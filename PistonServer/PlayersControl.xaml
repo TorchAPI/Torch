@@ -1,0 +1,15 @@
+﻿<UserControl x:Class="PistonServer.PlayersControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PistonServer"
+             mc:Ignorable="d">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom">
+            <Button x:Name="KickButton" Content="Kick" Margin="5,5,5,5"/>
+            <Button x:Name="BanButton" Content="Ban" Margin="5,5,5,5"/>
+        </StackPanel>
+        <ListBox x:Name="PlayerList" DockPanel.Dock="Top" Margin="5,5,5,5"/>
+    </DockPanel>
+</UserControl>
