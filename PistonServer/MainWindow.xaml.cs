@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -71,6 +72,11 @@ namespace PistonServer
             //HACK: Uncomment when restarting is possible.
             //BtnStart.IsEnabled = true;
             uiUpdate.Stop();
+            ServerManager.Static.StopServer();
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
             ServerManager.Static.StopServer();
         }
     }

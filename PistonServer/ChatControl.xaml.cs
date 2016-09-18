@@ -17,6 +17,7 @@ using Piston;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.World;
+using SteamSDK;
 
 namespace PistonServer
 {
@@ -29,34 +30,45 @@ namespace PistonServer
         public ChatControl()
         {
             InitializeComponent();
+            ServerManager.Static.SessionReady += InitChatHandler;
         }
 
-        public void MessageReceived(ulong steamId, string message, SteamSDK.ChatEntryTypeEnum chatType)
+        public void InitChatHandler()
+        {
+            MyMultiplayer.Static.ChatMessageReceived += MessageReceived;
+        }
+
+        public void MessageReceived(ulong steamId, string message, ChatEntryTypeEnum chatType)
         {
             //Messages sent from server loop back around.
             if (steamId == MyMultiplayer.Static.ServerId)
                 return;
 
-            var name = MySession.Static.Players.TryGetPlayerBySteamId(steamId)?.DisplayName ?? "";
+            var name = MyMultiplayer.Static.GetMemberName(steamId);
             Dispatcher.Invoke(() => AddMessage(name, message), DispatcherPriority.Normal);
         }
 
         public void AddMessage(string sender, string message)
         {
             Chat.Text += $"{DateTime.Now.ToLongTimeString()} | {sender}: {message}\n";
+            Program.UserInterface.Players.RefreshNames();
+        }
+
+        public void SendMessage(string message)
+        {
+            MyMultiplayer.Static.SendChatMessage(message);
+            Dispatcher.Invoke(() => AddMessage("Server", message));
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
             OnMessageEntered();
-            
         }
 
         private void OnMessageEntered()
         {
             var text = Message.Text;
-            AddMessage("Server", text);
-            MySandboxGame.Static.Invoke(() => MyMultiplayer.Static.SendChatMessage(text));
+            SendMessage(text);
             MessageEntered?.Invoke(Message.Text);
             Message.Text = "";
         }

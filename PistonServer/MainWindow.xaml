@@ -19,7 +19,7 @@
             </TabItem>
             <TabItem Header="Chat/Players">
                 <DockPanel>
-                    <local:PlayersControl x:Name="Players" DockPanel.Dock="Right" Width="150" IsEnabled="False"></local:PlayersControl>
+                    <local:PlayersControl x:Name="Players" DockPanel.Dock="Right" Width="250" IsEnabled="False"></local:PlayersControl>
                     <local:ChatControl x:Name="Chat" IsEnabled="False"/>
                 </DockPanel>
             </TabItem>

@@ -7,8 +7,8 @@
              mc:Ignorable="d">
     <DockPanel>
         <StackPanel DockPanel.Dock="Bottom">
-            <Button x:Name="KickButton" Content="Kick" Margin="5,5,5,5"/>
-            <Button x:Name="BanButton" Content="Ban" Margin="5,5,5,5"/>
+            <Button x:Name="KickButton" Content="Kick" Margin="5,5,5,5" Click="KickButton_Click"/>
+            <Button x:Name="BanButton" Content="Ban" Margin="5,5,5,5" Click="BanButton_Click"/>
         </StackPanel>
         <ListBox x:Name="PlayerList" DockPanel.Dock="Top" Margin="5,5,5,5"/>
     </DockPanel>

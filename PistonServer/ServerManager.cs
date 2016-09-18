@@ -21,6 +21,9 @@ namespace PistonServer
         public Thread ServerThread { get; private set; }
         public string[] RunArgs { get; set; } = new string[0];
 
+        public event Action SessionLoading;
+        public event Action SessionReady;
+
         private readonly Assembly _dsAssembly;
 
         private ServerManager()
@@ -38,12 +41,13 @@ namespace PistonServer
 
         private void OnSessionLoading()
         {
+            SessionLoading?.Invoke();
             MySession.Static.OnReady += OnSessionReady;
         }
 
         private void OnSessionReady()
         {
-            MyMultiplayer.Static.ChatMessageReceived += Program.UserInterface.Chat.MessageReceived;
+            SessionReady?.Invoke();
         }
 
         /// <summary>
