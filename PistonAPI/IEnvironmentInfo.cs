@@ -1,4 +1,4 @@
-﻿namespace PistonAPI
+﻿namespace Piston.API
 {
     public interface IEnvironmentInfo
     {

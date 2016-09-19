@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using PistonAPI;
+using Piston.API;
 using Sandbox;
 using VRage.Plugins;
 using VRage.Collections;
@@ -17,13 +17,12 @@ namespace Piston
     {
         //TODO: Disable reloading if the plugin has static elements because they prevent a full reload.
 
-        public static PluginManager Static { get; } = new PluginManager();
         public ListReader<IPlugin> Plugins => MyPlugins.Plugins;
 
         private List<IPlugin> _plugins;
         public const string PluginDir = "Plugins";
 
-        private PluginManager()
+        public PluginManager()
         {
             if (!Directory.Exists(PluginDir))
                 Directory.CreateDirectory(PluginDir);

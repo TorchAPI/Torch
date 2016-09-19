@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace PistonServer.Properties {
+namespace Piston.Server.Properties {
     using System;
     
     

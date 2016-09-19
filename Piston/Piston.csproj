@@ -111,17 +111,20 @@
     <Reference Include="VRage.Scripting">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Scripting.dll</HintPath>
     </Reference>
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Logger.cs" />
+    <Compile Include="MTObservableCollection.cs" />
     <Compile Include="MyPlayerCollectionExtensions.cs" />
+    <Compile Include="ObservableType.cs" />
     <Compile Include="PluginManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PistonAPI\PistonAPI.csproj">
+    <ProjectReference Include="..\PistonAPI\Piston.API.csproj">
       <Project>{fba5d932-6254-4a1e-baf4-e229fa94e3c2}</Project>
-      <Name>PistonAPI</Name>
+      <Name>Piston.API</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

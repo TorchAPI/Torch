@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace PistonAPI
+namespace Piston.API
 {
     public interface IServerControls
     {

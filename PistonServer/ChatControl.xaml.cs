@@ -19,45 +19,17 @@ using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.World;
 using SteamSDK;
 
-namespace PistonServer
+namespace Piston.Server
 {
     /// <summary>
     /// Interaction logic for ChatControl.xaml
     /// </summary>
     public partial class ChatControl : UserControl
     {
-        public event Action<string> MessageEntered;
         public ChatControl()
         {
             InitializeComponent();
-            ServerManager.Static.SessionReady += InitChatHandler;
-        }
-
-        public void InitChatHandler()
-        {
-            MyMultiplayer.Static.ChatMessageReceived += MessageReceived;
-        }
-
-        public void MessageReceived(ulong steamId, string message, ChatEntryTypeEnum chatType)
-        {
-            //Messages sent from server loop back around.
-            if (steamId == MyMultiplayer.Static.ServerId)
-                return;
-
-            var name = MyMultiplayer.Static.GetMemberName(steamId);
-            Dispatcher.Invoke(() => AddMessage(name, message), DispatcherPriority.Normal);
-        }
-
-        public void AddMessage(string sender, string message)
-        {
-            Chat.Text += $"{DateTime.Now.ToLongTimeString()} | {sender}: {message}\n";
-            Program.UserInterface.Players.RefreshNames();
-        }
-
-        public void SendMessage(string message)
-        {
-            MyMultiplayer.Static.SendChatMessage(message);
-            Dispatcher.Invoke(() => AddMessage("Server", message));
+            ChatItems.ItemsSource = PistonServer.Multiplayer.ChatView;
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
@@ -65,18 +37,18 @@ namespace PistonServer
             OnMessageEntered();
         }
 
-        private void OnMessageEntered()
-        {
-            var text = Message.Text;
-            SendMessage(text);
-            MessageEntered?.Invoke(Message.Text);
-            Message.Text = "";
-        }
-
         private void Message_OnKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
                 OnMessageEntered();
+        }
+
+        private void OnMessageEntered()
+        {
+            //Can't use Message.Text directly because of object ownership in WPF.
+            var text = Message.Text;
+            PistonServer.Multiplayer.SendMessage(text);
+            Message.Text = "";
         }
     }
 }

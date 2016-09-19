@@ -112,8 +112,10 @@
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PlayersControl.xaml.cs">
-      <DependentUpon>PlayersControl.xaml</DependentUpon>
+    <Compile Include="MultiplayerManager.cs" />
+    <Compile Include="PistonServer.cs" />
+    <Compile Include="PlayerListControl.xaml.cs">
+      <DependentUpon>PlayerListControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="ServerManager.cs" />
@@ -157,7 +159,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="PlayersControl.xaml">
+    <Page Include="PlayerListControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

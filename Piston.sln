@@ -5,11 +5,11 @@ VisualStudioVersion = 15.0.25618.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Piston", "Piston\Piston.csproj", "{7E01635C-3B67-472E-BCD6-C5539564F214}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PistonAPI", "PistonAPI\PistonAPI.csproj", "{FBA5D932-6254-4A1E-BAF4-E229FA94E3C2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Piston.API", "PistonAPI\Piston.API.csproj", "{FBA5D932-6254-4A1E-BAF4-E229FA94E3C2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PistonClient", "PistonClient\PistonClient.csproj", "{E36DF745-260B-4956-A2E8-09F08B2E7161}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Piston.Client", "PistonClient\Piston.Client.csproj", "{E36DF745-260B-4956-A2E8-09F08B2E7161}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PistonServer", "PistonServer\PistonServer.csproj", "{CA50886B-7B22-4CD8-93A0-C06F38D4F77D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Piston.Server", "PistonServer\Piston.Server.csproj", "{CA50886B-7B22-4CD8-93A0-C06F38D4F77D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

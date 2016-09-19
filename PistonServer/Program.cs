@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,7 @@ using System.Windows;
 using System.Windows.Threading;
 using Piston;
 
-namespace PistonServer
+namespace Piston.Server
 {
     public static class Program
     {
@@ -19,17 +20,18 @@ namespace PistonServer
         [STAThread]
         public static void Main(string[] args)
         {
-            ServerManager.Static.RunArgs = new[] { "-console" };
+            Logger.Write("Initializing");
+            PistonServer.Server.RunArgs = new[] { "-console" };
             MainDispatcher = Dispatcher.CurrentDispatcher;
-            Console.WriteLine(MainDispatcher.Thread.ManagedThreadId);
-#if DEBUG
-            Directory.SetCurrentDirectory(@"C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\DedicatedServer64");
-#endif
 
             if (args.Contains("-nogui"))
-                ServerManager.Static.StartServer();
+
+                PistonServer.Server.StartServer();
             else
                 StartUI();
+
+            if (args.Contains("-autostart") && !PistonServer.Server.Running)
+                PistonServer.Server.StartServerThread();
 
             Dispatcher.Run();
         }
@@ -38,6 +40,13 @@ namespace PistonServer
         {
             Thread.CurrentThread.Name = "UI Thread";
             UserInterface.Show();
+        }
+
+        public static void FullRestart()
+        {
+            PistonServer.Server.StopServer();
+            Process.Start("PistonServer.exe", "-autostart");
+            Environment.Exit(1);
         }
     }
 }

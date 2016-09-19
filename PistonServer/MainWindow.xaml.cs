@@ -17,7 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace PistonServer
+namespace Piston.Server
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -57,27 +57,32 @@ namespace PistonServer
         {
             startTime = DateTime.Now;
             Chat.IsEnabled = true;
-            Players.IsEnabled = true;
+            PlayerList.IsEnabled = true;
             ((Button) sender).IsEnabled = false;
             BtnStop.IsEnabled = true;
             uiUpdate.Start();
-            ServerManager.Static.StartServerThread();
+            PistonServer.Server.StartServerThread();
         }
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
         {
             Chat.IsEnabled = false;
-            Players.IsEnabled = false;
+            PlayerList.IsEnabled = false;
             ((Button) sender).IsEnabled = false;
             //HACK: Uncomment when restarting is possible.
             //BtnStart.IsEnabled = true;
             uiUpdate.Stop();
-            ServerManager.Static.StopServer();
+            PistonServer.Server.StopServer();
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            ServerManager.Static.StopServer();
+            PistonServer.Server.StopServer();
+        }
+
+        private void BtnRestart_Click(object sender, RoutedEventArgs e)
+        {
+            Program.FullRestart();
         }
     }
 }

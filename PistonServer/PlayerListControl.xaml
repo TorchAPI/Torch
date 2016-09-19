@@ -1,15 +1,26 @@
-﻿<UserControl x:Class="PistonServer.PlayersControl"
+﻿<UserControl x:Class="Piston.Server.PlayerListControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:PistonServer"
+             xmlns:local="clr-namespace:Piston.Server"
              mc:Ignorable="d">
     <DockPanel>
         <StackPanel DockPanel.Dock="Bottom">
             <Button x:Name="KickButton" Content="Kick" Margin="5,5,5,5" Click="KickButton_Click"/>
             <Button x:Name="BanButton" Content="Ban" Margin="5,5,5,5" Click="BanButton_Click"/>
         </StackPanel>
-        <ListBox x:Name="PlayerList" DockPanel.Dock="Top" Margin="5,5,5,5"/>
+        <ListView x:Name="PlayerList" DockPanel.Dock="Top" Margin="5,5,5,5">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <WrapPanel>
+                        <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                        <TextBlock Text=" ("/>
+                        <TextBlock Text="{Binding State}"/>
+                        <TextBlock Text=")"/>
+                    </WrapPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
     </DockPanel>
 </UserControl>

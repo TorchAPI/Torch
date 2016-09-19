@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VRage.Plugins;
 
-namespace PistonAPI
+namespace Piston.API
 {
     public interface IPistonPlugin : IPlugin
     {

@@ -13,20 +13,21 @@ using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.World;
 using VRage.Profiler;
 
-namespace PistonServer
+namespace Piston.Server
 {
     public class ServerManager
     {
-        public static ServerManager Static { get; } = new ServerManager();
         public Thread ServerThread { get; private set; }
         public string[] RunArgs { get; set; } = new string[0];
+        public bool Running { get; private set; }
 
         public event Action SessionLoading;
-        public event Action SessionReady;
+        public event Action SessionLoaded;
 
         private readonly Assembly _dsAssembly;
+        private readonly ManualResetEvent _stopHandle = new ManualResetEvent(false);
 
-        private ServerManager()
+        internal ServerManager()
         {
             using (var f = File.OpenRead("SpaceEngineersDedicated.exe"))
             {
@@ -47,7 +48,7 @@ namespace PistonServer
 
         private void OnSessionReady()
         {
-            SessionReady?.Invoke();
+            SessionLoaded?.Invoke();
         }
 
         /// <summary>
@@ -69,6 +70,7 @@ namespace PistonServer
         /// </summary>
         public void StartServer()
         {
+            Running = true;
             Logger.Write("Starting server.");
 
             if (MySandboxGame.Log.LogEnabled)
@@ -89,15 +91,19 @@ namespace PistonServer
         /// <summary>
         /// Stop the server.
         /// </summary>
-        /// <param name="abortThread"></param>
-        public void StopServer(bool abortThread = false)
+        public void StopServer()
         {
-            if (Thread.CurrentThread != ServerThread)
+            if (Thread.CurrentThread.ManagedThreadId != ServerThread.ManagedThreadId)
             {
-                MySandboxGame.Static?.Invoke(() => StopServer(true));
+                Logger.Write("Requesting server stop.");
+                MySandboxGame.Static.Invoke(StopServer);
+                _stopHandle.WaitOne();
                 return;
             }
 
+            Logger.Write("Stopping server.");
+            MySession.Static.Save();
+            MySession.Static.Unload();
             MySandboxGame.Static.Exit();
 
             //Unload all the static junk.
@@ -106,18 +112,10 @@ namespace PistonServer
             VRage.Input.MyGuiGameControlsHelpers.Reset();
             VRage.Input.MyInput.UnloadData();
             CleanupProfilers();
-            GC.Collect(2);
 
             Logger.Write("Server stopped.");
-            if (abortThread)
-            {
-                try { ServerThread.Abort(); }
-                catch (ThreadAbortException)
-                {
-                    Logger.Write("Server thread aborted.");
-                }
-                ServerThread = null;
-            }
+            _stopHandle.Set();
+            Running = false;
         }
 
         private void CleanupProfilers()
