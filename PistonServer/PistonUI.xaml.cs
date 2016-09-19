@@ -20,22 +20,22 @@ using System.Windows.Shapes;
 namespace Piston.Server
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for PistonUI.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class PistonUI : Window
     {
-        private DateTime startTime;
-        private Timer uiUpdate = new Timer
+        private DateTime _startTime;
+        private readonly Timer _uiUpdate = new Timer
         {
             Interval = 1000,
             AutoReset = true,
         };
 
-        public MainWindow()
+        public PistonUI()
         {
             InitializeComponent();
-            startTime = DateTime.Now;
-            uiUpdate.Elapsed += UiUpdate_Elapsed;
+            _startTime = DateTime.Now;
+            _uiUpdate.Elapsed += UiUpdate_Elapsed;
 
             TabControl.Items.Add(new TabItem());
         }
@@ -48,19 +48,19 @@ namespace Piston.Server
         private void UpdateUptime()
         {
             var currentTime = DateTime.Now;
-            var uptime = currentTime - startTime;
+            var uptime = currentTime - _startTime;
 
             Dispatcher.Invoke(() => LabelUptime.Content = $"Uptime: {uptime.Days}d {uptime.Hours}h {uptime.Minutes}m");
         }
 
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
-            startTime = DateTime.Now;
+            _startTime = DateTime.Now;
             Chat.IsEnabled = true;
             PlayerList.IsEnabled = true;
             ((Button) sender).IsEnabled = false;
             BtnStop.IsEnabled = true;
-            uiUpdate.Start();
+            _uiUpdate.Start();
             PistonServer.Server.StartServerThread();
         }
 
@@ -71,7 +71,7 @@ namespace Piston.Server
             ((Button) sender).IsEnabled = false;
             //HACK: Uncomment when restarting is possible.
             //BtnStart.IsEnabled = true;
-            uiUpdate.Stop();
+            _uiUpdate.Stop();
             PistonServer.Server.StopServer();
         }
 

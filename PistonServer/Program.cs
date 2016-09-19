@@ -21,12 +21,11 @@ namespace Piston.Server
             PistonServer.Server.RunArgs = new[] { "-console" };
 
             if (args.Contains("-nogui"))
-
                 PistonServer.Server.StartServer();
             else
                 StartUI();
 
-            if (args.Contains("-autostart") && !PistonServer.Server.Running)
+            if (args.Contains("-autostart") && !PistonServer.Server.IsRunning)
                 PistonServer.Server.StartServerThread();
 
             Dispatcher.Run();

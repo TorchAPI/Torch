@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Piston
 {
-    public class ObservableType : INotifyPropertyChanged
+    public class ViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

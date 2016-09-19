@@ -15,11 +15,11 @@ using VRage.Profiler;
 
 namespace Piston.Server
 {
-    public class ServerManager
+    public class ServerManager : IDisposable
     {
         public Thread ServerThread { get; private set; }
         public string[] RunArgs { get; set; } = new string[0];
-        public bool Running { get; private set; }
+        public bool IsRunning { get; private set; }
 
         public event Action SessionLoading;
         public event Action SessionLoaded;
@@ -70,7 +70,7 @@ namespace Piston.Server
         /// </summary>
         public void StartServer()
         {
-            Running = true;
+            IsRunning = true;
             Logger.Write("Starting server.");
 
             if (MySandboxGame.Log.LogEnabled)
@@ -115,7 +115,7 @@ namespace Piston.Server
 
             Logger.Write("Server stopped.");
             _stopHandle.Set();
-            Running = false;
+            IsRunning = false;
         }
 
         private void CleanupProfilers()
@@ -123,6 +123,12 @@ namespace Piston.Server
             typeof(MyRenderProfiler).GetField("m_threadProfiler", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, null);
             typeof(MyRenderProfiler).GetField("m_gpuProfiler", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, null);
             (typeof(MyRenderProfiler).GetField("m_threadProfilers", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as List<MyProfiler>).Clear();
+        }
+
+        public void Dispose()
+        {
+            if (IsRunning)
+                StopServer();
         }
     }
 }
