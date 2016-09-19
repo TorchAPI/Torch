@@ -14,15 +14,11 @@ namespace Piston.Server
 {
     public static class Program
     {
-        public static MainWindow UserInterface = new MainWindow();
-        public static Dispatcher MainDispatcher { get; private set; }
-
         [STAThread]
         public static void Main(string[] args)
         {
-            Logger.Write("Initializing");
+            PistonServer.Init();
             PistonServer.Server.RunArgs = new[] { "-console" };
-            MainDispatcher = Dispatcher.CurrentDispatcher;
 
             if (args.Contains("-nogui"))
 
@@ -39,7 +35,7 @@ namespace Piston.Server
         public static void StartUI()
         {
             Thread.CurrentThread.Name = "UI Thread";
-            UserInterface.Show();
+            PistonServer.UI.Show();
         }
 
         public static void FullRestart()

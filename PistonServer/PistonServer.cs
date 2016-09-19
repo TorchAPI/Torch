@@ -12,6 +12,7 @@ namespace Piston.Server
     /// </summary>
     public static class PistonServer
     {
+        public static MainWindow UI;
         public static ServerManager Server;
         public static MultiplayerManager Multiplayer;
         public static PluginManager Plugins;
@@ -27,6 +28,7 @@ namespace Piston.Server
                 Server = new ServerManager();
                 Multiplayer = new MultiplayerManager(Server);
                 Plugins = new PluginManager();
+                UI = new MainWindow();
             }
         }
 

@@ -33,11 +33,6 @@ namespace Piston
         private void GetPluginList()
         {
             _plugins = typeof(MyPlugins).GetField("m_plugins", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as List<IPlugin>;
-            if (_plugins == null)
-            {
-                typeof(MyPlugins).TypeInitializer.Invoke(null, null);
-                GetPluginList();
-            }
         }
 
         /// <summary>
