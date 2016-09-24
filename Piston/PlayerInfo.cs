@@ -1,6 +1,6 @@
 ﻿using Sandbox.Engine.Multiplayer;
 
-namespace Piston.Server
+namespace Piston
 {
     /// <summary>
     /// Stores player information in an observable format.

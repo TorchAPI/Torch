@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Piston.Server
+namespace Piston
 {
     /// <summary>
     /// Identifies a player's current connection state.

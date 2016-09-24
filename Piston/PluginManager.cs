@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Piston.API;
+using PistonAPI;
 using Sandbox;
 using VRage.Plugins;
 using VRage.Collections;
@@ -30,9 +32,33 @@ namespace Piston
             GetPluginList();
         }
 
+        /// <summary>
+        /// Get a reference to the internal VRage plugin list.
+        /// </summary>
         private void GetPluginList()
         {
             _plugins = typeof(MyPlugins).GetField("m_plugins", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as List<IPlugin>;
+        }
+
+        /// <summary>
+        /// Get a plugin's name from its <see cref="PluginAttribute"/> or its type name.
+        /// </summary>
+        public string GetPluginName(Type pluginType)
+        {
+            var attr = pluginType.GetCustomAttribute<PluginAttribute>();
+            return attr?.Name ?? pluginType.Name;
+        }
+
+        /// <summary>
+        /// Load all plugins in the <see cref="PluginDir"/> folder.
+        /// </summary>
+        public void LoadAllPlugins()
+        {
+            var pluginFolders = GetPluginFolders();
+            foreach (var folder in pluginFolders)
+            {
+                LoadPluginFolder(folder);
+            }
         }
 
         /// <summary>
@@ -41,6 +67,7 @@ namespace Piston
         /// <param name="plugin"></param>
         public void LoadPlugin(IPlugin plugin)
         {
+            Logger.Write($"Loading plugin: {GetPluginName(plugin.GetType())}");
             plugin.Init(MySandboxGame.Static);
             _plugins.Add(plugin);
         }
@@ -68,21 +95,25 @@ namespace Piston
         {
             var relativeDir = Path.Combine(PluginDir, folderName);
             if (!Directory.Exists(relativeDir))
-                throw new FileNotFoundException($"Plugin {folderName} does not exist in the Plugins folder.");
+            {
+                Logger.Write($"Plugin {folderName} does not exist in the Plugins folder.");
+                return;
+            }
 
             var fileNames = Directory.GetFiles(relativeDir, "*.dll");
 
             foreach (var fileName in fileNames)
             {
                 var fullPath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+                UnblockDll(fullPath);
                 var asm = Assembly.LoadFrom(fullPath);
 
                 foreach (var type in asm.GetTypes())
                 {
                     if (type.GetInterfaces().Contains(typeof(IPlugin)))
                     {
-                        var inst = Activator.CreateInstance(type);
-                        LoadPlugin((IPlugin)inst);
+                        var inst = (IPlugin)Activator.CreateInstance(type);
+                        MySandboxGame.Static.Invoke(() => LoadPlugin(inst));
                     }
                 }
             }
@@ -91,7 +122,6 @@ namespace Piston
         /// <summary>
         /// Unload a plugin from the game.
         /// </summary>
-        /// <param name="plugin"></param>
         public void UnloadPlugin(IPlugin plugin)
         {
             _plugins.Remove(plugin);
@@ -124,6 +154,15 @@ namespace Piston
                 var p = plugin as IPistonPlugin;
                 p?.Reload();
             }
+        }
+
+        [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool DeleteFile(string name);
+
+        public bool UnblockDll(string fileName)
+        {
+            return DeleteFile(fileName + ":Zone.Identifier");
         }
     }
 }

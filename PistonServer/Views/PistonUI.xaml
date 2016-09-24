@@ -1,9 +1,10 @@
-﻿<Window x:Class="Piston.Server.MainWindow"
+﻿<Window x:Class="Piston.Server.PistonUI"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Piston.Server"
+        xmlns:views="clr-namespace:Piston.Server.Views"
         mc:Ignorable="d"
         Title="Piston" Height="600" Width="900">
     <DockPanel>
@@ -16,8 +17,12 @@
         </StackPanel>
         <TabControl x:Name="TabControl" DockPanel.Dock="Bottom" Margin="5,0,5,5">
             <TabItem Header="Configuration">
+                <DockPanel>
+                    <local:ModsControl/>
+                    <views:PropertyGrid x:Name="PropGrid"/>
+                </DockPanel>
             </TabItem>
-            <TabItem Header="Chat/PlayerList">
+            <TabItem Header="Chat/Players">
                 <DockPanel>
                     <local:PlayerListControl x:Name="PlayerList" DockPanel.Dock="Right" Width="250" IsEnabled="False"/>
                     <local:ChatControl x:Name="Chat" IsEnabled="False"/>

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Piston.Server
+namespace Piston.Server.ViewModels
 {
     public class ChatItemInfo : ViewModel
     {

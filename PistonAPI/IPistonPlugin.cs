@@ -10,7 +10,6 @@ namespace Piston.API
 {
     public interface IPistonPlugin : IPlugin
     {
-        string Name { get; }
         void Reload();
     }
 }

@@ -77,7 +77,7 @@ namespace Piston.Server
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            PistonServer.Server.StopServer();
+            PistonServer.Reset();
         }
 
         private void BtnRestart_Click(object sender, RoutedEventArgs e)

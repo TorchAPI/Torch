@@ -10,7 +10,12 @@ using System.Windows;
 using Piston;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
+using Sandbox.Game;
 using Sandbox.Game.World;
+using SpaceEngineers.Game;
+using VRage.Dedicated;
+using VRage.Game;
+using VRage.Game.SessionComponents;
 using VRage.Profiler;
 
 namespace Piston.Server
@@ -24,20 +29,37 @@ namespace Piston.Server
         public event Action SessionLoading;
         public event Action SessionLoaded;
 
-        private readonly Assembly _dsAssembly;
         private readonly ManualResetEvent _stopHandle = new ManualResetEvent(false);
 
         internal ServerManager()
         {
-            using (var f = File.OpenRead("SpaceEngineersDedicated.exe"))
-            {
-                var bin = new byte[f.Length];
-                f.Read(bin, 0, (int)f.Length);
-                _dsAssembly = Assembly.Load(bin);
-            }
-
-            ServerThread = new Thread(StartServer);
             MySession.OnLoading += OnSessionLoading;
+        }
+
+        public void InitSandbox()
+        {
+            SpaceEngineersGame.SetupBasicGameInfo();
+            SpaceEngineersGame.SetupPerGameSettings();
+            MyPerGameSettings.SendLogToKeen = false;
+            MyPerServerSettings.GameName = MyPerGameSettings.GameName;
+            MyPerServerSettings.GameNameSafe = MyPerGameSettings.GameNameSafe;
+            MyPerServerSettings.GameDSName = MyPerServerSettings.GameNameSafe + "Dedicated";
+            MyPerServerSettings.GameDSDescription = "Your place for space engineering, destruction and exploring.";
+            MySessionComponentExtDebug.ForceDisable = true;
+            MyPerServerSettings.AppId = 244850u;
+            ConfigForm<MyObjectBuilder_SessionSettings>.GameAttributes = Game.SpaceEngineers;
+            ConfigForm<MyObjectBuilder_SessionSettings>.OnReset = delegate
+            {
+                SpaceEngineersGame.SetupBasicGameInfo();
+                SpaceEngineersGame.SetupPerGameSettings();
+            };
+            int? gameVersion = MyPerGameSettings.BasicGameInfo.GameVersion;
+            MyFinalBuildConstants.APP_VERSION = gameVersion ?? 0;
+        }
+
+        public void Invoke(Action action)
+        {
+            MySandboxGame.Static.Invoke(action);
         }
 
         private void OnSessionLoading()
@@ -56,9 +78,10 @@ namespace Piston.Server
         /// </summary>
         public void StartServerThread()
         {
-            if (ServerThread.IsAlive)
+            if (ServerThread?.IsAlive ?? false)
             {
-                throw new InvalidOperationException("The server thread is already running.");
+                Logger.Write("Cannot start the server because it's already running.");
+                return;
             }
 
             ServerThread = new Thread(StartServer);
@@ -76,16 +99,7 @@ namespace Piston.Server
             if (MySandboxGame.Log.LogEnabled)
                 MySandboxGame.Log.Close();
 
-            foreach (var type in _dsAssembly.GetTypes())
-            {
-                if (type.FullName.Contains("MyProgram"))
-                {
-                    var method = type.GetMethod("Main", BindingFlags.Static | BindingFlags.NonPublic);
-                    method.Invoke(null, new object[] {RunArgs});
-
-                    break;
-                }
-            }
+            DedicatedServer.Run<MyObjectBuilder_SessionSettings>(RunArgs);
         }
 
         /// <summary>
@@ -93,7 +107,7 @@ namespace Piston.Server
         /// </summary>
         public void StopServer()
         {
-            if (Thread.CurrentThread.ManagedThreadId != ServerThread.ManagedThreadId)
+            if (Thread.CurrentThread.ManagedThreadId != ServerThread?.ManagedThreadId)
             {
                 Logger.Write("Requesting server stop.");
                 MySandboxGame.Static.Invoke(StopServer);
