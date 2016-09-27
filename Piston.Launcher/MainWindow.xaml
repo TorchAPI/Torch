@@ -8,8 +8,8 @@
         Title="Piston Launcher" ResizeMode="NoResize" Height="220" Width="400">
     <StackPanel Orientation="Vertical">
         <Label FontSize="50" Content="Piston Launcher" HorizontalAlignment="Center"/>
-        <Button x:Name="LaunchBtn" FontSize="20" Height="30" Content="Launch" Margin="5,5,5,5" Click="LaunchBtn_Click"/>
-        <Button x:Name="UpdateBtn" FontSize="20" Height="30" Content="Install/Update" Margin="5,5,5,5" Click="UpdateBtn_Click"/>
+        <Button x:Name="LaunchBtn" FontSize="15" Height="25" Content="Launch" Margin="5,5,5,5" Click="LaunchBtn_Click"/>
+        <Button x:Name="UpdateBtn" FontSize="15" Height="25" Content="Install/Update" Margin="5,5,5,5" Click="UpdateBtn_Click"/>
         <Label x:Name="InfoLabel" Margin="5,5,5,5" HorizontalAlignment="Center"/>
     </StackPanel>
 </Window>

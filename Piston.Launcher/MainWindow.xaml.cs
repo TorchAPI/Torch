@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.IO;
+using System.Reflection;
 using Microsoft.Win32;
 
 namespace Piston.Launcher
@@ -25,6 +26,7 @@ namespace Piston.Launcher
     {
         private Config _config;
         private PistonFileManager _fileManager;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -33,6 +35,7 @@ namespace Piston.Launcher
             _fileManager = new PistonFileManager(_config.RemoteFilePath);
 
             CheckSpaceDirectory();
+            CheckSEBranch();
             UpdatePistonFiles();
         }
 
@@ -59,6 +62,23 @@ namespace Piston.Launcher
             return false;
         }
 
+        private void CheckSEBranch()
+        {
+            try
+            {
+                var seAsm = Assembly.LoadFrom(Path.Combine(_config.SpaceDirectory, "VRage.Game.dll"));
+                MessageBox.Show("found SE assembly");
+                var gameType = seAsm.ExportedTypes.First(x => x.Name == "MyFinalBuildConstants");
+                MessageBox.Show("found build constant class");
+                var stable = (bool)gameType.GetField("IS_STABLE", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+                this.Title += $"SE Branch: {(stable ? "Stable" : "Develop")}";
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Unable to check SE branch.\n\n" + e.Message + "\n\n" + e.StackTrace);
+            }
+        }
+
         private void UpdatePistonFiles()
         {
             var i = 0;
@@ -79,7 +99,7 @@ namespace Piston.Launcher
             if (!CheckSpaceDirectory())
                 return;
 
-            Directory.SetCurrentDirectory(_config.SpaceDirectory); 
+            Directory.SetCurrentDirectory(_config.SpaceDirectory);
             Process.Start(Path.Combine(_config.SpaceDirectory, "PistonClient.exe"));
             Environment.Exit(0);
         }

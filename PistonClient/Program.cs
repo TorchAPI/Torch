@@ -1,19 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Windows;
 using Sandbox;
-using Sandbox.Engine.Platform;
 using Sandbox.Game;
 using SpaceEngineers.Game;
 using VRage.FileSystem;
 using VRageRender;
 using Piston;
 using Sandbox.Game.Gui;
+using Sandbox.Graphics;
 using Sandbox.Graphics.GUI;
 using Sandbox.Gui;
+using VRage.Game;
+using VRage.Utils;
 using VRageMath;
+using Game = Sandbox.Engine.Platform.Game;
+using MessageBoxResult = System.Windows.MessageBoxResult;
 
 namespace Piston.Client
 {
@@ -29,6 +34,7 @@ namespace Piston.Client
 
         private static void Main(string[] args)
         {
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             if (!File.Exists("steam_appid.txt"))
             {
                 Directory.SetCurrentDirectory(Path.GetDirectoryName(typeof(VRage.FastResourceLock).Assembly.Location) + "\\..");
@@ -58,6 +64,7 @@ namespace Piston.Client
             {
                 _renderer = null;
                 SpaceEngineersGame.SetupPerGameSettings();
+
                 SpaceEngineersGame.SetupRender();
                 try
                 {
@@ -85,13 +92,27 @@ namespace Piston.Client
             MyInitializer.InvokeAfterRun();
         }
 
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            var ex = (Exception)e.ExceptionObject;
+            MessageBox.Show($"PistonClient crashed. Go bug Jimmacle and send him a screenshot of this box!\n\n{ex.Message}\n{ex.StackTrace}", "Unhandled Exception");
+        }
+
         private static void GuiControlCreated(object o)
         {
             var menu = o as MyGuiScreenMainMenu;
             if (menu != null)
             {
-                Logger.Write("Adding button to main menu");
-                menu.Controls.Add(new MyGuiControlImageButton("PistonButton", text: new StringBuilder("Piston"), size: new Vector2(20), position: new Vector2(0)));
+                var pistonBtn = new MyGuiControlButton(MyGuiManager.ComputeFullscreenGuiCoordinate(MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER), MyGuiControlButtonStyleEnum.Default, null, null, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_BOTTOM, null, new StringBuilder("Piston"), 1f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER, MyGuiControlHighlightType.WHEN_ACTIVE, null, GuiSounds.MouseClick, 1f, null, false);
+                pistonBtn.Visible = true;
+                //menu.Controls.Add(pistonBtn);
+
+                var scr = new PistonSettingsScreen();
+                scr.Controls.Add(pistonBtn);
+
+                MyScreenManager.AddScreen(scr);
+                //menu.Controls.Add(new MyGuiControlLabel(new Vector2(0.5f), new Vector2(0.5f), "Piston Enabled"));
+                //menu.RecreateControls(false);
             }
         }
 
@@ -106,32 +127,40 @@ namespace Piston.Client
 
         private static void InitializeRender()
         {
-            if (Game.IsDedicated)
+            try
             {
-                _renderer = new MyNullRender();
-            }
-            else
-            {
-                var graphicsRenderer = MySandboxGame.Config.GraphicsRenderer;
-                if (graphicsRenderer == MySandboxGame.DirectX11RendererKey)
+                if (Game.IsDedicated)
                 {
-                    _renderer = new MyDX11Render();
-                    if (!_renderer.IsSupported)
-                    {
-                        MySandboxGame.Log.WriteLine("DirectX 11 renderer not supported. No renderer to revert back to.");
-                        _renderer = null;
-                    }
+                    _renderer = new MyNullRender();
                 }
-                if (_renderer == null)
-                    throw new MyRenderException("The current version of the game requires a Dx11 card. \\n For more information please see : http://blog.marekrosa.org/2016/02/space-engineers-news-full-source-code_26.html", MyRenderExceptionEnum.GpuNotSupported);
+                else
+                {
+                    var graphicsRenderer = MySandboxGame.Config.GraphicsRenderer;
+                    if (graphicsRenderer == MySandboxGame.DirectX11RendererKey)
+                    {
+                        _renderer = new MyDX11Render();
+                        if (!_renderer.IsSupported)
+                        {
+                            MySandboxGame.Log.WriteLine("DirectX 11 renderer not supported. No renderer to revert back to.");
+                            _renderer = null;
+                        }
+                    }
+                    if (_renderer == null)
+                        throw new MyRenderException("The current version of the game requires a Dx11 card. \\n For more information please see : http://blog.marekrosa.org/2016/02/space-engineers-news-full-source-code_26.html", MyRenderExceptionEnum.GpuNotSupported);
 
-                MySandboxGame.Config.GraphicsRenderer = graphicsRenderer;
+                    MySandboxGame.Config.GraphicsRenderer = graphicsRenderer;
+                }
+
+                MyRenderProxy.Initialize(_renderer);
+                MyRenderProxy.IS_OFFICIAL = true;
+                MyRenderProxy.GetRenderProfiler().SetAutocommit(false);
+                MyRenderProxy.GetRenderProfiler().InitMemoryHack("MainEntryPoint");
             }
-
-            MyRenderProxy.Initialize(_renderer);
-            MyRenderProxy.IS_OFFICIAL = true;
-            MyRenderProxy.GetRenderProfiler().SetAutocommit(false);
-            MyRenderProxy.GetRenderProfiler().InitMemoryHack("MainEntryPoint");
+            catch (TypeLoadException)
+            {
+                MessageBox.Show("This version of Piston does not run on the Stable branch.", "Initialization Error");
+                Environment.Exit(-1);
+            }
         }
     }
 }
