@@ -57,9 +57,75 @@ namespace Piston.Server
             MyFinalBuildConstants.APP_VERSION = gameVersion ?? 0;
         }
 
-        public void Invoke(Action action)
+        /// <summary>
+        /// Invokes an action on the game thread and blocks until completion
+        /// </summary>
+        /// <param name="action"></param>
+        public void GameAction(Action action)
         {
-            MySandboxGame.Static.Invoke(action);
+            try
+            {
+                if (Thread.CurrentThread == MySandboxGame.Static.UpdateThread)
+                {
+                    action();
+                }
+                else
+                {
+                    AutoResetEvent e = new AutoResetEvent(false);
+
+                    MySandboxGame.Static.Invoke(() =>
+                                                {
+                                                    try
+                                                    {
+                                                        action();
+                                                    }
+                                                    catch (Exception ex)
+                                                    {
+                                                        //log
+                                                    }
+                                                    finally
+                                                    {
+                                                        e.Set();
+                                                    }
+                                                });
+
+                    //timeout so we don't accidentally hang the server
+                    e.WaitOne(60000);
+                }
+            }
+            catch (Exception ex)
+            {
+                //we need a logger :(
+            }
+        }
+
+        /// <summary>
+        /// Queues an action for invocation on the game thread and optionally runs a callback on completion
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="callback"></param>
+        /// <param name="state"></param>
+        public void BeginGameAction(Action action, Action<object> callback = null, object state = null)
+        {
+            try
+            {
+                if (Thread.CurrentThread == MySandboxGame.Static.UpdateThread)
+                {
+                    action();
+                }
+                else
+                {
+                    Task.Run(() =>
+                             {
+                                 GameAction(action);
+                                 callback?.Invoke(state);
+                             });
+                }
+            }
+            catch (Exception ex)
+            {
+                // log
+            }
         }
 
         private void OnSessionLoading()
