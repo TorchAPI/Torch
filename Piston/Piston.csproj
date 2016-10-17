@@ -123,14 +123,15 @@
   <ItemGroup>
     <Compile Include="ConnectionState.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="PistonPlugin.cs" />
     <Compile Include="PlayerInfo.cs" />
-    <Compile Include="PlayerInfoCache.cs" />
+    <Compile Include="Collections\PlayerInfoCache.cs" />
     <Compile Include="SteamService.cs" />
     <Compile Include="ViewModels\ModViewModel.cs" />
-    <Compile Include="MTObservableCollection.cs" />
-    <Compile Include="MyPlayerCollectionExtensions.cs" />
+    <Compile Include="Collections\MTObservableCollection.cs" />
+    <Compile Include="Extensions\MyPlayerCollectionExtensions.cs" />
     <Compile Include="SteamHelper.cs" />
-    <Compile Include="StringExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />
     <Compile Include="PluginManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -142,6 +143,7 @@
       <Name>Piston.API</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -19,8 +19,7 @@ namespace Piston.Client
             RecreateControls(true);
         }
 
-        /// <inheritdoc />
-        public override void RecreateControls(bool constructor)
+        public sealed override void RecreateControls(bool constructor)
         {
             base.RecreateControls(constructor);
             AddCaption(MyStringId.GetOrCompute("Piston Settings"));
