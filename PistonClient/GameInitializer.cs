@@ -44,7 +44,12 @@ namespace Piston.Client
             }
 
             //Add myself to the credits because I'm awesome.
-            var credits = new MyCreditsDepartment("Piston Developed By") { Persons = new List<MyCreditsPerson> { new MyCreditsPerson("JIMMACLE") } };
+            var credits = new MyCreditsDepartment("Piston Developed By") { Persons = new List<MyCreditsPerson>
+            {
+                new MyCreditsPerson("JIMMACLE"),
+                new MyCreditsPerson("REXXAR"),
+                new MyCreditsPerson("PHOENIXTHESAGE")
+            } };
             MyPerGameSettings.Credits.Departments.Add(credits);
 
             SpaceEngineersGame.SetupBasicGameInfo();
