@@ -121,7 +121,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandSystem.cs" />
+    <Compile Include="Commands\ChatCommand.cs" />
+    <Compile Include="Commands\ChatCommandAttribute.cs" />
+    <Compile Include="Commands\ChatCommandModule.cs" />
+    <Compile Include="Commands\CommandContext.cs" />
+    <Compile Include="Commands\CommandSystem.cs" />
     <Compile Include="ConnectionState.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="TorchPlugin.cs" />

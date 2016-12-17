@@ -252,11 +252,11 @@ namespace Torch.Server
             }
         }
 
-        private void UserGroupStatus(ulong userId, ulong groupId, bool member, bool officier)
+        private void UserGroupStatus(ulong userId, ulong groupId, bool member, bool officer)
         {
             if (groupId == MySandboxGame.ConfigDedicated.GroupID && _waitingForGroup.Remove(userId))
             {
-                if ((member || officier))
+                if (member || officer)
                 {
                     UserAccepted(userId);
                 }
