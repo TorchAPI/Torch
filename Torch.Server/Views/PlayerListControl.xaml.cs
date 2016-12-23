@@ -18,6 +18,7 @@ using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using SteamSDK;
+using Torch.API;
 
 namespace Torch.Server
 {
@@ -26,27 +27,45 @@ namespace Torch.Server
     /// </summary>
     public partial class PlayerListControl : UserControl
     {
+        private ITorchServer _server;
+
         public PlayerListControl()
         {
             InitializeComponent();
-            PlayerList.ItemsSource = TorchServer.Multiplayer.PlayersView;
+        }
+
+        public void BindServer(ITorchServer server)
+        {
+            _server = server;
+            server.Multiplayer.PlayerJoined += Refresh;
+            server.Multiplayer.PlayerLeft += Refresh;
+            Refresh();
+        }
+
+        private void Refresh(IPlayer player = null)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                PlayerList.ItemsSource = null;
+                PlayerList.ItemsSource = _server.Multiplayer.Players;
+            });
         }
 
         private void KickButton_Click(object sender, RoutedEventArgs e)
         {
-            var player = PlayerList.SelectedItem as PlayerInfo;
+            var player = PlayerList.SelectedItem as Player;
             if (player != null)
             {
-                TorchServer.Multiplayer.KickPlayer(player.SteamId);
+                _server.Multiplayer.KickPlayer(player.SteamId);
             }
         }
 
         private void BanButton_Click(object sender, RoutedEventArgs e)
         {
-            var player = PlayerList.SelectedItem as PlayerInfo;
+            var player = PlayerList.SelectedItem as Player;
             if (player != null)
             {
-                TorchServer.Multiplayer.BanPlayer(player.SteamId);
+                _server.Multiplayer.BanPlayer(player.SteamId);
             }
         }
     }

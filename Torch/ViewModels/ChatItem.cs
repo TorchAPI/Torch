@@ -1,14 +1,15 @@
 ﻿using System;
+using Torch.API;
 
-namespace Torch.Server.ViewModels
+namespace Torch.ViewModels
 {
-    public class ChatItemInfo : ViewModel
+    public class ChatItem : ViewModel, IChatItem
     {
-        private PlayerInfo _sender;
+        private IPlayer _sender;
         private string _message;
         private DateTime _timestamp;
 
-        public PlayerInfo Sender
+        public IPlayer Player
         {
             get { return _sender; }
             set { _sender = value; OnPropertyChanged(); }
@@ -20,19 +21,23 @@ namespace Torch.Server.ViewModels
             set { _message = value; OnPropertyChanged(); }
         }
 
-        public DateTime Timestamp
+        public DateTime Time
         {
             get { return _timestamp; }
             set { _timestamp = value; OnPropertyChanged(); }
         }
 
-        public string Time => Timestamp.ToShortTimeString();
+        public string TimeString => Time.ToShortTimeString();
 
-        public ChatItemInfo(PlayerInfo sender, string message)
+        public ChatItem(IPlayer sender, string message, DateTime timestamp = default(DateTime))
         {
             _sender = sender;
             _message = message;
-            _timestamp = DateTime.Now;
+
+            if (timestamp == default(DateTime))
+                _timestamp = DateTime.Now;
+            else
+                _timestamp = timestamp;
         }
     }
 }

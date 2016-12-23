@@ -5,6 +5,6 @@ namespace Torch.Commands
     public class ChatCommandModule
     {
         public ITorchPlugin Plugin { get; set; }
-        public ITorchServer Server { get; set; }
+        public ITorchBase Server { get; set; }
     }
 }

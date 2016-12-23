@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace Torch.API
 {
-    public interface ITorchServer
+    public interface IChatItem
     {
-        void Start();
-        void Stop();
+        IPlayer Player { get; }
+        string Message { get; }
+        DateTime Time { get; }
     }
 }

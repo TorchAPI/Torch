@@ -126,12 +126,14 @@
     <Compile Include="Commands\ChatCommandModule.cs" />
     <Compile Include="Commands\CommandContext.cs" />
     <Compile Include="Commands\CommandSystem.cs" />
-    <Compile Include="ConnectionState.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="MultiplayerManager.cs" />
+    <Compile Include="TorchBase.cs" />
     <Compile Include="TorchPlugin.cs" />
-    <Compile Include="PlayerInfo.cs" />
+    <Compile Include="Player.cs" />
     <Compile Include="Collections\PlayerInfoCache.cs" />
     <Compile Include="SteamService.cs" />
+    <Compile Include="ViewModels\ChatItem.cs" />
     <Compile Include="ViewModels\ModViewModel.cs" />
     <Compile Include="Collections\MTObservableCollection.cs" />
     <Compile Include="Extensions\MyPlayerCollectionExtensions.cs" />

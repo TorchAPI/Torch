@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
@@ -16,14 +17,17 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Torch.API;
+using Timer = System.Timers.Timer;
 
 namespace Torch.Server
 {
     /// <summary>
-    /// Interaction logic for PistonUI.xaml
+    /// Interaction logic for TorchUI.xaml
     /// </summary>
-    public partial class PistonUI : Window
+    public partial class TorchUI : Window
     {
+        private ITorchServer _server;
         private DateTime _startTime;
         private readonly Timer _uiUpdate = new Timer
         {
@@ -31,13 +35,15 @@ namespace Torch.Server
             AutoReset = true,
         };
 
-        public PistonUI()
+        public TorchUI(ITorchServer server)
         {
+            _server = server;
             InitializeComponent();
             _startTime = DateTime.Now;
             _uiUpdate.Elapsed += UiUpdate_Elapsed;
 
-            TabControl.Items.Add(new TabItem());
+            Chat.BindServer(server);
+            PlayerList.BindServer(server);
         }
 
         private void UiUpdate_Elapsed(object sender, ElapsedEventArgs e)
@@ -61,7 +67,7 @@ namespace Torch.Server
             ((Button) sender).IsEnabled = false;
             BtnStop.IsEnabled = true;
             _uiUpdate.Start();
-            TorchServer.Server.StartServerThread();
+            new Thread(() => _server.Start()).Start();
         }
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
@@ -72,12 +78,12 @@ namespace Torch.Server
             //HACK: Uncomment when restarting is possible.
             //BtnStart.IsEnabled = true;
             _uiUpdate.Stop();
-            TorchServer.Server.StopServer();
+            _server.Stop();
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            TorchServer.Reset();
+            _server.Stop();
         }
 
         private void BtnRestart_Click(object sender, RoutedEventArgs e)

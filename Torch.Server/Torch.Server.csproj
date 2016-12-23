@@ -111,20 +111,17 @@
     <Compile Include="Views\ChatControl.xaml.cs">
       <DependentUpon>ChatControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ViewModels\ChatItemInfo.cs" />
     <Compile Include="Views\ModsControl.xaml.cs">
       <DependentUpon>ModsControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\PistonUI.xaml.cs">
-      <DependentUpon>PistonUI.xaml</DependentUpon>
+    <Compile Include="Views\TorchUI.xaml.cs">
+      <DependentUpon>TorchUI.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MultiplayerManager.cs" />
-    <Compile Include="TorchServer.cs" />
     <Compile Include="Views\PlayerListControl.xaml.cs">
       <DependentUpon>PlayerListControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
-    <Compile Include="ServerManager.cs" />
+    <Compile Include="TorchServer.cs" />
     <Compile Include="Views\PropertyGrid.xaml.cs">
       <DependentUpon>PropertyGrid.xaml</DependentUpon>
     </Compile>
@@ -181,7 +178,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\PistonUI.xaml">
+    <Page Include="Views\TorchUI.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

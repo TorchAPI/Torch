@@ -3,25 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Torch.API;
 
 namespace Torch
 {
     public static class PlayerInfoCache
     {
-        private static readonly Dictionary<ulong, PlayerInfo> _cache = new Dictionary<ulong, PlayerInfo>();
+        private static readonly Dictionary<ulong, Player> _cache = new Dictionary<ulong, Player>();
 
-        public static PlayerInfo GetOrCreate(ulong steamId)
+        public static Player GetOrCreate(ulong steamId)
         {
-            PlayerInfo info;
-            if (_cache.TryGetValue(steamId, out info))
+            if (_cache.TryGetValue(steamId, out Player info))
                 return info;
 
-            info = new PlayerInfo(steamId) {State = ConnectionState.Unknown};
+            info = new Player(steamId) {State = ConnectionState.Unknown};
             _cache.Add(steamId, info);
             return info;
         }
 
-        public static void Add(PlayerInfo info)
+        public static void Add(Player info)
         {
             if (_cache.ContainsKey(info.SteamId))
                 return;

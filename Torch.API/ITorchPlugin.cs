@@ -10,7 +10,7 @@ namespace Torch.API
 {
     public interface ITorchPlugin : IPlugin
     {
-        void Init(ITorchServer server);
+        void Init(ITorchBase torch);
         void Reload();
     }
 }

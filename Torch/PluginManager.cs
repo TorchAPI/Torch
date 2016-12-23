@@ -15,7 +15,7 @@ using VRage.Library.Collections;
 
 namespace Torch
 {
-    public class PluginManager
+    public class PluginManager : IPluginManager
     {
         //TODO: Disable reloading if the plugin has static elements because they prevent a full reload.
 

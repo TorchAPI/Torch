@@ -7,12 +7,12 @@ namespace Torch.Commands
 {
     public class CommandSystem
     {
-        public ITorchServer Server { get; }
+        public ITorchBase Server { get; }
         public char Prefix { get; set; }
 
         public Dictionary<string, ChatCommand> Commands { get; } = new Dictionary<string, ChatCommand>();
 
-        public CommandSystem(ITorchServer server, char prefix = '/')
+        public CommandSystem(ITorchBase server, char prefix = '/')
         {
             Server = server;
             Prefix = prefix;
@@ -39,6 +39,12 @@ namespace Torch.Commands
                     var commandAttrib = method.GetCustomAttribute<ChatCommandAttribute>();
                     if (commandAttrib == null)
                         continue;
+
+                    if (Commands.ContainsKey(commandAttrib.Name))
+                    {
+                        Console.WriteLine($"[ERROR]: Command \"{method.Name}\" is already registered!");
+                        continue;
+                    }
 
                     var parameters = method.GetParameters();
                     if (parameters.Length != 1 || parameters[0].ParameterType != typeof(CommandContext))
@@ -82,8 +88,6 @@ namespace Torch.Commands
 
             
             Commands[cmdName].Invoke(context);
-
-            //Regex.Matches(command, "(\"[^\"]+\"|\\S+)");
         }
     }
 }

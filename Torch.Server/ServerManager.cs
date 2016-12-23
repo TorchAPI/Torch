@@ -13,6 +13,7 @@ using Sandbox.Engine.Multiplayer;
 using Sandbox.Game;
 using Sandbox.Game.World;
 using SpaceEngineers.Game;
+using Torch.API;
 using VRage.Dedicated;
 using VRage.Game;
 using VRage.Game.SessionComponents;
@@ -20,7 +21,7 @@ using VRage.Profiler;
 
 namespace Torch.Server
 {
-    public class ServerManager : IDisposable
+    public class TorchServer : ITorchServer
     {
         public Thread ServerThread { get; private set; }
         public string[] RunArgs { get; set; } = new string[0];
@@ -31,12 +32,12 @@ namespace Torch.Server
 
         private readonly ManualResetEvent _stopHandle = new ManualResetEvent(false);
 
-        internal ServerManager()
+        internal TorchServer()
         {
             MySession.OnLoading += OnSessionLoading;
         }
 
-        public void InitSandbox()
+        public void Init()
         {
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
@@ -53,7 +54,7 @@ namespace Torch.Server
                 SpaceEngineersGame.SetupBasicGameInfo();
                 SpaceEngineersGame.SetupPerGameSettings();
             };
-            int? gameVersion = MyPerGameSettings.BasicGameInfo.GameVersion;
+            var gameVersion = MyPerGameSettings.BasicGameInfo.GameVersion;
             MyFinalBuildConstants.APP_VERSION = gameVersion ?? 0;
         }
 
@@ -150,14 +151,14 @@ namespace Torch.Server
                 return;
             }
 
-            ServerThread = new Thread(StartServer);
+            ServerThread = new Thread(Start);
             ServerThread.Start();
         }
 
         /// <summary>
         /// Start server on the current thread.
         /// </summary>
-        public void StartServer()
+        public void Start()
         {
             IsRunning = true;
             Logger.Write("Starting server.");
@@ -171,12 +172,12 @@ namespace Torch.Server
         /// <summary>
         /// Stop the server.
         /// </summary>
-        public void StopServer()
+        public void Stop()
         {
             if (Thread.CurrentThread.ManagedThreadId != ServerThread?.ManagedThreadId)
             {
                 Logger.Write("Requesting server stop.");
-                MySandboxGame.Static.Invoke(StopServer);
+                MySandboxGame.Static.Invoke(Stop);
                 _stopHandle.WaitOne();
                 return;
             }
@@ -203,12 +204,6 @@ namespace Torch.Server
             typeof(MyRenderProfiler).GetField("m_threadProfiler", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, null);
             typeof(MyRenderProfiler).GetField("m_gpuProfiler", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, null);
             (typeof(MyRenderProfiler).GetField("m_threadProfilers", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as List<MyProfiler>).Clear();
-        }
-
-        public void Dispose()
-        {
-            if (IsRunning)
-                StopServer();
         }
     }
 }

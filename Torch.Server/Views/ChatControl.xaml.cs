@@ -18,6 +18,7 @@ using Sandbox;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.World;
 using SteamSDK;
+using Torch.API;
 
 namespace Torch.Server
 {
@@ -26,10 +27,27 @@ namespace Torch.Server
     /// </summary>
     public partial class ChatControl : UserControl
     {
+        private ITorchServer _server;
+
         public ChatControl()
         {
             InitializeComponent();
-            ChatItems.ItemsSource = TorchServer.Multiplayer.ChatView;
+        }
+
+        public void BindServer(ITorchServer server)
+        {
+            _server = server;
+            server.Multiplayer.MessageReceived += Refresh;
+            Refresh();
+        }
+
+        private void Refresh(IChatItem chatItem = null)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                ChatItems.ItemsSource = null;
+                ChatItems.ItemsSource = _server.Multiplayer.Chat;
+            });
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
@@ -47,7 +65,7 @@ namespace Torch.Server
         {
             //Can't use Message.Text directly because of object ownership in WPF.
             var text = Message.Text;
-            TorchServer.Multiplayer.SendMessage(text);
+            _server.Multiplayer.SendMessage(text);
             Message.Text = "";
         }
     }

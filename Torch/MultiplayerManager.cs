@@ -18,40 +18,43 @@ using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using SteamSDK;
-using Torch.Server.ViewModels;
+using Torch.API;
+using Torch.ViewModels;
 using VRage.Game;
 using VRage.Library.Collections;
 using VRage.Network;
 using VRage.Utils;
 
-namespace Torch.Server
+namespace Torch
 {
     /// <summary>
     /// Provides a proxy to the game's multiplayer-related functions.
     /// </summary>
-    public class MultiplayerManager
+    public class MultiplayerManager : IMultiplayer
     {
-        public event Action<PlayerInfo> PlayerJoined;
-        public event Action<PlayerInfo> PlayerLeft;
-        public event Action<ChatItemInfo> ChatMessageReceived;
+        public event Action<IPlayer> PlayerJoined;
+        public event Action<IPlayer> PlayerLeft;
+        public event Action<IChatItem> MessageReceived;
 
-        public MTObservableCollection<PlayerInfo> PlayersView { get; } = new MTObservableCollection<PlayerInfo>();
-        public MTObservableCollection<ChatItemInfo> ChatView { get; } = new MTObservableCollection<ChatItemInfo>();
-        public PlayerInfo LocalPlayer { get; private set; }
+        //public MTObservableCollection<MyPlayer> PlayersView { get; } = new MTObservableCollection<MyPlayer>();
+        //public MTObservableCollection<ChatItem> ChatView { get; } = new MTObservableCollection<ChatItem>();
+        public List<IChatItem> Chat { get; } = new List<IChatItem>();
+        public Dictionary<ulong, IPlayer> Players { get; } = new Dictionary<ulong, IPlayer>();
+        public Player LocalPlayer { get; private set; }
 
-        private TorchServer _server;
+        private readonly ITorchBase _torch;
 
-        internal MultiplayerManager(TorchServer server)
+        internal MultiplayerManager(ITorchBase torch)
         {
-            _server = server;
-            _server.Server.SessionLoaded += OnSessionLoaded;
+            _torch = torch;
+            _torch.SessionLoaded += OnSessionLoaded;
         }
 
-        public void KickPlayer(ulong steamId) => _server.Server.BeginGameAction(() => MyMultiplayer.Static.KickClient(steamId));
+        public void KickPlayer(ulong steamId) => _torch.BeginGameAction(() => MyMultiplayer.Static.KickClient(steamId));
 
         public void BanPlayer(ulong steamId, bool banned = true)
         {
-            _server.Server.BeginGameAction(() =>
+            _torch.BeginGameAction(() =>
             {
                 MyMultiplayer.Static.BanClient(steamId, banned);
                 if (_gameOwnerIds.ContainsKey(steamId))
@@ -65,12 +68,12 @@ namespace Torch.Server
         public void SendMessage(string message)
         {
             MyMultiplayer.Static.SendChatMessage(message);
-            ChatView.Add(new ChatItemInfo(LocalPlayer, message));
+            //ChatView.Add(new ChatItem(LocalPlayer, message));
         }
 
         private void OnSessionLoaded()
         {
-            LocalPlayer = new PlayerInfo(MyMultiplayer.Static.ServerId) { Name = "Server", State = ConnectionState.Connected };
+            LocalPlayer = new Player(MyMultiplayer.Static.ServerId) { Name = "Server", State = ConnectionState.Connected };
 
             MyMultiplayer.Static.ChatMessageReceived += OnChatMessage;
             MyMultiplayer.Static.ClientKicked += OnClientKicked;
@@ -79,21 +82,21 @@ namespace Torch.Server
 
             //TODO: Move these with the methods?
             RemoveHandlers();
-            SteamSDK.SteamServerAPI.Instance.GameServer.ValidateAuthTicketResponse += ValidateAuthTicketResponse;
-            SteamSDK.SteamServerAPI.Instance.GameServer.UserGroupStatus += UserGroupStatus;
+            SteamServerAPI.Instance.GameServer.ValidateAuthTicketResponse += ValidateAuthTicketResponse;
+            SteamServerAPI.Instance.GameServer.UserGroupStatus += UserGroupStatus;
             _members = (List<ulong>)typeof(MyDedicatedServerBase).GetField("m_members", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(MyMultiplayer.Static);
             _waitingForGroup = (HashSet<ulong>)typeof(MyDedicatedServerBase).GetField("m_waitingForGroup", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(MyMultiplayer.Static);
         }
 
         private void OnChatMessage(ulong steamId, string message, ChatEntryTypeEnum chatType)
         {
-            var player = PlayersView.FirstOrDefault(p => p.SteamId == steamId);
-            if (player == null || player == LocalPlayer)
+            var player = MyMultiplayer.Static.GetMemberName(steamId);
+            if (string.IsNullOrEmpty(player))
                 return;
 
-            var info = new ChatItemInfo(player, message);
-            ChatView.Add(info);
-            ChatMessageReceived?.Invoke(info);
+            var info = new ChatItem(new Player(steamId), message);
+            Chat.Add(info);
+            MessageReceived?.Invoke(info);
         }
 
         /// <summary>
@@ -102,8 +105,20 @@ namespace Torch.Server
         private void OnPlayerRequesting(PlayerRequestArgs args)
         {
             var steamId = args.PlayerId.SteamId;
-            var player = new PlayerInfo(steamId) {State = ConnectionState.Connected};
-            PlayersView.Add(player);
+
+            IPlayer player;
+            if (!Players.ContainsKey(steamId))
+            {
+                player = new Player(steamId) { State = ConnectionState.Connected };
+                Players.Add(steamId, player);
+            }
+            else
+            {
+                player = Players[steamId];
+                player.SetConnectionState(ConnectionState.Connected);
+            }
+
+            Logger.Write($"{player.Name} connected.");
             PlayerJoined?.Invoke(player);
         }
 
@@ -114,13 +129,12 @@ namespace Torch.Server
 
         private void OnClientLeft(ulong steamId, ChatMemberStateChangeEnum stateChange)
         {
-            var player = PlayersView.FirstOrDefault(p => p.SteamId == steamId);
-
-            if (player == null)
+            if (!Players.ContainsKey(steamId))
                 return;
 
-            player.State = (ConnectionState)stateChange;
-            PlayersView.Remove(player);
+            var player = Players[steamId];
+            Logger.Write($"{player.Name} disconnected ({(ConnectionState)stateChange}).");
+            player.SetConnectionState((ConnectionState)stateChange);
             PlayerLeft?.Invoke(player);
         }
 

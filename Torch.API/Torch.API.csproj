@@ -45,13 +45,20 @@
     <Reference Include="VRage">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.dll</HintPath>
     </Reference>
+    <Reference Include="VRage.Library, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Library.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IEnvironmentInfo.cs" />
+    <Compile Include="ConnectionState.cs" />
+    <Compile Include="IChatItem.cs" />
+    <Compile Include="IMultiplayer.cs" />
+    <Compile Include="IPlayer.cs" />
+    <Compile Include="IPluginManager.cs" />
     <Compile Include="ITorchPlugin.cs" />
     <Compile Include="IServerControls.cs" />
-    <Compile Include="ITorchServer.cs" />
-    <Compile Include="TorchAPI.cs" />
+    <Compile Include="ITorchBase.cs" />
     <Compile Include="PluginAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

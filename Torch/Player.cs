@@ -1,11 +1,14 @@
-﻿using Sandbox.Engine.Multiplayer;
+﻿using System;
+using System.Collections.Generic;
+using Sandbox.Engine.Multiplayer;
+using Torch.API;
 
 namespace Torch
 {
     /// <summary>
     /// Stores player information in an observable format.
     /// </summary>
-    public class PlayerInfo : ViewModel
+    public class Player : ViewModel, IPlayer
     {
         private ulong _steamId;
         private string _name;
@@ -23,17 +26,30 @@ namespace Torch
             set { _name = value; OnPropertyChanged(); }
         }
 
+        //TODO: track identity history
+        public List<ulong> IdentityIds { get; } = new List<ulong>();
+
+        public DateTime LastConnected { get; private set; }
+
         public ConnectionState State
         {
             get { return _state; }
             set { _state = value; OnPropertyChanged(); }
         }
 
-        public PlayerInfo(ulong steamId)
+        public Player(ulong steamId)
         {
             _steamId = steamId;
             _name = MyMultiplayer.Static.GetMemberName(steamId);
             _state = ConnectionState.Unknown;
+        }
+
+        public void SetConnectionState(ConnectionState state)
+        {
+            if (state == ConnectionState.Connected)
+                LastConnected = DateTime.Now;
+
+            State = state;
         }
     }
 }

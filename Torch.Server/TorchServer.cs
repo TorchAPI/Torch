@@ -1,75 +1,127 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using Torch;
 using Sandbox;
+using Sandbox.Engine.Multiplayer;
 using Sandbox.Game;
+using Sandbox.Game.World;
 using SpaceEngineers.Game;
 using Torch.API;
-using Torch.Launcher;
 using VRage.Dedicated;
 using VRage.Game;
 using VRage.Game.SessionComponents;
+using VRage.Profiler;
 
 namespace Torch.Server
 {
-    /// <summary>
-    /// Entry point for all Piston server functionality.
-    /// </summary>
-    public class TorchServer : ITorchServer
+    public class TorchServer : TorchBase, ITorchServer
     {
-        public ServerManager Server { get; private set; }
-        public MultiplayerManager Multiplayer { get; private set; }
-        public PluginManager Plugins { get; private set; }
-        public PistonUI UI { get; private set; }
+        public Thread ServerThread { get; private set; }
+        public string[] RunArgs { get; set; } = new string[0];
+        public bool IsRunning { get; private set; }
 
-        private bool _init;
+        public event Action SessionLoading;
 
-        public void Start()
+        private readonly ManualResetEvent _stopHandle = new ManualResetEvent(false);
+
+        internal TorchServer()
         {
-            if (!_init)
-                Init();
-
-            Server.StartServer();
-        }
-
-        public void Stop()
-        {
-            Server.StopServer();
-        }
-
-        public void Init()
-        {
-            if (_init)
-                return;
-
-            Logger.Write("Initializing Torch");
-            _init = true;
-            Server = new ServerManager();
-            Multiplayer = new MultiplayerManager(this);
+            MySession.OnLoading += OnSessionLoading;
             Plugins = new PluginManager();
-            UI = new PistonUI();
-
-            Server.SessionLoaded += Plugins.LoadAllPlugins;
-            Server.InitSandbox();
-            SteamHelper.Init();
-            UI.PropGrid.SetObject(MySandboxGame.ConfigDedicated);
         }
 
-        public void Reset()
+        public override void Init()
         {
-            Logger.Write("Resetting Torch");
-            Server.Dispose();
-            UI.Close();
+            SpaceEngineersGame.SetupBasicGameInfo();
+            SpaceEngineersGame.SetupPerGameSettings();
+            MyPerGameSettings.SendLogToKeen = false;
+            MyPerServerSettings.GameName = MyPerGameSettings.GameName;
+            MyPerServerSettings.GameNameSafe = MyPerGameSettings.GameNameSafe;
+            MyPerServerSettings.GameDSName = MyPerServerSettings.GameNameSafe + "Dedicated";
+            MyPerServerSettings.GameDSDescription = "Your place for space engineering, destruction and exploring.";
+            MySessionComponentExtDebug.ForceDisable = true;
+            MyPerServerSettings.AppId = 244850u;
+            ConfigForm<MyObjectBuilder_SessionSettings>.GameAttributes = Game.SpaceEngineers;
+            ConfigForm<MyObjectBuilder_SessionSettings>.OnReset = delegate
+            {
+                SpaceEngineersGame.SetupBasicGameInfo();
+                SpaceEngineersGame.SetupPerGameSettings();
+            };
+            var gameVersion = MyPerGameSettings.BasicGameInfo.GameVersion;
+            MyFinalBuildConstants.APP_VERSION = gameVersion ?? 0;
+        }
 
-            Server = null;
-            Multiplayer = null;
-            Plugins = null;
-            UI = null;
-            _init = false;
+        private void OnSessionLoading()
+        {
+            SessionLoading?.Invoke();
+            MySession.Static.OnReady += OnSessionReady;
+        }
+
+        private void OnSessionReady()
+        {
+            Plugins.LoadAllPlugins();
+            InvokeSessionLoaded();
+        }
+
+        /// <summary>
+        /// Start server on the current thread.
+        /// </summary>
+        public override void Start()
+        {
+            if (IsRunning)
+                throw new InvalidOperationException("Server is already running.");
+
+            IsRunning = true;
+            Logger.Write("Starting server.");
+
+            if (MySandboxGame.Log.LogEnabled)
+                MySandboxGame.Log.Close();
+
+            DedicatedServer.Run<MyObjectBuilder_SessionSettings>(RunArgs);
+        }
+
+        /// <summary>
+        /// Stop the server.
+        /// </summary>
+        public override void Stop()
+        {
+            if (Thread.CurrentThread.ManagedThreadId != ServerThread?.ManagedThreadId)
+            {
+                Logger.Write("Requesting server stop.");
+                MySandboxGame.Static.Invoke(Stop);
+                _stopHandle.WaitOne();
+                return;
+            }
+
+            Logger.Write("Stopping server.");
+            MySession.Static.Save();
+            MySession.Static.Unload();
+            MySandboxGame.Static.Exit();
+
+            //Unload all the static junk.
+            //TODO: Finish unloading all server data so it's in a completely clean state.
+            VRage.FileSystem.MyFileSystem.Reset();
+            VRage.Input.MyGuiGameControlsHelpers.Reset();
+            VRage.Input.MyInput.UnloadData();
+            CleanupProfilers();
+
+            Logger.Write("Server stopped.");
+            _stopHandle.Set();
+            IsRunning = false;
+        }
+
+        private void CleanupProfilers()
+        {
+            typeof(MyRenderProfiler).GetField("m_threadProfiler", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, null);
+            typeof(MyRenderProfiler).GetField("m_gpuProfiler", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, null);
+            (typeof(MyRenderProfiler).GetField("m_threadProfilers", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as List<MyProfiler>).Clear();
         }
     }
 }

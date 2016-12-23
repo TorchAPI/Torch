@@ -20,12 +20,11 @@ namespace Torch
                 {
                     var dispObj = nh.Target as DispatcherObject;
 
-                    Dispatcher dispatcher = dispObj?.Dispatcher;
+                    var dispatcher = dispObj?.Dispatcher;
                     if (dispatcher != null && !dispatcher.CheckAccess())
                     {
                         dispatcher.BeginInvoke(
-                            (Action)(() => nh.Invoke(this,
-                                                     new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset))),
+                            (Action)(() => nh.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset))),
                             DispatcherPriority.DataBind);
                         continue;
                     }
