@@ -10,20 +10,12 @@ namespace Torch
 {
     public static class Logger
     {
-        public const string Prefix = "[PISTON]";
+        public const string Prefix = "[TORCH]";
 
         public static void Write(string message)
         {
             var msg = $"{Prefix}: {message}";
-            MySandboxGame.Log.WriteLineAndConsole(msg);
-            if (!MySandboxGame.Log.LogEnabled)
-            {
-                try
-                {
-                    MySandboxGame.Log.AppendToClosedLog(msg);
-                }
-                catch (Exception) { }
-            }
+            MyLog.Default.WriteLineAndConsole(msg);
         }
     }
 }

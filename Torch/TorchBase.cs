@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -11,6 +12,9 @@ namespace Torch
 {
     public abstract class TorchBase : ITorchBase
     {
+        public static ITorchBase Instance { get; private set; }
+
+        public string[] RunArgs { get; set; }
         public IPluginManager Plugins { get; protected set; }
         public IMultiplayer Multiplayer { get; protected set; }
 
@@ -23,85 +27,54 @@ namespace Torch
 
         protected TorchBase()
         {
+            RunArgs = new string[0];
+            Instance = this;
             Plugins = new PluginManager();
             Multiplayer = new MultiplayerManager(this);
         }
 
-        /// <summary>
-        /// Invokes an action on the game thread and blocks until completion
-        /// </summary>
-        /// <param name="action"></param>
-        public void GameAction(Action action)
+        public void DoGameAction(Action action)
         {
-            if (action == null)
-                return;
-
-            try
-            {
-                if (Thread.CurrentThread == MySandboxGame.Static.UpdateThread)
-                {
-                    action();
-                }
-                else
-                {
-                    AutoResetEvent e = new AutoResetEvent(false);
-
-                    MySandboxGame.Static.Invoke(() =>
-                    {
-                        try
-                        {
-                            action();
-                        }
-                        catch (Exception ex)
-                        {
-                            //log
-                        }
-                        finally
-                        {
-                            e.Set();
-                        }
-                    });
-
-                    //timeout so we don't accidentally hang the server
-                    e.WaitOne(60000);
-                }
-            }
-            catch (Exception ex)
-            {
-                //we need a logger :(
-            }
+            MySandboxGame.Static.Invoke(action);
         }
 
         /// <summary>
-        /// Queues an action for invocation on the game thread and optionally runs a callback on completion
+        /// Invokes an action on the game thread asynchronously.
         /// </summary>
         /// <param name="action"></param>
-        /// <param name="callback"></param>
-        /// <param name="state"></param>
-        public void BeginGameAction(Action action, Action<object> callback = null, object state = null)
+        public Task DoGameActionAsync(Action action)
         {
-            if (action == null)
-                return;
+            if (Thread.CurrentThread == MySandboxGame.Static.UpdateThread)
+            {
+                Debug.Assert(false, $"{nameof(DoGameActionAsync)} should not be called on the game thread.");
+                action?.Invoke();
+                return Task.CompletedTask;
+            }
 
-            try
+            return Task.Run(() =>
             {
-                if (Thread.CurrentThread == MySandboxGame.Static.UpdateThread)
+                var e = new AutoResetEvent(false);
+
+                MySandboxGame.Static.Invoke(() =>
                 {
-                    action();
-                }
-                else
-                {
-                    Task.Run(() =>
+                    try
                     {
-                        GameAction(action);
-                        callback?.Invoke(state);
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                // log
-            }
+                        action?.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        //log
+                    }
+                    finally
+                    {
+                        e.Set();
+                    }
+                });
+
+                if(!e.WaitOne(60000))
+                    throw new TimeoutException("The game action timed out.");
+                
+            });
         }
 
         public abstract void Start();

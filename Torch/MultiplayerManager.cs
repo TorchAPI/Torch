@@ -50,11 +50,11 @@ namespace Torch
             _torch.SessionLoaded += OnSessionLoaded;
         }
 
-        public void KickPlayer(ulong steamId) => _torch.BeginGameAction(() => MyMultiplayer.Static.KickClient(steamId));
+        public void KickPlayer(ulong steamId) => _torch.DoGameActionAsync(() => MyMultiplayer.Static.KickClient(steamId));
 
         public void BanPlayer(ulong steamId, bool banned = true)
         {
-            _torch.BeginGameAction(() =>
+            _torch.DoGameActionAsync(() =>
             {
                 MyMultiplayer.Static.BanClient(steamId, banned);
                 if (_gameOwnerIds.ContainsKey(steamId))
@@ -179,16 +179,16 @@ namespace Torch
         //Largely copied from SE
         private void ValidateAuthTicketResponse(ulong steamID, AuthSessionResponseEnum response, ulong ownerSteamID)
         {
-            MyLog.Default.WriteLineAndConsole($"{Logger.Prefix} Server ValidateAuthTicketResponse ({response}), owner: {ownerSteamID}");
+            Logger.Write($"Server ValidateAuthTicketResponse ({response}), owner: {ownerSteamID}");
 
             if (steamID != ownerSteamID)
             {
-                MyLog.Default.WriteLineAndConsole($"User {steamID} is using a game owned by {ownerSteamID}. Tracking...");
+                Logger.Write($"User {steamID} is using a game owned by {ownerSteamID}. Tracking...");
                 _gameOwnerIds[steamID] = ownerSteamID;
                 
                 if (MySandboxGame.ConfigDedicated.Banned.Contains(ownerSteamID))
                 {
-                    MyLog.Default.WriteLineAndConsole($"Game owner {ownerSteamID} is banned. Banning and rejecting client {steamID}...");
+                    Logger.Write($"Game owner {ownerSteamID} is banned. Banning and rejecting client {steamID}...");
                     UserRejected(steamID, JoinResult.BannedByAdmins);
                     BanPlayer(steamID, true);
                 }

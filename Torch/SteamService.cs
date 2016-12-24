@@ -30,18 +30,18 @@ namespace Torch
             }
             else
             {
-                var SteamAPI = SteamSDK.SteamAPI.Instance;
+                var steamApi = SteamSDK.SteamAPI.Instance;
                 steam.GetField("SteamAPI").SetValue(this, SteamSDK.SteamAPI.Instance);
                 steam.GetProperty("IsActive").GetSetMethod(true).Invoke(this, new object[] { SteamSDK.SteamAPI.Instance != null });
 
-                if (SteamAPI != null)
+                if (steamApi != null)
                 {
-                    steam.GetProperty("UserId").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.GetSteamUserId() });
-                    steam.GetProperty("UserName").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.GetSteamName() });
-                    steam.GetProperty("OwnsGame").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.HasGame() });
-                    steam.GetProperty("UserUniverse").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.GetSteamUserUniverse() });
-                    steam.GetProperty("BranchName").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.GetBranchName() });
-                    SteamAPI.LoadStats();
+                    steam.GetProperty("UserId").GetSetMethod(true).Invoke(this, new object[] { steamApi.GetSteamUserId() });
+                    steam.GetProperty("UserName").GetSetMethod(true).Invoke(this, new object[] { steamApi.GetSteamName() });
+                    steam.GetProperty("OwnsGame").GetSetMethod(true).Invoke(this, new object[] { steamApi.HasGame() });
+                    steam.GetProperty("UserUniverse").GetSetMethod(true).Invoke(this, new object[] { steamApi.GetSteamUserUniverse() });
+                    steam.GetProperty("BranchName").GetSetMethod(true).Invoke(this, new object[] { steamApi.GetBranchName() });
+                    steamApi.LoadStats();
                 }
             }
         }

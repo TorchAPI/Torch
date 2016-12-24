@@ -7,11 +7,11 @@ namespace Torch.Client
     {
         public static void Main(string[] args)
         {
-            var game = new GameInitializer(args);
+            var client = new TorchClient();
 
             try
             {
-                game.TryInit();
+                client.Init();
             }
             catch (Exception e)
             {
@@ -19,7 +19,7 @@ namespace Torch.Client
                 return;
             }
 
-            game.RunGame();
+            client.Start();
         }
     }
 }

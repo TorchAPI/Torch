@@ -11,8 +11,9 @@ namespace Torch.API
         event Action SessionLoaded;
         IMultiplayer Multiplayer { get; }
         IPluginManager Plugins { get; }
-        void GameAction(Action action);
-        void BeginGameAction(Action action, Action<object> callback = null, object state = null);
+        void DoGameAction(Action action);
+        Task DoGameActionAsync(Action action);
+        string[] RunArgs { get; set; }
         void Start();
         void Stop();
         void Init();
@@ -21,7 +22,6 @@ namespace Torch.API
     public interface ITorchServer : ITorchBase
     {
         bool IsRunning { get; }
-        string[] RunArgs { get; set; }
     }
 
     public interface ITorchClient : ITorchBase

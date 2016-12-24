@@ -86,8 +86,9 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GameInitializer.cs" />
+    <Compile Include="TorchClient.cs" />
     <Compile Include="TorchConsoleScreen.cs" />
+    <Compile Include="TorchMainMenuScreen.cs" />
     <Compile Include="TorchSettingsScreen.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -114,6 +115,10 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Torch.API\Torch.API.csproj">
+      <Project>{fba5d932-6254-4a1e-baf4-e229fa94e3c2}</Project>
+      <Name>Torch.API</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Torch\Torch.csproj">
       <Project>{7E01635C-3B67-472E-BCD6-C5539564F214}</Project>
       <Name>Torch</Name>

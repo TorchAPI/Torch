@@ -6,54 +6,31 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using Sandbox;
+using Sandbox.Engine.Platform;
 using Sandbox.Game;
-using Sandbox.Game.Gui;
-using Sandbox.Graphics;
-using Sandbox.Graphics.GUI;
-using Sandbox.Gui;
 using SpaceEngineers.Game;
-using SpaceEngineers.Game.GUI;
+using Torch.API;
 using VRage.FileSystem;
-using VRage.Game;
-using VRage.Input;
-using VRage.Utils;
 using VRageRender;
-using Game = Sandbox.Engine.Platform.Game;
 
 namespace Torch.Client
 {
-    public class GameInitializer
+    class TorchClient : TorchBase, ITorchClient
     {
         private MyCommonProgramStartup _startup;
         private IMyRender _renderer;
         private const uint APP_ID = 244850;
-        private PluginManager _pluginManager;
-        private readonly string[] _args;
         private VRageGameServices _services;
 
-        public GameInitializer(string[] args)
-        {
-            _args = args;
-        }
-
-        public void TryInit()
+        public override void Init()
         {
             if (!File.Exists("steam_appid.txt"))
             {
                 Directory.SetCurrentDirectory(Path.GetDirectoryName(typeof(VRage.FastResourceLock).Assembly.Location) + "\\..");
             }
 
-            //Add myself to the credits because I'm awesome.
-            var credits = new MyCreditsDepartment("Torch Developed By") { Persons = new List<MyCreditsPerson>
-            {
-                new MyCreditsPerson("JIMMACLE"),
-                new MyCreditsPerson("REXXAR"),
-                new MyCreditsPerson("PHOENIXTHESAGE")
-            } };
-            MyPerGameSettings.Credits.Departments.Add(credits);
-
             SpaceEngineersGame.SetupBasicGameInfo();
-            _startup = new MyCommonProgramStartup(_args);
+            _startup = new MyCommonProgramStartup(RunArgs);
             if (_startup.PerformReporting())
                 return;
 
@@ -73,6 +50,8 @@ namespace Torch.Client
                 _renderer = null;
                 SpaceEngineersGame.SetupPerGameSettings();
 
+                OverrideMenus();
+
                 InitializeRender();
 
                 _services = new VRageGameServices(mySteamService);
@@ -84,42 +63,34 @@ namespace Torch.Client
             MyInitializer.InvokeAfterRun();
         }
 
-        public void RunGame()
+        private void OverrideMenus()
         {
-            using (var spaceEngineersGame = new SpaceEngineersGame(_services, _args))
+            var credits = new MyCreditsDepartment("Torch Developed By")
             {
-                Logger.Write("Starting SE...");
-                spaceEngineersGame.OnGameLoaded += SpaceEngineersGame_OnGameLoaded;
-                MyGuiSandbox.GuiControlCreated += GuiControlCreated;
+                Persons = new List<MyCreditsPerson>
+                    {
+                        new MyCreditsPerson("JIMMACLE"),
+                        new MyCreditsPerson("REXXAR"),
+                        new MyCreditsPerson("PHOENIXTHESAGE")
+                    }
+            };
+            MyPerGameSettings.Credits.Departments.Insert(0, credits);
+
+            MyPerGameSettings.GUI.MainMenu = typeof(TorchMainMenuScreen);
+        }
+
+        public override void Start()
+        {
+            using (var spaceEngineersGame = new SpaceEngineersGame(_services, RunArgs))
+            {
+                Logger.Write("Starting client...");
                 spaceEngineersGame.Run();
             }
         }
 
-        private void GuiControlCreated(object o)
+        public override void Stop()
         {
-            var menu = o as MyGuiScreenMainMenu;
-            if (menu != null)
-            {
-                var pistonBtn = new MyGuiControlImageButton
-                {
-                    Name = "TorchButton",
-                    Text = "Torch",
-                    HighlightType = MyGuiControlHighlightType.WHEN_CURSOR_OVER,
-                    Visible = true,
-                };
-
-                menu.Controls.Add(pistonBtn);
-            }
-        }
-
-        private void SpaceEngineersGame_OnGameLoaded(object sender, EventArgs e)
-        {
-            _pluginManager = new PluginManager();
-            _pluginManager.LoadAllPlugins();
-
-            //Fix Marek's name.
-            MyPerGameSettings.Credits.Departments[1].Persons[0].Name.Clear().Append("MEARK ROAS");
-            MyScreenManager.AddScreen(new TorchConsoleScreen());
+            MySandboxGame.ExitThreadSafe();
         }
 
         private void InitializeRender()

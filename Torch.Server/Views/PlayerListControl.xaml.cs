@@ -53,7 +53,7 @@ namespace Torch.Server
 
         private void KickButton_Click(object sender, RoutedEventArgs e)
         {
-            var player = PlayerList.SelectedItem as Player;
+            var player = PlayerList.SelectedItem as IPlayer;
             if (player != null)
             {
                 _server.Multiplayer.KickPlayer(player.SteamId);
@@ -62,7 +62,7 @@ namespace Torch.Server
 
         private void BanButton_Click(object sender, RoutedEventArgs e)
         {
-            var player = PlayerList.SelectedItem as Player;
+            var player = PlayerList.SelectedItem as IPlayer;
             if (player != null)
             {
                 _server.Multiplayer.BanPlayer(player.SteamId);

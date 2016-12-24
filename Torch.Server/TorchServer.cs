@@ -24,7 +24,6 @@ namespace Torch.Server
     public class TorchServer : TorchBase, ITorchServer
     {
         public Thread ServerThread { get; private set; }
-        public string[] RunArgs { get; set; } = new string[0];
         public bool IsRunning { get; private set; }
 
         public event Action SessionLoading;

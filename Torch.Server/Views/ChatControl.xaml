@@ -16,7 +16,7 @@
                     <WrapPanel>
                         <TextBlock Text="{Binding Time}"/>
                         <TextBlock Text=" "/>
-                        <TextBlock Text="{Binding Sender.Name}" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding Player.Name}" FontWeight="Bold"/>
                         <TextBlock Text=": "/>
                         <TextBlock Text="{Binding Message}"/>
                     </WrapPanel>
