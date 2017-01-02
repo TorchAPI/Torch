@@ -129,7 +129,11 @@
     <Compile Include="Commands\CommandSystem.cs" />
     <Compile Include="Commands\CommandTree.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="Managers\ChatManager.cs" />
+    <Compile Include="Managers\NetworkManager\NetworkHandlerBase.cs" />
+    <Compile Include="Managers\NetworkManager\NetworkManager.cs" />
     <Compile Include="MultiplayerManager.cs" />
+    <Compile Include="Reflection.cs" />
     <Compile Include="TorchBase.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Collections\PlayerInfoCache.cs" />
