@@ -18,6 +18,7 @@ namespace Torch
         /// Dirty hack because *keen*
         /// Use only if absolutely necessary.
         /// </summary>
+        [Obsolete]
         public static ITorchBase Instance { get; private set; }
         public string[] RunArgs { get; set; }
         public IPluginManager Plugins { get; protected set; }

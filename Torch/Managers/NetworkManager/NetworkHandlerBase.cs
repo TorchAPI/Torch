@@ -8,7 +8,7 @@ using VRage.Library.Collections;
 using VRage.Network;
 using VRage.Serialization;
 
-namespace Torch.Managers.NetworkManager
+namespace Torch.Managers
 {
     public abstract class NetworkHandlerBase
     {
@@ -17,7 +17,7 @@ namespace Torch.Managers.NetworkManager
         /// </summary>
         /// <param name="site"></param>
         /// <returns></returns>
-        public abstract bool CanHandle( CallSite site );
+        public abstract bool CanHandle(CallSite site);
 
         /// <summary>
         /// Performs action on network packet. Return value of true means the packet has been handled, and will not be passed on to the game server.
@@ -27,7 +27,7 @@ namespace Torch.Managers.NetworkManager
         /// <param name="stream"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public abstract bool Handle(ulong remoteUserId, CallSite site, BitStream stream, object obj );
+        public abstract bool Handle(ulong remoteUserId, CallSite site, BitStream stream, object obj);
         
         /// <summary>
         /// Extracts method arguments from the bitstream or packs them back in, depending on stream read mode.
@@ -220,22 +220,22 @@ namespace Torch.Managers.NetworkManager
             if ( stream.Reading )
             {
                 MySerializationHelpers.CreateAndRead(stream, out arg1, s1, info1);
-                MySerializationHelpers.CreateAndRead( stream, out arg2, s2, info2 );
-                MySerializationHelpers.CreateAndRead( stream, out arg3, s3, info3 );
-                MySerializationHelpers.CreateAndRead( stream, out arg4, s4, info4 );
-                MySerializationHelpers.CreateAndRead( stream, out arg5, s5, info5 );
-                MySerializationHelpers.CreateAndRead( stream, out arg6, s6, info6 );
-                MySerializationHelpers.CreateAndRead( stream, out arg7, s7, info7 );
+                MySerializationHelpers.CreateAndRead(stream, out arg2, s2, info2);
+                MySerializationHelpers.CreateAndRead(stream, out arg3, s3, info3);
+                MySerializationHelpers.CreateAndRead(stream, out arg4, s4, info4);
+                MySerializationHelpers.CreateAndRead(stream, out arg5, s5, info5);
+                MySerializationHelpers.CreateAndRead(stream, out arg6, s6, info6);
+                MySerializationHelpers.CreateAndRead(stream, out arg7, s7, info7);
             }
             else
             {
-                MySerializationHelpers.Write( stream, ref arg1, s1, info1 );
-                MySerializationHelpers.Write( stream, ref arg2, s2, info2 );
-                MySerializationHelpers.Write( stream, ref arg3, s3, info3 );
-                MySerializationHelpers.Write( stream, ref arg4, s4, info4 );
-                MySerializationHelpers.Write( stream, ref arg5, s5, info5 );
-                MySerializationHelpers.Write( stream, ref arg6, s6, info6 );
-                MySerializationHelpers.Write( stream, ref arg7, s7, info7 );
+                MySerializationHelpers.Write(stream, ref arg1, s1, info1);
+                MySerializationHelpers.Write(stream, ref arg2, s2, info2);
+                MySerializationHelpers.Write(stream, ref arg3, s3, info3);
+                MySerializationHelpers.Write(stream, ref arg4, s4, info4);
+                MySerializationHelpers.Write(stream, ref arg5, s5, info5);
+                MySerializationHelpers.Write(stream, ref arg6, s6, info6);
+                MySerializationHelpers.Write(stream, ref arg7, s7, info7);
             }
         }
     }

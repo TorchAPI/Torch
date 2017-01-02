@@ -9,7 +9,7 @@ using VRage;
 using VRage.Library.Collections;
 using VRage.Network;
 
-namespace Torch.Managers.NetworkManager
+namespace Torch.Managers
 {
     public class NetworkManager
     {
@@ -33,26 +33,26 @@ namespace Torch.Managers.NetworkManager
             try
             {
                 var syncLayerType = typeof(MySyncLayer);
-                var transportLayerField = syncLayerType.GetField( MyTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance );
+                var transportLayerField = syncLayerType.GetField(MyTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance);
 
-                if ( transportLayerField == null )
-                    throw new TypeLoadException( "Could not find internal type for TransportLayer" );
+                if (transportLayerField == null)
+                    throw new TypeLoadException("Could not find internal type for TransportLayer");
 
-                Type transportLayerType = transportLayerField.FieldType;
+                var transportLayerType = transportLayerField.FieldType;
 
-                Type replicationLayerType = typeof(MyReplicationLayerBase);
-                if ( !Reflection.HasField( replicationLayerType, TypeTableField ) )
-                    throw new TypeLoadException( "Could not find TypeTable field" );
+                var replicationLayerType = typeof(MyReplicationLayerBase);
+                if (!Reflection.HasField(replicationLayerType, TypeTableField))
+                    throw new TypeLoadException("Could not find TypeTable field");
 
-                if ( !Reflection.HasField( transportLayerType, TransportHandlersField ) )
-                    throw new TypeLoadException( "Could not find Handlers field" );
+                if (!Reflection.HasField(transportLayerType, TransportHandlersField))
+                    throw new TypeLoadException("Could not find Handlers field");
 
                 return true;
             }
-            catch ( TypeLoadException ex )
+            catch (TypeLoadException ex)
             {
                 //ApplicationLog.BaseLog.Error(ex);
-                TorchBase.Instance.Log.WriteException( ex );
+                TorchBase.Instance.Log.WriteException(ex);
                 if ( suppress )
                     return false;
                 throw;
@@ -107,13 +107,13 @@ namespace Torch.Managers.NetworkManager
                 return;
             }
             
-            BitStream stream = new BitStream();
+            var stream = new BitStream();
             stream.ResetRead(packet);
 
-            NetworkId networkId = stream.ReadNetworkId();
+            var networkId = stream.ReadNetworkId();
             //this value is unused, but removing this line corrupts the rest of the stream
-            NetworkId blockedNetworkId = stream.ReadNetworkId();
-            uint eventId = (uint)stream.ReadByte();
+            var blockedNetworkId = stream.ReadNetworkId();
+            var eventId = (uint)stream.ReadByte();
 
 
             CallSite site;
@@ -133,7 +133,7 @@ namespace Torch.Managers.NetworkManager
                     return;
                 }
                 var typeInfo = m_typeTable.Get(sendAs.GetType());
-                int eventCount = typeInfo.EventTable.Count;
+                var eventCount = typeInfo.EventTable.Count;
                 if (eventId < eventCount) // Directly
                 {
                     obj = sendAs;
@@ -148,23 +148,23 @@ namespace Torch.Managers.NetworkManager
             }
 
             //we're handling the network live in the game thread, this needs to go as fast as possible
-            bool handled = false;
+            var discard = false;
             Parallel.ForEach(_networkHandlers, handler =>
-                                               {
-                                                   try
-                                                   {
-                                                       if (handler.CanHandle(site))
-                                                           handled |= handler.Handle(packet.Sender.Value, site, stream, obj);
-                                                   }
-                                                   catch (Exception ex)
-                                                   {
-                                                       //ApplicationLog.Error(ex.ToString());
-                                                       TorchBase.Instance.Log.WriteException(ex);
-                                                   }
-                                               });
+            {
+                try
+                {
+                    if (handler.CanHandle(site))
+                        discard |= handler.Handle(packet.Sender.Value, site, stream, obj);
+                }
+                catch (Exception ex)
+                {
+                    //ApplicationLog.Error(ex.ToString());
+                    TorchBase.Instance.Log.WriteException(ex);
+                }
+            });
 
             //one of the handlers wants us to discard this packet
-            if (handled)
+            if (discard)
                 return;
 
             //pass the message back to the game server
@@ -183,8 +183,8 @@ namespace Torch.Managers.NetworkManager
 
         private void RegisterNetworkHandler(NetworkHandlerBase handler)
         {
-            string handlerType = handler.GetType().FullName;
-            List<NetworkHandlerBase> toRemove = new List<NetworkHandlerBase>();
+            var handlerType = handler.GetType().FullName;
+            var toRemove = new List<NetworkHandlerBase>();
             foreach (var item in _networkHandlers)
             {
                 if (item.GetType().FullName == handlerType)
@@ -253,7 +253,7 @@ namespace Torch.Managers.NetworkManager
 
             var owner = obj as IMyEventOwner;
             if (obj != null && owner == null )
-                throw new InvalidCastException( "Provided event target is not of type IMyEventOwner!" );
+                throw new InvalidCastException("Provided event target is not of type IMyEventOwner!");
 
             if(!method.HasAttribute<EventAttribute>())
                 throw new CustomAttributeFormatException("Provided event target does not have the Event attribute! Replication will not succeed!");
@@ -267,23 +267,23 @@ namespace Torch.Managers.NetworkManager
             arguments[3] = owner;
 
             //copy supplied arguments into the reflection arguments
-            for (int i = 0; i < args.Length; i++)
+            for (var i = 0; i < args.Length; i++)
                 arguments[i + 4] = args[i];
 
             //pad the array out with DBNull
-            for (int j = args.Length + 4; j < 10; j++)
+            for (var j = args.Length + 4; j < 10; j++)
                 arguments[j] = e;
 
             arguments[10] = (IMyEventOwner)null;
 
             //create an array of Types so we can create a generic method
-            Type[] argTypes = new Type[8];
+            var argTypes = new Type[8];
 
-            for (int k = 3; k < 11; k++)
+            for (var k = 3; k < 11; k++)
                 argTypes[k - 3] = arguments[k]?.GetType() ?? typeof(IMyEventOwner);
 
             var parameters = method.GetParameters();
-            for (int i = 0; i < parameters.Length; i++)
+            for (var i = 0; i < parameters.Length; i++)
             {
                 if (argTypes[i] != parameters[i].ParameterType)
                     throw new TypeLoadException($"Type mismatch on method parameters. Expected {string.Join(", ", parameters.Select(p => p.ParameterType.ToString()))} got {string.Join(", ", argTypes.Select(t => t.ToString()))}");
