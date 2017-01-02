@@ -23,9 +23,16 @@ namespace Torch.Client
         {
             base.RecreateControls(constructor);
             AddCaption(MyStringId.GetOrCompute("Torch Settings"), null, new Vector2(0, 0), 1.2f);
-            var pluginList = new MyGuiControlListbox {VisibleRowsCount = 20};
-            foreach (var name in TorchBase.Instance.Plugins.GetPluginFolders())
+            var pluginList = new MyGuiControlListbox
+            {
+                VisibleRowsCount = 10,
+            };
+
+            foreach (var plugin in TorchBase.Instance.Plugins.Plugins)
+            {
+                var name = TorchBase.Instance.Plugins.GetPluginName(plugin.GetType());
                 pluginList.Items.Add(new MyGuiControlListbox.Item(new StringBuilder(name)));
+            }
             Controls.Add(pluginList);
         }
     }

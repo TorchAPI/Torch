@@ -8,6 +8,7 @@ using Sandbox;
 using Sandbox.Engine.Networking;
 using Sandbox.Engine.Platform;
 using SteamSDK;
+using Torch.API;
 using VRage.Game;
 
 namespace Torch
@@ -15,9 +16,12 @@ namespace Torch
     public static class SteamHelper
     {
         private static Thread _callbackThread;
+        private static ILogger _log;
 
-        public static void Init()
+        public static void Init(ILogger log)
         {
+            _log = log;
+
             _callbackThread = new Thread(() =>
             {
                 while (true)
@@ -52,7 +56,7 @@ namespace Torch
                     }
                     else
                     {
-                        Logger.Write($"Failed to get item info for {itemId}");
+                        _log.Write($"Failed to get item info for {itemId}");
                     }
 
                     mre.Set();
@@ -68,20 +72,19 @@ namespace Torch
         public static SteamUGCDetails GetItemDetails(ulong itemId)
         {
             SteamUGCDetails details = default(SteamUGCDetails);
-            using (var mre = new ManualResetEvent(false))
+            using (var re = new AutoResetEvent(false))
             {
                 SteamAPI.Instance.UGC.RequestUGCDetails(itemId, 0, (b, result) =>
                 {
                     if (!b && result.Details.Result == Result.OK)
                         details = result.Details;
                     else
-                        Logger.Write($"Failed to get item details for {itemId}");
+                        _log.Write($"Failed to get item details for {itemId}");
 
-                    mre.Set();
+                    re.Set();
                 });
 
-                mre.WaitOne();
-                mre.Reset();
+                re.WaitOne();
             }
 
             return details;

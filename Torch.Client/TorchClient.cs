@@ -15,7 +15,7 @@ using VRageRender;
 
 namespace Torch.Client
 {
-    class TorchClient : TorchBase, ITorchClient
+    public class TorchClient : TorchBase, ITorchClient
     {
         private MyCommonProgramStartup _startup;
         private IMyRender _renderer;
@@ -24,6 +24,8 @@ namespace Torch.Client
 
         public override void Init()
         {
+            base.Init();
+
             if (!File.Exists("steam_appid.txt"))
             {
                 Directory.SetCurrentDirectory(Path.GetDirectoryName(typeof(VRage.FastResourceLock).Assembly.Location) + "\\..");
@@ -83,9 +85,16 @@ namespace Torch.Client
         {
             using (var spaceEngineersGame = new SpaceEngineersGame(_services, RunArgs))
             {
-                Logger.Write("Starting client...");
+                Log.Write("Starting client...");
+                spaceEngineersGame.OnGameLoaded += SpaceEngineersGame_OnGameLoaded;
                 spaceEngineersGame.Run();
             }
+        }
+
+        private void SpaceEngineersGame_OnGameLoaded(object sender, EventArgs e)
+        {
+            Log.Write("Loading plugins");
+            Plugins.LoadAllPlugins();
         }
 
         public override void Stop()

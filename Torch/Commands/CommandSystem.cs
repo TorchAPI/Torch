@@ -10,7 +10,7 @@ namespace Torch.Commands
         public ITorchBase Server { get; }
         public char Prefix { get; set; }
 
-        public Dictionary<string, ChatCommand> Commands { get; } = new Dictionary<string, ChatCommand>();
+        public Dictionary<string, Command> Commands { get; } = new Dictionary<string, Command>();
 
         public CommandSystem(ITorchBase server, char prefix = '/')
         {
@@ -28,15 +28,15 @@ namespace Torch.Commands
             var assembly = plugin.GetType().Assembly;
             foreach (var type in assembly.ExportedTypes)
             {
-                if (!type.IsSubclassOf(typeof(ChatCommandModule)))
+                if (!type.IsSubclassOf(typeof(CommandModule)))
                     continue;
 
-                var module = (ChatCommandModule)Activator.CreateInstance(type);
+                var module = (CommandModule)Activator.CreateInstance(type);
                 module.Server = Server;
                 module.Plugin = plugin;
                 foreach (var method in type.GetMethods())
                 {
-                    var commandAttrib = method.GetCustomAttribute<ChatCommandAttribute>();
+                    var commandAttrib = method.GetCustomAttribute<CommandAttribute>();
                     if (commandAttrib == null)
                         continue;
 
@@ -54,7 +54,7 @@ namespace Torch.Commands
                         continue;
                     }
 
-                    var command = new ChatCommand
+                    var command = new Command
                     {
                         Module = module,
                         Name = commandAttrib.Name,
@@ -82,7 +82,7 @@ namespace Torch.Commands
 
             var context = new CommandContext
             {
-                Argument = arg,
+                Args = arg,
                 SteamId = steamId
             };
 

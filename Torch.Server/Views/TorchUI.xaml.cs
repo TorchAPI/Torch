@@ -88,7 +88,7 @@ namespace Torch.Server
 
         private void BtnRestart_Click(object sender, RoutedEventArgs e)
         {
-            Program.FullRestart();
+            //Program.FullRestart();
         }
     }
 }

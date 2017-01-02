@@ -4,13 +4,18 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
-using VRage.Plugins;
 
 namespace Torch.API
 {
-    public interface ITorchPlugin : IPlugin
+    public interface ITorchPlugin
     {
-        void Init(ITorchBase torch);
-        void Reload();
+        Guid Id { get; }
+        Version Version { get; }
+        string Name { get; }
+        bool Enabled { get; set; }
+
+        void Init(ITorchBase torchBase);
+        void Update();
+        void Unload();
     }
 }

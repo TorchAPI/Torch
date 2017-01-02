@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PistonAPI
+namespace Torch.API
 {
     public class PluginAttribute : Attribute
     {

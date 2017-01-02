@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Torch
+namespace Torch.API
 {
-    public class TorchPlugin
+    public interface ILogger
     {
-
+        void Write(string message);
+        void WriteException(Exception e);
     }
 }

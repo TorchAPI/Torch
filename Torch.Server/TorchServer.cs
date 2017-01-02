@@ -33,11 +33,12 @@ namespace Torch.Server
         internal TorchServer()
         {
             MySession.OnLoading += OnSessionLoading;
-            Plugins = new PluginManager();
         }
 
         public override void Init()
         {
+            base.Init();
+
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
             MyPerGameSettings.SendLogToKeen = false;
@@ -78,7 +79,7 @@ namespace Torch.Server
                 throw new InvalidOperationException("Server is already running.");
 
             IsRunning = true;
-            Logger.Write("Starting server.");
+            Log.Write("Starting server.");
 
             if (MySandboxGame.Log.LogEnabled)
                 MySandboxGame.Log.Close();
@@ -93,13 +94,13 @@ namespace Torch.Server
         {
             if (Thread.CurrentThread.ManagedThreadId != ServerThread?.ManagedThreadId)
             {
-                Logger.Write("Requesting server stop.");
+                Log.Write("Requesting server stop.");
                 MySandboxGame.Static.Invoke(Stop);
                 _stopHandle.WaitOne();
                 return;
             }
 
-            Logger.Write("Stopping server.");
+            Log.Write("Stopping server.");
             MySession.Static.Save();
             MySession.Static.Unload();
             MySandboxGame.Static.Exit();
@@ -111,7 +112,7 @@ namespace Torch.Server
             VRage.Input.MyInput.UnloadData();
             CleanupProfilers();
 
-            Logger.Write("Server stopped.");
+            Log.Write("Server stopped.");
             _stopHandle.Set();
             IsRunning = false;
         }

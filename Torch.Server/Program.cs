@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,38 +16,23 @@ namespace Torch.Server
 {
     public static class Program
     {
-        private static readonly ITorchServer _server = new TorchServer();
-        private static TorchUI _ui;
+        private static ITorchServer _server;
 
-        [STAThread]
         public static void Main(string[] args)
         {
-            _server.Init();
-            _server.RunArgs = new[] { "-console" };
-            _ui = new TorchUI(_server);
-
-            if (args.Contains("-nogui"))
-                _server.Start();
+            if (!Environment.UserInteractive)
+            {
+                using (var service = new TorchService())
+                {
+                    ServiceBase.Run(service);
+                }
+            }
             else
-                StartUI();
-
-            if (args.Contains("-autostart") && !_server.IsRunning)
-                new Thread(() => _server.Start()).Start();
-
-            Dispatcher.Run();
-        }
-
-        public static void StartUI()
-        {
-            Thread.CurrentThread.Name = "UI Thread";
-            _ui.Show();
-        }
-
-        public static void FullRestart()
-        {
-            _server.Stop();
-            Process.Start("TorchServer.exe", "-autostart");
-            Environment.Exit(1);
+            {
+                _server = new TorchServer();
+                _server.Init();
+                _server.Start();
+            }
         }
     }
 }
