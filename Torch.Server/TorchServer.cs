@@ -23,7 +23,7 @@ namespace Torch.Server
 {
     public class TorchServer : TorchBase, ITorchServer
     {
-        public Thread ServerThread { get; private set; }
+        public Thread GameThread { get; private set; }
         public bool IsRunning { get; private set; }
 
         public event Action SessionLoading;
@@ -66,7 +66,7 @@ namespace Torch.Server
 
         private void OnSessionReady()
         {
-            Plugins.LoadAllPlugins();
+            Plugins.LoadPlugins();
             InvokeSessionLoaded();
         }
 
@@ -92,7 +92,7 @@ namespace Torch.Server
         /// </summary>
         public override void Stop()
         {
-            if (Thread.CurrentThread.ManagedThreadId != ServerThread?.ManagedThreadId)
+            if (Thread.CurrentThread.ManagedThreadId != GameThread?.ManagedThreadId)
             {
                 Log.Write("Requesting server stop.");
                 MySandboxGame.Static.Invoke(Stop);

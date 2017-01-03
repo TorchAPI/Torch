@@ -16,8 +16,6 @@ namespace Torch
         public Guid Id { get; }
         public Version Version { get; }
         public string Name { get; }
-        public bool Enabled { get; set; } = true;
-        public bool IsRunning => !Loop.IsCompleted;
         public ITorchBase Torch { get; private set; }
 
         protected TorchPluginBase()
@@ -50,57 +48,5 @@ namespace Torch
 
         public abstract void Update();
         public abstract void Unload();
-
-        #region Internal Loop Code
-
-        internal CancellationTokenSource ctSource = new CancellationTokenSource();
-
-        internal Task Loop { get; private set; } = Task.CompletedTask;
-        private readonly TimeSpan _loopInterval = TimeSpan.FromSeconds(1d / 60d);
-        private bool _runLoop;
-        internal Task Run(ITorchBase torch, bool enable = false)
-        {
-            if (IsRunning)
-                throw new InvalidOperationException($"Plugin {Name} is already running.");
-
-            if (!Enabled)
-                return Loop = Task.CompletedTask;
-
-            _runLoop = true;
-            return Loop = Task.Run(() =>
-            {
-                try
-                {
-                    Init(torch);
-
-                    while (Enabled && !ctSource.Token.IsCancellationRequested)
-                    {
-                        ctSource.Token.ThrowIfCancellationRequested();
-                        var ts = Stopwatch.GetTimestamp();
-                        Update();
-                        var time = TimeSpan.FromTicks(Stopwatch.GetTimestamp() - ts);
-
-                        if (time < _loopInterval)
-                            Task.Delay(_loopInterval - time);
-                    }
-
-                    Unload();
-                }
-                catch (Exception e)
-                {
-                    torch.Log.Write($"Plugin {Name} threw an exception.");
-                    torch.Log.WriteException(e);
-                    throw;
-                }
-            });
-        }
-
-        internal async Task StopAsync()
-        {
-            ctSource.Cancel();
-            await Loop;
-        }
-
-        #endregion
     }
 }

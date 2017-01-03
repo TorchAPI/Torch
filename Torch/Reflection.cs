@@ -10,13 +10,8 @@ namespace Torch
 	public static class Reflection
 	{
 		//private static readonly Logger Log = LogManager.GetLogger( "BaseLog" );
-		public static bool HasMethod(Type objectType, string methodName)
-		{
-			return HasMethod(objectType, methodName, null);
-		}
 
-
-		public static bool HasMethod(Type objectType, string methodName, Type[] argTypes)
+		public static bool HasMethod(Type objectType, string methodName, Type[] argTypes = null)
 		{
 			try
 			{

@@ -233,7 +233,7 @@ namespace Torch.Managers
         /// <param name="args"></param>
 	    public void RaiseEvent(MethodInfo method, object obj, ulong steamId, params object[] args)
 	    {
-	        RaiseEvent(method,obj,new EndpointId(steamId), args);
+	        RaiseEvent(method, obj, new EndpointId(steamId), args);
 	    }
 
         /// <summary>
@@ -252,7 +252,7 @@ namespace Torch.Managers
                 throw new ArgumentOutOfRangeException(nameof(args), "Cannot pass more than 6 arguments!");
 
             var owner = obj as IMyEventOwner;
-            if (obj != null && owner == null )
+            if (obj != null && owner == null)
                 throw new InvalidCastException("Provided event target is not of type IMyEventOwner!");
 
             if(!method.HasAttribute<EventAttribute>())
@@ -261,7 +261,7 @@ namespace Torch.Managers
             //array to hold arguments to pass into DispatchEvent
             object[] arguments = new object[11];
 
-            arguments[0] = (obj == null ? TryGetStaticCallSite(method) : TryGetCallSite(method, obj));
+            arguments[0] = obj == null ? TryGetStaticCallSite(method) : TryGetCallSite(method, obj);
             arguments[1] = endpoint;
             arguments[2] = 1f;
             arguments[3] = owner;

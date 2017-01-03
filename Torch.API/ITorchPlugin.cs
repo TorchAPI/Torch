@@ -12,7 +12,6 @@ namespace Torch.API
         Guid Id { get; }
         Version Version { get; }
         string Name { get; }
-        bool Enabled { get; set; }
 
         void Init(ITorchBase torchBase);
         void Update();
