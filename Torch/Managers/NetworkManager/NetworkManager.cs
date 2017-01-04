@@ -20,7 +20,7 @@ namespace Torch.Managers
                 InitNetworkIntercept();
         }
 
-        private static Logger _log = LogManager.GetCurrentClassLogger();
+        private static Logger _log = LogManager.GetLogger("Torch");
         private static NetworkManager _instance;
         public static NetworkManager Instance => _instance ?? (_instance = new NetworkManager());
 

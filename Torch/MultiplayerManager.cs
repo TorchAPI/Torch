@@ -44,7 +44,7 @@ namespace Torch
         public Player LocalPlayer { get; private set; }
 
         private readonly ITorchBase _torch;
-        private static Logger _log = LogManager.GetCurrentClassLogger();
+        private static Logger _log = LogManager.GetLogger("Torch");
 
         internal MultiplayerManager(ITorchBase torch)
         {

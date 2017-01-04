@@ -22,7 +22,7 @@ namespace Torch
     public class PluginManager : IPluginManager
     {
         private readonly ITorchBase _torch;
-        private static Logger _log = LogManager.GetCurrentClassLogger();
+        private static Logger _log = LogManager.GetLogger("Torch");
         public const string PluginDir = "Plugins";
 
         private readonly List<ITorchPlugin> _plugins = new List<ITorchPlugin>();

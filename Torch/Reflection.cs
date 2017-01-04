@@ -111,7 +111,7 @@ namespace Torch
 			}
 		}
 
-	    public static object InvokeStatic(Type type, string methodName, params object[] args)
+	    public static object InvokeStaticMethod(Type type, string methodName, params object[] args)
 	    {
 	        var method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 	        if (method == null)
