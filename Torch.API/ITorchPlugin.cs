@@ -13,8 +13,20 @@ namespace Torch.API
         Version Version { get; }
         string Name { get; }
 
+        /// <summary>
+        /// Called when the game is initialized.
+        /// </summary>
+        /// <param name="torchBase"></param>
         void Init(ITorchBase torchBase);
+
+        /// <summary>
+        /// Called after each game tick. Not thread safe, use invocation methods in <see cref="ITorchBase"/>.
+        /// </summary>
         void Update();
+
+        /// <summary>
+        /// Called when the game exits.
+        /// </summary>
         void Unload();
     }
 }

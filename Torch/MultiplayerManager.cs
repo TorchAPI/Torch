@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
+using NLog;
 using Torch;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
@@ -43,6 +44,7 @@ namespace Torch
         public Player LocalPlayer { get; private set; }
 
         private readonly ITorchBase _torch;
+        private static Logger _log = LogManager.GetCurrentClassLogger();
 
         internal MultiplayerManager(ITorchBase torch)
         {
@@ -118,7 +120,7 @@ namespace Torch
                 player.SetConnectionState(ConnectionState.Connected);
             }
 
-            _torch.Log.Write($"{player.Name} connected.");
+            _log.Info($"{player.Name} connected.");
             PlayerJoined?.Invoke(player);
         }
 
@@ -133,7 +135,7 @@ namespace Torch
                 return;
 
             var player = Players[steamId];
-            _torch.Log.Write($"{player.Name} disconnected ({(ConnectionState)stateChange}).");
+            _log.Info($"{player.Name} disconnected ({(ConnectionState)stateChange}).");
             player.SetConnectionState((ConnectionState)stateChange);
             PlayerLeft?.Invoke(player);
         }
@@ -179,16 +181,16 @@ namespace Torch
         //Largely copied from SE
         private void ValidateAuthTicketResponse(ulong steamID, AuthSessionResponseEnum response, ulong ownerSteamID)
         {
-            _torch.Log.Write($"Server ValidateAuthTicketResponse ({response}), owner: {ownerSteamID}");
+            _log.Info($"Server ValidateAuthTicketResponse ({response}), owner: {ownerSteamID}");
 
             if (steamID != ownerSteamID)
             {
-                _torch.Log.Write($"User {steamID} is using a game owned by {ownerSteamID}. Tracking...");
+                _log.Info($"User {steamID} is using a game owned by {ownerSteamID}. Tracking...");
                 _gameOwnerIds[steamID] = ownerSteamID;
                 
                 if (MySandboxGame.ConfigDedicated.Banned.Contains(ownerSteamID))
                 {
-                    _torch.Log.Write($"Game owner {ownerSteamID} is banned. Banning and rejecting client {steamID}...");
+                    _log.Info($"Game owner {ownerSteamID} is banned. Banning and rejecting client {steamID}...");
                     UserRejected(steamID, JoinResult.BannedByAdmins);
                     BanPlayer(steamID, true);
                 }

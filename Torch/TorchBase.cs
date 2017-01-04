@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NLog;
 using Sandbox;
 using Torch.API;
 using VRage.Scripting;
@@ -20,10 +21,10 @@ namespace Torch
         /// </summary>
         [Obsolete]
         public static ITorchBase Instance { get; private set; }
+        protected static Logger Log = LogManager.GetLogger("Torch");
         public string[] RunArgs { get; set; }
         public IPluginManager Plugins { get; protected set; }
         public IMultiplayer Multiplayer { get; protected set; }
-        public ILogger Log { get; set; }
         public event Action SessionLoaded;
 
         private bool _init;
@@ -40,7 +41,6 @@ namespace Torch
 
             Instance = this;
 
-            Log = new Logger(Path.Combine(Directory.GetCurrentDirectory(), "TorchLog.log"));
             RunArgs = new string[0];
             Plugins = new PluginManager(this);
             Multiplayer = new MultiplayerManager(this);

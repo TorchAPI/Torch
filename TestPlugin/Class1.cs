@@ -15,19 +15,19 @@ namespace TestPlugin
         public override void Init(ITorchBase torch)
         {
             base.Init(torch);
-            Torch.Log.Write($"Plugin init {Name}");
+            //Torch.Log.Write($"Plugin init {Name}");
         }
 
         /// <inheritdoc />
         public override void Update()
         {
-            Torch.Log.Write($"Plugin update {Name}");
+            //Torch.Log.Write($"Plugin update {Name}");
         }
 
         /// <inheritdoc />
         public override void Unload()
         {
-            Torch.Log.Write($"Plugin unload {Name}");
+            //Torch.Log.Write($"Plugin unload {Name}");
         }
     }
 }

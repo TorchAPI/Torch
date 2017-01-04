@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -11,6 +12,7 @@ using Torch;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game;
+using Sandbox.Game.Gui;
 using Sandbox.Game.World;
 using SpaceEngineers.Game;
 using Torch.API;
@@ -66,7 +68,6 @@ namespace Torch.Server
 
         private void OnSessionReady()
         {
-            Plugins.LoadPlugins();
             InvokeSessionLoaded();
         }
 
@@ -79,12 +80,12 @@ namespace Torch.Server
                 throw new InvalidOperationException("Server is already running.");
 
             IsRunning = true;
-            Log.Write("Starting server.");
+            Log.Info("Starting server.");
 
-            if (MySandboxGame.Log.LogEnabled)
-                MySandboxGame.Log.Close();
+            MySandboxGame.IsDedicated = true;
+            Environment.SetEnvironmentVariable("SteamAppId", MyPerServerSettings.AppId.ToString());
 
-            DedicatedServer.Run<MyObjectBuilder_SessionSettings>(RunArgs);
+            Reflection.InvokeStaticMethod(typeof(DedicatedServer), "RunMain", "Torch", null, true);
         }
 
         /// <summary>
@@ -94,13 +95,13 @@ namespace Torch.Server
         {
             if (Thread.CurrentThread.ManagedThreadId != GameThread?.ManagedThreadId)
             {
-                Log.Write("Requesting server stop.");
+                Log.Info("Requesting server stop.");
                 MySandboxGame.Static.Invoke(Stop);
                 _stopHandle.WaitOne();
                 return;
             }
 
-            Log.Write("Stopping server.");
+            Log.Info("Stopping server.");
             MySession.Static.Save();
             MySession.Static.Unload();
             MySandboxGame.Static.Exit();
@@ -112,7 +113,7 @@ namespace Torch.Server
             VRage.Input.MyInput.UnloadData();
             CleanupProfilers();
 
-            Log.Write("Server stopped.");
+            Log.Info("Server stopped.");
             _stopHandle.Set();
             IsRunning = false;
         }

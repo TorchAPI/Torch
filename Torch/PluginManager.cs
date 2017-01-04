@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NLog;
 using Sandbox;
 using Sandbox.ModAPI;
 using Torch.API;
@@ -18,36 +19,19 @@ using VRage.Library.Collections;
 
 namespace Torch
 {
-    internal class TorchPluginUpdater : IPlugin
-    {
-        private readonly IPluginManager _manager;
-        public TorchPluginUpdater(IPluginManager manager)
-        {
-            _manager = manager;
-        }
-
-        public void Init(object obj) { }
-
-        public void Update()
-        {
-            _manager.UpdatePlugins();
-        }
-
-        public void Dispose() { }
-    }
-
     public class PluginManager : IPluginManager
     {
         private readonly ITorchBase _torch;
+        private static Logger _log = LogManager.GetCurrentClassLogger();
         public const string PluginDir = "Plugins";
 
         private readonly List<ITorchPlugin> _plugins = new List<ITorchPlugin>();
-        private readonly TorchPluginUpdater _updater;
+        private readonly PluginUpdater _updater;
 
         public PluginManager(ITorchBase torch)
         {
             _torch = torch;
-            _updater = new TorchPluginUpdater(this);
+            _updater = new PluginUpdater(this);
 
             if (!Directory.Exists(PluginDir))
                 Directory.CreateDirectory(PluginDir);
@@ -57,9 +41,10 @@ namespace Torch
 
         private void InitUpdater()
         {
-            var pluginList = typeof(MyPlugins).GetField("m_plugins", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as List<IPlugin>;
+            var fieldName = "m_plugins";
+            var pluginList = typeof(MyPlugins).GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as List<IPlugin>;
             if (pluginList == null)
-                throw new TypeLoadException($"m_plugins field not found in {nameof(MyPlugins)}");
+                throw new TypeLoadException($"{fieldName} field not found in {nameof(MyPlugins)}");
 
             pluginList.Add(_updater);
         }
@@ -78,7 +63,7 @@ namespace Torch
         }
 
         /// <summary>
-        /// Load all plugins in the <see cref="PluginDir"/> folder.
+        /// Load and create instances of all plugins in the <see cref="PluginDir"/> folder.
         /// </summary>
         public void LoadPlugins()
         {
@@ -92,7 +77,11 @@ namespace Torch
                 foreach (var type in asm.GetExportedTypes())
                 {
                     if (type.GetInterfaces().Contains(typeof(ITorchPlugin)))
-                        _plugins.Add((ITorchPlugin)Activator.CreateInstance(type));
+                    {
+                        var plugin = (ITorchPlugin)Activator.CreateInstance(type);
+                        _log.Info($"Loading plugin {plugin.Name} ({plugin.Version})");
+                        _plugins.Add(plugin);
+                    }
                 }
             }
         }
@@ -119,5 +108,32 @@ namespace Torch
         [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool DeleteFile(string name);
+
+        /// <summary>
+        /// Tiny "plugin" to call <see cref="PluginManager"/>'s update method after each game tick.
+        /// </summary>
+        private class PluginUpdater : IPlugin
+        {
+            private readonly IPluginManager _manager;
+            public PluginUpdater(IPluginManager manager)
+            {
+                _manager = manager;
+            }
+
+            public void Init(object obj)
+            {
+                _manager.LoadPlugins();
+            }
+
+            public void Update()
+            {
+                _manager.UpdatePlugins();
+            }
+
+            public void Dispose()
+            {
+                _manager.UnloadPlugins();
+            }
+        }
     }
 }

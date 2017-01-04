@@ -11,7 +11,6 @@ namespace Torch.API
         event Action SessionLoaded;
         IMultiplayer Multiplayer { get; }
         IPluginManager Plugins { get; }
-        ILogger Log { get; set; }
         void Invoke(Action action);
         void InvokeBlocking(Action action);
         Task InvokeAsync(Action action);

@@ -26,13 +26,12 @@ namespace Torch.Server
                 {
                     ServiceBase.Run(service);
                 }
+                return;
             }
-            else
-            {
-                _server = new TorchServer();
-                _server.Init();
-                _server.Start();
-            }
+
+            _server = new TorchServer();
+            _server.Init();
+            _server.Start();
         }
     }
 }

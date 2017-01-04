@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NLog;
 using Sandbox;
 using Sandbox.Engine.Networking;
 using Sandbox.Engine.Platform;
@@ -16,12 +17,10 @@ namespace Torch
     public static class SteamHelper
     {
         private static Thread _callbackThread;
-        private static ILogger _log;
+        private static Logger _log = LogManager.GetLogger("Torch");
 
-        public static void Init(ILogger log)
+        public static void Init()
         {
-            _log = log;
-
             _callbackThread = new Thread(() =>
             {
                 while (true)
@@ -56,7 +55,7 @@ namespace Torch
                     }
                     else
                     {
-                        _log.Write($"Failed to get item info for {itemId}");
+                        _log.Warn($"Failed to get item info for {itemId}");
                     }
 
                     mre.Set();
@@ -79,7 +78,7 @@ namespace Torch
                     if (!b && result.Details.Result == Result.OK)
                         details = result.Details;
                     else
-                        _log.Write($"Failed to get item details for {itemId}");
+                        _log.Warn($"Failed to get item details for {itemId}");
 
                     re.Set();
                 });

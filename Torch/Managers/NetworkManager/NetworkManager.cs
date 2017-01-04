@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using NLog;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
 using VRage;
@@ -19,6 +20,7 @@ namespace Torch.Managers
                 InitNetworkIntercept();
         }
 
+        private static Logger _log = LogManager.GetCurrentClassLogger();
         private static NetworkManager _instance;
         public static NetworkManager Instance => _instance ?? (_instance = new NetworkManager());
 
@@ -51,9 +53,8 @@ namespace Torch.Managers
             }
             catch (TypeLoadException ex)
             {
-                //ApplicationLog.BaseLog.Error(ex);
-                TorchBase.Instance.Log.WriteException(ex);
-                if ( suppress )
+                _log.Error(ex);
+                if (suppress)
                     return false;
                 throw;
             }
@@ -99,7 +100,7 @@ namespace Torch.Managers
                 }
                 catch (Exception ex)
                 {
-                    TorchBase.Instance.Log.WriteException(ex);
+                    _log.Error(ex);
                     //ApplicationLog.Error(ex, "~Error processing event!");
                     //crash after logging, bad things could happen if we continue on with bad data
                     throw;
@@ -159,7 +160,7 @@ namespace Torch.Managers
                 catch (Exception ex)
                 {
                     //ApplicationLog.Error(ex.ToString());
-                    TorchBase.Instance.Log.WriteException(ex);
+                    _log.Error(ex);
                 }
             });
 
@@ -174,7 +175,7 @@ namespace Torch.Managers
             }
             catch (Exception ex)
             {
-                TorchBase.Instance.Log.WriteException(ex);
+                _log.Error(ex);
                 //ApplicationLog.Error(ex, "Error when returning control to game server!");
                 //crash after logging, bad things could happen if we continue on with bad data
                 throw;

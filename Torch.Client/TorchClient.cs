@@ -85,7 +85,7 @@ namespace Torch.Client
         {
             using (var spaceEngineersGame = new SpaceEngineersGame(_services, RunArgs))
             {
-                Log.Write("Starting client...");
+                Log.Info("Starting client");
                 spaceEngineersGame.OnGameLoaded += SpaceEngineersGame_OnGameLoaded;
                 spaceEngineersGame.Run();
             }
@@ -93,8 +93,6 @@ namespace Torch.Client
 
         private void SpaceEngineersGame_OnGameLoaded(object sender, EventArgs e)
         {
-            Log.Write("Loading plugins");
-            Plugins.LoadAllPlugins();
         }
 
         public override void Stop()

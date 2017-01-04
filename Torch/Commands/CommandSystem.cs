@@ -82,7 +82,7 @@ namespace Torch.Commands
 
             var context = new CommandContext
             {
-                Args = arg,
+                //Args = arg,
                 SteamId = steamId
             };
 

@@ -110,5 +110,14 @@ namespace Torch
 				return false;
 			}
 		}
+
+	    public static object InvokeStatic(Type type, string methodName, params object[] args)
+	    {
+	        var method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+	        if (method == null)
+	            throw new TypeLoadException($"Method {methodName} not found in static class {type.FullName}");
+
+	        return method.Invoke(null, args);
+	    }
 	}
 }

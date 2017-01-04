@@ -28,10 +28,9 @@ namespace Torch.Client
                 VisibleRowsCount = 10,
             };
 
-            foreach (var plugin in TorchBase.Instance.Plugins.Plugins)
+            foreach (var plugin in TorchBase.Instance.Plugins)
             {
-                var name = TorchBase.Instance.Plugins.GetPluginName(plugin.GetType());
-                pluginList.Items.Add(new MyGuiControlListbox.Item(new StringBuilder(name)));
+                pluginList.Items.Add(new MyGuiControlListbox.Item(new StringBuilder(plugin.Name)));
             }
             Controls.Add(pluginList);
         }
