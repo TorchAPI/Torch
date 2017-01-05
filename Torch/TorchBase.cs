@@ -113,10 +113,17 @@ namespace Torch
         {
             Debug.Assert(!_init, "Torch instance is already initialized.");
 
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
             _init = true;
             MyScriptCompiler.Static.AddConditionalCompilationSymbols("TORCH");
             MyScriptCompiler.Static.AddReferencedAssemblies(typeof(ITorchBase).Assembly.Location);
             MyScriptCompiler.Static.AddReferencedAssemblies(typeof(TorchBase).Assembly.Location);
+        }
+
+        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Log.Fatal((Exception)e.ExceptionObject);
         }
 
         public abstract void Start();

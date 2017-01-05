@@ -9,6 +9,7 @@ using VRage.Plugins;
 
 namespace TestPlugin
 {
+    [Plugin("Test Plugin", "1.3.3.7", "fed85d8d-8a29-4ab0-9869-4ad121f99d04")]
     public class Plugin : TorchPluginBase
     {
         /// <inheritdoc />

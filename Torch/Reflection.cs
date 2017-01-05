@@ -4,14 +4,15 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
 
 namespace Torch
 {
 	public static class Reflection
 	{
-		//private static readonly Logger Log = LogManager.GetLogger( "BaseLog" );
+		private static readonly Logger Log = LogManager.GetLogger("Reflection");
 
-		public static bool HasMethod(Type objectType, string methodName, Type[] argTypes = null)
+		public static bool HasMethod(Type type, string methodName, Type[] argTypes = null)
 		{
 			try
 			{
@@ -20,27 +21,27 @@ namespace Torch
 
 				if (argTypes == null)
 				{
-					var methodInfo = objectType.GetMethod(methodName);
+					var methodInfo = type.GetMethod(methodName);
 					if (methodInfo == null)
-						methodInfo = objectType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
-					if (methodInfo == null && objectType.BaseType != null)
-						methodInfo = objectType.BaseType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+						methodInfo = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+					if (methodInfo == null && type.BaseType != null)
+						methodInfo = type.BaseType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 					if (methodInfo == null)
 					{
-						//Log.Error( "Failed to find method '" + methodName + "' in type '" + objectType.FullName + "'" );
+						Log.Error( "Failed to find method '" + methodName + "' in type '" + type.FullName + "'" );
 						return false;
 					}
 				}
 				else
 				{
-					MethodInfo method = objectType.GetMethod(methodName, argTypes);
+					MethodInfo method = type.GetMethod(methodName, argTypes);
 					if (method == null)
-						method = objectType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy, Type.DefaultBinder, argTypes, null);
-					if (method == null && objectType.BaseType != null)
-						method = objectType.BaseType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy, Type.DefaultBinder, argTypes, null);
+						method = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy, Type.DefaultBinder, argTypes, null);
+					if (method == null && type.BaseType != null)
+						method = type.BaseType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy, Type.DefaultBinder, argTypes, null);
 					if (method == null)
 					{
-						//Log.Error( "Failed to find method '" + methodName + "' in type '" + objectType.FullName + "'" );
+						Log.Error( "Failed to find method '" + methodName + "' in type '" + type.FullName + "'" );
 						return false;
 					}
 				}
@@ -53,60 +54,58 @@ namespace Torch
 			}
 			catch (Exception ex)
 			{
-				//Log.Error( "Failed to find method '" + methodName + "' in type '" + objectType.FullName + "': " + ex.Message );
-				//Log.Error( ex );
+				Log.Error( "Failed to find method '" + methodName + "' in type '" + type.FullName + "': " + ex.Message );
+				Log.Error( ex );
 				return false;
 			}
 		}
 
-		public static bool HasField(Type objectType, string fieldName)
+		public static bool HasField(Type type, string fieldName)
 		{
 			try
 			{
 				if (string.IsNullOrEmpty(fieldName))
 					return false;
-				var field = objectType.GetField(fieldName);
+				var field = type.GetField(fieldName);
 				if (field == null)
-					field = objectType.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+					field = type.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 				if (field == null)
-					field = objectType.BaseType.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+					field = type.BaseType.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 				if (field == null)
 				{
-					//Log.Error( "Failed to find field '" + fieldName + "' in type '" + objectType.FullName + "'" );
+					Log.Error("Failed to find field '{0}' in type '{1}'", fieldName, type.FullName);
 					return false;
 				}
 				return true;
 			}
 			catch (Exception ex)
 			{
-				//Log.Error( "Failed to find field '" + fieldName + "' in type '" + objectType.FullName + "': " + ex.Message );
-				//Log.Error( ex );
+                Log.Error(ex, "Failed to find field '{0}' in type '{1}'", fieldName, type.FullName);
 				return false;
 			}
 		}
 
-		public static bool HasProperty(Type objectType, string propertyName)
+		public static bool HasProperty(Type type, string propertyName)
 		{
 			try
 			{
 				if (string.IsNullOrEmpty(propertyName))
 					return false;
-				var prop = objectType.GetProperty(propertyName);
+				var prop = type.GetProperty(propertyName);
 				if (prop == null)
-					prop = objectType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+					prop = type.GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 				if (prop == null)
-					prop = objectType.BaseType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+					prop = type.BaseType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 				if (prop == null)
 				{
-					//Log.Error( "Failed to find property '" + propertyName + "' in type '" + objectType.FullName + "'" );
+					Log.Error("Failed to find property '{0}' in type '{1}'", propertyName, type.FullName);
 					return false;
 				}
 				return true;
 			}
 			catch (Exception ex)
 			{
-				//Log.Error( "Failed to find property '" + propertyName + "' in type '" + objectType.FullName + "': " + ex.Message );
-				//Log.Error( ex );
+				Log.Error(ex, "Failed to find property '{0}' in type '{1}'", propertyName, type.FullName);
 				return false;
 			}
 		}
@@ -115,9 +114,18 @@ namespace Torch
 	    {
 	        var method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 	        if (method == null)
-	            throw new TypeLoadException($"Method {methodName} not found in static class {type.FullName}");
+	        {
+                Log.Error($"Method {methodName} not found in static class {type.FullName}");
+                return null;
+            }
 
 	        return method.Invoke(null, args);
+	    }
+
+	    public static T GetPrivateField<T>(this object obj, string fieldName)
+	    {
+	        var type = obj.GetType();
+	        return (T)type.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(obj);
 	    }
 	}
 }

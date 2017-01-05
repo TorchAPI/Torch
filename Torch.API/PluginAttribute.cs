@@ -9,12 +9,14 @@ namespace Torch.API
     public class PluginAttribute : Attribute
     {
         public string Name { get; }
-        public bool Reloadable { get; }
+        public Version Version { get; }
+        public Guid Guid { get; }
 
-        public PluginAttribute(string name, bool reloadable = false)
+        public PluginAttribute(string name, string version, string guid)
         {
             Name = name;
-            Reloadable = reloadable;
+            Version = Version.Parse(version);
+            Guid = Guid.Parse(guid);
         }
     }
 }

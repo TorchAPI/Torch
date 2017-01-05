@@ -27,10 +27,11 @@ namespace Torch.Server
     {
         public Thread GameThread { get; private set; }
         public bool IsRunning { get; private set; }
+        public bool IsService { get; set; }
 
         public event Action SessionLoading;
 
-        private readonly ManualResetEvent _stopHandle = new ManualResetEvent(false);
+        private readonly AutoResetEvent _stopHandle = new AutoResetEvent(false);
 
         internal TorchServer()
         {
@@ -85,7 +86,15 @@ namespace Torch.Server
             MySandboxGame.IsDedicated = true;
             Environment.SetEnvironmentVariable("SteamAppId", MyPerServerSettings.AppId.ToString());
 
-            Reflection.InvokeStaticMethod(typeof(DedicatedServer), "RunMain", "Torch", null, true);
+            Log.Trace("Invoking RunMain");
+            try { Reflection.InvokeStaticMethod(typeof(DedicatedServer), "RunMain", "Torch", null, IsService, true); }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
+            Log.Trace("RunMain completed");
+            IsRunning = false;
         }
 
         /// <summary>
@@ -93,11 +102,15 @@ namespace Torch.Server
         /// </summary>
         public override void Stop()
         {
-            if (Thread.CurrentThread.ManagedThreadId != GameThread?.ManagedThreadId)
+            if (!IsRunning)
+                Log.Error("Server is already stopped");
+
+            if (Thread.CurrentThread.ManagedThreadId != GameThread?.ManagedThreadId && MySandboxGame.Static.IsRunning)
             {
                 Log.Info("Requesting server stop.");
                 MySandboxGame.Static.Invoke(Stop);
-                _stopHandle.WaitOne();
+                _stopHandle.WaitOne(10000);
+                Log.Error("Server stop timed out.");
                 return;
             }
 

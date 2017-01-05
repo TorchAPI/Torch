@@ -22,6 +22,7 @@ using SteamSDK;
 using Torch.API;
 using Torch.ViewModels;
 using VRage.Game;
+using VRage.Game.ModAPI;
 using VRage.Library.Collections;
 using VRage.Network;
 using VRage.Utils;
@@ -42,9 +43,9 @@ namespace Torch
         public List<IChatItem> Chat { get; } = new List<IChatItem>();
         public Dictionary<ulong, IPlayer> Players { get; } = new Dictionary<ulong, IPlayer>();
         public Player LocalPlayer { get; private set; }
-
         private readonly ITorchBase _torch;
         private static Logger _log = LogManager.GetLogger("Torch");
+        private Dictionary<MyPlayer.PlayerId, MyPlayer> _onlinePlayers;
 
         internal MultiplayerManager(ITorchBase torch)
         {
@@ -64,6 +65,12 @@ namespace Torch
             });
         }
 
+        public IMyPlayer GetPlayerBySteamId(ulong steamId)
+        {
+            _onlinePlayers.TryGetValue(new MyPlayer.PlayerId(steamId), out MyPlayer p);
+            return p;
+        }
+
         /// <summary>
         /// Send a message in chat.
         /// </summary>
@@ -81,6 +88,8 @@ namespace Torch
             MyMultiplayer.Static.ClientKicked += OnClientKicked;
             MyMultiplayer.Static.ClientLeft += OnClientLeft;
             MySession.Static.Players.PlayerRequesting += OnPlayerRequesting;
+
+            _onlinePlayers = MySession.Static.Players.GetPrivateField<Dictionary<MyPlayer.PlayerId, MyPlayer>>("m_players");
 
             //TODO: Move these with the methods?
             RemoveHandlers();

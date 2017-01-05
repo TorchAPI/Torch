@@ -37,14 +37,14 @@ namespace Torch.Commands
             return true;
         }
 
-        public InvokeResult Invoke(ulong steamId, string[] command)
+        public Command ParseCommand(ulong steamId, string[] command, out string[] args)
         {
+            args = new string[0];
             var root = command.First();
             if (!RootNodes.ContainsKey(root))
-                return InvokeResult.NoCommand;
+                return null;
 
             var node = RootNodes[root];
-            var args = new string[0];
             for (var i = 1; i < command.Length; i++)
             {
                 var current = command[i];
@@ -59,13 +59,9 @@ namespace Torch.Commands
             }
 
             if (!node.IsCommand)
-                return InvokeResult.NoCommand;
+                return null;
 
-            //check permission here
-
-            var context = new CommandContext(steamId, args);
-            node.Command.Invoke(context);
-            return InvokeResult.Success;
+            return node.Command;
         }
 
         private class Node

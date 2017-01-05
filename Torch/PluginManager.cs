@@ -13,6 +13,7 @@ using NLog;
 using Sandbox;
 using Sandbox.ModAPI;
 using Torch.API;
+using Torch.Commands;
 using VRage.Plugins;
 using VRage.Collections;
 using VRage.Library.Collections;
@@ -22,16 +23,18 @@ namespace Torch
     public class PluginManager : IPluginManager
     {
         private readonly ITorchBase _torch;
-        private static Logger _log = LogManager.GetLogger("Torch");
+        private static Logger _log = LogManager.GetLogger(nameof(PluginManager));
         public const string PluginDir = "Plugins";
 
         private readonly List<ITorchPlugin> _plugins = new List<ITorchPlugin>();
         private readonly PluginUpdater _updater;
+        private readonly CommandManager _commands;
 
         public PluginManager(ITorchBase torch)
         {
             _torch = torch;
             _updater = new PluginUpdater(this);
+            _commands = new CommandManager(_torch);
 
             if (!Directory.Exists(PluginDir))
                 Directory.CreateDirectory(PluginDir);
@@ -67,6 +70,7 @@ namespace Torch
         /// </summary>
         public void LoadPlugins()
         {
+            _log.Info("Loading plugins");
             var pluginsPath = Path.Combine(Directory.GetCurrentDirectory(), PluginDir);
             var dlls = Directory.GetFiles(pluginsPath, "*.dll", SearchOption.AllDirectories);
             foreach (var dllPath in dlls)
@@ -78,9 +82,22 @@ namespace Torch
                 {
                     if (type.GetInterfaces().Contains(typeof(ITorchPlugin)))
                     {
-                        var plugin = (ITorchPlugin)Activator.CreateInstance(type);
-                        _log.Info($"Loading plugin {plugin.Name} ({plugin.Version})");
-                        _plugins.Add(plugin);
+                        try
+                        {
+                            var plugin = (ITorchPlugin)Activator.CreateInstance(type);
+                            if (plugin.Id == default(Guid))
+                                throw new TypeLoadException($"Plugin '{type.FullName}' is missing a {nameof(PluginAttribute)}");
+
+                            _log.Info($"Loading plugin {plugin.Name} ({plugin.Version})");
+                            _plugins.Add(plugin);
+
+                            _commands.RegisterPluginCommands(plugin);
+                        }
+                        catch (Exception e)
+                        {
+                            _log.Error($"Error loading plugin '{type.FullName}'");
+                            throw;
+                        }
                     }
                 }
             }

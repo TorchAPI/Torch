@@ -1,21 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using NLog;
 using Torch.API;
+using VRage.Game.ModAPI;
 
 namespace Torch.Commands
 {
-    public class CommandSystem
+    public class PermissionGroup
     {
-        public ITorchBase Server { get; }
+        public List<ulong> Members { get; }
+        public List<Permission> Permissions { get; }
+    }
+
+    public class PermissionUser
+    {
+        public ulong SteamID { get; }
+        public List<PermissionGroup> Groups { get; }
+        public List<Permission> Permissions { get; }
+    }
+
+    public class Permission
+    {
+        public string[] Path { get; }
+        public bool Allow { get; }
+    }
+
+    public class CommandManager
+    {
+        public ITorchBase Torch { get; }
         public char Prefix { get; set; }
 
         public Dictionary<string, Command> Commands { get; } = new Dictionary<string, Command>();
+        private Logger _log = LogManager.GetLogger(nameof(CommandManager));
 
-        public CommandSystem(ITorchBase server, char prefix = '/')
+        public CommandManager(ITorchBase torch, char prefix = '/')
         {
-            Server = server;
+            Torch = torch;
             Prefix = prefix;
+        }
+
+        public bool HasPermission(ulong steamId, Command command)
+        {
+            return true;
         }
 
         public bool IsCommand(string command)
@@ -31,37 +58,14 @@ namespace Torch.Commands
                 if (!type.IsSubclassOf(typeof(CommandModule)))
                     continue;
 
-                var module = (CommandModule)Activator.CreateInstance(type);
-                module.Server = Server;
-                module.Plugin = plugin;
                 foreach (var method in type.GetMethods())
                 {
                     var commandAttrib = method.GetCustomAttribute<CommandAttribute>();
                     if (commandAttrib == null)
                         continue;
 
-                    if (Commands.ContainsKey(commandAttrib.Name))
-                    {
-                        Console.WriteLine($"[ERROR]: Command \"{method.Name}\" is already registered!");
-                        continue;
-                    }
-
-                    var parameters = method.GetParameters();
-                    if (parameters.Length != 1 || parameters[0].ParameterType != typeof(CommandContext))
-                    {
-                        //TODO: log invalid command
-                        Console.WriteLine($"[ERROR]: Command \"{method.Name}\" has the wrong signature! Must take one CommandContext parameter.");
-                        continue;
-                    }
-
-                    var command = new Command
-                    {
-                        Module = module,
-                        Name = commandAttrib.Name,
-                        Invoke = c => method.Invoke(module, new object[] {c})
-                    };
-
-                    Commands.Add(command.Name, command);
+                    var command = new Command(plugin, method);
+                    _log.Info($"Registering command '{string.Join(".", command.Path)}' from plugin '{plugin.Name}'");
                 }
             }
         }
@@ -79,15 +83,6 @@ namespace Torch.Commands
             string arg = "";
             if (command.Length > cmdNameEnd + 1)
                 arg = command.Substring(cmdNameEnd + 1);
-
-            var context = new CommandContext
-            {
-                //Args = arg,
-                SteamId = steamId
-            };
-
-            
-            Commands[cmdName].Invoke(context);
         }
     }
 }

@@ -4,7 +4,6 @@ namespace Torch.Commands
 {
     public class CommandModule
     {
-        public ITorchPlugin Plugin { get; set; }
-        public ITorchBase Server { get; set; }
+        public CommandContext Context { get; internal set; }
     }
 }

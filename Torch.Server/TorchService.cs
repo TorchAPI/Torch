@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.ServiceProcess;
+using NLog;
 using Torch.API;
 
 namespace Torch.Server
@@ -11,7 +12,8 @@ namespace Torch.Server
     class TorchService : ServiceBase
     {
         public const string Name = "Torch (SEDS)";
-        private readonly ITorchServer _server = new TorchServer();
+        private readonly TorchServer _server = new TorchServer();
+        private static Logger _log = LogManager.GetLogger("Torch");
 
         public TorchService()
         {
@@ -29,7 +31,9 @@ namespace Torch.Server
         {
             base.OnStart(args);
             _server.Init();
-            _server.Start();
+            _server.RunArgs = args;
+            _server.IsService = true;
+            Task.Run(() => _server.Start());
         }
 
         /// <inheritdoc />
