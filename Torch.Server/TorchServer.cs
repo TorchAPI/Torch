@@ -27,14 +27,22 @@ namespace Torch.Server
     {
         public Thread GameThread { get; private set; }
         public bool IsRunning { get; private set; }
-        public bool IsService { get; set; }
+        public bool IsService { get; }
+        public string InstancePath { get; private set; }
+        public string InstanceName { get; }
 
         public event Action SessionLoading;
 
         private readonly AutoResetEvent _stopHandle = new AutoResetEvent(false);
 
-        internal TorchServer()
+        internal TorchServer(string instanceName = null)
         {
+            if (instanceName != null)
+            {
+                IsService = true;
+                InstanceName = instanceName;
+            }
+
             MySession.OnLoading += OnSessionLoading;
         }
 
@@ -59,6 +67,8 @@ namespace Torch.Server
             };
             var gameVersion = MyPerGameSettings.BasicGameInfo.GameVersion;
             MyFinalBuildConstants.APP_VERSION = gameVersion ?? 0;
+
+            InstancePath = InstanceName != null ? GetInstancePath(true, InstanceName) : GetInstancePath();
         }
 
         private void OnSessionLoading()
@@ -87,7 +97,7 @@ namespace Torch.Server
             Environment.SetEnvironmentVariable("SteamAppId", MyPerServerSettings.AppId.ToString());
 
             Log.Trace("Invoking RunMain");
-            try { Reflection.InvokeStaticMethod(typeof(DedicatedServer), "RunMain", "Torch", null, IsService, true); }
+            try { Reflection.InvokeStaticMethod(typeof(DedicatedServer), "RunMain", InstanceName, InstancePath, false, true); }
             catch (Exception e)
             {
                 Log.Error(e);
@@ -129,6 +139,14 @@ namespace Torch.Server
             Log.Info("Server stopped.");
             _stopHandle.Set();
             IsRunning = false;
+        }
+
+        private string GetInstancePath(bool isService = false, string instanceName = "Torch")
+        {
+            if (isService)
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), MyPerServerSettings.GameDSName, instanceName);
+
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), MyPerServerSettings.GameDSName);
         }
 
         private void CleanupProfilers()

@@ -152,11 +152,15 @@
     <Compile Include="Commands\CommandContext.cs" />
     <Compile Include="Commands\CommandManager.cs" />
     <Compile Include="Commands\CommandTree.cs" />
+    <Compile Include="Commands\DefaultPermissionAttribute.cs" />
+    <Compile Include="Commands\Permissions\PermissonsSystem.cs" />
+    <Compile Include="Commands\TorchCommands.cs" />
     <Compile Include="Managers\ChatManager.cs" />
     <Compile Include="Managers\NetworkManager\NetworkHandlerBase.cs" />
     <Compile Include="Managers\NetworkManager\NetworkManager.cs" />
-    <Compile Include="MultiplayerManager.cs" />
+    <Compile Include="Managers\MultiplayerManager.cs" />
     <Compile Include="Reflection.cs" />
+    <Compile Include="Managers\ScriptingManager.cs" />
     <Compile Include="TorchBase.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Collections\PlayerInfoCache.cs" />
@@ -169,7 +173,7 @@
     <Compile Include="SteamHelper.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />
-    <Compile Include="PluginManager.cs" />
+    <Compile Include="Managers\PluginManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewModels\PluginViewModel.cs" />
   </ItemGroup>

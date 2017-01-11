@@ -14,13 +14,13 @@ namespace Torch.Managers
 {
     public class NetworkManager
     {
-        public NetworkManager()
+        private NetworkManager()
         {
             if (ReflectionUnitTest())
                 InitNetworkIntercept();
         }
 
-        private static Logger _log = LogManager.GetLogger("Torch");
+        private static Logger _log = LogManager.GetLogger(nameof(NetworkManager));
         private static NetworkManager _instance;
         public static NetworkManager Instance => _instance ?? (_instance = new NetworkManager());
 
@@ -77,7 +77,7 @@ namespace Torch.Managers
 
             //PrintDebug();
 
-            //ApplicationLog.Info("Initialized network intercept!");
+            _log.Debug("Initialized network intercept");
         }
 
         #region Network Intercept
@@ -100,8 +100,8 @@ namespace Torch.Managers
                 }
                 catch (Exception ex)
                 {
-                    _log.Error(ex);
-                    //ApplicationLog.Error(ex, "~Error processing event!");
+                    _log.Fatal(ex);
+                    _log.Fatal(ex, "~Error processing event!");
                     //crash after logging, bad things could happen if we continue on with bad data
                     throw;
                 }
@@ -175,8 +175,8 @@ namespace Torch.Managers
             }
             catch (Exception ex)
             {
-                _log.Error(ex);
-                //ApplicationLog.Error(ex, "Error when returning control to game server!");
+                _log.Fatal(ex);
+                _log.Fatal(ex, "Error when returning control to game server!");
                 //crash after logging, bad things could happen if we continue on with bad data
                 throw;
             }
@@ -191,7 +191,7 @@ namespace Torch.Managers
                 if (item.GetType().FullName == handlerType)
                 {
                     //if (ExtenderOptions.IsDebugging)
-                    //    ApplicationLog.BaseLog.Error("Network handler already registered! " + handlerType);
+                    _log.Error("Network handler already registered! " + handlerType);
                     toRemove.Add(item);
                 }
             }

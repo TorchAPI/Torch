@@ -8,7 +8,7 @@ namespace Torch.Commands
 {
     public class CategoryAttribute : Attribute
     {
-        public string[] Path { get; }
+        public List<string> Path { get; }
 
         /// <summary>
         /// Specifies where to add the class's commands in the command tree.
@@ -16,7 +16,7 @@ namespace Torch.Commands
         /// <param name="path">Command path, e.g. "/admin config" -> "admin, config"</param>
         public CategoryAttribute(params string[] path)
         {
-            Path = path;
+            Path = path.Select(i => i.ToLower()).ToList();
         }
     }
 }

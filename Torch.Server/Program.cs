@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Configuration.Install;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -34,6 +36,18 @@ namespace Torch.Server
 
             if (args.FirstOrDefault() == "-svcinstall")
             {
+                /* Working on installing the service properly instead of with sc.exe
+                _log.Info("Installing service");
+                var installer = new TorchServiceInstaller();
+                installer.Context = new InstallContext(Path.Combine(Directory.GetCurrentDirectory(), "svclog.log"), null);
+                installer.Context.Parameters.Add("name", "Torch DS");
+                installer.Install(new Hashtable
+                {
+                    {"name", "Torch DS"}
+                    
+                });
+                _log.Info("Service Installed");*/
+
                 var runArgs = string.Join(" ", args.Skip(1));
                 _log.Info($"Installing Torch as a service with arguments '{runArgs}'");
                 var startInfo = new ProcessStartInfo

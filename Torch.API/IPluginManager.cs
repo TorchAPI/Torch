@@ -8,7 +8,7 @@ namespace Torch.API
     public interface IPluginManager : IEnumerable<ITorchPlugin>
     {
         void UpdatePlugins();
-        void LoadPlugins();
+        void Init();
         void UnloadPlugins();
     }
 }

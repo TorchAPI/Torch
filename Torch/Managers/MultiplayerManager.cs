@@ -27,7 +27,7 @@ using VRage.Library.Collections;
 using VRage.Network;
 using VRage.Utils;
 
-namespace Torch
+namespace Torch.Managers
 {
     /// <summary>
     /// Provides a proxy to the game's multiplayer-related functions.
@@ -38,13 +38,11 @@ namespace Torch
         public event Action<IPlayer> PlayerLeft;
         public event Action<IChatItem> MessageReceived;
 
-        //public MTObservableCollection<MyPlayer> PlayersView { get; } = new MTObservableCollection<MyPlayer>();
-        //public MTObservableCollection<ChatItem> ChatView { get; } = new MTObservableCollection<ChatItem>();
         public List<IChatItem> Chat { get; } = new List<IChatItem>();
         public Dictionary<ulong, IPlayer> Players { get; } = new Dictionary<ulong, IPlayer>();
         public Player LocalPlayer { get; private set; }
         private readonly ITorchBase _torch;
-        private static Logger _log = LogManager.GetLogger("Torch");
+        private static Logger _log = LogManager.GetLogger(nameof(MultiplayerManager));
         private Dictionary<MyPlayer.PlayerId, MyPlayer> _onlinePlayers;
 
         internal MultiplayerManager(ITorchBase torch)
@@ -53,16 +51,21 @@ namespace Torch
             _torch.SessionLoaded += OnSessionLoaded;
         }
 
-        public void KickPlayer(ulong steamId) => _torch.InvokeAsync(() => MyMultiplayer.Static.KickClient(steamId));
+        public void KickPlayer(ulong steamId) => _torch.Invoke(() => MyMultiplayer.Static.KickClient(steamId));
 
         public void BanPlayer(ulong steamId, bool banned = true)
         {
-            _torch.InvokeAsync(() =>
+            _torch.Invoke(() =>
             {
                 MyMultiplayer.Static.BanClient(steamId, banned);
                 if (_gameOwnerIds.ContainsKey(steamId))
                     MyMultiplayer.Static.BanClient(_gameOwnerIds[steamId], banned);
             });
+        }
+
+        public IMyPlayer GetPlayerByDisplayName(string displayName)
+        {
+            return _onlinePlayers.FirstOrDefault(x => x.Value.DisplayName == displayName).Value;
         }
 
         public IMyPlayer GetPlayerBySteamId(ulong steamId)
@@ -71,13 +74,18 @@ namespace Torch
             return p;
         }
 
+        public void SendMessage(string message)
+        {
+            SendMessage(message, 0);
+        }
+
         /// <summary>
         /// Send a message in chat.
         /// </summary>
-        public void SendMessage(string message)
+        public void SendMessage(string message, long playerId, string author = "Server", string font = MyFontEnum.Blue)
         {
-            MyMultiplayer.Static.SendChatMessage(message);
-            //ChatView.Add(new ChatItem(LocalPlayer, message));
+            var msg = new ScriptedChatMsg {Author = author, Font = font, Target = playerId, Text = message};
+            MyMultiplayerBase.SendScriptedChatMessage(ref msg);
         }
 
         private void OnSessionLoaded()
@@ -156,6 +164,8 @@ namespace Torch
         private HashSet<ulong> _waitingForGroup;
         private HashSet<ulong> _waitingForFriends;
         private Dictionary<ulong, ulong> _gameOwnerIds = new Dictionary<ulong, ulong>();
+        private IMultiplayer _multiplayerImplementation;
+
         /// <summary>
         /// Removes Keen's hooks into some Steam events so we have full control over client authentication
         /// </summary>

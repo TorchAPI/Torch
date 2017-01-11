@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using Sandbox;
+using Sandbox.ModAPI;
 using Torch.API;
+using Torch.Managers;
 using VRage.Scripting;
 
 namespace Torch
@@ -22,6 +25,7 @@ namespace Torch
         [Obsolete]
         public static ITorchBase Instance { get; private set; }
         protected static Logger Log = LogManager.GetLogger("Torch");
+        public Version Version { get; protected set; }
         public string[] RunArgs { get; set; }
         public IPluginManager Plugins { get; protected set; }
         public IMultiplayer Multiplayer { get; protected set; }
@@ -41,6 +45,7 @@ namespace Torch
 
             Instance = this;
 
+            Version = Assembly.GetExecutingAssembly().GetName().Version; 
             RunArgs = new string[0];
             Plugins = new PluginManager(this);
             Multiplayer = new MultiplayerManager(this);
@@ -116,9 +121,6 @@ namespace Torch
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             _init = true;
-            MyScriptCompiler.Static.AddConditionalCompilationSymbols("TORCH");
-            MyScriptCompiler.Static.AddReferencedAssemblies(typeof(ITorchBase).Assembly.Location);
-            MyScriptCompiler.Static.AddReferencedAssemblies(typeof(TorchBase).Assembly.Location);
         }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

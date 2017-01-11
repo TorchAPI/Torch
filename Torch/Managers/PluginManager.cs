@@ -14,11 +14,12 @@ using Sandbox;
 using Sandbox.ModAPI;
 using Torch.API;
 using Torch.Commands;
+using Torch.Managers;
 using VRage.Plugins;
 using VRage.Collections;
 using VRage.Library.Collections;
 
-namespace Torch
+namespace Torch.Managers
 {
     public class PluginManager : IPluginManager
     {
@@ -28,13 +29,15 @@ namespace Torch
 
         private readonly List<ITorchPlugin> _plugins = new List<ITorchPlugin>();
         private readonly PluginUpdater _updater;
-        private readonly CommandManager _commands;
+        public CommandManager Commands { get; private set; }
+
+        public float LastUpdateMs => _lastUpdateMs;
+        private volatile float _lastUpdateMs;
 
         public PluginManager(ITorchBase torch)
         {
             _torch = torch;
             _updater = new PluginUpdater(this);
-            _commands = new CommandManager(_torch);
 
             if (!Directory.Exists(PluginDir))
                 Directory.CreateDirectory(PluginDir);
@@ -42,6 +45,9 @@ namespace Torch
             InitUpdater();
         }
 
+        /// <summary>
+        /// Adds the plugin updater plugin to VRage's plugin system.
+        /// </summary>
         private void InitUpdater()
         {
             var fieldName = "m_plugins";
@@ -52,11 +58,20 @@ namespace Torch
             pluginList.Add(_updater);
         }
 
+        /// <summary>
+        /// Updates loaded plugins in parallel.
+        /// </summary>
         public void UpdatePlugins()
         {
+            var s = Stopwatch.StartNew();
             Parallel.ForEach(_plugins, p => p.Update());
+            s.Stop();
+            _lastUpdateMs = (float)s.Elapsed.TotalMilliseconds;
         }
 
+        /// <summary>
+        /// Unloads all plugins.
+        /// </summary>
         public void UnloadPlugins()
         {
             foreach (var plugin in _plugins)
@@ -66,10 +81,13 @@ namespace Torch
         }
 
         /// <summary>
-        /// Load and create instances of all plugins in the <see cref="PluginDir"/> folder.
+        /// Loads and creates instances of all plugins in the <see cref="PluginDir"/> folder.
         /// </summary>
-        public void LoadPlugins()
+        public void Init()
         {
+            var network = NetworkManager.Instance;
+            Commands = new CommandManager(_torch);
+
             _log.Info("Loading plugins");
             var pluginsPath = Path.Combine(Directory.GetCurrentDirectory(), PluginDir);
             var dlls = Directory.GetFiles(pluginsPath, "*.dll", SearchOption.AllDirectories);
@@ -91,7 +109,7 @@ namespace Torch
                             _log.Info($"Loading plugin {plugin.Name} ({plugin.Version})");
                             _plugins.Add(plugin);
 
-                            _commands.RegisterPluginCommands(plugin);
+                            Commands.RegisterPluginCommands(plugin);
                         }
                         catch (Exception e)
                         {
@@ -132,6 +150,7 @@ namespace Torch
         private class PluginUpdater : IPlugin
         {
             private readonly IPluginManager _manager;
+
             public PluginUpdater(IPluginManager manager)
             {
                 _manager = manager;
@@ -139,7 +158,7 @@ namespace Torch
 
             public void Init(object obj)
             {
-                _manager.LoadPlugins();
+                _manager.Init();
             }
 
             public void Update()

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Torch.API;
@@ -12,7 +13,7 @@ namespace Torch.Commands
         public string Description { get; }
         public string HelpText { get; }
         public Type Module { get; }
-        public string[] Path { get; }
+        public List<string> Path { get; } = new List<string>();
         public ITorchPlugin Plugin { get; }
         private readonly MethodInfo _method;
 
@@ -31,16 +32,13 @@ namespace Torch.Commands
 
             _method = commandMethod;
             Module = commandMethod.DeclaringType;
-            var path = commandAttribute.Path;
+
             if (moduleAttribute != null)
             {
-                var modPath = moduleAttribute.Path;
-                var comPath = commandAttribute.Path;
-                path = new string[modPath.Length + comPath.Length];
-                modPath.CopyTo(path, 0);
-                comPath.CopyTo(path, modPath.Length);
+                Path.AddRange(moduleAttribute.Path);
             }
-            Path = path;
+            Path.AddRange(commandAttribute.Path);
+
             Name = commandAttribute.Name;
             Description = commandAttribute.Description;
             HelpText = commandAttribute.HelpText;
@@ -50,7 +48,7 @@ namespace Torch.Commands
         {
             var moduleInstance = (CommandModule)Activator.CreateInstance(Module);
             moduleInstance.Context = context;
-            _method.Invoke(moduleInstance, new object[0]);
+            _method.Invoke(moduleInstance, null);
         }
     }
 }

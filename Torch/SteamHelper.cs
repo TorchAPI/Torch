@@ -16,20 +16,27 @@ namespace Torch
 {
     public static class SteamHelper
     {
-        private static Thread _callbackThread;
-        private static Logger _log = LogManager.GetLogger("Torch");
+        private static CancellationTokenSource _tokenSource = new CancellationTokenSource();
+        private static CancellationToken _cancelToken;
+        private static Logger _log = LogManager.GetLogger(nameof(SteamHelper));
 
         public static void Init()
         {
-            _callbackThread = new Thread(() =>
+            _cancelToken = _tokenSource.Token;
+
+            Task.Run(() =>
             {
-                while (true)
+                while (!_cancelToken.IsCancellationRequested)
                 {
                     SteamAPI.Instance.RunCallbacks();
                     Thread.Sleep(100);
                 }
-            }) {Name = "SteamAPICallbacks"};
-            _callbackThread.Start();
+            });
+        }
+
+        public static void StopCallbackLoop()
+        {
+            _tokenSource.Cancel();
         }
 
         public static MySteamWorkshop.SubscribedItem GetItemInfo(ulong itemId)
@@ -55,7 +62,7 @@ namespace Torch
                     }
                     else
                     {
-                        _log.Warn($"Failed to get item info for {itemId}");
+                        _log.Error($"Failed to get item info for {itemId}");
                     }
 
                     mre.Set();
@@ -78,7 +85,7 @@ namespace Torch
                     if (!b && result.Details.Result == Result.OK)
                         details = result.Details;
                     else
-                        _log.Warn($"Failed to get item details for {itemId}");
+                        _log.Error($"Failed to get item details for {itemId}");
 
                     re.Set();
                 });

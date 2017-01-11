@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace Torch.Server
 {
     [RunInstaller(true)]
-    class TorchServiceInstaller : Installer
+    public class TorchServiceInstaller : Installer
     {
         private ServiceInstaller _serviceInstaller;
 

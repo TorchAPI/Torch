@@ -12,7 +12,7 @@ namespace Torch.Server
     class TorchService : ServiceBase
     {
         public const string Name = "Torch (SEDS)";
-        private readonly TorchServer _server = new TorchServer();
+        private TorchServer _server;
         private static Logger _log = LogManager.GetLogger("Torch");
 
         public TorchService()
@@ -30,9 +30,9 @@ namespace Torch.Server
         protected override void OnStart(string[] args)
         {
             base.OnStart(args);
+            _server = new TorchServer("Torch");
             _server.Init();
             _server.RunArgs = args;
-            _server.IsService = true;
             Task.Run(() => _server.Start());
         }
 

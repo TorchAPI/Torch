@@ -1,47 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using NLog;
 using Torch.API;
+using Torch.Managers;
 using VRage.Game.ModAPI;
+using VRage.Network;
 
 namespace Torch.Commands
 {
-    public class PermissionGroup
-    {
-        public List<ulong> Members { get; }
-        public List<Permission> Permissions { get; }
-    }
-
-    public class PermissionUser
-    {
-        public ulong SteamID { get; }
-        public List<PermissionGroup> Groups { get; }
-        public List<Permission> Permissions { get; }
-    }
-
-    public class Permission
-    {
-        public string[] Path { get; }
-        public bool Allow { get; }
-    }
-
     public class CommandManager
     {
-        public ITorchBase Torch { get; }
         public char Prefix { get; set; }
 
-        public Dictionary<string, Command> Commands { get; } = new Dictionary<string, Command>();
+        public CommandTree Commands { get; set; } = new CommandTree();
         private Logger _log = LogManager.GetLogger(nameof(CommandManager));
+        private readonly ITorchBase _torch;
+        private readonly ChatManager _chatManager = ChatManager.Instance;
 
         public CommandManager(ITorchBase torch, char prefix = '/')
         {
-            Torch = torch;
+            _torch = torch;
             Prefix = prefix;
+            _chatManager.MessageRecieved += HandleCommand;
+            RegisterCommandModule(typeof(TorchCommands));
         }
 
         public bool HasPermission(ulong steamId, Command command)
         {
+            _log.Warn("Command permissions not implemented");
             return true;
         }
 
@@ -50,39 +39,72 @@ namespace Torch.Commands
             return command.Length > 1 && command[0] == Prefix;
         }
 
+        public void RegisterCommandModule(Type moduleType, ITorchPlugin plugin = null)
+        {
+            if (!moduleType.IsSubclassOf(typeof(CommandModule)))
+                return;
+
+            foreach (var method in moduleType.GetMethods())
+            {
+                var commandAttrib = method.GetCustomAttribute<CommandAttribute>();
+                if (commandAttrib == null)
+                    continue;
+
+                var command = new Command(plugin, method);
+                var cmdPath = string.Join(".", command.Path);
+                _log.Info($"Registering command '{cmdPath}'");
+
+                if (!Commands.AddCommand(command))
+                    _log.Error($"Command path {cmdPath} is already registered.");
+            }
+        }
+
         public void RegisterPluginCommands(ITorchPlugin plugin)
         {
             var assembly = plugin.GetType().Assembly;
             foreach (var type in assembly.ExportedTypes)
             {
-                if (!type.IsSubclassOf(typeof(CommandModule)))
-                    continue;
-
-                foreach (var method in type.GetMethods())
-                {
-                    var commandAttrib = method.GetCustomAttribute<CommandAttribute>();
-                    if (commandAttrib == null)
-                        continue;
-
-                    var command = new Command(plugin, method);
-                    _log.Info($"Registering command '{string.Join(".", command.Path)}' from plugin '{plugin.Name}'");
-                }
+                RegisterCommandModule(type, plugin);
             }
         }
 
-        public void HandleCommand(string command, ulong steamId = 0)
+        public void HandleCommand(ChatMsg msg, ref bool sendToOthers)
         {
-            if (!IsCommand(command))
+            if (msg.Text.Length < 1 || msg.Text[0] != Prefix)
                 return;
 
-            var cmdNameEnd = command.Length - command.IndexOf(" ", StringComparison.InvariantCultureIgnoreCase);
-            var cmdName = command.Substring(1, cmdNameEnd);
-            if (!Commands.ContainsKey(cmdName))
+            sendToOthers = false;
+
+            var player = _torch.Multiplayer.GetPlayerBySteamId(msg.Author);
+            if (player == null)
+            {
+                _log.Error($"Command {msg.Text} invoked by nonexistant player");
+                return;
+            }
+
+            var cmdText = new string(msg.Text.Skip(1).ToArray());
+            var split = Regex.Matches(cmdText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
+
+            if (split.Count == 0)
                 return;
 
-            string arg = "";
-            if (command.Length > cmdNameEnd + 1)
-                arg = command.Substring(cmdNameEnd + 1);
+            var command = Commands.ParseCommand(split, out List<string> args);
+
+            if (command != null)
+            {
+                var cmdPath = string.Join(".", command.Path);
+
+                if (!HasPermission(msg.Author, command))
+                {
+                    _log.Info($"{player.DisplayName} tried to use command {cmdPath} without permission");
+                    return;
+                }
+
+                _log.Trace($"Invoking {cmdPath} for player {player.DisplayName}");
+                var context = new CommandContext(_torch, command.Plugin, player, args);
+                command.Invoke(context);
+                _log.Info($"Player {player.DisplayName} ran command '{msg.Text}'");
+            }
         }
     }
 }

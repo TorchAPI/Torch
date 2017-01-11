@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Torch.Commands
 {
@@ -7,14 +9,16 @@ namespace Torch.Commands
         public string Name { get; }
         public string Description { get; }
         public string HelpText { get; }
-        public string[] Path { get; }
+        public List<string> Path { get; } = new List<string>();
 
-        public CommandAttribute(string name, string description = "", string helpText = "", params string[] path)
+        public CommandAttribute(string name, string description = "", string helpText = null, params string[] path)
         {
             Name = name;
             Description = description;
-            HelpText = helpText;
-            Path = path.Length > 0 ? path : new [] {name.ToLower()};
+            HelpText = helpText ?? description;
+            
+            Path.AddRange(path.Select(x => x.ToLower()));
+            Path.Add(name.ToLower());
         }
     }
 }

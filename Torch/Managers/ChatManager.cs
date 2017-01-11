@@ -11,7 +11,7 @@ namespace Torch.Managers
 {
     public class ChatManager
     {
-        public ChatManager()
+        private ChatManager()
         {
             NetworkManager.Instance.RegisterNetworkHandlers(new ChatIntercept());
         }
