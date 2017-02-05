@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Torch.API
 {
-    public interface ITorchPlugin
+    public interface ITorchPlugin : IDisposable
     {
         Guid Id { get; }
         Version Version { get; }
@@ -23,10 +23,5 @@ namespace Torch.API
         /// Called after each game tick. Not thread safe, use invocation methods in <see cref="ITorchBase"/>.
         /// </summary>
         void Update();
-
-        /// <summary>
-        /// Called when the game exits.
-        /// </summary>
-        void Unload();
     }
 }

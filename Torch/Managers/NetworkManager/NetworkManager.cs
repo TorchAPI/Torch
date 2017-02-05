@@ -16,8 +16,16 @@ namespace Torch.Managers
     {
         private NetworkManager()
         {
-            if (ReflectionUnitTest())
-                InitNetworkIntercept();
+            try
+            {
+                if (ReflectionUnitTest())
+                    InitNetworkIntercept();
+            }
+            catch (Exception ex)
+            {
+                _log.Error("Error initializing network intercept");
+                _log.Error(ex);
+            }
         }
 
         private static Logger _log = LogManager.GetLogger(nameof(NetworkManager));

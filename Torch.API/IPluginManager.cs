@@ -9,6 +9,6 @@ namespace Torch.API
     {
         void UpdatePlugins();
         void Init();
-        void UnloadPlugins();
+        void DisposePlugins();
     }
 }

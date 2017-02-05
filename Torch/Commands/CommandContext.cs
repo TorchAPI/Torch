@@ -28,7 +28,7 @@ namespace Torch.Commands
 
         public void Respond(string message, string sender = "Server", string font = MyFontEnum.Blue)
         {
-            Torch.Multiplayer.SendMessage(message, Player.PlayerID, sender, font);
+            Torch.Multiplayer.SendMessage(message, Player.IdentityId, sender, font);
         }
     }
 }

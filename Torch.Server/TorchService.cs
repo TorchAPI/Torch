@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,7 +31,15 @@ namespace Torch.Server
         protected override void OnStart(string[] args)
         {
             base.OnStart(args);
-            _server = new TorchServer("Torch");
+
+            string configName = args.Length > 0 ? args[0] : "TorchConfig.xml";
+            var options = new ServerConfig("Torch");
+            if (File.Exists(configName))
+                options = ServerConfig.LoadFrom(configName);
+            else
+                options.SaveTo(configName);
+
+            _server = new TorchServer(options);
             _server.Init();
             _server.RunArgs = args;
             Task.Run(() => _server.Start());

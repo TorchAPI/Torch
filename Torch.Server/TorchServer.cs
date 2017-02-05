@@ -8,9 +8,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using NLog;
 using Torch;
 using Sandbox;
+using Sandbox.Engine.Analytics;
 using Sandbox.Engine.Multiplayer;
+using Sandbox.Engine.Utils;
 using Sandbox.Game;
 using Sandbox.Game.Gui;
 using Sandbox.Game.World;
@@ -27,31 +30,24 @@ namespace Torch.Server
     {
         public Thread GameThread { get; private set; }
         public bool IsRunning { get; private set; }
-        public bool IsService { get; }
-        public string InstancePath { get; private set; }
+        public string InstancePath { get; }
         public string InstanceName { get; }
-
-        public event Action SessionLoading;
 
         private readonly AutoResetEvent _stopHandle = new AutoResetEvent(false);
 
-        internal TorchServer(string instanceName = null)
+        internal TorchServer(ServerConfig options)
         {
-            if (instanceName != null)
-            {
-                IsService = true;
-                InstanceName = instanceName;
-            }
-
-            MySession.OnLoading += OnSessionLoading;
+            InstanceName = options.InstanceName;
+            InstancePath = options.InstancePath;
         }
 
         public override void Init()
         {
             base.Init();
 
-            SpaceEngineersGame.SetupBasicGameInfo();
-            SpaceEngineersGame.SetupPerGameSettings();
+            Log.Info($"Server instance {InstanceName} at path {InstancePath}");
+
+            MyFakes.ENABLE_INFINARIO = false;
             MyPerGameSettings.SendLogToKeen = false;
             MyPerServerSettings.GameName = MyPerGameSettings.GameName;
             MyPerServerSettings.GameNameSafe = MyPerGameSettings.GameNameSafe;
@@ -68,18 +64,7 @@ namespace Torch.Server
             var gameVersion = MyPerGameSettings.BasicGameInfo.GameVersion;
             MyFinalBuildConstants.APP_VERSION = gameVersion ?? 0;
 
-            InstancePath = InstanceName != null ? GetInstancePath(true, InstanceName) : GetInstancePath();
-        }
-
-        private void OnSessionLoading()
-        {
-            SessionLoading?.Invoke();
-            MySession.Static.OnReady += OnSessionReady;
-        }
-
-        private void OnSessionReady()
-        {
-            InvokeSessionLoaded();
+            //InstancePath = InstanceName != null ? GetInstancePath(true, InstanceName) : GetInstancePath();
         }
 
         /// <summary>
@@ -100,6 +85,7 @@ namespace Torch.Server
             try { Reflection.InvokeStaticMethod(typeof(DedicatedServer), "RunMain", InstanceName, InstancePath, false, true); }
             catch (Exception e)
             {
+                Log.Error("Error running server.");
                 Log.Error(e);
                 throw;
             }
@@ -134,26 +120,28 @@ namespace Torch.Server
             VRage.FileSystem.MyFileSystem.Reset();
             VRage.Input.MyGuiGameControlsHelpers.Reset();
             VRage.Input.MyInput.UnloadData();
-            CleanupProfilers();
+            //CleanupProfilers();
 
             Log.Info("Server stopped.");
             _stopHandle.Set();
             IsRunning = false;
         }
 
+        /*
         private string GetInstancePath(bool isService = false, string instanceName = "Torch")
         {
             if (isService)
                 return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), MyPerServerSettings.GameDSName, instanceName);
 
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), MyPerServerSettings.GameDSName);
-        }
+        }*/
 
+        /*
         private void CleanupProfilers()
         {
             typeof(MyRenderProfiler).GetField("m_threadProfiler", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, null);
             typeof(MyRenderProfiler).GetField("m_gpuProfiler", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, null);
             (typeof(MyRenderProfiler).GetField("m_threadProfilers", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as List<MyProfiler>).Clear();
-        }
+        }*/
     }
 }

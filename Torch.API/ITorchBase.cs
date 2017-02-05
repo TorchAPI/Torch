@@ -8,10 +8,13 @@ namespace Torch.API
 {
     public interface ITorchBase
     {
+        event Action SessionLoading;
         event Action SessionLoaded;
+        event Action SessionUnloading;
+        event Action SessionUnloaded;
         IMultiplayer Multiplayer { get; }
         IPluginManager Plugins { get; }
-        Version Version { get; }
+        Version TorchVersion { get; }
         void Invoke(Action action);
         void InvokeBlocking(Action action);
         Task InvokeAsync(Action action);

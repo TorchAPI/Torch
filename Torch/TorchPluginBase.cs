@@ -18,7 +18,7 @@ namespace Torch
         public Version Version { get; }
         public string Name { get; }
         public ITorchBase Torch { get; private set; }
-        private static Logger _log = LogManager.GetCurrentClassLogger();
+        private static readonly Logger _log = LogManager.GetLogger(nameof(TorchPluginBase));
 
         protected TorchPluginBase()
         {
@@ -44,7 +44,7 @@ namespace Torch
             Torch = torch;
         }
 
-        public abstract void Update();
-        public abstract void Unload();
+        public virtual void Update() { }
+        public abstract void Dispose();
     }
 }

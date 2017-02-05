@@ -26,7 +26,7 @@ namespace TestPlugin
         }
 
         /// <inheritdoc />
-        public override void Unload()
+        public override void Dispose()
         {
             //Torch.Log.Write($"Plugin unload {Name}");
         }

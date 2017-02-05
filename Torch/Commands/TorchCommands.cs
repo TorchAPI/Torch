@@ -9,13 +9,20 @@ namespace Torch.Commands
 {
     public class TorchCommands : CommandModule
     {
+#if DEBUG
+        [Command("fixit")]
+        public void Fixit()
+        {
+            Environment.Exit(0);
+        }
+
         [Command("dbgcmd")]
         public void Dbgcmd()
         {
             var commandManager = ((PluginManager)Context.Torch.Plugins).Commands;
             Console.WriteLine(commandManager.Commands.GetTreeString());
         }
-
+#endif
         [Command("help", "Displays help for a command")]
         public void Help()
         {
@@ -32,8 +39,7 @@ namespace Torch.Commands
                 if (command != null)
                     sb.AppendLine(command.HelpText);
 
-                if (children.Any())
-                    sb.AppendLine($"Subcommands: {string.Join(", ", children)}");
+               sb.AppendLine($"Subcommands: {string.Join(", ", children)}");
 
                 Context.Respond(sb.ToString());
             }
@@ -47,7 +53,7 @@ namespace Torch.Commands
         [Command("ver", "Shows the running Torch version.")]
         public void Version()
         {
-            var ver = Context.Torch.Version;
+            var ver = Context.Torch.TorchVersion;
             Context.Respond($"Torch version: {ver}");
         }
 

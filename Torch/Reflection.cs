@@ -48,7 +48,7 @@ namespace Torch
 
 				return true;
 			}
-			catch (AmbiguousMatchException aex)
+			catch (AmbiguousMatchException)
 			{
 				return true;
 			}
@@ -95,7 +95,7 @@ namespace Torch
 				if (prop == null)
 					prop = type.GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 				if (prop == null)
-					prop = type.BaseType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+					prop = type.BaseType?.GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 				if (prop == null)
 				{
 					Log.Error("Failed to find property '{0}' in type '{1}'", propertyName, type.FullName);

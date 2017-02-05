@@ -9,10 +9,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using Sandbox;
+using Sandbox.Game;
+using Sandbox.Game.World;
 using Sandbox.ModAPI;
+using SpaceEngineers.Game;
 using Torch.API;
 using Torch.Managers;
 using VRage.Scripting;
+using VRage.Utils;
 
 namespace Torch
 {
@@ -24,19 +28,18 @@ namespace Torch
         /// </summary>
         [Obsolete]
         public static ITorchBase Instance { get; private set; }
-        protected static Logger Log = LogManager.GetLogger("Torch");
-        public Version Version { get; protected set; }
+        protected static Logger Log { get; } = LogManager.GetLogger("Torch");
+        public Version TorchVersion { get; protected set; }
+        public Version GameVersion { get; private set; }
         public string[] RunArgs { get; set; }
         public IPluginManager Plugins { get; protected set; }
         public IMultiplayer Multiplayer { get; protected set; }
+        public event Action SessionLoading;
         public event Action SessionLoaded;
+        public event Action SessionUnloading;
+        public event Action SessionUnloaded;
 
         private bool _init;
-
-        protected void InvokeSessionLoaded()
-        {
-            SessionLoaded?.Invoke();
-        }
 
         protected TorchBase()
         {
@@ -45,7 +48,7 @@ namespace Torch
 
             Instance = this;
 
-            Version = Assembly.GetExecutingAssembly().GetName().Version; 
+            TorchVersion = Assembly.GetExecutingAssembly().GetName().Version; 
             RunArgs = new string[0];
             Plugins = new PluginManager(this);
             Multiplayer = new MultiplayerManager(this);
@@ -120,12 +123,34 @@ namespace Torch
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
+            SpaceEngineersGame.SetupBasicGameInfo();
+            SpaceEngineersGame.SetupPerGameSettings();
+            TorchVersion = Assembly.GetEntryAssembly().GetName().Version;
+            GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
+            var verInfo = $"Torch {TorchVersion}, SE {GameVersion}";
+            Console.Title = verInfo;
+#if DEBUG
+            Log.Info("DEBUG");
+#else
+            Log.Info("RELEASE");
+#endif
+            Log.Info(verInfo);
+            Log.Info($"Executing assembly: {Assembly.GetEntryAssembly().FullName}");
+            Log.Info($"Executing directory: {AppDomain.CurrentDomain.BaseDirectory}");
+
+            MySession.OnLoading += () => SessionLoading?.Invoke();
+            MySession.AfterLoading += () => SessionLoaded?.Invoke();
+            MySession.OnUnloading += () => SessionUnloading?.Invoke();
+            MySession.OnUnloaded += () => SessionUnloaded?.Invoke();
+
             _init = true;
         }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             Log.Fatal((Exception)e.ExceptionObject);
+            Console.ReadLine();
+            Environment.Exit(-1);
         }
 
         public abstract void Start();

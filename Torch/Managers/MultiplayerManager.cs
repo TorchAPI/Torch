@@ -82,7 +82,7 @@ namespace Torch.Managers
         /// <summary>
         /// Send a message in chat.
         /// </summary>
-        public void SendMessage(string message, long playerId, string author = "Server", string font = MyFontEnum.Blue)
+        public void SendMessage(string message, long playerId, string author = "Server", string font = MyFontEnum.Red)
         {
             var msg = new ScriptedChatMsg {Author = author, Font = font, Target = playerId, Text = message};
             MyMultiplayerBase.SendScriptedChatMessage(ref msg);
@@ -164,7 +164,7 @@ namespace Torch.Managers
         private HashSet<ulong> _waitingForGroup;
         private HashSet<ulong> _waitingForFriends;
         private Dictionary<ulong, ulong> _gameOwnerIds = new Dictionary<ulong, ulong>();
-        private IMultiplayer _multiplayerImplementation;
+        //private IMultiplayer _multiplayerImplementation;
 
         /// <summary>
         /// Removes Keen's hooks into some Steam events so we have full control over client authentication

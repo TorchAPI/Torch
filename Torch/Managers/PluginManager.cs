@@ -72,10 +72,10 @@ namespace Torch.Managers
         /// <summary>
         /// Unloads all plugins.
         /// </summary>
-        public void UnloadPlugins()
+        public void DisposePlugins()
         {
             foreach (var plugin in _plugins)
-                plugin.Unload();
+                plugin.Dispose();
 
             _plugins.Clear();
         }
@@ -114,11 +114,14 @@ namespace Torch.Managers
                         catch (Exception e)
                         {
                             _log.Error($"Error loading plugin '{type.FullName}'");
+                            _log.Error(e);
                             throw;
                         }
                     }
                 }
             }
+
+            _plugins.ForEach(p => p.Init(_torch));
         }
 
         public IEnumerator<ITorchPlugin> GetEnumerator()
@@ -168,7 +171,7 @@ namespace Torch.Managers
 
             public void Dispose()
             {
-                _manager.UnloadPlugins();
+                _manager.DisposePlugins();
             }
         }
     }

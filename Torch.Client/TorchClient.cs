@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Sandbox;
 using Sandbox.Engine.Platform;
+using Sandbox.Engine.Utils;
 using Sandbox.Game;
 using SpaceEngineers.Game;
 using Torch.API;
@@ -24,6 +25,7 @@ namespace Torch.Client
 
         public override void Init()
         {
+            Log.Info("Initializing Torch Client");
             base.Init();
 
             if (!File.Exists("steam_appid.txt"))
@@ -71,9 +73,8 @@ namespace Torch.Client
             {
                 Persons = new List<MyCreditsPerson>
                     {
-                        new MyCreditsPerson("JIMMACLE"),
-                        new MyCreditsPerson("REXXAR"),
-                        new MyCreditsPerson("PHOENIXTHESAGE")
+                        new MyCreditsPerson("THE TORCH TEAM"),
+                        new MyCreditsPerson("http://github.com/TorchSE"),
                     }
             };
             MyPerGameSettings.Credits.Departments.Insert(0, credits);

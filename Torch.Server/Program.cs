@@ -12,9 +12,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using NLog;
+using Sandbox.Game.World;
+using Sandbox.ModAPI;
 using Torch;
 using Torch.API;
+using VRage.Game.ModAPI;
 
 namespace Torch.Server
 {
@@ -34,19 +39,49 @@ namespace Torch.Server
                 return;
             }
 
-            if (args.FirstOrDefault() == "-svcinstall")
+            string configName = args.Length > 0 ? args[0] : "TorchConfig.xml";
+            var configPath = Path.Combine(Directory.GetCurrentDirectory(), configName);
+            var options = new ServerConfig("Torch");
+            if (File.Exists(configName))
             {
-                /* Working on installing the service properly instead of with sc.exe
-                _log.Info("Installing service");
-                var installer = new TorchServiceInstaller();
-                installer.Context = new InstallContext(Path.Combine(Directory.GetCurrentDirectory(), "svclog.log"), null);
-                installer.Context.Parameters.Add("name", "Torch DS");
-                installer.Install(new Hashtable
+                _log.Info($"Loading config {configPath}");
+                options = ServerConfig.LoadFrom(configPath);
+            }
+            else
+            {
+                _log.Info($"Generating default config at {configPath}");
+                options.SaveTo(configPath);
+            }
+
+            /*
+            if (!parser.ParseArguments(args, options))
+            {
+                _log.Error($"Parsing arguments failed: {string.Join(" ", args)}");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(options.Config) && File.Exists(options.Config))
+            {
+                options = ServerConfig.LoadFrom(options.Config);
+                parser.ParseArguments(args, options);
+            }*/
+
+            //RestartOnCrash autostart autosave=15 
+            //gamepath ="C:\Program Files\Space Engineers DS" instance="Hydro Survival" instancepath="C:\ProgramData\SpaceEngineersDedicated\Hydro Survival"
+
+            /*
+            if (options.InstallService)
+            {
+                var serviceName = $"\"Torch - {options.InstanceName}\"";
+                // Working on installing the service properly instead of with sc.exe
+                _log.Info($"Installing service '{serviceName}");
+                var exePath = $"\"{Assembly.GetExecutingAssembly().Location}\"";
+                var createInfo = new ServiceCreateInfo
                 {
-                    {"name", "Torch DS"}
-                    
-                });
-                _log.Info("Service Installed");*/
+                    Name = options.InstanceName,
+                    BinaryPath = exePath,
+                };
+                _log.Info("Service Installed");
 
                 var runArgs = string.Join(" ", args.Skip(1));
                 _log.Info($"Installing Torch as a service with arguments '{runArgs}'");
@@ -63,7 +98,7 @@ namespace Torch.Server
                 return;
             }
 
-            if (args.FirstOrDefault() == "-svcuninstall")
+            if (options.UninstallService)
             {
                 _log.Info("Uninstalling Torch service");
                 var startInfo = new ProcessStartInfo
@@ -77,9 +112,9 @@ namespace Torch.Server
                 Process.Start(startInfo).WaitForExit();
                 _log.Info("Torch service uninstalled");
                 return;
-            }
+            }*/
 
-            _server = new TorchServer();
+            _server = new TorchServer(options);
             _server.Init();
             _server.Start();
         }
