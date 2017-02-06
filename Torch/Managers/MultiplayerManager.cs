@@ -74,15 +74,10 @@ namespace Torch.Managers
             return p;
         }
 
-        public void SendMessage(string message)
-        {
-            SendMessage(message, 0);
-        }
-
         /// <summary>
         /// Send a message in chat.
         /// </summary>
-        public void SendMessage(string message, long playerId, string author = "Server", string font = MyFontEnum.Red)
+        public void SendMessage(string message, string author = "Server", long playerId = 0, string font = MyFontEnum.Red)
         {
             var msg = new ScriptedChatMsg {Author = author, Font = font, Target = playerId, Text = message};
             MyMultiplayerBase.SendScriptedChatMessage(ref msg);

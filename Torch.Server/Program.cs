@@ -39,9 +39,9 @@ namespace Torch.Server
                 return;
             }
 
-            string configName = args.Length > 0 ? args[0] : "TorchConfig.xml";
+            var configName = args.FirstOrDefault() ?? "TorchConfig.xml";
             var configPath = Path.Combine(Directory.GetCurrentDirectory(), configName);
-            var options = new ServerConfig("Torch");
+            ServerConfig options;
             if (File.Exists(configName))
             {
                 _log.Info($"Loading config {configPath}");
@@ -50,6 +50,7 @@ namespace Torch.Server
             else
             {
                 _log.Info($"Generating default config at {configPath}");
+                options = new ServerConfig();
                 options.SaveTo(configPath);
             }
 

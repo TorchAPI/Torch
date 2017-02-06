@@ -16,7 +16,6 @@ namespace Torch.Server
 
         public string InstancePath { get; set; }
         public string InstanceName { get; set; }
-        //public string SaveName { get; set; }
         public int Autosave { get; set; }
         public bool AutoRestart { get; set; }
 
@@ -30,7 +29,6 @@ namespace Torch.Server
 
         public static ServerConfig LoadFrom(string path)
         {
-            _log.Info($"Loading config from '{path}'");
             try
             {
                 var serializer = new XmlSerializer(typeof(ServerConfig));
@@ -43,14 +41,13 @@ namespace Torch.Server
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _log.Error(e);
                 return null;
             }
         }
 
         public bool SaveTo(string path)
         {
-            _log.Info($"Saving config to '{path}'");
             try
             {
                 var serializer = new XmlSerializer(typeof(ServerConfig));
@@ -62,7 +59,7 @@ namespace Torch.Server
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _log.Error(e);
                 return false;
             }
         }

@@ -27,6 +27,7 @@ namespace Torch.API
     public interface ITorchServer : ITorchBase
     {
         bool IsRunning { get; }
+        string InstancePath { get; }
     }
 
     public interface ITorchClient : ITorchBase

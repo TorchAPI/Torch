@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using NLog;
 using Sandbox;
 using Sandbox.Game;
+using Sandbox.Game.Multiplayer;
+using Sandbox.Game.Screens.Helpers;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using SpaceEngineers.Game;
@@ -23,10 +25,9 @@ namespace Torch
     public abstract class TorchBase : ITorchBase
     {
         /// <summary>
-        /// Dirty hack because *keen*
-        /// Use only if absolutely necessary.
+        /// Hack because *keen*.
+        /// Use only if necessary, prefer dependency injection.
         /// </summary>
-        [Obsolete]
         public static ITorchBase Instance { get; private set; }
         protected static Logger Log { get; } = LogManager.GetLogger("Torch");
         public Version TorchVersion { get; protected set; }
@@ -53,6 +54,37 @@ namespace Torch
             Plugins = new PluginManager(this);
             Multiplayer = new MultiplayerManager(this);
         }
+
+        public async Task SaveGameAsync()
+        {
+            Log.Info("Saving game");
+            if (MySandboxGame.IsGameReady && !MyAsyncSaving.InProgress && Sync.IsServer && !(MySession.Static.LocalCharacter?.IsDead ?? true))
+            {
+                using (var e = new AutoResetEvent(false))
+                {
+                    MyAsyncSaving.Start(() =>
+                    {
+                        MySector.ResetEyeAdaptation = true;
+                        e.Set();
+                    });
+
+                    await Task.Run(() =>
+                    {
+                        if (!e.WaitOne(60000))
+                        {
+                            Log.Error("Save failed!");
+                            Multiplayer.SendMessage("Save timed out!", author: "Error");
+                        }
+                    });
+                }
+            }
+            else
+            {
+                Log.Error("Cannot save");
+            }
+        }
+
+        #region Game Actions
 
         /// <summary>
         /// Invokes an action on the game thread.
@@ -116,6 +148,8 @@ namespace Torch
             if (!e.WaitOne(60000))
                 throw new TimeoutException("The game action timed out.");
         }
+
+        #endregion
 
         public virtual void Init()
         {
