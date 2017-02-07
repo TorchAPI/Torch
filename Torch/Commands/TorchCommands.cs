@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Torch.Commands.Permissions;
 using Torch.Managers;
+using VRage.Game.ModAPI;
 
 namespace Torch.Commands
 {
@@ -65,6 +67,7 @@ namespace Torch.Commands
         }
 
         [Command("stop", "Stops the server.")]
+        [Permission(MyPromoteLevel.Admin)]
         public void Stop()
         {
             Context.Respond("Stopping server.");

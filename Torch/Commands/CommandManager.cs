@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using NLog;
+using Sandbox.Game.World;
 using Torch.API;
 using Torch.Managers;
 using VRage.Game.ModAPI;
@@ -30,8 +31,8 @@ namespace Torch.Commands
 
         public bool HasPermission(ulong steamId, Command command)
         {
-            _log.Warn("Command permissions not implemented");
-            return true;
+            var userLevel = MySession.Static.GetUserPromoteLevel(steamId);
+            return userLevel >= command.MinimumPromoteLevel;
         }
 
         public bool IsCommand(string command)
@@ -97,6 +98,7 @@ namespace Torch.Commands
                 if (!HasPermission(msg.Author, command))
                 {
                     _log.Info($"{player.DisplayName} tried to use command {cmdPath} without permission");
+                    _torch.Multiplayer.SendMessage($"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", playerId: player.IdentityId);
                     return;
                 }
 

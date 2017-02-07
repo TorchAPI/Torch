@@ -154,6 +154,7 @@
     <Compile Include="Commands\CommandManager.cs" />
     <Compile Include="Commands\CommandTree.cs" />
     <Compile Include="Commands\DefaultPermissionAttribute.cs" />
+    <Compile Include="Commands\Permissions\PermissionAttribute.cs" />
     <Compile Include="Commands\Permissions\PermissonsSystem.cs" />
     <Compile Include="Commands\TorchCommands.cs" />
     <Compile Include="Managers\ChatManager.cs" />

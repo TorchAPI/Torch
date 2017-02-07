@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Torch.API;
+using Torch.Commands.Permissions;
 using VRage.Game.ModAPI;
 
 namespace Torch.Commands
 {
     public class Command
     {
+        public MyPromoteLevel MinimumPromoteLevel { get; }
         public string Name { get; }
         public string Description { get; }
         public string HelpText { get; }
@@ -24,6 +26,9 @@ namespace Torch.Commands
             var commandAttribute = commandMethod.GetCustomAttribute<CommandAttribute>();
             if (commandAttribute == null)
                 throw new TypeLoadException($"Method does not have a {nameof(CommandAttribute)}");
+
+            var permissionAttribute = commandMethod.GetCustomAttribute<PermissionAttribute>();
+            MinimumPromoteLevel = permissionAttribute?.PromoteLevel ?? MyPromoteLevel.None;
 
             if (!commandMethod.DeclaringType.IsSubclassOf(typeof(CommandModule)))
                 throw new TypeLoadException($"Command {commandMethod.Name}'s declaring type {commandMethod.DeclaringType.FullName} is not a subclass of {nameof(CommandModule)}");
