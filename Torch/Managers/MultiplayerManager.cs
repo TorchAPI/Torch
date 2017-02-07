@@ -63,9 +63,9 @@ namespace Torch.Managers
             });
         }
 
-        public IMyPlayer GetPlayerByDisplayName(string displayName)
+        public IMyPlayer GetPlayerByName(string name)
         {
-            return _onlinePlayers.FirstOrDefault(x => x.Value.DisplayName == displayName).Value;
+            return _onlinePlayers.FirstOrDefault(x => x.Value.DisplayName == name).Value;
         }
 
         public IMyPlayer GetPlayerBySteamId(ulong steamId)

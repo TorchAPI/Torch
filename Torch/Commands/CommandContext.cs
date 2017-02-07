@@ -9,15 +9,23 @@ namespace Torch.Commands
 {
     public class CommandContext
     {
+        /// <summary>
+        /// The plugin that added this command.
+        /// </summary>
         public ITorchPlugin Plugin { get; }
+        /// <summary>
+        /// The current Torch instance.
+        /// </summary>
         public ITorchBase Torch { get; }
+        /// <summary>
+        /// The player who ran the command.
+        /// </summary>
         public IMyPlayer Player { get; }
+        /// <summary>
+        /// The command arguments split by spaces and quotes. Ex. "this is" a command -> {this is, a, command}
+        /// </summary>
         public List<string> Args { get; }
 
-        /// <summary>
-        /// Splits the argument by single words and quoted blocks.
-        /// </summary>
-        /// <returns></returns>
         public CommandContext(ITorchBase torch, ITorchPlugin plugin, IMyPlayer player, List<string> args = null)
         {
             Torch = torch;
@@ -28,7 +36,7 @@ namespace Torch.Commands
 
         public void Respond(string message, string sender = "Server", string font = MyFontEnum.Blue)
         {
-            Torch.Multiplayer.SendMessage(message, Player.IdentityId, sender, font);
+            Torch.Multiplayer.SendMessage(message, sender, Player.IdentityId, font);
         }
     }
 }

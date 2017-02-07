@@ -17,5 +17,6 @@ namespace Torch.API
         void KickPlayer(ulong id);
         void BanPlayer(ulong id, bool banned = true);
         IMyPlayer GetPlayerBySteamId(ulong id);
+        IMyPlayer GetPlayerByName(string name);
     }
 }
