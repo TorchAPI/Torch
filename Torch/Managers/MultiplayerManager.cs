@@ -39,7 +39,7 @@ namespace Torch.Managers
         public event Action<ulong, ConnectionState> PlayerLeft;
         public event MessageReceivedDel MessageReceived;
 
-        public MTObservableCollection<IChatMessage> ChatHistory { get; } = new MTObservableCollection<IChatMessage>();
+        public List<IChatMessage> ChatHistory { get; } = new List<IChatMessage>();
         public Dictionary<ulong, IMyPlayer> Players { get; } = new Dictionary<ulong, IMyPlayer>();
         public IMyPlayer LocalPlayer => MySession.Static.LocalHumanPlayer;
         private readonly ITorchBase _torch;
@@ -139,8 +139,7 @@ namespace Torch.Managers
         private static void RemoveHandlers()
         {
             var eventField = typeof(GameServer).GetField("<backing_store>ValidateAuthTicketResponse", BindingFlags.NonPublic | BindingFlags.Instance);
-            var eventDel = eventField?.GetValue(SteamServerAPI.Instance.GameServer) as MulticastDelegate;
-            if (eventDel != null)
+            if (eventField?.GetValue(SteamServerAPI.Instance.GameServer) is MulticastDelegate eventDel)
             {
                 foreach (var handle in eventDel.GetInvocationList())
                 {

@@ -40,7 +40,7 @@
                 <Label Content="Mods"/>
                 <ListBox ItemsSource="{Binding Mods}" Width="130" Margin="3,0,3,3" Height="100" MouseDoubleClick="Mods_OnMouseDoubleClick"/>
             </StackPanel>
-            <ScrollViewer Margin="3" DockPanel.Dock="Right">
+            <ScrollViewer Margin="3" DockPanel.Dock="Right" Height="700">
                 <StackPanel DataContext="{Binding SessionSettings}">
                     <Expander Header="Multipliers">
                         <StackPanel Margin="10,0,0,0">
@@ -81,13 +81,34 @@
                     </Expander>
                     <Expander Header="Environment">
                         <StackPanel Margin="10,0,0,0">
-                            <CheckBox IsChecked="{Binding EnableSunRotation}" Content="Enable Sun Rotation" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableRealisticSound}" Content="Enable Realistic Sound" Margin="3"/>
                             <CheckBox IsChecked="{Binding EnableAirtightness}" Content="Enable Airtightness" Margin="3"/>
                             <CheckBox IsChecked="{Binding EnableOxygen}" Content="Enable Oxygen" Margin="3"/>
                             <CheckBox IsChecked="{Binding EnableDestructibleBlocks}" Content="Enable Destructible Blocks" Margin="3"/>
                             <CheckBox IsChecked="{Binding EnableToolShake}" Content="Enable Tool Shake" Margin="3"/>
                             <CheckBox IsChecked="{Binding EnableVoxelDestruction}" Content="Enable Voxel Destruction" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableSunRotation}" Content="Enable Sun Rotation" Margin="3"/>
+                            <DockPanel>
+                                <TextBox Text="{Binding SunRotationInterval}" Margin="3" Width="70"/>
+                                <Label Content="Sun Rotation Interval (mins)"/>
+                            </DockPanel>
                             <CheckBox IsChecked="{Binding EnableFlora}" Content="Enable Flora" Margin="3"/>
+                            <DockPanel>
+                                <TextBox Text="{Binding FloraDensity}" Margin="3" Width="70"/>
+                                <Label Content="Flora Density"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding FloraDensityMultiplier}" Margin="3" Width="70"/>
+                                <Label Content="Flora Density Multiplier"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding ViewDistance}" Margin="3" Width="70"/>
+                                <Label Content="View Distance (meters)"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding WorldSize}" Margin="3" Width="70"/>
+                                <Label Content="World Size (km)"/>
+                            </DockPanel>
                             <DockPanel>
                                 <ComboBox SelectedItem="{Binding EnvironmentHostility}" ItemsSource="{Binding EnvironmentHostilityValues}" Margin="3" Width="100" DockPanel.Dock="Left"/>
                                 <Label Content="Environment Hostility"></Label>
@@ -114,7 +135,6 @@
                             <CheckBox IsChecked="{Binding EnableRespawnShips}" Content="Enable Respawn Ships" Margin="3"/>
                             <CheckBox IsChecked="{Binding EnableScripterRole}" Content="Enable Scripter Role" Margin="3"/>
                             <CheckBox IsChecked="{Binding EnableSpectator}" Content="Enable Spectator Camera" Margin="3"/>
-                            <CheckBox IsChecked="{Binding EnableRealisticSound}" Content="Enable Realistic Sound" Margin="3"/>
                             <CheckBox IsChecked="{Binding ResetOwnership}" Content="Reset Ownership" Margin="3"/>
                             <CheckBox IsChecked="{Binding DeleteRespawnShips}" Content="Remove Respawn Ships on Logoff" Margin="3"/>
                             <CheckBox IsChecked="{Binding EnableThrusterDamage}" Content="Enable Thruster Damage" Margin="3"/>
@@ -124,14 +144,6 @@
                             <DockPanel>
                                 <ComboBox SelectedItem="{Binding GameMode}" ItemsSource="{Binding GameModeValues}" Margin="3" Width="100" DockPanel.Dock="Left"/>
                                 <Label Content="Game Mode"></Label>
-                            </DockPanel>
-                            <DockPanel>
-                                <TextBox Text="{Binding FloraDensity}" Margin="3" Width="70"/>
-                                <Label Content="Flora Density"/>
-                            </DockPanel>
-                            <DockPanel>
-                                <TextBox Text="{Binding FloraDensityMultiplier}" Margin="3" Width="70"/>
-                                <Label Content="Flora Density Multiplier"/>
                             </DockPanel>
                             <DockPanel>
                                 <TextBox Text="{Binding MaxBackupSaves}" Margin="3" Width="70"/>
@@ -160,18 +172,6 @@
                             <DockPanel>
                                 <TextBox Text="{Binding SpawnTimeMultiplier}" Margin="3" Width="70"/>
                                 <Label Content="Respawn Time Multiplier"/>
-                            </DockPanel>
-                            <DockPanel>
-                                <TextBox Text="{Binding SunRotationInterval}" Margin="3" Width="70"/>
-                                <Label Content="Sun Rotation Interval (mins)"/>
-                            </DockPanel>
-                            <DockPanel>
-                                <TextBox Text="{Binding ViewDistance}" Margin="3" Width="70"/>
-                                <Label Content="View Distance (meters)"/>
-                            </DockPanel>
-                            <DockPanel>
-                                <TextBox Text="{Binding WorldSize}" Margin="3" Width="70"/>
-                                <Label Content="World Size (km)"/>
                             </DockPanel>
                         </StackPanel>
                     </Expander>

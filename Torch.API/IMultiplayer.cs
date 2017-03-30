@@ -18,6 +18,6 @@ namespace Torch.API
         void BanPlayer(ulong steamId, bool banned = true);
         IMyPlayer GetPlayerBySteamId(ulong id);
         IMyPlayer GetPlayerByName(string name);
-        MTObservableCollection<IChatMessage> ChatHistory { get; }
+        List<IChatMessage> ChatHistory { get; }
     }
 }
