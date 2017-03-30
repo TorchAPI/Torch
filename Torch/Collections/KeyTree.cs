@@ -9,6 +9,25 @@ namespace Torch.Collections
     public class KeyTree<TKey, TValue>
     {
         private Dictionary<TKey, KeyTreeNode<TKey, TValue>> _nodes = new Dictionary<TKey, KeyTreeNode<TKey, TValue>>();
+
+        public KeyTreeNode<TKey, TValue> this[TKey key] => _nodes[key];
+
+        public void AddNode(TKey key, TValue value)
+        {
+            _nodes.Add(key, new KeyTreeNode<TKey, TValue>(key, value));
+        }
+
+        public bool RemoveNode(TKey key)
+        {
+            return _nodes.Remove(key);
+        }
+
+        public IEnumerable<KeyTreeNode<TKey, TValue>> Traverse()
+        {
+            foreach (var node in _nodes.Values)
+                foreach (var child in node.Traverse())
+                    yield return child;
+        }
     }
 
     public class KeyTreeNode<TKey, TValue>
@@ -25,6 +44,8 @@ namespace Torch.Collections
             Key = key;
             Value = value;
         }
+
+        public KeyTreeNode<TKey, TValue> this[TKey key] => _children[key];
 
         public KeyTreeNode<TKey, TValue> GetChild(TKey key)
         {

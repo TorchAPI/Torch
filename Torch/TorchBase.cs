@@ -17,6 +17,7 @@ using Sandbox.ModAPI;
 using SpaceEngineers.Game;
 using Torch.API;
 using Torch.Managers;
+using VRage.FileSystem;
 using VRage.Scripting;
 using VRage.Utils;
 
@@ -35,6 +36,8 @@ namespace Torch
         public string[] RunArgs { get; set; }
         public IPluginManager Plugins { get; protected set; }
         public IMultiplayer Multiplayer { get; protected set; }
+        public EntityManager Entities { get; protected set; }
+        public NetworkManager Network { get; protected set; }
         public event Action SessionLoading;
         public event Action SessionLoaded;
         public event Action SessionUnloading;
@@ -53,6 +56,13 @@ namespace Torch
             RunArgs = new string[0];
             Plugins = new PluginManager(this);
             Multiplayer = new MultiplayerManager(this);
+            Entities = new EntityManager(this);
+            Network = NetworkManager.Instance;
+        }
+
+        public bool IsOnGameThread()
+        {
+            return Thread.CurrentThread.ManagedThreadId == MySandboxGame.Static.UpdateThread.ManagedThreadId;
         }
 
         public async Task SaveGameAsync()

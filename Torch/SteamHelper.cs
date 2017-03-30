@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 using NLog;
 using Sandbox;
 using Sandbox.Engine.Networking;
@@ -19,9 +22,13 @@ namespace Torch
         private static CancellationTokenSource _tokenSource = new CancellationTokenSource();
         private static CancellationToken _cancelToken;
         private static Logger _log = LogManager.GetLogger(nameof(SteamHelper));
+        public static string BasePath { get; private set; }
+        private static string _libraryFolders;
 
         public static void Init()
         {
+            BasePath = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Valve\Steam", "SteamPath", null) as string;
+            _libraryFolders = File.ReadAllText(Path.Combine(BasePath, @"steamapps\libraryfolders.vdf"));
             _cancelToken = _tokenSource.Token;
 
             Task.Run(() =>
@@ -105,6 +112,21 @@ namespace Torch
         public static MyObjectBuilder_Checkpoint.ModItem GetModItem(SteamUGCDetails details)
         {
             return new MyObjectBuilder_Checkpoint.ModItem(null, details.PublishedFileId, details.Title);
+        }
+
+        public static string GetInstallFolder(string subfolderName)
+        {
+            var basePaths = new List<string>();
+            var matches = Regex.Matches(_libraryFolders, @"""\d+""[ \t]+""([^""]+)""", RegexOptions.Singleline);
+            foreach (Match match in matches)
+            {
+                basePaths.Add(match.Groups[1].Value);
+            }
+
+            var path = basePaths.Select(p => Path.Combine(p, "SteamApps", "common", subfolderName)).FirstOrDefault(Directory.Exists);
+            if (path != null && !path.EndsWith("\\"))
+                path += "\\";
+            return path;
         }
     }
 }

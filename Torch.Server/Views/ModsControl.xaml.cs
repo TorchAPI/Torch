@@ -32,22 +32,32 @@ namespace Torch.Server
 
         private void addBtn_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new AddModsDialog();
-            dialog.ShowDialog();
+            ulong[] mods;
+            if (!string.IsNullOrEmpty(ModIdBox.Text))
+            {
+                mods = new ulong[1];
+                ulong.TryParse(ModIdBox.Text, out mods[0]);
+            }
+            else
+            {
+                var dialog = new AddModsDialog();
+                dialog.ShowDialog();
+                mods = dialog.Result;
+            }
 
-            foreach (var id in dialog.Result)
+            foreach (var id in mods)
             {
                 var details = SteamHelper.GetItemDetails(id);
                 if (details.FileType != WorkshopFileType.Community)
                     continue;
 
                 var item = SteamHelper.GetModItem(details);
-                var desc = string.Join("\n", details.Description.ReadLines(5, true), "Double click to open the workshop page.");
+                var desc = details.Description.Length < 500 ? details.Description : details.Description.Substring(0, 500);
                 ModList.Items.Add(new ModViewModel(item, desc));
             }
         }
 
-        private void modList_OnMouesDoubleClick(object sender, MouseButtonEventArgs e)
+        private void modList_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             var box = (ListView)sender;
             if (box.SelectedItem == null)

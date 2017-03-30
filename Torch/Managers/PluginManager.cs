@@ -21,14 +21,13 @@ using VRage.Library.Collections;
 
 namespace Torch.Managers
 {
-    public class PluginManager : IPluginManager
+    public class PluginManager : IPluginManager, IPlugin
     {
         private readonly ITorchBase _torch;
         private static Logger _log = LogManager.GetLogger(nameof(PluginManager));
         public const string PluginDir = "Plugins";
 
         private readonly List<ITorchPlugin> _plugins = new List<ITorchPlugin>();
-        private readonly PluginUpdater _updater;
         public CommandManager Commands { get; private set; }
 
         public float LastUpdateMs => _lastUpdateMs;
@@ -37,7 +36,6 @@ namespace Torch.Managers
         public PluginManager(ITorchBase torch)
         {
             _torch = torch;
-            _updater = new PluginUpdater(this);
 
             if (!Directory.Exists(PluginDir))
                 Directory.CreateDirectory(PluginDir);
@@ -46,7 +44,7 @@ namespace Torch.Managers
         }
 
         /// <summary>
-        /// Adds the plugin updater plugin to VRage's plugin system.
+        /// Adds the plugin manager "plugin" to VRage's plugin system.
         /// </summary>
         private void InitUpdater()
         {
@@ -55,7 +53,7 @@ namespace Torch.Managers
             if (pluginList == null)
                 throw new TypeLoadException($"{fieldName} field not found in {nameof(MyPlugins)}");
 
-            pluginList.Add(_updater);
+            pluginList.Add(this);
         }
 
         /// <summary>
@@ -85,7 +83,8 @@ namespace Torch.Managers
         /// </summary>
         public void Init()
         {
-            var network = NetworkManager.Instance;
+            ((TorchBase)_torch).Network.Init();
+            ChatManager.Instance.Init();
             Commands = new CommandManager(_torch);
 
             _log.Info("Loading plugins");
@@ -93,8 +92,7 @@ namespace Torch.Managers
             var dlls = Directory.GetFiles(pluginsPath, "*.dll", SearchOption.AllDirectories);
             foreach (var dllPath in dlls)
             {
-                UnblockDll(dllPath);
-                var asm = Assembly.LoadFrom(dllPath);
+                var asm = Assembly.UnsafeLoadFrom(dllPath);
 
                 foreach (var type in asm.GetExportedTypes())
                 {
@@ -134,45 +132,19 @@ namespace Torch.Managers
             return GetEnumerator();
         }
 
-        /// <summary>
-        /// Removes the lock on a DLL downloaded from the internet.
-        /// </summary>
-        /// <returns></returns>
-        public bool UnblockDll(string fileName)
+        void IPlugin.Init(object obj)
         {
-            return DeleteFile(fileName + ":Zone.Identifier");
+            Init();
         }
 
-        [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool DeleteFile(string name);
-
-        /// <summary>
-        /// Tiny "plugin" to call <see cref="PluginManager"/>'s update method after each game tick.
-        /// </summary>
-        private class PluginUpdater : IPlugin
+        void IPlugin.Update()
         {
-            private readonly IPluginManager _manager;
+            UpdatePlugins();
+        }
 
-            public PluginUpdater(IPluginManager manager)
-            {
-                _manager = manager;
-            }
-
-            public void Init(object obj)
-            {
-                _manager.Init();
-            }
-
-            public void Update()
-            {
-                _manager.UpdatePlugins();
-            }
-
-            public void Dispose()
-            {
-                _manager.DisposePlugins();
-            }
+        public void Dispose()
+        {
+            DisposePlugins();
         }
     }
 }

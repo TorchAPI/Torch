@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using VRage;
 using VRage.Library.Collections;
 using VRage.Network;
 using VRage.Serialization;
@@ -27,7 +28,7 @@ namespace Torch.Managers
         /// <param name="stream"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public abstract bool Handle(ulong remoteUserId, CallSite site, BitStream stream, object obj);
+        public abstract bool Handle(ulong remoteUserId, CallSite site, BitStream stream, object obj, MyPacket packet);
         
         /// <summary>
         /// Extracts method arguments from the bitstream or packs them back in, depending on stream read mode.

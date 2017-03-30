@@ -14,29 +14,15 @@ namespace Torch.Managers
 {
     public class NetworkManager
     {
-        private NetworkManager()
-        {
-            try
-            {
-                if (ReflectionUnitTest())
-                    InitNetworkIntercept();
-            }
-            catch (Exception ex)
-            {
-                _log.Error("Error initializing network intercept");
-                _log.Error(ex);
-            }
-        }
-
         private static Logger _log = LogManager.GetLogger(nameof(NetworkManager));
-        private static NetworkManager _instance;
-        public static NetworkManager Instance => _instance ?? (_instance = new NetworkManager());
+        public static NetworkManager Instance { get; } = new NetworkManager();
 
         private const string MyTransportLayerField = "TransportLayer";
         private const string TypeTableField = "m_typeTable";
         private const string TransportHandlersField = "m_handlers";
         private MyTypeTable m_typeTable = new MyTypeTable();
         private HashSet<NetworkHandlerBase> _networkHandlers = new HashSet<NetworkHandlerBase>();
+        private bool _init;
 
         private bool ReflectionUnitTest(bool suppress = false)
         {
@@ -70,8 +56,16 @@ namespace Torch.Managers
         /// <summary>
         /// Loads the network intercept system
         /// </summary>
-        public void InitNetworkIntercept()
+        public void Init()
         {
+            if (_init)
+                return;
+
+            _init = true;
+
+            if (!ReflectionUnitTest())
+                throw new InvalidOperationException("Reflection unit test failed.");
+
             m_typeTable = typeof(MyReplicationLayerBase).GetField(TypeTableField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(MyMultiplayer.ReplicationLayer) as MyTypeTable;
             //don't bother with nullchecks here, it was all handled in ReflectionUnitTest
             var transportType = typeof(MySyncLayer).GetField(MyTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance).FieldType;
@@ -163,7 +157,7 @@ namespace Torch.Managers
                 try
                 {
                     if (handler.CanHandle(site))
-                        discard |= handler.Handle(packet.Sender.Value, site, stream, obj);
+                        discard |= handler.Handle(packet.Sender.Value, site, stream, obj, packet);
                 }
                 catch (Exception ex)
                 {

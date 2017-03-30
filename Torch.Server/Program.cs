@@ -28,6 +28,7 @@ namespace Torch.Server
         private static ITorchServer _server;
         private static Logger _log = LogManager.GetLogger("Torch");
 
+        [STAThread]
         public static void Main(string[] args)
         {
             if (!Environment.UserInteractive)
@@ -41,16 +42,16 @@ namespace Torch.Server
 
             var configName = args.FirstOrDefault() ?? "TorchConfig.xml";
             var configPath = Path.Combine(Directory.GetCurrentDirectory(), configName);
-            ServerConfig options;
+            TorchConfig options;
             if (File.Exists(configName))
             {
                 _log.Info($"Loading config {configPath}");
-                options = ServerConfig.LoadFrom(configPath);
+                options = TorchConfig.LoadFrom(configPath);
             }
             else
             {
                 _log.Info($"Generating default config at {configPath}");
-                options = new ServerConfig();
+                options = new TorchConfig();
                 options.SaveTo(configPath);
             }
 
@@ -117,7 +118,9 @@ namespace Torch.Server
 
             _server = new TorchServer(options);
             _server.Init();
-            _server.Start();
+            var ui = new TorchUI((TorchServer)_server);
+            ui.LoadConfig(options);
+            ui.ShowDialog();
         }
     }
 }

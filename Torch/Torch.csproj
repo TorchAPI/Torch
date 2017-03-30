@@ -145,6 +145,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChatMessage.cs" />
     <Compile Include="Collections\KeyTree.cs" />
     <Compile Include="Commands\CategoryAttribute.cs" />
     <Compile Include="Commands\Command.cs" />
@@ -153,22 +154,20 @@
     <Compile Include="Commands\CommandContext.cs" />
     <Compile Include="Commands\CommandManager.cs" />
     <Compile Include="Commands\CommandTree.cs" />
-    <Compile Include="Commands\DefaultPermissionAttribute.cs" />
     <Compile Include="Commands\Permissions\PermissionAttribute.cs" />
     <Compile Include="Commands\Permissions\PermissonsSystem.cs" />
     <Compile Include="Commands\TorchCommands.cs" />
     <Compile Include="Managers\ChatManager.cs" />
+    <Compile Include="Managers\EntityManager.cs" />
     <Compile Include="Managers\NetworkManager\NetworkHandlerBase.cs" />
     <Compile Include="Managers\NetworkManager\NetworkManager.cs" />
     <Compile Include="Managers\MultiplayerManager.cs" />
     <Compile Include="Reflection.cs" />
     <Compile Include="Managers\ScriptingManager.cs" />
     <Compile Include="TorchBase.cs" />
-    <Compile Include="Player.cs" />
-    <Compile Include="Collections\PlayerInfoCache.cs" />
     <Compile Include="SteamService.cs" />
+    <Compile Include="TorchConfig.cs" />
     <Compile Include="TorchPluginBase.cs" />
-    <Compile Include="ViewModels\ChatItem.cs" />
     <Compile Include="ViewModels\ModViewModel.cs" />
     <Compile Include="Collections\MTObservableCollection.cs" />
     <Compile Include="Extensions\MyPlayerCollectionExtensions.cs" />

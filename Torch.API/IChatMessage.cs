@@ -6,13 +6,11 @@ using System.Threading.Tasks;
 
 namespace Torch.API
 {
-    public interface IPlayer
+    public interface IChatMessage
     {
+        DateTime Timestamp { get; }
         ulong SteamId { get; }
-        List<ulong> IdentityIds { get; }
         string Name { get; }
-        ConnectionState State { get; }
-        DateTime LastConnected { get; }
-        void SetConnectionState(ConnectionState state);
+        string Message { get; }
     }
 }

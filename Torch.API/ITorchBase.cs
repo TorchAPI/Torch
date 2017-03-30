@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VRage.Game.ModAPI;
 
 namespace Torch.API
 {
@@ -19,6 +20,7 @@ namespace Torch.API
         void InvokeBlocking(Action action);
         Task InvokeAsync(Action action);
         string[] RunArgs { get; set; }
+        bool IsOnGameThread();
         void Start();
         void Stop();
         void Init();
@@ -28,6 +30,7 @@ namespace Torch.API
     {
         bool IsRunning { get; }
         string InstancePath { get; }
+        void Start(IMyConfigDedicated config);
     }
 
     public interface ITorchClient : ITorchBase

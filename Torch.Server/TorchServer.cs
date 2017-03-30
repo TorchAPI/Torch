@@ -18,9 +18,12 @@ using Sandbox.Game;
 using Sandbox.Game.Gui;
 using Sandbox.Game.World;
 using SpaceEngineers.Game;
+using SteamSDK;
 using Torch.API;
 using VRage.Dedicated;
+using VRage.FileSystem;
 using VRage.Game;
+using VRage.Game.ModAPI;
 using VRage.Game.SessionComponents;
 using VRage.Profiler;
 
@@ -30,22 +33,24 @@ namespace Torch.Server
     {
         public Thread GameThread { get; private set; }
         public bool IsRunning { get; private set; }
-        public string InstancePath { get; }
-        public string InstanceName { get; }
+        public string InstancePath { get; private set; }
+        public string InstanceName { get; private set; }
 
         private readonly AutoResetEvent _stopHandle = new AutoResetEvent(false);
 
-        internal TorchServer(ServerConfig options)
+        public TorchServer(TorchConfig options = null)
         {
-            InstanceName = options.InstanceName;
-            InstancePath = options.InstancePath;
+            var opt = options ?? new TorchConfig();
+
+            InstanceName = opt.InstanceName;
+            InstancePath = opt.InstancePath;
         }
 
         public override void Init()
         {
             base.Init();
 
-            Log.Info($"Server instance {InstanceName} at path {InstancePath}");
+            Log.Info($"Init server instance '{InstanceName}' at path '{InstancePath}'");
 
             MyFakes.ENABLE_INFINARIO = false;
             MyPerGameSettings.SendLogToKeen = false;
@@ -55,16 +60,30 @@ namespace Torch.Server
             MyPerServerSettings.GameDSDescription = "Your place for space engineering, destruction and exploring.";
             MySessionComponentExtDebug.ForceDisable = true;
             MyPerServerSettings.AppId = 244850u;
-            ConfigForm<MyObjectBuilder_SessionSettings>.GameAttributes = Game.SpaceEngineers;
-            ConfigForm<MyObjectBuilder_SessionSettings>.OnReset = delegate
-            {
-                SpaceEngineersGame.SetupBasicGameInfo();
-                SpaceEngineersGame.SetupPerGameSettings();
-            };
             var gameVersion = MyPerGameSettings.BasicGameInfo.GameVersion;
             MyFinalBuildConstants.APP_VERSION = gameVersion ?? 0;
 
-            //InstancePath = InstanceName != null ? GetInstancePath(true, InstanceName) : GetInstancePath();
+            //TODO: Allows players to filter servers for Torch in the server browser.
+            //SteamServerAPI.Instance.GameServer.SetKeyValue("SM", "Torch");
+        }
+
+        public void SetConfig(IMyConfigDedicated config)
+        {
+            MySandboxGame.ConfigDedicated = config;
+        }
+
+        public void SetInstance(string path = null, string name = null)
+        {
+            if (path != null)
+                InstancePath = path;
+            if (name != null)
+                InstanceName = name;
+        }
+
+        public void Start(IMyConfigDedicated config)
+        {
+            SetConfig(config);
+            Start();
         }
 
         /// <summary>
@@ -103,10 +122,7 @@ namespace Torch.Server
 
             if (Thread.CurrentThread.ManagedThreadId != GameThread?.ManagedThreadId && MySandboxGame.Static.IsRunning)
             {
-                Log.Info("Requesting server stop.");
-                MySandboxGame.Static.Invoke(Stop);
-                _stopHandle.WaitOne(10000);
-                Log.Error("Server stop timed out.");
+                Invoke(Stop);
                 return;
             }
 

@@ -1,0 +1,183 @@
+﻿<UserControl x:Class="Torch.Server.Views.ConfigControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Torch.Server.Views"
+             xmlns:viewModels="clr-namespace:Torch.Server.ViewModels"
+             mc:Ignorable="d" 
+             Background="White">
+    <UserControl.DataContext>
+        <viewModels:ConfigDedicatedViewModel/>
+    </UserControl.DataContext>
+    <StackPanel>
+        <DockPanel>
+            <Label Content="World:" DockPanel.Dock="Left"/>
+            <ComboBox Text="{Binding LoadWorld}" ItemsSource="{Binding WorldPaths}" IsEditable="True" Margin="3"/>
+        </DockPanel>
+        <DockPanel>
+            <StackPanel Margin="3" DockPanel.Dock="Left">
+                <Label Content="Server Name"/>
+                <TextBox Text="{Binding ServerName}" Margin="3,0,3,3" Width="130"/>
+                <Label Content="World Name"/>
+                <TextBox Text="{Binding WorldName}" Margin="3,0,3,3" Width="130"/>
+                <Label Content="Whitelist Group ID"/>
+                <TextBox Text="{Binding GroupId}" Margin="3,0,3,3" Width="130"/>
+                <Label Content="Server IP"/>
+                <StackPanel Orientation="Horizontal" Margin="3,0,3,3">
+                    <TextBox Text="{Binding IP}" Width="100" Height="20"/>
+                    <Label Content=":"></Label>
+                    <TextBox Text="{Binding Port}" Width="50" Height="20"/>
+                </StackPanel>
+                <Label Content="Steam Port"/>
+                <TextBox Text="{Binding SteamPort}" Width="130" Margin="3,0,3,3"/>
+                <CheckBox IsChecked="{Binding IgnoreLastSession}" Content="Ignore Last Session" Margin="3"/>
+                <CheckBox IsChecked="{Binding PauseGameWhenEmpty}" Content="Pause When Empty" Margin="3"/>
+                <Label Content="Banned Players"/>
+                <ListBox ItemsSource="{Binding Banned}" Width="130" Margin="3,0,3,3" Height="100" MouseDoubleClick="Banned_OnMouseDoubleClick"/>
+                <Label Content="Administrators"/>
+                <ListBox ItemsSource="{Binding Administrators}" Width="130" Margin="3,0,3,3" Height="100" MouseDoubleClick="Administrators_OnMouseDoubleClick"/>
+                <Label Content="Mods"/>
+                <ListBox ItemsSource="{Binding Mods}" Width="130" Margin="3,0,3,3" Height="100" MouseDoubleClick="Mods_OnMouseDoubleClick"/>
+            </StackPanel>
+            <ScrollViewer Margin="3" DockPanel.Dock="Right">
+                <StackPanel DataContext="{Binding SessionSettings}">
+                    <Expander Header="Multipliers">
+                        <StackPanel Margin="10,0,0,0">
+                            <DockPanel>
+                                <TextBox Text="{Binding InventorySizeMultiplier}" Margin="3" Width="70"/>
+                                <Label Content="Inventory Size"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding RefinerySpeedMultiplier}" Margin="3" Width="70"/>
+                                <Label Content="Refinery Speed"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding AssemblerEfficiencyMultiplier}" Margin="3" Width="70"/>
+                                <Label Content="Assembler Efficiency"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding AssemblerSpeedMultiplier}" Margin="3" Width="70"/>
+                                <Label Content="Assembler Speed"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding GrinderSpeedMultiplier}" Margin="3" Width="70"/>
+                                <Label Content="Grinder Speed"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding HackSpeedMultiplier}" Margin="3" Width="70"/>
+                                <Label Content="Hacking Speed"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Expander>
+                    <Expander Header="NPCs">
+                        <StackPanel Margin="10,0,0,0">
+                            <CheckBox IsChecked="{Binding EnableDrones}" Content="Enable Drones" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableEncounters}" Content="Enable Encounters" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableSpiders}" Content="Enable Spiders" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableWolves}" Content="Enable Wolves" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableCargoShips}" Content="Enable Cargo Ships" Margin="3"/>
+                        </StackPanel>
+                    </Expander>
+                    <Expander Header="Environment">
+                        <StackPanel Margin="10,0,0,0">
+                            <CheckBox IsChecked="{Binding EnableSunRotation}" Content="Enable Sun Rotation" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableAirtightness}" Content="Enable Airtightness" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableOxygen}" Content="Enable Oxygen" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableDestructibleBlocks}" Content="Enable Destructible Blocks" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableToolShake}" Content="Enable Tool Shake" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableVoxelDestruction}" Content="Enable Voxel Destruction" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableFlora}" Content="Enable Flora" Margin="3"/>
+                            <DockPanel>
+                                <ComboBox SelectedItem="{Binding EnvironmentHostility}" ItemsSource="{Binding EnvironmentHostilityValues}" Margin="3" Width="100" DockPanel.Dock="Left"/>
+                                <Label Content="Environment Hostility"></Label>
+                            </DockPanel>
+                        </StackPanel>
+                    </Expander>
+                    <Expander Header="Players">
+                        <StackPanel Margin="10,0,0,0">
+                            <CheckBox IsChecked="{Binding EnableAutoHealing}" Content="Auto Healing" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableCopyPaste}" Content="Enable Copy/Paste" Margin="3"/>
+                            <CheckBox IsChecked="{Binding ShowPlayerNamesOnHud}" Content="Show Player Names on HUD" Margin="3"/>
+                        </StackPanel>
+                    </Expander>
+                    <Expander Header="Miscellaneous">
+                        <StackPanel Margin="10,0,0,0">
+                            <DockPanel>
+                                <TextBox Text="{Binding AutosaveInterval}" Margin="3" Width="70"/>
+                                <Label Content="Autosave Interval (minutes)"/>
+                            </DockPanel>
+                            <CheckBox IsChecked="{Binding EnableThirdPerson}" Content="Enable 3rd Person Camera" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableConvertToStation}" Content="Enable Convert to Station" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableJetpack}" Content="Enable Jetpack" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableRemoteOwnerRemoval}" Content="Enable Remote Ownership Removal" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableRespawnShips}" Content="Enable Respawn Ships" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableScripterRole}" Content="Enable Scripter Role" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableSpectator}" Content="Enable Spectator Camera" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableRealisticSound}" Content="Enable Realistic Sound" Margin="3"/>
+                            <CheckBox IsChecked="{Binding ResetOwnership}" Content="Reset Ownership" Margin="3"/>
+                            <CheckBox IsChecked="{Binding DeleteRespawnShips}" Content="Remove Respawn Ships on Logoff" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableThrusterDamage}" Content="Enable Thruster Damage" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableWeapons}" Content="Enable Weapons" Margin="3"/>
+                            <CheckBox IsChecked="{Binding EnableIngameScripts}" Content="Enable Ingame Scripts" Margin="3"/>
+                            <CheckBox IsChecked="{Binding SpawnWithTools}" Content="Spawn With Tools" Margin="3"/>
+                            <DockPanel>
+                                <ComboBox SelectedItem="{Binding GameMode}" ItemsSource="{Binding GameModeValues}" Margin="3" Width="100" DockPanel.Dock="Left"/>
+                                <Label Content="Game Mode"></Label>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding FloraDensity}" Margin="3" Width="70"/>
+                                <Label Content="Flora Density"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding FloraDensityMultiplier}" Margin="3" Width="70"/>
+                                <Label Content="Flora Density Multiplier"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding MaxBackupSaves}" Margin="3" Width="70"/>
+                                <Label Content="Max Backup Saves"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding MaxBlocksPerPlayer}" Margin="3" Width="70"/>
+                                <Label Content="Max Blocks Per Player"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding MaxFloatingObjects}" Margin="3" Width="70"/>
+                                <Label Content="Max Floating Objects"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding MaxGridSize}" Margin="3" Width="70"/>
+                                <Label Content="Max Grid Size"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding MaxPlayers}" Margin="3" Width="70"/>
+                                <Label Content="Max Players"/>
+                            </DockPanel>
+                            <DockPanel ToolTip="Increases physics precision at the cost of performance.">
+                                <TextBox Text="{Binding PhysicsIterations}" Margin="3" Width="70"/>
+                                <Label Content="Physics Iterations"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding SpawnTimeMultiplier}" Margin="3" Width="70"/>
+                                <Label Content="Respawn Time Multiplier"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding SunRotationInterval}" Margin="3" Width="70"/>
+                                <Label Content="Sun Rotation Interval (mins)"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding ViewDistance}" Margin="3" Width="70"/>
+                                <Label Content="View Distance (meters)"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBox Text="{Binding WorldSize}" Margin="3" Width="70"/>
+                                <Label Content="World Size (km)"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </StackPanel>
+</UserControl>
+

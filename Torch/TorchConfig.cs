@@ -6,11 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using NLog;
-using VRage.Dedicated;
 
-namespace Torch.Server
+namespace Torch
 {
-    public class ServerConfig
+    public class TorchConfig
     {
         private static Logger _log = LogManager.GetLogger("Config");
 
@@ -18,8 +17,11 @@ namespace Torch.Server
         public string InstanceName { get; set; }
         public int Autosave { get; set; }
         public bool AutoRestart { get; set; }
+        public bool LogChat { get; set; }
 
-        public ServerConfig(string instanceName = "Torch", string instancePath = null, int autosaveInterval = 5, bool autoRestart = false)
+        public TorchConfig() : this("Torch") { }
+
+        public TorchConfig(string instanceName = "Torch", string instancePath = null, int autosaveInterval = 5, bool autoRestart = false)
         {
             InstanceName = instanceName;
             InstancePath = instancePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Torch", InstanceName);
@@ -27,15 +29,15 @@ namespace Torch.Server
             AutoRestart = autoRestart;
         }
 
-        public static ServerConfig LoadFrom(string path)
+        public static TorchConfig LoadFrom(string path)
         {
             try
             {
-                var serializer = new XmlSerializer(typeof(ServerConfig));
-                ServerConfig config;
+                var serializer = new XmlSerializer(typeof(TorchConfig));
+                TorchConfig config;
                 using (var f = File.OpenRead(path))
                 {
-                    config = (ServerConfig)serializer.Deserialize(f);
+                    config = (TorchConfig)serializer.Deserialize(f);
                 }
                 return config;
             }
@@ -50,7 +52,7 @@ namespace Torch.Server
         {
             try
             {
-                var serializer = new XmlSerializer(typeof(ServerConfig));
+                var serializer = new XmlSerializer(typeof(TorchConfig));
                 using (var f = File.OpenWrite(path))
                 {
                     serializer.Serialize(f, this);

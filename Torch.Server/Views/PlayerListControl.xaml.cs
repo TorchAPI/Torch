@@ -19,6 +19,7 @@ using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using SteamSDK;
 using Torch.API;
+using VRage.Game.ModAPI;
 
 namespace Torch.Server
 {
@@ -37,35 +38,35 @@ namespace Torch.Server
         public void BindServer(ITorchServer server)
         {
             _server = server;
-            server.Multiplayer.PlayerJoined += Refresh;
-            server.Multiplayer.PlayerLeft += Refresh;
+            //server.Multiplayer.PlayerJoined += Refresh;
+            //server.Multiplayer.PlayerLeft += Refresh;
             Refresh();
         }
 
-        private void Refresh(IPlayer player = null)
+        private void Refresh(IMyPlayer player = null)
         {
             Dispatcher.Invoke(() =>
             {
                 PlayerList.ItemsSource = null;
-                PlayerList.ItemsSource = _server.Multiplayer.Players;
+                //PlayerList.ItemsSource = _server.Multiplayer.Players;
             });
         }
 
         private void KickButton_Click(object sender, RoutedEventArgs e)
         {
-            var player = PlayerList.SelectedItem as IPlayer;
+            var player = PlayerList.SelectedItem as IMyPlayer;
             if (player != null)
             {
-                _server.Multiplayer.KickPlayer(player.SteamId);
+                _server.Multiplayer.KickPlayer(player.SteamUserId);
             }
         }
 
         private void BanButton_Click(object sender, RoutedEventArgs e)
         {
-            var player = PlayerList.SelectedItem as IPlayer;
+            var player = PlayerList.SelectedItem as IMyPlayer;
             if (player != null)
             {
-                _server.Multiplayer.BanPlayer(player.SteamId);
+                _server.Multiplayer.BanPlayer(player.SteamUserId);
             }
         }
     }

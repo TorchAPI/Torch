@@ -36,17 +36,17 @@ namespace Torch.Server
 
         public void BindServer(ITorchServer server)
         {
-            _server = server;
-            server.Multiplayer.MessageReceived += Refresh;
-            Refresh();
+            //ChatItems.ItemsSource = server.Multiplayer.ChatHistory;
+            //server.Multiplayer.MessageReceived += Refresh;
+            //Refresh();
         }
 
-        private void Refresh(IChatItem chatItem = null)
+        private void Refresh(IChatMessage chatItem = null)
         {
             Dispatcher.Invoke(() =>
             {
                 ChatItems.ItemsSource = null;
-                ChatItems.ItemsSource = _server.Multiplayer.Chat;
+                //ChatItems.ItemsSource = _server.Multiplayer.Chat;
             });
         }
 

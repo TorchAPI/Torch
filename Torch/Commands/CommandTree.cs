@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Torch.API;
 using VRage.Collections;
 using VRage.Library.Collections;
 
@@ -75,13 +76,17 @@ namespace Torch.Commands
                 {
                     node = node.Subcommands[current];
                 }
+                else
+                {
+                    break;
+                }
             }
 
             commandNode = node;
-            return path.Count - i + 1;
+            return i;
         }
 
-        public Command ParseCommand(List<string> path, out List<string> args)
+        public Command GetCommand(List<string> path, out List<string> args)
         {
             args = new List<string>();
             var skip = GetNode(path, out CommandNode node);
@@ -89,6 +94,29 @@ namespace Torch.Commands
             return node.Command;
         }
 
+        public Command GetCommand(string commandText, out string argText)
+        {
+            var split = commandText.Split(new []{' '}, StringSplitOptions.RemoveEmptyEntries).ToList();
+            var skip = GetNode(split, out CommandNode node);
+            if (skip == -1)
+            {
+                argText = "";
+                return null;
+            }
+
+            if (split.Count > skip)
+            {
+                var substringIndex = commandText.IndexOf(split[skip]);
+                if (substringIndex <= commandText.Length)
+                {
+                    argText = commandText.Substring(substringIndex);
+                    return node.Command;
+                }
+            }
+
+            argText = "";
+            return node.Command;
+        }
 
         public string GetTreeString()
         {
@@ -100,6 +128,17 @@ namespace Torch.Commands
             }
 
             return sb.ToString();
+        }
+
+        public IEnumerable<CommandNode> WalkTree(CommandNode root = null)
+        {
+            foreach (var node in root?.GetChildren() ?? _root.Values)
+            {
+                yield return node;
+
+                foreach (var child in WalkTree(node))
+                    yield return child;
+            }
         }
 
         private void DebugNode(CommandNode commandNode, StringBuilder sb, ref int indent)
@@ -141,6 +180,11 @@ namespace Torch.Commands
             public bool TryGetChild(string name, out CommandNode node)
             {
                 return Subcommands.TryGetValue(name, out node);
+            }
+
+            public IEnumerable<CommandNode> GetChildren()
+            {
+                return _subcommands.Values;
             }
 
             public List<string> GetPath()

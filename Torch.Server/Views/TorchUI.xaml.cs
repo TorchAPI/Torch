@@ -27,7 +27,8 @@ namespace Torch.Server
     /// </summary>
     public partial class TorchUI : Window
     {
-        private ITorchServer _server;
+        private TorchServer _server;
+        private TorchConfig _config;
         private DateTime _startTime;
         private readonly Timer _uiUpdate = new Timer
         {
@@ -35,7 +36,7 @@ namespace Torch.Server
             AutoReset = true,
         };
 
-        public TorchUI(ITorchServer server)
+        public TorchUI(TorchServer server)
         {
             _server = server;
             InitializeComponent();
@@ -44,6 +45,19 @@ namespace Torch.Server
 
             Chat.BindServer(server);
             PlayerList.BindServer(server);
+        }
+
+        public void LoadConfig(TorchConfig config)
+        {
+            if (!Directory.Exists(config.InstancePath))
+                return;
+
+            _config = config;
+            Dispatcher.Invoke(() =>
+            {
+                ConfigControl.LoadDedicatedConfig(config);
+                InstancePathBox.Text = config.InstancePath;
+            });
         }
 
         private void UiUpdate_Elapsed(object sender, ElapsedEventArgs e)
@@ -67,7 +81,8 @@ namespace Torch.Server
             ((Button) sender).IsEnabled = false;
             BtnStop.IsEnabled = true;
             _uiUpdate.Start();
-            new Thread(() => _server.Start()).Start();
+            ConfigControl.SaveConfig();
+            new Thread(() => _server.Start(ConfigControl.Config)).Start();
         }
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
@@ -83,12 +98,23 @@ namespace Torch.Server
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            _server.Stop();
+            if (_server?.IsRunning ?? false)
+                _server.Stop();
         }
 
         private void BtnRestart_Click(object sender, RoutedEventArgs e)
         {
-            //Program.FullRestart();
+            
+        }
+
+        private void InstancePathBox_OnTextChanged(object sender, TextChangedEventArgs e)
+        {
+            var name = (sender as TextBox).Text;
+
+            _server.SetInstance(null, name);
+            _config.InstancePath = name;
+
+            LoadConfig(_config);
         }
     }
 }

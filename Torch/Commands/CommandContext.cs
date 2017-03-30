@@ -25,12 +25,17 @@ namespace Torch.Commands
         /// The command arguments split by spaces and quotes. Ex. "this is" a command -> {this is, a, command}
         /// </summary>
         public List<string> Args { get; }
+        /// <summary>
+        /// The non-split argument string.
+        /// </summary>
+        public string RawArgs { get; }
 
-        public CommandContext(ITorchBase torch, ITorchPlugin plugin, IMyPlayer player, List<string> args = null)
+        public CommandContext(ITorchBase torch, ITorchPlugin plugin, IMyPlayer player, string rawArgs = null, List<string> args = null)
         {
             Torch = torch;
             Plugin = plugin;
             Player = player;
+            RawArgs = rawArgs;
             Args = args ?? new List<string>();
         }
 

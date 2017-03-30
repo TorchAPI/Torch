@@ -19,13 +19,12 @@ namespace Torch.Commands
         public CommandTree Commands { get; set; } = new CommandTree();
         private Logger _log = LogManager.GetLogger(nameof(CommandManager));
         private readonly ITorchBase _torch;
-        private readonly ChatManager _chatManager = ChatManager.Instance;
 
         public CommandManager(ITorchBase torch, char prefix = '/')
         {
             _torch = torch;
             Prefix = prefix;
-            _chatManager.MessageRecieved += HandleCommand;
+            ChatManager.Instance.MessageRecieved += HandleCommand;
             RegisterCommandModule(typeof(TorchCommands));
         }
 
@@ -84,12 +83,7 @@ namespace Torch.Commands
             }
 
             var cmdText = new string(msg.Text.Skip(1).ToArray());
-            var split = Regex.Matches(cmdText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
-
-            if (split.Count == 0)
-                return;
-
-            var command = Commands.ParseCommand(split, out List<string> args);
+            var command = Commands.GetCommand(cmdText, out string argText);
 
             if (command != null)
             {
@@ -102,8 +96,9 @@ namespace Torch.Commands
                     return;
                 }
 
+                var splitArgs = Regex.Matches(argText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
                 _log.Trace($"Invoking {cmdPath} for player {player.DisplayName}");
-                var context = new CommandContext(_torch, command.Plugin, player, args);
+                var context = new CommandContext(_torch, command.Plugin, player, argText, splitArgs);
                 command.Invoke(context);
                 _log.Info($"Player {player.DisplayName} ran command '{msg.Text}'");
             }
