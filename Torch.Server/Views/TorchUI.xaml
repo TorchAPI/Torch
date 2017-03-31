@@ -18,7 +18,10 @@
         <TabControl x:Name="TabControl" DockPanel.Dock="Bottom" Margin="5,0,5,5">
             <TabItem Header="Configuration">
                 <StackPanel>
-                    <TextBox x:Name="InstancePathBox" Margin="3" Height="20" TextChanged="InstancePathBox_OnTextChanged"/>
+                    <DockPanel>
+                        <Label Content="Instance Path: " Margin="3"/>
+                        <TextBox x:Name="InstancePathBox" Margin="3" Height="20" TextChanged="InstancePathBox_OnTextChanged"/>
+                    </DockPanel>
                     <views:ConfigControl x:Name="ConfigControl" Margin="3"/>
                 </StackPanel>
             </TabItem>

@@ -117,9 +117,17 @@
                     </Expander>
                     <Expander Header="Players">
                         <StackPanel Margin="10,0,0,0">
+                            <DockPanel>
+                                <TextBox Text="{Binding MaxPlayers}" Margin="3" Width="70"/>
+                                <Label Content="Max Players"/>
+                            </DockPanel>
                             <CheckBox IsChecked="{Binding EnableAutoHealing}" Content="Auto Healing" Margin="3"/>
                             <CheckBox IsChecked="{Binding EnableCopyPaste}" Content="Enable Copy/Paste" Margin="3"/>
                             <CheckBox IsChecked="{Binding ShowPlayerNamesOnHud}" Content="Show Player Names on HUD" Margin="3"/>
+                            <DockPanel>
+                                <TextBox Text="{Binding SpawnTimeMultiplier}" Margin="3" Width="70"/>
+                                <Label Content="Respawn Time Multiplier"/>
+                            </DockPanel>
                         </StackPanel>
                     </Expander>
                     <Expander Header="Miscellaneous">
@@ -161,18 +169,12 @@
                                 <TextBox Text="{Binding MaxGridSize}" Margin="3" Width="70"/>
                                 <Label Content="Max Grid Size"/>
                             </DockPanel>
-                            <DockPanel>
-                                <TextBox Text="{Binding MaxPlayers}" Margin="3" Width="70"/>
-                                <Label Content="Max Players"/>
-                            </DockPanel>
+                            
                             <DockPanel ToolTip="Increases physics precision at the cost of performance.">
                                 <TextBox Text="{Binding PhysicsIterations}" Margin="3" Width="70"/>
                                 <Label Content="Physics Iterations"/>
                             </DockPanel>
-                            <DockPanel>
-                                <TextBox Text="{Binding SpawnTimeMultiplier}" Margin="3" Width="70"/>
-                                <Label Content="Respawn Time Multiplier"/>
-                            </DockPanel>
+                            
                         </StackPanel>
                     </Expander>
                 </StackPanel>

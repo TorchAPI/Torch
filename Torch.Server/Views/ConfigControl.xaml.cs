@@ -33,7 +33,6 @@ namespace Torch.Server.Views
         public ConfigControl()
         {
             InitializeComponent();
-            LoadDedicatedConfig(@"C:\ProgramData\Torch\Torch\SpaceEngineers-Dedicated.cfg");
         }
 
         public void SaveConfig()
@@ -41,18 +40,16 @@ namespace Torch.Server.Views
             Config.Save(_configPath);
         }
 
-        public void LoadDedicatedConfig(string path)
-        {
-            Config = new MyConfigDedicated<MyObjectBuilder_SessionSettings>(path);
-            Config.Load(path);
-
-            _viewModel = new ConfigDedicatedViewModel(Config);
-            DataContext = _viewModel;
-        }
-
         public void LoadDedicatedConfig(TorchConfig torchConfig)
         {
             var path = Path.Combine(torchConfig.InstancePath, "SpaceEngineers-Dedicated.cfg");
+
+            if (!File.Exists(path))
+            {
+                DataContext = null;
+                return;
+            }
+
             Config = new MyConfigDedicated<MyObjectBuilder_SessionSettings>(path);
             Config.Load(path);
             _configPath = path;
