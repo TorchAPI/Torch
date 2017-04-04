@@ -25,7 +25,7 @@ namespace Torch.Server
         public TorchConfig(string instanceName = "Torch", string instancePath = null, int autosaveInterval = 5, bool autoRestart = false)
         {
             InstanceName = instanceName;
-            InstancePath = instancePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Torch", InstanceName);
+            InstancePath = instancePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpaceEngineersDedicated", InstanceName);
             Autosave = autosaveInterval;
             AutoRestart = autoRestart;
         }

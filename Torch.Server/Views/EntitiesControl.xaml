@@ -1,0 +1,22 @@
+﻿<UserControl x:Class="Torch.Server.Views.EntitiesControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Torch.Server.Views"
+             mc:Ignorable="d">
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Left">
+            <StackPanel DockPanel.Dock="Bottom">
+                <Button Content="Refresh" Margin="3"></Button>
+                <Button Content="Delete Selected" Margin="3"></Button>
+            </StackPanel>
+            <TreeView Width="300" Margin="3" DockPanel.Dock="Top">
+                <TreeViewItem Header="Grids"/>
+                <TreeViewItem Header="Characters"/>
+                <TreeViewItem Header="Floating Objects"/>
+            </TreeView>
+        </DockPanel>
+        <Frame Margin="3"></Frame>
+    </DockPanel>
+</UserControl>

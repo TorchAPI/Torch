@@ -38,6 +38,7 @@ namespace Torch.Server
 
         public TorchUI(TorchServer server)
         {
+            _config = new TorchConfig();
             _server = server;
             InitializeComponent();
             _startTime = DateTime.Now;
@@ -45,6 +46,7 @@ namespace Torch.Server
 
             Chat.BindServer(server);
             PlayerList.BindServer(server);
+            Plugins.BindServer(server);
         }
 
         public void LoadConfig(TorchConfig config)

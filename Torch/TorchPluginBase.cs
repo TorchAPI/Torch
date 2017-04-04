@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using Torch.API;
+using Torch.API.Plugins;
 
 namespace Torch
 {

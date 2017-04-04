@@ -5,7 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Torch.API
+namespace Torch.API.Plugins
 {
     public interface ITorchPlugin : IDisposable
     {

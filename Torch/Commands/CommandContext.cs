@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using Torch.API;
+using Torch.API.Plugins;
 using VRage.Game;
 using VRage.Game.ModAPI;
 

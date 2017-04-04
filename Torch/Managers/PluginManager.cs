@@ -13,6 +13,7 @@ using NLog;
 using Sandbox;
 using Sandbox.ModAPI;
 using Torch.API;
+using Torch.API.Plugins;
 using Torch.Commands;
 using Torch.Managers;
 using VRage.Plugins;
@@ -27,11 +28,13 @@ namespace Torch.Managers
         private static Logger _log = LogManager.GetLogger(nameof(PluginManager));
         public const string PluginDir = "Plugins";
 
-        private readonly List<ITorchPlugin> _plugins = new List<ITorchPlugin>();
+        public List<ITorchPlugin> Plugins { get; } = new List<ITorchPlugin>();
         public CommandManager Commands { get; private set; }
 
         public float LastUpdateMs => _lastUpdateMs;
         private volatile float _lastUpdateMs;
+
+        public event Action<List<ITorchPlugin>> PluginsLoaded;
 
         public PluginManager(ITorchBase torch)
         {
@@ -62,7 +65,7 @@ namespace Torch.Managers
         public void UpdatePlugins()
         {
             var s = Stopwatch.StartNew();
-            Parallel.ForEach(_plugins, p => p.Update());
+            Parallel.ForEach(Plugins, p => p.Update());
             s.Stop();
             _lastUpdateMs = (float)s.Elapsed.TotalMilliseconds;
         }
@@ -72,10 +75,10 @@ namespace Torch.Managers
         /// </summary>
         public void DisposePlugins()
         {
-            foreach (var plugin in _plugins)
+            foreach (var plugin in Plugins)
                 plugin.Dispose();
 
-            _plugins.Clear();
+            Plugins.Clear();
         }
 
         /// <summary>
@@ -105,7 +108,7 @@ namespace Torch.Managers
                                 throw new TypeLoadException($"Plugin '{type.FullName}' is missing a {nameof(PluginAttribute)}");
 
                             _log.Info($"Loading plugin {plugin.Name} ({plugin.Version})");
-                            _plugins.Add(plugin);
+                            Plugins.Add(plugin);
 
                             Commands.RegisterPluginCommands(plugin);
                         }
@@ -119,12 +122,13 @@ namespace Torch.Managers
                 }
             }
 
-            _plugins.ForEach(p => p.Init(_torch));
+            Plugins.ForEach(p => p.Init(_torch));
+            PluginsLoaded?.Invoke(Plugins);
         }
 
         public IEnumerator<ITorchPlugin> GetEnumerator()
         {
-            return _plugins.GetEnumerator();
+            return Plugins.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

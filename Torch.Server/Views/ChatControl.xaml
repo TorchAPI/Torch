@@ -14,9 +14,9 @@
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel>
-                        <TextBlock Text="{Binding Time}"/>
+                        <TextBlock Text="{Binding Timestamp}"/>
                         <TextBlock Text=" "/>
-                        <TextBlock Text="{Binding Player.Name}" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
                         <TextBlock Text=": "/>
                         <TextBlock Text="{Binding Message}"/>
                     </WrapPanel>

@@ -162,6 +162,7 @@
     <Compile Include="Managers\NetworkManager\NetworkHandlerBase.cs" />
     <Compile Include="Managers\NetworkManager\NetworkManager.cs" />
     <Compile Include="Managers\MultiplayerManager.cs" />
+    <Compile Include="PluginOptions.cs" />
     <Compile Include="Reflection.cs" />
     <Compile Include="Managers\ScriptingManager.cs" />
     <Compile Include="TorchBase.cs" />

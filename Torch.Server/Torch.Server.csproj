@@ -165,7 +165,13 @@
     <Compile Include="TorchServiceInstaller.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ViewModels\CharacterViewModel.cs" />
     <Compile Include="ViewModels\ConfigDedicatedViewModel.cs" />
+    <Compile Include="ViewModels\EntityTreeViewModel.cs" />
+    <Compile Include="ViewModels\EntityViewModel.cs" />
+    <Compile Include="ViewModels\GridViewModel.cs" />
+    <Compile Include="ViewModels\PluginManagerViewModel.cs" />
+    <Compile Include="ViewModels\PluginViewModel.cs" />
     <Compile Include="ViewModels\SessionSettingsViewModel.cs" />
     <Compile Include="Views\AddWorkshopItemsDialog.xaml.cs">
       <DependentUpon>AddWorkshopItemsDialog.xaml</DependentUpon>
@@ -179,8 +185,14 @@
     <Compile Include="Views\ConfigControl.xaml.cs">
       <DependentUpon>ConfigControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\EntitiesControl.xaml.cs">
+      <DependentUpon>EntitiesControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ModsControl.xaml.cs">
       <DependentUpon>ModsControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\PluginsControl.xaml.cs">
+      <DependentUpon>PluginsControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\TorchUI.xaml.cs">
       <DependentUpon>TorchUI.xaml</DependentUpon>
@@ -242,7 +254,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\EntitiesControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\ModsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\PluginsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

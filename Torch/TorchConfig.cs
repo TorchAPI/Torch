@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using NLog;
+using Sandbox.ModAPI.Ingame;
 
 namespace Torch
 {

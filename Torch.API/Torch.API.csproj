@@ -114,12 +114,13 @@
     <Compile Include="IChatMessage.cs" />
     <Compile Include="IMultiplayer.cs" />
     <Compile Include="IPluginManager.cs" />
-    <Compile Include="ITorchPlugin.cs" />
+    <Compile Include="Plugins\ITorchPlugin.cs" />
     <Compile Include="IServerControls.cs" />
     <Compile Include="ITorchBase.cs" />
+    <Compile Include="Plugins\IWpfPlugin.cs" />
     <Compile Include="ModAPI\Ingame\GridExtensions.cs" />
     <Compile Include="ModAPI\TorchAPI.cs" />
-    <Compile Include="PluginAttribute.cs" />
+    <Compile Include="Plugins\PluginAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

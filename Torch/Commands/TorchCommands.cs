@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Sandbox.ModAPI;
 using Torch.Commands.Permissions;
 using Torch.Managers;
 using VRage.Game.ModAPI;
@@ -39,7 +40,10 @@ namespace Torch.Commands
                 var sb = new StringBuilder();
 
                 if (command != null)
+                {
+                    sb.AppendLine($"Syntax: {command.SyntaxHelp}");
                     sb.AppendLine(command.HelpText);
+                }
 
                sb.AppendLine($"Subcommands: {string.Join(", ", children)}");
 

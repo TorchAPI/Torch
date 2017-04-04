@@ -129,6 +129,12 @@ namespace Torch.Managers
             });
         }
 
+        public void RevealAll()
+        {
+            for (var i = _concealGroups.Count - 1; i >= 0; i--)
+                RevealGroup(_concealGroups[i]);
+        }
+
         private void ConcealTimerElapsed(object sender, ElapsedEventArgs e)
         {
             if (_concealInProgress)
@@ -164,6 +170,8 @@ namespace Torch.Managers
             void UnregisterRecursive(IMyEntity e)
             {
                 MyEntities.UnregisterForUpdate((MyEntity)e);
+                if (e.Hierarchy == null)
+                    return;
                 foreach (var child in e.Hierarchy.Children)
                     UnregisterRecursive(child.Entity);
             }
@@ -181,6 +189,8 @@ namespace Torch.Managers
             void RegisterRecursive(IMyEntity e)
             {
                 MyEntities.RegisterForUpdate((MyEntity)e);
+                if (e.Hierarchy == null)
+                    return;
                 foreach (var child in e.Hierarchy.Children)
                     RegisterRecursive(child.Entity);
             }
