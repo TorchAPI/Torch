@@ -45,46 +45,48 @@
   <ItemGroup>
     <Reference Include="HavokWrapper, Version=1.0.6051.28726, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\DedicatedServer64\HavokWrapper.dll</HintPath>
+      <HintPath>..\GameBinaries\HavokWrapper.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis, Version=1.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Microsoft.CodeAnalysis.dll</HintPath>
+      <HintPath>..\GameBinaries\Microsoft.CodeAnalysis.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp, Version=1.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      <HintPath>..\GameBinaries\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.4.1\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Sandbox.Common">
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\Sandbox.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="Sandbox.Game">
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\Sandbox.Game.dll</HintPath>
-    </Reference>
-    <Reference Include="Sandbox.Graphics, Version=0.1.6236.31422, Culture=neutral, processorArchitecture=AMD64">
+    <Reference Include="Sandbox.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\Sandbox.Graphics.dll</HintPath>
+      <HintPath>..\GameBinaries\Sandbox.Common.dll</HintPath>
     </Reference>
-    <Reference Include="SpaceEngineers.Game">
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\SpaceEngineers.Game.dll</HintPath>
+    <Reference Include="Sandbox.Game, Version=0.1.6305.30774, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GameBinaries\Sandbox.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.Graphics, Version=0.1.6305.30761, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GameBinaries\Sandbox.Graphics.dll</HintPath>
+    </Reference>
+    <Reference Include="SpaceEngineers.Game, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GameBinaries\SpaceEngineers.Game.dll</HintPath>
     </Reference>
     <Reference Include="SpaceEngineers.ObjectBuilders, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\SpaceEngineers.ObjectBuilders.dll</HintPath>
+      <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.dll</HintPath>
     </Reference>
     <Reference Include="SpaceEngineers.ObjectBuilders.XmlSerializers, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\SpaceEngineers.ObjectBuilders.XmlSerializers.dll</HintPath>
+      <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.XmlSerializers.dll</HintPath>
     </Reference>
     <Reference Include="SteamSDK, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\SteamSDK.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\GameBinaries\SteamSDK.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration.Install" />
@@ -101,51 +103,57 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="VRage">
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.dll</HintPath>
+    <Reference Include="VRage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GameBinaries\VRage.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Audio, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.Audio.dll</HintPath>
+      <HintPath>..\GameBinaries\VRage.Audio.dll</HintPath>
     </Reference>
-    <Reference Include="VRage.Dedicated">
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.Dedicated.dll</HintPath>
+    <Reference Include="VRage.Dedicated, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GameBinaries\VRage.Dedicated.dll</HintPath>
     </Reference>
-    <Reference Include="VRage.Game">
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.Game.dll</HintPath>
+    <Reference Include="VRage.Game, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GameBinaries\VRage.Game.dll</HintPath>
     </Reference>
-    <Reference Include="VRage.Game.XmlSerializers">
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.Game.XmlSerializers.dll</HintPath>
+    <Reference Include="VRage.Game.XmlSerializers, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GameBinaries\VRage.Game.XmlSerializers.dll</HintPath>
     </Reference>
-    <Reference Include="VRage.Input">
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.Input.dll</HintPath>
+    <Reference Include="VRage.Input, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GameBinaries\VRage.Input.dll</HintPath>
     </Reference>
-    <Reference Include="VRage.Library">
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.Library.dll</HintPath>
+    <Reference Include="VRage.Library, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GameBinaries\VRage.Library.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Math, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.Math.dll</HintPath>
+      <HintPath>..\GameBinaries\VRage.Math.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Native, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.Native.dll</HintPath>
+      <HintPath>..\GameBinaries\VRage.Native.dll</HintPath>
     </Reference>
     <Reference Include="VRage.OpenVRWrapper, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.OpenVRWrapper.dll</HintPath>
+      <HintPath>..\GameBinaries\VRage.OpenVRWrapper.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Render, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.Render.dll</HintPath>
+      <HintPath>..\GameBinaries\VRage.Render.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Render11, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.Render11.dll</HintPath>
+      <HintPath>..\GameBinaries\VRage.Render11.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Scripting, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.Scripting.dll</HintPath>
+      <HintPath>..\GameBinaries\VRage.Scripting.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
@@ -158,6 +166,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>AssemblyInfo.tt</DependentUpon>
     </Compile>
+    <Compile Include="Properties\AssemblyInfo1.cs" />
     <Compile Include="TorchConfig.cs" />
     <Compile Include="TorchService.cs">
       <SubType>Component</SubType>

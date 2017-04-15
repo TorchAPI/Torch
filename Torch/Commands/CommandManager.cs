@@ -100,11 +100,13 @@ namespace Torch.Commands
                 var splitArgs = Regex.Matches(argText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
                 _log.Trace($"Invoking {cmdPath} for player {player.DisplayName}");
                 var context = new CommandContext(_torch, command.Plugin, player, argText, splitArgs);
-                //command.Invoke(context);
-                if (command.TryInvoke(context))
-                    _log.Info($"Player {player.DisplayName} ran command '{msg.Text}'");
-                else
-                    context.Respond($"Invalid Syntax: {command.SyntaxHelp}");
+                _torch.Invoke(() =>
+                {
+                    if (command.TryInvoke(context))
+                        _log.Info($"Player {player.DisplayName} ran command '{msg.Text}'");
+                    else
+                        context.Respond($"Invalid Syntax: {command.SyntaxHelp}");
+                });
             }
         }
     }

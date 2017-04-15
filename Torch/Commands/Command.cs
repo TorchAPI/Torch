@@ -21,10 +21,11 @@ namespace Torch.Commands
         public Type Module { get; }
         public List<string> Path { get; } = new List<string>();
         public ITorchPlugin Plugin { get; }
+        public string SyntaxHelp { get; }
+
         private readonly MethodInfo _method;
         private ParameterInfo[] _parameters;
         private int? _requiredParamCount;
-        public string SyntaxHelp { get; }
 
         public Command(ITorchPlugin plugin, MethodInfo commandMethod)
         {
@@ -76,7 +77,7 @@ namespace Torch.Commands
                 }
             }
 
-            _requiredParamCount = _requiredParamCount ?? 0;
+            _requiredParamCount = _requiredParamCount ?? _parameters.Length;
             LogManager.GetLogger(nameof(Command)).Debug($"Params: {_parameters.Length} ({_requiredParamCount} required)");
             SyntaxHelp = sb.ToString();
         }
@@ -97,7 +98,7 @@ namespace Torch.Commands
                     return false;
             }
 
-            //Fill omitted default parameters
+            //Fill remaining parameters with default values
             for (var i = 0; i < parameters.Length; i++)
             {
                 if (parameters[i] == null)
@@ -108,13 +109,6 @@ namespace Torch.Commands
             moduleInstance.Context = context;
             _method.Invoke(moduleInstance, parameters);
             return true;
-        }
-
-        public void Invoke(CommandContext context)
-        {
-            var moduleInstance = (CommandModule)Activator.CreateInstance(Module);
-            moduleInstance.Context = context;
-            _method.Invoke(moduleInstance, null);
         }
     }
 

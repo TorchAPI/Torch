@@ -11,16 +11,19 @@
         <viewModels:PluginManagerViewModel/>
     </UserControl.DataContext>
     <DockPanel>
-        <ListView Width="150" ItemsSource="{Binding Plugins}" SelectedItem="{Binding SelectedPlugin}" Margin="3">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Name}"/>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+        <DockPanel>
+            <Button Content="Open Folder" Margin="3" DockPanel.Dock="Bottom" IsEnabled="false"></Button>
+            <ListView Width="150" ItemsSource="{Binding Plugins}" SelectedItem="{Binding SelectedPlugin}" Margin="3">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </DockPanel>
         <StackPanel Margin="3">
             <Label Content="{Binding SelectedPlugin.Name}" FontSize="16"/>
-            <Frame Content="{Binding SelectedPlugin.Control}"/>
+            <Frame NavigationUIVisibility="Hidden" Content="{Binding SelectedPlugin.Control}"/>
         </StackPanel>
     </DockPanel>
 </UserControl>

@@ -27,10 +27,7 @@ namespace Torch.Managers
 
         public void Init()
         {
-            //HACK
-            MyMultiplayer.Static.ChatMessageReceived += Static_ChatMessageReceived;
-            _log.Warn("Chat intercept broken, chat hiding will not work!");
-            //NetworkManager.Instance.RegisterNetworkHandlers(new ChatIntercept());
+            NetworkManager.Instance.RegisterNetworkHandlers(new ChatIntercept());
         }
 
         private void Static_ChatMessageReceived(ulong arg1, string arg2, SteamSDK.ChatEntryTypeEnum arg3)
@@ -70,28 +67,6 @@ namespace Torch.Managers
 
         public override bool Handle(ulong remoteUserId, CallSite site, BitStream stream, object obj, MyPacket packet)
         {
-            /*
-            var msg = new ChatMsg();
-
-            var msgLength = stream.ByteLength - stream.BytePosition - 8;
-            var bytes = new byte[msgLength];
-            stream.ReadBytes(bytes, stream.BytePosition, msgLength);
-
-            msg.Text = Encoding.Unicode.GetString(bytes);
-            msg.Author = stream.ReadUInt64();
-
-            var log = LogManager.GetLogger("HandleDebug");
-            var sb = new StringBuilder();
-
-            foreach (char c in msg.Text.ToCharArray())
-            {
-                sb.Append(Convert.ToString(c, 2).PadLeft(16, '0'));
-            }
-
-            log.Debug(sb.ToString());*/
-            //stream.ResetRead(packet);
-            //var msg = MySerializer.CreateAndRead<ChatMsg>(stream);
-
             var msg = new ChatMsg();
             Serialize(site.MethodInfo, stream, ref msg);
 

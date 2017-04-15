@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Torch.Server"
         xmlns:views="clr-namespace:Torch.Server.Views"
         mc:Ignorable="d"
-        Title="Torch" Height="600" Width="800">
+        Title="Torch" Height="800" Width="800">
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Margin="5,5,5,5" Orientation="Horizontal">
             <Button x:Name="BtnStart" Content="Start" Height="24" Width="75" Margin="5,0,5,0" HorizontalAlignment="Left" Click="BtnStart_Click" IsDefault="True"/>
@@ -17,13 +17,13 @@
         </StackPanel>
         <TabControl x:Name="TabControl" DockPanel.Dock="Bottom" Margin="5,0,5,5">
             <TabItem Header="Configuration">
-                <StackPanel>
-                    <DockPanel>
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top">
                         <Label Content="Instance Path: " Margin="3"/>
                         <TextBox x:Name="InstancePathBox" Margin="3" Height="20" TextChanged="InstancePathBox_OnTextChanged"/>
                     </DockPanel>
-                    <views:ConfigControl x:Name="ConfigControl" Margin="3"/>
-                </StackPanel>
+                    <views:ConfigControl x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom"/>
+                </DockPanel>
             </TabItem>
             <TabItem Header="Chat/Players">
                 <DockPanel>

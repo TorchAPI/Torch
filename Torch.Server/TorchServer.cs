@@ -24,6 +24,7 @@ using VRage.Dedicated;
 using VRage.FileSystem;
 using VRage.Game;
 using VRage.Game.ModAPI;
+using VRage.Game.ObjectBuilder;
 using VRage.Game.SessionComponents;
 using VRage.Profiler;
 
@@ -59,11 +60,11 @@ namespace Torch.Server
             MyPerServerSettings.GameDSName = MyPerServerSettings.GameNameSafe + "Dedicated";
             MyPerServerSettings.GameDSDescription = "Your place for space engineering, destruction and exploring.";
             MySessionComponentExtDebug.ForceDisable = true;
-            MyPerServerSettings.AppId = 244850u;
-            var gameVersion = MyPerGameSettings.BasicGameInfo.GameVersion;
-            MyFinalBuildConstants.APP_VERSION = gameVersion ?? 0;
+            MyPerServerSettings.AppId = 244850;
+            MyFinalBuildConstants.APP_VERSION = MyPerGameSettings.BasicGameInfo.GameVersion;
+            //MyGlobalTypeMetadata.Static.Init();
 
-            //TODO: Allows players to filter servers for Torch in the server browser.
+            //TODO: Allows players to filter servers for Torch in the server browser. Need to init Steam before this
             //SteamServerAPI.Instance.GameServer.SetKeyValue("SM", "Torch");
         }
 

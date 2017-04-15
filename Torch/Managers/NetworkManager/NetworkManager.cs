@@ -116,7 +116,7 @@ namespace Torch.Managers
             var networkId = stream.ReadNetworkId();
             //this value is unused, but removing this line corrupts the rest of the stream
             var blockedNetworkId = stream.ReadNetworkId();
-            var eventId = (uint)stream.ReadByte();
+            var eventId = (uint)stream.ReadInt16();
 
 
             CallSite site;
@@ -152,7 +152,8 @@ namespace Torch.Managers
 
             //we're handling the network live in the game thread, this needs to go as fast as possible
             var discard = false;
-            Parallel.ForEach(_networkHandlers, handler =>
+            foreach (var handler in _networkHandlers)
+            //Parallel.ForEach(_networkHandlers, handler =>
             {
                 try
                 {
@@ -164,7 +165,7 @@ namespace Torch.Managers
                     //ApplicationLog.Error(ex.ToString());
                     _log.Error(ex);
                 }
-            });
+            };
 
             //one of the handlers wants us to discard this packet
             if (discard)

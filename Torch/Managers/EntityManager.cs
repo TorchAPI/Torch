@@ -75,6 +75,7 @@ namespace Torch.Managers
 
         public void InitConcealment(double concealInterval)
         {
+            return;
             Log.Info($"Initializing concealment to run every {concealInterval}ms");
             _concealedAabbTree = new MyDynamicAABBTreeD(MyConstants.GAME_PRUNING_STRUCTURE_AABB_EXTENSION);
             _concealTimer = new Timer(concealInterval);

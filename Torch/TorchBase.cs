@@ -192,7 +192,13 @@ namespace Torch
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            Log.Fatal((Exception)e.ExceptionObject);
+            var ex = (Exception)e.ExceptionObject;
+            Log.Fatal(ex);
+            if (ex is ReflectionTypeLoadException rex)
+            {
+                foreach (var x in rex.LoaderExceptions)
+                    Log.Fatal(x);
+            }
             Console.ReadLine();
             Environment.Exit(-1);
         }
