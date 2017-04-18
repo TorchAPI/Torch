@@ -137,7 +137,6 @@
     <Compile Include="Managers\ScriptingManager.cs" />
     <Compile Include="TorchBase.cs" />
     <Compile Include="SteamService.cs" />
-    <Compile Include="TorchConfig.cs" />
     <Compile Include="TorchPluginBase.cs" />
     <Compile Include="Updater\PluginUpdater.cs" />
     <Compile Include="ViewModels\ModViewModel.cs" />

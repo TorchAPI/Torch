@@ -52,7 +52,7 @@ namespace Torch.Server
             {
                 _log.Info($"Generating default config at {configPath}");
                 options = new TorchConfig();
-                options.SaveTo(configPath);
+                options.Save(configPath);
             }
 
             /*

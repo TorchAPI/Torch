@@ -37,7 +37,7 @@ namespace Torch.Server
             if (File.Exists(configName))
                 options = TorchConfig.LoadFrom(configName);
             else
-                options.SaveTo(configName);
+                options.Save(configName);
 
             _server = new TorchServer(options);
             _server.Init();

@@ -38,7 +38,7 @@ namespace Torch.Server
 
         public TorchUI(TorchServer server)
         {
-            _config = new TorchConfig();
+            _config = server.Config;
             _server = server;
             InitializeComponent();
             _startTime = DateTime.Now;
@@ -113,7 +113,6 @@ namespace Torch.Server
         {
             var name = (sender as TextBox).Text;
 
-            _server.SetInstance(null, name);
             _config.InstancePath = name;
 
             LoadConfig(_config);

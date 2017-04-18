@@ -34,24 +34,22 @@ namespace Torch.Server
     {
         public Thread GameThread { get; private set; }
         public bool IsRunning { get; private set; }
-        public string InstancePath { get; private set; }
-        public string InstanceName { get; private set; }
+        public TorchConfig Config { get; }
+        public string InstanceName => Config?.InstanceName;
+        public string InstancePath => Config?.InstancePath;
 
         private readonly AutoResetEvent _stopHandle = new AutoResetEvent(false);
 
-        public TorchServer(TorchConfig options = null)
+        public TorchServer(TorchConfig config = null)
         {
-            var opt = options ?? new TorchConfig();
-
-            InstanceName = opt.InstanceName;
-            InstancePath = opt.InstancePath;
+            Config = config ?? new TorchConfig();
         }
 
         public override void Init()
         {
             base.Init();
 
-            Log.Info($"Init server instance '{InstanceName}' at path '{InstancePath}'");
+            Log.Info($"Init server instance '{Config.InstanceName}' at path '{Config.InstancePath}'");
 
             MyFakes.ENABLE_INFINARIO = false;
             MyPerGameSettings.SendLogToKeen = false;
@@ -73,14 +71,6 @@ namespace Torch.Server
             MySandboxGame.ConfigDedicated = config;
         }
 
-        public void SetInstance(string path = null, string name = null)
-        {
-            if (path != null)
-                InstancePath = path;
-            if (name != null)
-                InstanceName = name;
-        }
-
         public void Start(IMyConfigDedicated config)
         {
             SetConfig(config);
@@ -95,6 +85,7 @@ namespace Torch.Server
             if (IsRunning)
                 throw new InvalidOperationException("Server is already running.");
 
+            Config.Save();
             IsRunning = true;
             Log.Info("Starting server.");
 
@@ -102,7 +93,7 @@ namespace Torch.Server
             Environment.SetEnvironmentVariable("SteamAppId", MyPerServerSettings.AppId.ToString());
 
             Log.Trace("Invoking RunMain");
-            try { Reflection.InvokeStaticMethod(typeof(DedicatedServer), "RunMain", InstanceName, InstancePath, false, true); }
+            try { Reflection.InvokeStaticMethod(typeof(DedicatedServer), "RunMain", Config.InstanceName, Config.InstancePath, false, true); }
             catch (Exception e)
             {
                 Log.Error("Error running server.");

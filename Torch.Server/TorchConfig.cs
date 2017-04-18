@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using NLog;
-using VRage.Dedicated;
+using Sandbox.ModAPI.Ingame;
 
-namespace Torch.Server
+namespace Torch
 {
     public class TorchConfig
     {
@@ -19,13 +19,15 @@ namespace Torch.Server
         public int Autosave { get; set; }
         public bool AutoRestart { get; set; }
         public bool LogChat { get; set; }
+        [NonSerialized]
+        private string _path;
 
         public TorchConfig() : this("Torch") { }
 
         public TorchConfig(string instanceName = "Torch", string instancePath = null, int autosaveInterval = 5, bool autoRestart = false)
         {
             InstanceName = instanceName;
-            InstancePath = instancePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpaceEngineersDedicated", InstanceName);
+            InstancePath = instancePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Torch", InstanceName);
             Autosave = autosaveInterval;
             AutoRestart = autoRestart;
         }
@@ -40,6 +42,7 @@ namespace Torch.Server
                 {
                     config = (TorchConfig)serializer.Deserialize(f);
                 }
+                config._path = path;
                 return config;
             }
             catch (Exception e)
@@ -49,8 +52,13 @@ namespace Torch.Server
             }
         }
 
-        public bool SaveTo(string path)
+        public bool Save(string path = null)
         {
+            if (path == null)
+                path = _path;
+            else
+                _path = path;
+
             try
             {
                 var serializer = new XmlSerializer(typeof(TorchConfig));
