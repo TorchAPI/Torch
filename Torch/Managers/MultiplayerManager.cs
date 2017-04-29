@@ -177,7 +177,7 @@ namespace Torch.Managers
                 {
                     _log.Info($"Game owner {ownerSteamID} is banned. Banning and rejecting client {steamID}...");
                     UserRejected(steamID, JoinResult.BannedByAdmins);
-                    BanPlayer(steamID, true);
+                    BanPlayer(steamID);
                 }
             }
 

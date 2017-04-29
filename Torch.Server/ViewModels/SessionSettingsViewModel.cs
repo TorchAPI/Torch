@@ -331,5 +331,10 @@ namespace Torch.Server.ViewModels
             get { return _settings.ViewDistance; }
             set { _settings.WorldSizeKm = value; OnPropertyChanged(); }
         }
+
+        public static implicit operator MyObjectBuilder_SessionSettings(SessionSettingsViewModel viewModel)
+        {
+            return viewModel._settings;
+        }
     }
 }

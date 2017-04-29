@@ -13,6 +13,7 @@ namespace Torch.API
         event Action SessionLoaded;
         event Action SessionUnloading;
         event Action SessionUnloaded;
+        ITorchConfig Config { get; }
         IMultiplayer Multiplayer { get; }
         IPluginManager Plugins { get; }
         Version TorchVersion { get; }
@@ -28,9 +29,7 @@ namespace Torch.API
 
     public interface ITorchServer : ITorchBase
     {
-        bool IsRunning { get; }
         string InstancePath { get; }
-        void Start(IMyConfigDedicated config);
     }
 
     public interface ITorchClient : ITorchBase

@@ -40,7 +40,7 @@ namespace Torch.Server
                 return;
             }
 
-            var configName = args.FirstOrDefault() ?? "TorchConfig.xml";
+            var configName = /*args.FirstOrDefault() ??*/ "TorchConfig.xml";
             var configPath = Path.Combine(Directory.GetCurrentDirectory(), configName);
             TorchConfig options;
             if (File.Exists(configName))
@@ -53,6 +53,20 @@ namespace Torch.Server
                 _log.Info($"Generating default config at {configPath}");
                 options = new TorchConfig();
                 options.Save(configPath);
+            }
+
+            bool gui = true;
+            foreach (var arg in args)
+            {
+                switch (arg)
+                {
+                    case "-noupdate":
+                        options.EnableAutomaticUpdates = false;
+                        break;
+                    case "-nogui":
+                        gui = false;
+                        break;
+                }
             }
 
             /*
@@ -118,9 +132,16 @@ namespace Torch.Server
 
             _server = new TorchServer(options);
             _server.Init();
-            var ui = new TorchUI((TorchServer)_server);
-            ui.LoadConfig(options);
-            ui.ShowDialog();
+            if (gui)
+            {
+                var ui = new TorchUI((TorchServer)_server);
+                ui.LoadConfig(options);
+                ui.ShowDialog();
+            }
+            else
+            {
+                _server.Start();
+            }
         }
     }
 }

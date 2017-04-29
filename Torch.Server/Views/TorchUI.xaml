@@ -20,7 +20,7 @@
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top">
                         <Label Content="Instance Path: " Margin="3"/>
-                        <TextBox x:Name="InstancePathBox" Margin="3" Height="20" TextChanged="InstancePathBox_OnTextChanged"/>
+                        <TextBox x:Name="InstancePathBox" Margin="3" Height="20" TextChanged="InstancePathBox_OnTextChanged" IsEnabled="False"/>
                     </DockPanel>
                     <views:ConfigControl x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom"/>
                 </DockPanel>

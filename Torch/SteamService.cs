@@ -16,24 +16,23 @@ namespace Torch
     /// </summary>
     public class SteamService : MySteamService
     {
-        public SteamService(bool isDedicated, uint appId)
-            : base(true, appId)
+        public SteamService(bool isDedicated, uint appId) : base(true, appId)
         {
             // TODO: Add protection for this mess... somewhere
-            SteamSDK.SteamServerAPI.Instance.Dispose();
-            var steam = typeof(Sandbox.MySteamService);
+            SteamServerAPI.Instance.Dispose();
+            var steam = typeof(MySteamService);
             steam.GetField("SteamServerAPI").SetValue(this, null);
 
             steam.GetProperty("AppId").GetSetMethod(true).Invoke(this, new object[] { appId });
             if (isDedicated)
             {
-                steam.GetField("SteamServerAPI").SetValue(this, SteamSDK.SteamServerAPI.Instance);
+                steam.GetField("SteamServerAPI").SetValue(this, SteamServerAPI.Instance);
             }
             else
             {
-                var steamApi = SteamSDK.SteamAPI.Instance;
-                steam.GetField("SteamAPI").SetValue(this, SteamSDK.SteamAPI.Instance);
-                steam.GetProperty("IsActive").GetSetMethod(true).Invoke(this, new object[] { SteamSDK.SteamAPI.Instance != null });
+                var steamApi = SteamAPI.Instance;
+                steam.GetField("SteamAPI").SetValue(this, SteamAPI.Instance);
+                steam.GetProperty("IsActive").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.Instance != null });
 
                 if (steamApi != null)
                 {

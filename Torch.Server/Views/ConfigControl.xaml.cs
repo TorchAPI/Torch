@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -14,8 +15,12 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using NLog;
+using Sandbox;
+using Sandbox.Engine.Networking;
 using Sandbox.Engine.Utils;
 using Torch.Server.ViewModels;
+using VRage.Dedicated;
 using VRage.Game;
 using Path = System.IO.Path;
 
@@ -38,10 +43,31 @@ namespace Torch.Server.Views
         public void SaveConfig()
         {
             Config.Save(_configPath);
+            //TODO: make this work
+            try
+            {
+                var checkpoint = MyLocalCache.LoadCheckpoint(_viewModel.LoadWorld, out ulong size);
+                checkpoint.SessionName = _viewModel.WorldName;
+                checkpoint.Settings = _viewModel.SessionSettings;
+                checkpoint.Mods.Clear();
+                foreach (var modId in _viewModel.Mods)
+                    checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(modId));
+
+                Debug.Assert(checkpoint != null);
+                Debug.Assert(_viewModel.LoadWorld != null);
+                MyLocalCache.SaveCheckpoint(checkpoint, _viewModel.LoadWorld);
+            }
+            catch (Exception e)
+            {
+                var log = LogManager.GetLogger("Torch");
+                log.Error("Failed to overwrite sandbox config, changes will not appear on server");
+                log.Error(e);
+            }
         }
 
         public void LoadDedicatedConfig(TorchConfig torchConfig)
         {
+            MySandboxGame.Config = new MyConfig(MyPerServerSettings.GameNameSafe + ".cfg");
             var path = Path.Combine(torchConfig.InstancePath, "SpaceEngineers-Dedicated.cfg");
 
             if (!File.Exists(path))

@@ -38,7 +38,7 @@ namespace Torch.Server
 
         public TorchUI(TorchServer server)
         {
-            _config = server.Config;
+            _config = (TorchConfig)server.Config;
             _server = server;
             InitializeComponent();
             _startTime = DateTime.Now;
@@ -84,7 +84,7 @@ namespace Torch.Server
             BtnStop.IsEnabled = true;
             _uiUpdate.Start();
             ConfigControl.SaveConfig();
-            new Thread(() => _server.Start(ConfigControl.Config)).Start();
+            new Thread(_server.Start).Start();
         }
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
@@ -100,7 +100,7 @@ namespace Torch.Server
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            if (_server?.IsRunning ?? false)
+            if (_server?.State == ServerState.Running)
                 _server.Stop();
         }
 

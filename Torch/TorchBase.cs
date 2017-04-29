@@ -18,18 +18,20 @@ using SpaceEngineers.Game;
 using Torch.API;
 using Torch.Managers;
 using VRage.FileSystem;
+using VRage.Plugins;
 using VRage.Scripting;
 using VRage.Utils;
 
 namespace Torch
 {
-    public abstract class TorchBase : ITorchBase
+    public abstract class TorchBase : ViewModel, ITorchBase, IPlugin
     {
         /// <summary>
         /// Hack because *keen*.
         /// Use only if necessary, prefer dependency injection.
         /// </summary>
         public static ITorchBase Instance { get; private set; }
+        public ITorchConfig Config { get; protected set; }
         protected static Logger Log { get; } = LogManager.GetLogger("Torch");
         public Version TorchVersion { get; protected set; }
         public Version GameVersion { get; private set; }
@@ -186,9 +188,24 @@ namespace Torch
             MySession.AfterLoading += () => SessionLoaded?.Invoke();
             MySession.OnUnloading += () => SessionUnloading?.Invoke();
             MySession.OnUnloaded += () => SessionUnloaded?.Invoke();
+            InitUpdater();
 
             _init = true;
         }
+
+        /// <summary>
+        /// Hook into the VRage plugin system for updates.
+        /// </summary>
+        private void InitUpdater()
+        {
+            var fieldName = "m_plugins";
+            var pluginList = typeof(MyPlugins).GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as List<IPlugin>;
+            if (pluginList == null)
+                throw new TypeLoadException($"{fieldName} field not found in {nameof(MyPlugins)}");
+
+            pluginList.Add(this);
+        }
+
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
@@ -205,5 +222,25 @@ namespace Torch
 
         public abstract void Start();
         public abstract void Stop();
+
+        /// <inheritdoc />
+        public virtual void Dispose()
+        {
+            Plugins.DisposePlugins();
+        }
+
+        /// <inheritdoc />
+        public virtual void Init(object gameInstance)
+        {
+            Network.Init();
+            ChatManager.Instance.Init();
+            Plugins.Init();
+        }
+
+        /// <inheritdoc />
+        public virtual void Update()
+        {
+            Plugins.UpdatePlugins();
+        }
     }
 }

@@ -17,6 +17,7 @@ using Sandbox.ModAPI;
 using SpaceEngineers.Game.Entities.Blocks;
 using SpaceEngineers.Game.ModAPI;
 using Torch.API;
+using Torch.API.Plugins;
 using VRage;
 using VRage.Collections;
 using VRage.Game;

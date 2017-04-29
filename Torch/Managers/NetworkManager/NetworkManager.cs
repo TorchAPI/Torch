@@ -120,17 +120,15 @@ namespace Torch.Managers
 
 
             CallSite site;
-            IMyNetObject sendAs;
             object obj;
             if (networkId.IsInvalid) // Static event
             {
                 site = m_typeTable.StaticEventTable.Get(eventId);
-                sendAs = null;
                 obj = null;
             }
             else // Instance event
             {
-                sendAs = ((MyReplicationLayer)MyMultiplayer.ReplicationLayer).GetObjectByNetworkId(networkId);
+                var sendAs = ((MyReplicationLayer)MyMultiplayer.ReplicationLayer).GetObjectByNetworkId(networkId);
                 if (sendAs == null)
                 {
                     return;
@@ -165,7 +163,7 @@ namespace Torch.Managers
                     //ApplicationLog.Error(ex.ToString());
                     _log.Error(ex);
                 }
-            };
+            }
 
             //one of the handlers wants us to discard this packet
             if (discard)
@@ -278,7 +276,7 @@ namespace Torch.Managers
             for (var j = args.Length + 4; j < 10; j++)
                 arguments[j] = e;
 
-            arguments[10] = (IMyEventOwner)null;
+            arguments[10] = null;
 
             //create an array of Types so we can create a generic method
             var argTypes = new Type[8];
@@ -336,8 +334,7 @@ namespace Torch.Managers
         private CallSite TryGetStaticCallSite(MethodInfo method)
 	    {
             var methodLookup = (Dictionary<MethodInfo, CallSite>)typeof(MyEventTable).GetField("m_methodInfoLookup", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(m_typeTable.StaticEventTable);
-	        CallSite result;
-            if(!methodLookup.TryGetValue(method, out result))
+            if (!methodLookup.TryGetValue(method, out CallSite result))
                 throw new MissingMemberException("Provided event target not found!");
             return result;
 	    }
@@ -346,8 +343,7 @@ namespace Torch.Managers
 	    {
 	        var typeInfo = m_typeTable.Get(arg.GetType());
             var methodLookup = (Dictionary<MethodInfo, CallSite>)typeof(MyEventTable).GetField("m_methodInfoLookup", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(typeInfo.EventTable);
-            CallSite result;
-            if (!methodLookup.TryGetValue(method, out result))
+            if (!methodLookup.TryGetValue(method, out CallSite result))
                 throw new MissingMemberException("Provided event target not found!");
             return result;
         }

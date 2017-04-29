@@ -116,6 +116,7 @@
   <ItemGroup>
     <Compile Include="ChatMessage.cs" />
     <Compile Include="Collections\KeyTree.cs" />
+    <Compile Include="Collections\RollingAverage.cs" />
     <Compile Include="Commands\CategoryAttribute.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\CommandAttribute.cs" />
@@ -131,8 +132,8 @@
     <Compile Include="Managers\NetworkManager\NetworkHandlerBase.cs" />
     <Compile Include="Managers\NetworkManager\NetworkManager.cs" />
     <Compile Include="Managers\MultiplayerManager.cs" />
-    <Compile Include="PluginManifest.cs" />
-    <Compile Include="PluginOptions.cs" />
+    <Compile Include="TorchConfig.cs" />
+    <Compile Include="Updater\PluginManifest.cs" />
     <Compile Include="Reflection.cs" />
     <Compile Include="Managers\ScriptingManager.cs" />
     <Compile Include="TorchBase.cs" />

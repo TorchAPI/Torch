@@ -43,7 +43,7 @@ namespace Torch.Client
                 return;
 
             var appDataPath = _startup.GetAppDataPath();
-            MyInitializer.InvokeBeforeRun(APP_ID, MyPerGameSettings.BasicGameInfo.ApplicationName, appDataPath, false);
+            MyInitializer.InvokeBeforeRun(APP_ID, MyPerGameSettings.BasicGameInfo.ApplicationName, appDataPath);
             MyInitializer.InitCheckSum();
             if (!_startup.Check64Bit())
                 return;

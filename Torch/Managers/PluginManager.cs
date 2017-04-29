@@ -16,17 +16,18 @@ using Torch.API;
 using Torch.API.Plugins;
 using Torch.Commands;
 using Torch.Managers;
+using Torch.Updater;
 using VRage.Plugins;
 using VRage.Collections;
 using VRage.Library.Collections;
 
 namespace Torch.Managers
 {
-    public class PluginManager : IPluginManager, IPlugin
+    public class PluginManager : IPluginManager
     {
         private readonly ITorchBase _torch;
         private static Logger _log = LogManager.GetLogger(nameof(PluginManager));
-        public const string PluginDir = "Plugins";
+        public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
 
         public List<ITorchPlugin> Plugins { get; } = new List<ITorchPlugin>();
         public CommandManager Commands { get; private set; }
@@ -42,21 +43,6 @@ namespace Torch.Managers
 
             if (!Directory.Exists(PluginDir))
                 Directory.CreateDirectory(PluginDir);
-
-            InitUpdater();
-        }
-
-        /// <summary>
-        /// Adds the plugin manager "plugin" to VRage's plugin system.
-        /// </summary>
-        private void InitUpdater()
-        {
-            var fieldName = "m_plugins";
-            var pluginList = typeof(MyPlugins).GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as List<IPlugin>;
-            if (pluginList == null)
-                throw new TypeLoadException($"{fieldName} field not found in {nameof(MyPlugins)}");
-
-            pluginList.Add(this);
         }
 
         /// <summary>
@@ -81,18 +67,48 @@ namespace Torch.Managers
             Plugins.Clear();
         }
 
+        private void DownloadPlugins()
+        {
+            _log.Info("Downloading plugins");
+            var updater = new PluginUpdater(this);
+
+            var folders = Directory.GetDirectories(PluginDir);
+            var taskList = new List<Task>();
+            if (_torch.Config.RedownloadPlugins)
+                _log.Warn("Force downloading all plugins because the RedownloadPlugins flag is set in the config");
+
+            foreach (var folder in folders)
+            {
+                var manifestPath = Path.Combine(folder, "manifest.xml");
+                if (!File.Exists(manifestPath))
+                {
+                    _log.Info($"No manifest in {folder}, skipping");
+                    continue;
+                }
+
+                _log.Info($"Checking for updates for {folder}");
+                var manifest = PluginManifest.Load(manifestPath);
+                taskList.Add(updater.CheckAndUpdate(manifest, _torch.Config.RedownloadPlugins));
+            }
+
+            Task.WaitAll(taskList.ToArray());
+            _torch.Config.RedownloadPlugins = false;
+        }
+
         /// <summary>
         /// Loads and creates instances of all plugins in the <see cref="PluginDir"/> folder.
         /// </summary>
         public void Init()
         {
-            ((TorchBase)_torch).Network.Init();
-            ChatManager.Instance.Init();
             Commands = new CommandManager(_torch);
 
+            if (_torch.Config.EnableAutomaticUpdates)
+                DownloadPlugins();
+            else
+                _log.Warn("Automatic plugin updates are disabled.");
+
             _log.Info("Loading plugins");
-            var pluginsPath = Path.Combine(Directory.GetCurrentDirectory(), PluginDir);
-            var dlls = Directory.GetFiles(pluginsPath, "*.dll", SearchOption.AllDirectories);
+            var dlls = Directory.GetFiles(PluginDir, "*.dll", SearchOption.AllDirectories);
             foreach (var dllPath in dlls)
             {
                 var asm = Assembly.UnsafeLoadFrom(dllPath);
@@ -134,21 +150,6 @@ namespace Torch.Managers
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
-        }
-
-        void IPlugin.Init(object obj)
-        {
-            Init();
-        }
-
-        void IPlugin.Update()
-        {
-            UpdatePlugins();
-        }
-
-        public void Dispose()
-        {
-            DisposePlugins();
         }
     }
 }

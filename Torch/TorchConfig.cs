@@ -10,15 +10,17 @@ using Sandbox.ModAPI.Ingame;
 
 namespace Torch
 {
-    public class TorchConfig
+    public class TorchConfig : ITorchConfig
     {
         private static Logger _log = LogManager.GetLogger("Config");
 
         public string InstancePath { get; set; }
         public string InstanceName { get; set; }
-        public int Autosave { get; set; }
-        public bool AutoRestart { get; set; }
-        public bool LogChat { get; set; }
+        //public int Autosave { get; set; }
+        //public bool AutoRestart { get; set; }
+        //public bool LogChat { get; set; }
+        public bool EnableAutomaticUpdates { get; set; } = true;
+        public bool RedownloadPlugins { get; set; }
         [NonSerialized]
         private string _path;
 
@@ -28,8 +30,8 @@ namespace Torch
         {
             InstanceName = instanceName;
             InstancePath = instancePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Torch", InstanceName);
-            Autosave = autosaveInterval;
-            AutoRestart = autoRestart;
+            //Autosave = autosaveInterval;
+            //AutoRestart = autoRestart;
         }
 
         public static TorchConfig LoadFrom(string path)

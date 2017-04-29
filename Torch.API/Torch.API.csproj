@@ -141,6 +141,7 @@
     <Compile Include="IChatMessage.cs" />
     <Compile Include="IMultiplayer.cs" />
     <Compile Include="IPluginManager.cs" />
+    <Compile Include="ITorchConfig.cs" />
     <Compile Include="Plugins\ITorchPlugin.cs" />
     <Compile Include="IServerControls.cs" />
     <Compile Include="ITorchBase.cs" />
@@ -149,6 +150,7 @@
     <Compile Include="ModAPI\TorchAPI.cs" />
     <Compile Include="Plugins\PluginAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServerState.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
