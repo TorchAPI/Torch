@@ -12,6 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Torch.Server.ViewModels;
+using VRage.Game.ModAPI;
 
 namespace Torch.Server.Views
 {
@@ -20,9 +22,32 @@ namespace Torch.Server.Views
     /// </summary>
     public partial class EntitiesControl : UserControl
     {
+        public EntityTreeViewModel Entities { get; set; } = new EntityTreeViewModel();
+
         public EntitiesControl()
         {
             InitializeComponent();
+            DataContext = Entities;
+        }
+
+        private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (e.NewValue is EntityViewModel vm)
+                Entities.CurrentEntity = vm;
+            else
+                Entities.CurrentEntity = null;
+        }
+
+        private void Delete_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (Entities.CurrentEntity?.Entity is IMyCharacter)
+                return;
+            TorchBase.Instance.Invoke(() => Entities.CurrentEntity?.Entity.Close());
+        }
+
+        private void Stop_OnClick(object sender, RoutedEventArgs e)
+        {
+            TorchBase.Instance.Invoke(() => Entities.CurrentEntity?.Entity.Physics?.ClearSpeed());
         }
     }
 }

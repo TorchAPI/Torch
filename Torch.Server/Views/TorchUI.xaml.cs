@@ -17,6 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Sandbox;
 using Torch.API;
 using Timer = System.Timers.Timer;
 
@@ -106,7 +107,7 @@ namespace Torch.Server
 
         private void BtnRestart_Click(object sender, RoutedEventArgs e)
         {
-            
+            //MySandboxGame.Static.Invoke(MySandboxGame.ReloadDedicatedServerSession); use i
         }
 
         private void InstancePathBox_OnTextChanged(object sender, TextChangedEventArgs e)

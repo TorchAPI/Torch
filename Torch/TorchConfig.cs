@@ -21,6 +21,7 @@ namespace Torch
         //public bool LogChat { get; set; }
         public bool EnableAutomaticUpdates { get; set; } = true;
         public bool RedownloadPlugins { get; set; }
+        public List<string> Plugins { get; set; } = new List<string>();
         [NonSerialized]
         private string _path;
 

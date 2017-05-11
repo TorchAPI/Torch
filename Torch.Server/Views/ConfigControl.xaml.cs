@@ -20,6 +20,7 @@ using Sandbox;
 using Sandbox.Engine.Networking;
 using Sandbox.Engine.Utils;
 using Torch.Server.ViewModels;
+using Torch.Views;
 using VRage.Dedicated;
 using VRage.Game;
 using Path = System.IO.Path;
@@ -43,18 +44,14 @@ namespace Torch.Server.Views
         public void SaveConfig()
         {
             Config.Save(_configPath);
-            //TODO: make this work
             try
             {
                 var checkpoint = MyLocalCache.LoadCheckpoint(_viewModel.LoadWorld, out ulong size);
-                checkpoint.SessionName = _viewModel.WorldName;
                 checkpoint.Settings = _viewModel.SessionSettings;
                 checkpoint.Mods.Clear();
                 foreach (var modId in _viewModel.Mods)
                     checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(modId));
 
-                Debug.Assert(checkpoint != null);
-                Debug.Assert(_viewModel.LoadWorld != null);
                 MyLocalCache.SaveCheckpoint(checkpoint, _viewModel.LoadWorld);
             }
             catch (Exception e)
@@ -105,6 +102,11 @@ namespace Torch.Server.Views
         {
             var editor = new CollectionEditor { Owner = Window.GetWindow(this) };
             editor.Edit(_viewModel.Mods, "Mods");
+        }
+
+        private void Save_OnClick(object sender, RoutedEventArgs e)
+        {
+            SaveConfig();
         }
     }
 }

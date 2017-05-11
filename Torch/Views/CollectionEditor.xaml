@@ -1,9 +1,8 @@
-﻿<Window x:Class="Torch.Server.Views.CollectionEditor"
+﻿<Window x:Class="Torch.Views.CollectionEditor"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Torch.Server.Views"
         mc:Ignorable="d"
         Title="Edit Collection" Height="300" Width="300">
     <DockPanel>

@@ -19,5 +19,15 @@ namespace Torch
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
         }
+
+        /// <summary>
+        /// Fires PropertyChanged for all properties.
+        /// </summary>
+        public void RefreshModel()
+        {
+            foreach (var propName in GetType().GetProperties().Select(x => x.Name))
+                // ReSharper disable once ExplicitCallerInfoArgument
+                OnPropertyChanged(propName);
+        }
     }
 }

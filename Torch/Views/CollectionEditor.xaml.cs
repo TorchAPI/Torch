@@ -14,7 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace Torch.Server.Views
+namespace Torch.Views
 {
     /// <summary>
     /// Interaction logic for CollectionEditor.xaml

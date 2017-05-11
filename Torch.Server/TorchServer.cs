@@ -67,7 +67,7 @@ namespace Torch.Server
         /// </summary>
         public override void Start()
         {
-            if (State > 0)
+            if (State != ServerState.Stopped)
                 throw new InvalidOperationException("Server is already running.");
 
             Config.Save();
@@ -115,14 +115,12 @@ namespace Torch.Server
             Log.Info("Stopping server.");
             MySession.Static.Save();
             MySession.Static.Unload();
-            MySandboxGame.Static.Exit();
 
             //Unload all the static junk.
             //TODO: Finish unloading all server data so it's in a completely clean state.
             MyFileSystem.Reset();
             VRage.Input.MyGuiGameControlsHelpers.Reset();
             VRage.Input.MyInput.UnloadData();
-            //CleanupProfilers();
 
             Log.Info("Server stopped.");
             _stopHandle.Set();
