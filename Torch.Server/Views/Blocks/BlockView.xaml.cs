@@ -1,0 +1,73 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using Sandbox.ModAPI;
+using Sandbox.ModAPI.Interfaces;
+using Torch.Server.ViewModels.Blocks;
+using VRage.Game.ModAPI;
+
+namespace Torch.Server.Views.Blocks
+{
+    /// <summary>
+    /// Interaction logic for BlockView.xaml
+    /// </summary>
+    public partial class BlockView : UserControl
+    {
+        public BlockView()
+        {
+            InitializeComponent();
+        }
+
+        /*
+        public void SetTarget(BlockViewModel model)
+        {
+            DataContext = model;
+            Stack.Children.Clear();
+
+            var propList = new List<ITerminalProperty>();
+            model.Block.GetProperties(propList);
+            foreach (var prop in propList)
+            {
+                Type propType = null;
+                foreach (var iface in prop.GetType().GetInterfaces())
+                {
+                    if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(ITerminalProperty<>))
+                        propType = iface.GenericTypeArguments[0];
+                }
+
+                var modelType = typeof(PropertyViewModel<>).MakeGenericType(propType);
+                var vm = Activator.CreateInstance(modelType, prop, model.Block);
+
+                var label = new Label { Content = $"{prop.Id}: "};
+                var textBox = new TextBox { Margin = new Thickness(3) };
+                var binding = new Binding("Value") {Source = vm};
+                textBox.SetBinding(TextBox.TextProperty, binding);
+                var stack = new DockPanel {Children = {label, textBox}, LastChildFill = true};
+                Stack.Children.Add(stack);
+            }
+
+            /*
+            var properties = model.PropertyWrapper.GetType().GetProperties();
+            foreach (var property in properties)
+            {
+                var control = new TextBox {Margin = new Thickness(3), Text = property.GetValue(model.PropertyWrapper).ToString()};
+                var bindingPath = $"{nameof(model.PropertyWrapper)}.{property.Name}";
+                var binding = new Binding {Path = new PropertyPath(bindingPath), Source = model};
+                BindingOperations.SetBinding(control, TextBox.TextProperty, binding);
+                Stack.Children.Add(control);
+            }
+        }*/
+    }
+}

@@ -33,12 +33,25 @@ namespace Torch
                 }
         }
 
+        public void Sort<TKey>(Func<T, TKey> selector, IComparer<TKey> comparer = null)
+        {
+            List<T> sortedItems;
+            if (comparer != null)
+                sortedItems = Items.OrderBy(selector, comparer).ToList();
+            else
+                sortedItems = Items.OrderBy(selector).ToList();
+
+            Items.Clear();
+            foreach (var item in sortedItems)
+                Add(item);
+        }
+
         public void RemoveWhere(Func<T, bool> condition)
         {
             for (var i = Items.Count - 1; i > 0; i--)
             {
                 if (condition(Items[i]))
-                    Items.RemoveAt(i);
+                    RemoveAt(i);
             }
         }
     }

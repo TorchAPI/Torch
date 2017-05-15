@@ -9,6 +9,7 @@ using System.Threading;
 using System.Xml.Serialization;
 using SteamSDK;
 using Torch.API;
+using Torch.Server.ViewModels.Blocks;
 using VRage.Dedicated;
 using VRage.FileSystem;
 using VRage.Game;

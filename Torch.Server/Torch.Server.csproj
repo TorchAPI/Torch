@@ -175,18 +175,27 @@
     <Compile Include="TorchServiceInstaller.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ViewModels\CharacterViewModel.cs" />
+    <Compile Include="ViewModels\Blocks\BlockViewModel.cs" />
+    <Compile Include="ViewModels\Blocks\BlockViewModelGenerator.cs" />
+    <Compile Include="ViewModels\Blocks\PropertyViewModel.cs" />
+    <Compile Include="ViewModels\Entities\CharacterViewModel.cs" />
     <Compile Include="ViewModels\ConfigDedicatedViewModel.cs" />
     <Compile Include="ViewModels\EntityTreeViewModel.cs" />
-    <Compile Include="ViewModels\EntityViewModel.cs" />
+    <Compile Include="ViewModels\Entities\EntityViewModel.cs" />
     <Compile Include="ViewModels\FloatingObjectViewModel.cs" />
-    <Compile Include="ViewModels\GridViewModel.cs" />
+    <Compile Include="ViewModels\Entities\GridViewModel.cs" />
     <Compile Include="ViewModels\PluginManagerViewModel.cs" />
     <Compile Include="ViewModels\PluginViewModel.cs" />
     <Compile Include="ViewModels\SessionSettingsViewModel.cs" />
-    <Compile Include="ViewModels\VoxelMapViewModel.cs" />
+    <Compile Include="ViewModels\Entities\VoxelMapViewModel.cs" />
     <Compile Include="Views\AddWorkshopItemsDialog.xaml.cs">
       <DependentUpon>AddWorkshopItemsDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Blocks\BlockView.xaml.cs">
+      <DependentUpon>BlockView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Blocks\PropertyView.xaml.cs">
+      <DependentUpon>PropertyView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ChatControl.xaml.cs">
       <DependentUpon>ChatControl.xaml</DependentUpon>
@@ -251,6 +260,14 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\Blocks\BlockView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Blocks\PropertyView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\ChatControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -292,6 +309,7 @@
       <LastGenOutput>AssemblyInfo.cs</LastGenOutput>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(SolutionDir)NLog.config" "$(TargetDir)"</PostBuildEvent>

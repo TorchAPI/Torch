@@ -1,0 +1,21 @@
+﻿<UserControl x:Class="Torch.Server.Views.Blocks.PropertyView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Torch.Server.Views.Blocks"
+             xmlns:blocks="clr-namespace:Torch.Server.ViewModels.Blocks"
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <local:StringIdConverter x:Key="StringIdConverter"/>
+    </UserControl.Resources>
+    <DockPanel x:Name="Dock">
+        <Label x:Name="Label" Width="150" VerticalAlignment="Center" DockPanel.Dock="Left">
+            <Label.Content>
+                <TextBlock Text="{Binding Name, StringFormat={}{0}: }" />
+            </Label.Content>
+            </Label>
+            <Frame x:Name="Frame" DockPanel.Dock="Right" NavigationUIVisibility="Hidden"/>
+        </DockPanel>
+</UserControl>
+

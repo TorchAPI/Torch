@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
+using Torch.Server.ViewModels.Entities;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 

@@ -5,6 +5,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Torch.Server.Views"
              xmlns:viewModels="clr-namespace:Torch.Server.ViewModels"
+             xmlns:blocks="clr-namespace:Torch.Server.Views.Blocks"
+             xmlns:entities="clr-namespace:Torch.Server.ViewModels.Entities"
+             xmlns:blocks1="clr-namespace:Torch.Server.ViewModels.Blocks"
              mc:Ignorable="d">
     <UserControl.DataContext>
         <viewModels:EntityTreeViewModel />
@@ -17,15 +20,18 @@
                 <Button Content="Stop" Click="Stop_OnClick" IsEnabled="{Binding CurrentEntity.CanStop}" Margin="3" />
             </StackPanel>
             <TreeView Width="300" Margin="3" DockPanel.Dock="Top" SelectedItemChanged="TreeView_OnSelectedItemChanged">
+                <TreeView.Resources>
+                    <HierarchicalDataTemplate DataType="{x:Type entities:GridViewModel}" ItemsSource="{Binding Blocks}">
+                        <TextBlock Text="{Binding Name}" />
+                    </HierarchicalDataTemplate>
+                    <DataTemplate DataType="{x:Type blocks1:BlockViewModel}">
+                        <TextBlock Text="{Binding Path=Name}" />
+                    </DataTemplate>
+                </TreeView.Resources>
                 <TreeViewItem ItemsSource="{Binding Grids}" IsExpanded="true">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding Grids.Count, StringFormat=Grids ({0})}" />
                     </TreeViewItem.Header>
-                    <TreeViewItem.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Name}" />
-                        </DataTemplate>
-                    </TreeViewItem.ItemTemplate>
                 </TreeViewItem>
                 <TreeViewItem ItemsSource="{Binding Characters}" IsExpanded="true">
                     <TreeViewItem.Header>
@@ -59,6 +65,6 @@
                 </TreeViewItem>
             </TreeView>
         </DockPanel>
-        <Frame Margin="3" />
+        <Frame x:Name="EditorFrame" Margin="3" NavigationUIVisibility="Hidden" />
     </DockPanel>
 </UserControl>

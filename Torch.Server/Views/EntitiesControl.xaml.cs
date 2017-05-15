@@ -13,6 +13,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Torch.Server.ViewModels;
+using Torch.Server.ViewModels.Blocks;
+using Torch.Server.ViewModels.Entities;
+using Torch.Server.Views.Blocks;
 using VRage.Game.ModAPI;
 
 namespace Torch.Server.Views
@@ -33,7 +36,11 @@ namespace Torch.Server.Views
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (e.NewValue is EntityViewModel vm)
+            {
                 Entities.CurrentEntity = vm;
+                if (e.NewValue is BlockViewModel bvm)
+                    EditorFrame.Content = new BlockView { DataContext = bvm };
+            }
             else
                 Entities.CurrentEntity = null;
         }

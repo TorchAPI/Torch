@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VRage.Game.ModAPI;
+﻿using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
 
-namespace Torch.Server.ViewModels
+namespace Torch.Server.ViewModels.Entities
 {
     public class EntityViewModel : ViewModel
     {
@@ -44,6 +39,11 @@ namespace Torch.Server.ViewModels
         public EntityViewModel(IMyEntity entity)
         {
             Entity = entity;
+        }
+
+        public EntityViewModel()
+        {
+            
         }
     }
 }

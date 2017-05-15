@@ -1,4 +1,5 @@
 ﻿using Sandbox.Game.Entities;
+using Torch.Server.ViewModels.Entities;
 
 namespace Torch.Server.ViewModels
 {

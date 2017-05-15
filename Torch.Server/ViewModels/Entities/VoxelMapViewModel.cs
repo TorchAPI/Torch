@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Medieval.ObjectBuilders.Definitions;
-using Sandbox.Game.Entities;
-using VRage.ModAPI;
+﻿using Sandbox.Game.Entities;
 
-namespace Torch.Server.ViewModels
+namespace Torch.Server.ViewModels.Entities
 {
     public class VoxelMapViewModel : EntityViewModel
     {

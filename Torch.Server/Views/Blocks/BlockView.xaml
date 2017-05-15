@@ -1,0 +1,32 @@
+﻿<UserControl x:Class="Torch.Server.Views.Blocks.BlockView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Torch.Server.Views.Blocks"
+             xmlns:blocks="clr-namespace:Torch.Server.ViewModels.Blocks"
+             mc:Ignorable="d">
+    <UserControl.DataContext>
+        <blocks:BlockViewModel />
+    </UserControl.DataContext>
+    <DockPanel x:Name="Stack" Margin="3">
+        <Label Content="{Binding FullName}" FontSize="16" DockPanel.Dock="Top" />
+        <ListView ItemsSource="{Binding Properties}" Margin="3" IsEnabled="True" DockPanel.Dock="Bottom">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <local:PropertyView />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment"
+                            Value="Stretch" />
+                    <Setter Property="VerticalContentAlignment"
+                            Value="Center" />
+                    <Setter Property="Focusable" 
+                            Value="false" />
+                </Style>
+            </ListView.ItemContainerStyle>
+        </ListView>
+    </DockPanel>
+</UserControl>
