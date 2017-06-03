@@ -10,7 +10,14 @@
         <blocks:BlockViewModel />
     </UserControl.DataContext>
     <DockPanel x:Name="Stack" Margin="3">
-        <Label Content="{Binding FullName}" FontSize="16" DockPanel.Dock="Top" />
+        <StackPanel DockPanel.Dock="Top">
+            <Label Content="{Binding FullName}" FontSize="16" />
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Built By: "/>
+                <TextBox Text="{Binding BuiltBy}" HorizontalAlignment="Stretch" Margin="3"/>
+            </StackPanel>
+            <Label Content="Properties"/>
+        </StackPanel>
         <ListView ItemsSource="{Binding Properties}" Margin="3" IsEnabled="True" DockPanel.Dock="Bottom">
             <ListView.ItemTemplate>
                 <DataTemplate>

@@ -9,6 +9,6 @@ namespace Torch.Server.ViewModels
 
         public override string Name => $"{base.Name} ({Floating.Amount})";
 
-        public FloatingObjectViewModel(MyFloatingObject floating) : base(floating) { }
+        public FloatingObjectViewModel(MyFloatingObject floating, EntityTreeViewModel tree) : base(floating, tree) { }
     }
 }

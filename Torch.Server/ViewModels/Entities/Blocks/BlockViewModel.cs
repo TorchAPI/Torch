@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Text;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Sandbox.Game.Entities.Cube;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces;
 using Torch.Server.ViewModels.Entities;
@@ -26,9 +29,22 @@ namespace Torch.Server.ViewModels.Blocks
             }
         }
 
+        /// <inheritdoc />
+        public override string Position { get => base.Position; set { } }
+
+        public long BuiltBy
+        {
+            get => ((MySlimBlock)Block.SlimBlock).BuiltBy;
+            set
+            {
+                TorchBase.Instance.InvokeBlocking(() => ((MySlimBlock)Block.SlimBlock).TransferAuthorship(value));
+                OnPropertyChanged();
+            }
+        }
+
         public override bool CanStop => false;
 
-        public BlockViewModel(IMyTerminalBlock block) : base(block)
+        public BlockViewModel(IMyTerminalBlock block, EntityTreeViewModel tree) : base(block, tree)
         {
             Block = block;
             var propList = new List<ITerminalProperty>();

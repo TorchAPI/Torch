@@ -187,7 +187,7 @@ namespace Torch.Managers
                 {
                     UserRejected(steamID, JoinResult.ServerFull);
                 }
-                else if (MySandboxGame.ConfigDedicated.Administrators.Contains(steamID.ToString()) || MySandboxGame.ConfigDedicated.Administrators.Contains(MyDedicatedServerBase.ConvertSteamIDFrom64(steamID)))
+                else if (MySandboxGame.ConfigDedicated.Administrators.Contains(steamID.ToString()) /*|| MySandboxGame.ConfigDedicated.Administrators.Contains(MyDedicatedServerBase.ConvertSteamIDFrom64(steamID))*/)
                 {
                     UserAccepted(steamID);
                 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -70,12 +71,24 @@ namespace Torch.Managers
             //don't bother with nullchecks here, it was all handled in ReflectionUnitTest
             var transportType = typeof(MySyncLayer).GetField(MyTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance).FieldType;
             var transportInstance = typeof(MySyncLayer).GetField(MyTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(MyMultiplayer.Static.SyncLayer);
-            var handlers = (Dictionary<MyMessageId, Action<MyPacket>>)transportType.GetField(TransportHandlersField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(transportInstance);
+            var handlers = (IDictionary)transportType.GetField(TransportHandlersField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(transportInstance);
+            var handlerTypeField = handlers.GetType().GenericTypeArguments[0].GetField("messageId"); //Should be MyTransportLayer.HandlerId
+            object id = null;
+            foreach (var key in handlers.Keys)
+            {
+                if ((MyMessageId)handlerTypeField.GetValue(key) != MyMessageId.RPC)
+                    continue;
+
+                id = key;
+                break;
+            }
+            if (id == null)
+                throw new InvalidOperationException("RPC handler not found.");
 
             //remove Keen's network listener
-            handlers.Remove(MyMessageId.RPC);
+            handlers.Remove(id);
             //replace it with our own
-            handlers.Add(MyMessageId.RPC, ProcessEvent);
+            handlers.Add(id, new Action<MyPacket>(OnEvent));
 
             //PrintDebug();
 
@@ -91,14 +104,14 @@ namespace Torch.Managers
         /// DO NOT modify this method unless you're absolutely sure of what you're doing. This can very easily destabilize the game!
         /// </summary>
         /// <param name="packet"></param>
-        private void ProcessEvent(MyPacket packet)
+        private void OnEvent(MyPacket packet)
         {
             if (_networkHandlers.Count == 0)
             {
                 //pass the message back to the game server
                 try
                 {
-                    ((MyReplicationLayer)MyMultiplayer.ReplicationLayer).ProcessEvent(packet);
+                    ((MyReplicationLayer)MyMultiplayer.ReplicationLayer).OnEvent(packet);
                 }
                 catch (Exception ex)
                 {
@@ -156,7 +169,7 @@ namespace Torch.Managers
                 try
                 {
                     if (handler.CanHandle(site))
-                        discard |= handler.Handle(packet.Sender.Value, site, stream, obj, packet);
+                        discard |= handler.Handle(packet.Sender.Id.Value, site, stream, obj, packet);
                 }
                 catch (Exception ex)
                 {
@@ -172,7 +185,7 @@ namespace Torch.Managers
             //pass the message back to the game server
             try
             {
-                ((MyReplicationLayer)MyMultiplayer.ReplicationLayer).ProcessEvent(packet);
+                ((MyReplicationLayer)MyMultiplayer.ReplicationLayer).OnEvent(packet);
             }
             catch (Exception ex)
             {

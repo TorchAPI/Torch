@@ -19,6 +19,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Sandbox;
 using Torch.API;
+using VRageMath;
 using Timer = System.Timers.Timer;
 
 namespace Torch.Server
@@ -44,6 +45,11 @@ namespace Torch.Server
             InitializeComponent();
             _startTime = DateTime.Now;
             _uiUpdate.Elapsed += UiUpdate_Elapsed;
+
+            Left = _config.WindowPosition.X;
+            Top = _config.WindowPosition.Y;
+            Width = _config.WindowSize.X;
+            Height = _config.WindowSize.Y;
 
             Chat.BindServer(server);
             PlayerList.BindServer(server);
@@ -101,6 +107,12 @@ namespace Torch.Server
 
         protected override void OnClosing(CancelEventArgs e)
         {
+            var newSize = new Vector2I((int)Width, (int)Height);
+            _config.WindowSize = newSize;
+            var newPos = new Vector2I((int)Left, (int)Top);
+            _config.WindowPosition = newPos;
+            _config.Save();
+
             if (_server?.State == ServerState.Running)
                 _server.Stop();
         }

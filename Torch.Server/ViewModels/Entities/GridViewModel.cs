@@ -11,15 +11,17 @@ namespace Torch.Server.ViewModels.Entities
         public MTObservableCollection<BlockViewModel> Blocks { get; } = new MTObservableCollection<BlockViewModel>();
 
         /// <inheritdoc />
-        public override string Name => $"{base.Name} ({Grid.BlocksCount} blocks)";
+        public string DescriptiveName => $"{Name} ({Grid.BlocksCount} blocks)";
 
-        public GridViewModel(MyCubeGrid grid) : base(grid)
+        public GridViewModel() { }
+
+        public GridViewModel(MyCubeGrid grid, EntityTreeViewModel tree) : base(grid, tree)
         {
             TorchBase.Instance.InvokeBlocking(() =>
             {
                 foreach (var block in grid.GetFatBlocks().Where(b => b is IMyTerminalBlock))
                 {
-                    Blocks.Add(new BlockViewModel((IMyTerminalBlock)block));
+                    Blocks.Add(new BlockViewModel((IMyTerminalBlock)block, tree));
                 }
             });
             Blocks.Sort(b => b.Block.GetType().AssemblyQualifiedName);
@@ -39,8 +41,9 @@ namespace Torch.Server.ViewModels.Entities
 
         private void Grid_OnBlockAdded(Sandbox.Game.Entities.Cube.MySlimBlock obj)
         {
-            if (obj.FatBlock != null)
-                Blocks.Add(new BlockViewModel((IMyTerminalBlock)obj.FatBlock));
+            var block = obj.FatBlock as IMyTerminalBlock;
+            if (block != null)
+                Blocks.Add(new BlockViewModel(block, Tree));
 
             Blocks.Sort(b => b.Block.GetType().AssemblyQualifiedName);
             OnPropertyChanged(nameof(Name));

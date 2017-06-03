@@ -6,6 +6,7 @@ namespace Torch.Server.ViewModels.Entities
 {
     public class EntityViewModel : ViewModel
     {
+        protected EntityTreeViewModel Tree { get; }
         public IMyEntity Entity { get; }
         public long Id => Entity.EntityId;
 
@@ -36,7 +37,7 @@ namespace Torch.Server.ViewModels.Entities
 
         public virtual bool CanDelete => !(Entity is IMyCharacter);
 
-        public EntityViewModel(IMyEntity entity)
+        public EntityViewModel(IMyEntity entity, EntityTreeViewModel tree)
         {
             Entity = entity;
         }

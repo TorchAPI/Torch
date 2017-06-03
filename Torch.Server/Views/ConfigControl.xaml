@@ -16,39 +16,39 @@
             <ComboBox Text="{Binding LoadWorld}" ItemsSource="{Binding WorldPaths}" IsEditable="True" Margin="3" />
         </DockPanel>
         <DockPanel DockPanel.Dock="Bottom">
-            <StackPanel>
-            <ScrollViewer IsEnabled="True">
-                <StackPanel Orientation="Horizontal">
-                    <StackPanel Margin="3" DockPanel.Dock="Left">
-                        <Label Content="Server Name" />
-                        <TextBox Text="{Binding ServerName}" Margin="3,0,3,3" Width="160" />
-                        <Label Content="World Name" />
-                        <TextBox Text="{Binding WorldName}" Margin="3,0,3,3" Width="160" />
-                        <Label Content="Whitelist Group ID" />
-                        <TextBox Text="{Binding GroupId}" Margin="3,0,3,3" Width="160" />
-                        <Label Content="Server IP" />
-                        <StackPanel Orientation="Horizontal" Margin="3,0,3,3">
-                            <TextBox Text="{Binding IP}" Width="100" Height="20" />
-                            <Label Content=":" Width="12"/>
-                            <TextBox Text="{Binding Port}" Width="48" Height="20" />
+            <StackPanel DockPanel.Dock="Left">
+                <ScrollViewer IsEnabled="True">
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel Margin="3" DockPanel.Dock="Left">
+                            <Label Content="Server Name" />
+                            <TextBox Text="{Binding ServerName}" Margin="3,0,3,3" Width="160" />
+                            <Label Content="World Name" />
+                            <TextBox Text="{Binding WorldName}" Margin="3,0,3,3" Width="160" />
+                            <Label Content="Whitelist Group ID" />
+                            <TextBox Text="{Binding GroupId}" Margin="3,0,3,3" Width="160" />
+                            <Label Content="Server IP" />
+                            <StackPanel Orientation="Horizontal" Margin="3,0,3,3">
+                                <TextBox Text="{Binding IP}" Width="100" Height="20" />
+                                <Label Content=":" Width="12" />
+                                <TextBox Text="{Binding Port}" Width="48" Height="20" />
+                            </StackPanel>
+                            <CheckBox IsChecked="{Binding IgnoreLastSession}" Content="Ignore Last Session" Margin="3" />
+                            <CheckBox IsChecked="{Binding PauseGameWhenEmpty}" Content="Pause When Empty" Margin="3" />
                         </StackPanel>
-                        <CheckBox IsChecked="{Binding IgnoreLastSession}" Content="Ignore Last Session" Margin="3" />
-                        <CheckBox IsChecked="{Binding PauseGameWhenEmpty}" Content="Pause When Empty" Margin="3" />
+                        <StackPanel Margin="3">
+                            <Label Content="Banned Players" />
+                            <ListBox ItemsSource="{Binding Banned}" Width="130" Margin="3,0,3,3" Height="100"
+                                     MouseDoubleClick="Banned_OnMouseDoubleClick" />
+                            <Label Content="Administrators" />
+                            <ListBox ItemsSource="{Binding Administrators}" Width="130" Margin="3,0,3,3" Height="100"
+                                     MouseDoubleClick="Administrators_OnMouseDoubleClick" />
+                            <Label Content="Mods" />
+                            <ListBox ItemsSource="{Binding Mods}" Width="130" Margin="3,0,3,3" Height="100"
+                                     MouseDoubleClick="Mods_OnMouseDoubleClick" />
+                        </StackPanel>
                     </StackPanel>
-                    <StackPanel Margin="3">
-                        <Label Content="Banned Players" />
-                        <ListBox ItemsSource="{Binding Banned}" Width="130" Margin="3,0,3,3" Height="100"
-                                 MouseDoubleClick="Banned_OnMouseDoubleClick" />
-                        <Label Content="Administrators" />
-                        <ListBox ItemsSource="{Binding Administrators}" Width="130" Margin="3,0,3,3" Height="100"
-                                 MouseDoubleClick="Administrators_OnMouseDoubleClick" />
-                        <Label Content="Mods" />
-                        <ListBox ItemsSource="{Binding Mods}" Width="130" Margin="3,0,3,3" Height="100"
-                                 MouseDoubleClick="Mods_OnMouseDoubleClick" />
-                    </StackPanel>
-                </StackPanel>
-            </ScrollViewer>
-                <Button Content="Save Config" Margin="3" Click="Save_OnClick"></Button>
+                </ScrollViewer>
+                <Button Content="Save Config" Margin="3" Click="Save_OnClick" />
             </StackPanel>
             <ScrollViewer Margin="3" DockPanel.Dock="Right" IsEnabled="True">
                 <StackPanel DataContext="{Binding SessionSettings}">

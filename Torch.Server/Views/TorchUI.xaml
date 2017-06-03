@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Torch.Server"
         xmlns:views="clr-namespace:Torch.Server.Views"
         mc:Ignorable="d"
-        Title="Torch" Height="560" Width="700">
+        Title="Torch">
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Margin="5,5,5,5" Orientation="Horizontal">
             <Button x:Name="BtnStart" Content="Start" Height="24" Width="75" Margin="5,0,5,0" HorizontalAlignment="Left" Click="BtnStart_Click" IsDefault="True"/>

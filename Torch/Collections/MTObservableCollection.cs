@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -31,6 +32,22 @@ namespace Torch
 
                     nh.Invoke(this, e);
                 }
+        }
+
+        public void Insert<TKey>(T item, Func<T, TKey> selector, IComparer<TKey> comparer)
+        {
+            var key = selector(item);
+            for (var i = 0; i < Count; i++)
+            {
+                var key2 = selector(Items[i]);
+                if (comparer.Compare(key, key2) < 1)
+                    continue;
+
+                Insert(i + 1, item);
+                return;
+            }
+
+            Add(item);
         }
 
         public void Sort<TKey>(Func<T, TKey> selector, IComparer<TKey> comparer = null)

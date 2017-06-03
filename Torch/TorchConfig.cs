@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using NLog;
 using Sandbox.ModAPI.Ingame;
+using VRageMath;
 
 namespace Torch
 {
@@ -22,6 +23,8 @@ namespace Torch
         public bool EnableAutomaticUpdates { get; set; } = true;
         public bool RedownloadPlugins { get; set; }
         public List<string> Plugins { get; set; } = new List<string>();
+        public Vector2I WindowSize { get; set; } = new Vector2I(800, 600);
+        public Vector2I WindowPosition { get; set; } = new Vector2I();
         [NonSerialized]
         private string _path;
 

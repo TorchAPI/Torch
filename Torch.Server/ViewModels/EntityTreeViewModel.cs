@@ -53,20 +53,23 @@ namespace Torch.Server.ViewModels
 
         private void MyEntities_OnEntityAdd(VRage.Game.Entity.MyEntity obj)
         {
-            //TODO: make view models
             switch (obj)
             {
                 case MyCubeGrid grid:
-                    Grids.Add(new GridViewModel(grid));
+                    if (Grids.All(g => g.Entity.EntityId != obj.EntityId))
+                        Grids.Add(new GridViewModel(grid, this));
                     break;
                 case MyCharacter character:
-                    Characters.Add(new CharacterViewModel(character));
+                    if (Characters.All(g => g.Entity.EntityId != obj.EntityId))
+                        Characters.Add(new CharacterViewModel(character, this));
                     break;
                 case MyFloatingObject floating:
-                    FloatingObjects.Add(new FloatingObjectViewModel(floating));
+                    if (FloatingObjects.All(g => g.Entity.EntityId != obj.EntityId))
+                        FloatingObjects.Add(new FloatingObjectViewModel(floating, this));
                     break;
                 case MyVoxelBase voxel:
-                    VoxelMaps.Add(new VoxelMapViewModel(voxel));
+                    if (VoxelMaps.All(g => g.Entity.EntityId != obj.EntityId))
+                        VoxelMaps.Add(new VoxelMapViewModel(voxel, this));
                     break;
             }
         }

@@ -10,13 +10,19 @@ namespace Torch.Commands
     {
         public List<string> Path { get; }
 
-        /// <summary>
-        /// Specifies where to add the class's commands in the command tree.
-        /// </summary>
-        /// <param name="path">Command path, e.g. "/admin config" -> "admin, config"</param>
+        [Obsolete("Use the other CategoryAttribute constructor.")]
         public CategoryAttribute(params string[] path)
         {
             Path = path.Select(i => i.ToLower()).ToList();
+        }
+
+        /// <summary>
+        /// Provides information about where to place commands in the command tree. Supports space-delimited hierarchy.
+        /// </summary>
+        /// <param name="category"></param>
+        public CategoryAttribute(string category)
+        {
+            Path = category.Split(' ').ToList();
         }
     }
 }

@@ -36,7 +36,7 @@ namespace Torch.Commands
                 throw new TypeLoadException($"Method does not have a {nameof(CommandAttribute)}");
 
             var permissionAttribute = commandMethod.GetCustomAttribute<PermissionAttribute>();
-            MinimumPromoteLevel = permissionAttribute?.PromoteLevel ?? MyPromoteLevel.None;
+            MinimumPromoteLevel = permissionAttribute?.PromoteLevel ?? MyPromoteLevel.Admin;
 
             if (!commandMethod.DeclaringType.IsSubclassOf(typeof(CommandModule)))
                 throw new TypeLoadException($"Command {commandMethod.Name}'s declaring type {commandMethod.DeclaringType.FullName} is not a subclass of {nameof(CommandModule)}");

@@ -5,9 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Torch.Server.Views"
              xmlns:viewModels="clr-namespace:Torch.Server.ViewModels"
-             xmlns:blocks="clr-namespace:Torch.Server.Views.Blocks"
              xmlns:entities="clr-namespace:Torch.Server.ViewModels.Entities"
-             xmlns:blocks1="clr-namespace:Torch.Server.ViewModels.Blocks"
+             xmlns:blocks="clr-namespace:Torch.Server.ViewModels.Blocks"
              mc:Ignorable="d">
     <UserControl.DataContext>
         <viewModels:EntityTreeViewModel />
@@ -22,11 +21,14 @@
             <TreeView Width="300" Margin="3" DockPanel.Dock="Top" SelectedItemChanged="TreeView_OnSelectedItemChanged">
                 <TreeView.Resources>
                     <HierarchicalDataTemplate DataType="{x:Type entities:GridViewModel}" ItemsSource="{Binding Blocks}">
-                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock Text="{Binding DescriptiveName}" />
                     </HierarchicalDataTemplate>
-                    <DataTemplate DataType="{x:Type blocks1:BlockViewModel}">
+                    <DataTemplate DataType="{x:Type blocks:BlockViewModel}">
                         <TextBlock Text="{Binding Path=Name}" />
                     </DataTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type entities:VoxelMapViewModel}" ItemsSource="{Binding AttachedGrids}">
+                        <TextBlock Text="{Binding Name}"/>
+                    </HierarchicalDataTemplate>
                 </TreeView.Resources>
                 <TreeViewItem ItemsSource="{Binding Grids}" IsExpanded="true">
                     <TreeViewItem.Header>

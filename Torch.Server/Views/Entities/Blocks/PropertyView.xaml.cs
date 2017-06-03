@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Torch.Server.ViewModels.Blocks;
-using VRage.Utils;
+using Torch.Server.Views.Converters;
 
 namespace Torch.Server.Views.Blocks
 {
@@ -69,36 +67,6 @@ namespace Torch.Server.Views.Blocks
             var binding = new Binding("Value") { Source = DataContext };
             textBox.SetBinding(TextBox.TextProperty, binding);
             Frame.Content = textBox;
-        }
-    }
-
-    public class StringBuilderConverter : IValueConverter
-    {
-        /// <inheritdoc />
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return ((StringBuilder)value).ToString();
-        }
-
-        /// <inheritdoc />
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return new StringBuilder((string)value);
-        }
-    }
-
-    public class StringIdConverter : IValueConverter
-    {
-        /// <inheritdoc />
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return MyStringId.GetOrCompute((string)value);
-        }
-
-        /// <inheritdoc />
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new InvalidOperationException();
         }
     }
 }

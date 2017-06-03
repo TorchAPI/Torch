@@ -175,14 +175,14 @@
     <Compile Include="TorchServiceInstaller.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ViewModels\Blocks\BlockViewModel.cs" />
-    <Compile Include="ViewModels\Blocks\BlockViewModelGenerator.cs" />
-    <Compile Include="ViewModels\Blocks\PropertyViewModel.cs" />
+    <Compile Include="ViewModels\Entities\Blocks\BlockViewModel.cs" />
+    <Compile Include="ViewModels\Entities\Blocks\BlockViewModelGenerator.cs" />
+    <Compile Include="ViewModels\Entities\Blocks\PropertyViewModel.cs" />
     <Compile Include="ViewModels\Entities\CharacterViewModel.cs" />
     <Compile Include="ViewModels\ConfigDedicatedViewModel.cs" />
     <Compile Include="ViewModels\EntityTreeViewModel.cs" />
     <Compile Include="ViewModels\Entities\EntityViewModel.cs" />
-    <Compile Include="ViewModels\FloatingObjectViewModel.cs" />
+    <Compile Include="ViewModels\Entities\FloatingObjectViewModel.cs" />
     <Compile Include="ViewModels\Entities\GridViewModel.cs" />
     <Compile Include="ViewModels\PluginManagerViewModel.cs" />
     <Compile Include="ViewModels\PluginViewModel.cs" />
@@ -191,10 +191,11 @@
     <Compile Include="Views\AddWorkshopItemsDialog.xaml.cs">
       <DependentUpon>AddWorkshopItemsDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Blocks\BlockView.xaml.cs">
+    <Compile Include="Views\Converters\Vector3DConverter.cs" />
+    <Compile Include="Views\Entities\Blocks\BlockView.xaml.cs">
       <DependentUpon>BlockView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Blocks\PropertyView.xaml.cs">
+    <Compile Include="Views\Entities\Blocks\PropertyView.xaml.cs">
       <DependentUpon>PropertyView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ChatControl.xaml.cs">
@@ -205,6 +206,14 @@
     </Compile>
     <Compile Include="Views\EntitiesControl.xaml.cs">
       <DependentUpon>EntitiesControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Converters\StringBuilderConverter.cs" />
+    <Compile Include="Views\Converters\StringIdConverter.cs" />
+    <Compile Include="Views\Entities\GridView.xaml.cs">
+      <DependentUpon>GridView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Entities\VoxelMapView.xaml.cs">
+      <DependentUpon>VoxelMapView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ModsControl.xaml.cs">
       <DependentUpon>ModsControl.xaml</DependentUpon>
@@ -260,11 +269,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Blocks\BlockView.xaml">
+    <Page Include="Views\Entities\Blocks\BlockView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Blocks\PropertyView.xaml">
+    <Page Include="Views\Entities\Blocks\PropertyView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -277,6 +286,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\EntitiesControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Entities\GridView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Entities\VoxelMapView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

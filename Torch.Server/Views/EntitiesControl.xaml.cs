@@ -16,6 +16,7 @@ using Torch.Server.ViewModels;
 using Torch.Server.ViewModels.Blocks;
 using Torch.Server.ViewModels.Entities;
 using Torch.Server.Views.Blocks;
+using Torch.Server.Views.Entities;
 using VRage.Game.ModAPI;
 
 namespace Torch.Server.Views
@@ -38,11 +39,18 @@ namespace Torch.Server.Views
             if (e.NewValue is EntityViewModel vm)
             {
                 Entities.CurrentEntity = vm;
+                if (e.NewValue is GridViewModel gvm)
+                    EditorFrame.Content = new Entities.GridView { DataContext = gvm};
                 if (e.NewValue is BlockViewModel bvm)
-                    EditorFrame.Content = new BlockView { DataContext = bvm };
+                    EditorFrame.Content = new BlockView {DataContext = bvm};
+                if (e.NewValue is VoxelMapViewModel vvm)
+                    EditorFrame.Content = new VoxelMapView {DataContext = vvm};
             }
             else
+            {
                 Entities.CurrentEntity = null;
+                EditorFrame.Content = null;
+            }
         }
 
         private void Delete_OnClick(object sender, RoutedEventArgs e)

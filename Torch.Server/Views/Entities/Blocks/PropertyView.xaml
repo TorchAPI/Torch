@@ -5,9 +5,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Torch.Server.Views.Blocks"
              xmlns:blocks="clr-namespace:Torch.Server.ViewModels.Blocks"
+             xmlns:converters="clr-namespace:Torch.Server.Views.Converters"
              mc:Ignorable="d">
     <UserControl.Resources>
-        <local:StringIdConverter x:Key="StringIdConverter"/>
+        <converters:StringIdConverter x:Key="StringIdConverter"/>
     </UserControl.Resources>
     <DockPanel x:Name="Dock">
         <Label x:Name="Label" Width="150" VerticalAlignment="Center" DockPanel.Dock="Left">
