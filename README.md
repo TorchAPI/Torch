@@ -14,3 +14,4 @@ Torch is the successor to SE Server Extender and gives server admins the tools t
 
 You can get the latest information about Torch and ask questions on our Discord server:
 [![Discord](https://discordapp.com/api/guilds/230191591640268800/widget.png)](https://discord.gg/8uHZykr)
+Support us on [Patreon](https://www.patreon.com/bePatron?u=847269)!
