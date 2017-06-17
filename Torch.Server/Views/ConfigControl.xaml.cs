@@ -52,13 +52,13 @@ namespace Torch.Server.Views
             Log.Info("Saved DS config.");
             try
             {
-                var checkpoint = MyLocalCache.LoadCheckpoint(_viewModel.LoadWorld, out _);
-                checkpoint.Settings = _viewModel.SessionSettings;
+                var checkpoint = MyLocalCache.LoadCheckpoint(Config.LoadWorld, out _);
+                checkpoint.Settings = Config.SessionSettings;
                 checkpoint.Mods.Clear();
-                foreach (var modId in _viewModel.Mods)
+                foreach (var modId in Config.Mods)
                     checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(modId));
 
-                MyLocalCache.SaveCheckpoint(checkpoint, _viewModel.LoadWorld);
+                MyLocalCache.SaveCheckpoint(checkpoint, Config.LoadWorld);
                 Log.Info("Saved world config.");
             }
             catch (Exception e)

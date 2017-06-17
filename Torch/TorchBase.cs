@@ -217,8 +217,12 @@ namespace Torch
             pluginList.Add(this);
         }
 
-        public abstract void Start();
-        public abstract void Stop();
+        public virtual void Start()
+        {
+            Plugins.Init();
+        }
+
+        public virtual void Stop() { }
 
         /// <inheritdoc />
         public virtual void Dispose()
@@ -231,7 +235,6 @@ namespace Torch
         {
             Network.Init();
             ChatManager.Instance.Init();
-            Plugins.Init();
         }
 
         /// <inheritdoc />

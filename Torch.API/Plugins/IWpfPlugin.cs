@@ -11,7 +11,7 @@ namespace Torch.API.Plugins
     {
         /// <summary>
         /// Used by the server's WPF interface to load custom plugin controls.
-        /// Do not instantiate your plugin control outside of this method! It will throw an exception.
+        /// You must instantiate your plugin's control object here, otherwise it will not be owned by the correct thread for WPF.
         /// </summary>
         UserControl GetControl();
     }

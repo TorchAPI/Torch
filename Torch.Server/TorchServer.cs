@@ -113,7 +113,7 @@ namespace Torch.Server
             MySandboxGame.Log.WriteLine("Environment.CurrentDirectory: " + Environment.CurrentDirectory);
             MySandboxGame.Log.WriteLine("MainAssembly.ProcessorArchitecture: " + Assembly.GetExecutingAssembly().GetArchitecture());
             MySandboxGame.Log.WriteLine("ExecutingAssembly.ProcessorArchitecture: " + MyFileSystem.MainAssembly.GetArchitecture());
-            MySandboxGame.Log.WriteLine("IntPtr.Size: " + IntPtr.Size.ToString());
+            MySandboxGame.Log.WriteLine("IntPtr.Size: " + IntPtr.Size);
             MySandboxGame.Log.WriteLine("Default Culture: " + CultureInfo.CurrentCulture.Name);
             MySandboxGame.Log.WriteLine("Default UI Culture: " + CultureInfo.CurrentUICulture.Name);
             MySandboxGame.Log.WriteLine("IsAdmin: " + new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator));
@@ -150,6 +150,7 @@ namespace Torch.Server
 
             VRage.Service.ExitListenerSTA.OnExit += delegate { MySandboxGame.Static?.Exit(); };
 
+            base.Start();
             runInternal.Invoke(null, null);
 
             MySandboxGame.Log.Close();

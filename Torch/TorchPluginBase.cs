@@ -47,6 +47,7 @@ namespace Torch
         }
 
         public virtual void Update() { }
-        public abstract void Dispose();
+
+        public virtual void Dispose() { }
     }
 }

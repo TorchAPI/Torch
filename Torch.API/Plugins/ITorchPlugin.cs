@@ -9,18 +9,29 @@ namespace Torch.API.Plugins
 {
     public interface ITorchPlugin : IDisposable
     {
+        /// <summary>
+        /// A unique ID for the plugin.
+        /// </summary>
         Guid Id { get; }
+
+        /// <summary>
+        /// The version of the plugin.
+        /// </summary>
         Version Version { get; }
+
+        /// <summary>
+        /// The name of the plugin.
+        /// </summary>
         string Name { get; }
 
         /// <summary>
-        /// Called when the game is initialized.
+        /// This is called before the game loop is started.
         /// </summary>
-        /// <param name="torchBase"></param>
+        /// <param name="torchBase">Torch instance</param>
         void Init(ITorchBase torchBase);
 
         /// <summary>
-        /// Called after each game tick. Not thread safe, use invocation methods in <see cref="ITorchBase"/>.
+        /// This is called on the game thread after each tick.
         /// </summary>
         void Update();
     }

@@ -118,6 +118,9 @@ namespace Torch.Managers
                 {
                     if (type.GetInterfaces().Contains(typeof(ITorchPlugin)))
                     {
+                        if (type.GetCustomAttribute<PluginAttribute>() == null)
+                            continue;
+
                         try
                         {
                             var plugin = (TorchPluginBase)Activator.CreateInstance(type);
@@ -130,10 +133,9 @@ namespace Torch.Managers
 
                             commands.RegisterPluginCommands(plugin);
                         }
-                        catch (Exception e)
+                        catch
                         {
                             _log.Error($"Error loading plugin '{type.FullName}'");
-                            _log.Error(e);
                             throw;
                         }
                     }

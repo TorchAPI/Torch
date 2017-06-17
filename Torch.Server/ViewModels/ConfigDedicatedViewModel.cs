@@ -23,27 +23,26 @@ namespace Torch.Server.ViewModels
         {
             _config = configDedicated;
             SessionSettings = new SessionSettingsViewModel(_config.SessionSettings);
-            Administrators = string.Join("\r\n", _config.Administrators);
-            Banned = string.Join("\r\n", _config.Banned);
-            Mods = string.Join("\r\n", _config.Mods);
+            Administrators = string.Join(Environment.NewLine, _config.Administrators);
+            Banned = string.Join(Environment.NewLine, _config.Banned);
+            Mods = string.Join(Environment.NewLine, _config.Mods);
         }
 
         public void Save(string path = null)
         {
+            var newline = new [] {Environment.NewLine};
+
             _config.Administrators.Clear();
-            foreach (var admin in Administrators.Split('\r', '\n'))
-                if (!string.IsNullOrEmpty(admin))
-                    _config.Administrators.Add(admin);
+            foreach (var admin in Administrators.Split(newline, StringSplitOptions.RemoveEmptyEntries))
+                _config.Administrators.Add(admin);
 
             _config.Banned.Clear();
-            foreach (var banned in Banned.Split('\r', '\n'))
-                if (!string.IsNullOrEmpty(banned))
-                    _config.Banned.Add(ulong.Parse(banned));
+            foreach (var banned in Banned.Split(newline, StringSplitOptions.RemoveEmptyEntries))
+                _config.Banned.Add(ulong.Parse(banned));
 
             _config.Mods.Clear();
-            foreach (var mod in Mods.Split('\r', '\n'))
-                if (!string.IsNullOrEmpty(mod))
-                    _config.Mods.Add(ulong.Parse(mod));
+            foreach (var mod in Mods.Split(newline, StringSplitOptions.RemoveEmptyEntries))
+                _config.Mods.Add(ulong.Parse(mod));
 
             _config.Save(path);
         }
