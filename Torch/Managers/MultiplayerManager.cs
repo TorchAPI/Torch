@@ -96,6 +96,7 @@ namespace Torch.Managers
         {
             var msg = new ScriptedChatMsg {Author = author, Font = font, Target = playerId, Text = message};
             MyMultiplayerBase.SendScriptedChatMessage(ref msg);
+            ChatHistory.Add(new ChatMessage(DateTime.Now, 0, author, message));
         }
 
         private void OnSessionLoaded()

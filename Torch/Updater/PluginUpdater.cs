@@ -53,7 +53,7 @@ namespace Torch.Updater
                 currentVersion = new Version(manifest.Version);
                 latestVersion = new Version(releases[0].TagName);
             }
-            catch (Exception e)
+            catch
             {
                 Log.Warn("Invalid version number on manifest or GitHub release");
                 return;

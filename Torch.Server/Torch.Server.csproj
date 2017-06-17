@@ -92,6 +92,7 @@
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -160,7 +161,8 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandLine.cs" />
+    <Compile Include="Managers\DSConfigManager.cs" />
+    <Compile Include="TorchCli.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <AutoGen>True</AutoGen>
@@ -175,6 +177,7 @@
     <Compile Include="TorchServiceInstaller.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ViewModels\BlockLimitViewModel.cs" />
     <Compile Include="ViewModels\Entities\Blocks\BlockViewModel.cs" />
     <Compile Include="ViewModels\Entities\Blocks\BlockViewModelGenerator.cs" />
     <Compile Include="ViewModels\Entities\Blocks\PropertyViewModel.cs" />
@@ -188,6 +191,7 @@
     <Compile Include="ViewModels\PluginViewModel.cs" />
     <Compile Include="ViewModels\SessionSettingsViewModel.cs" />
     <Compile Include="ViewModels\Entities\VoxelMapViewModel.cs" />
+    <Compile Include="ViewModels\SteamUserViewModel.cs" />
     <Compile Include="Views\AddWorkshopItemsDialog.xaml.cs">
       <DependentUpon>AddWorkshopItemsDialog.xaml</DependentUpon>
     </Compile>
@@ -214,6 +218,9 @@
     </Compile>
     <Compile Include="Views\Entities\VoxelMapView.xaml.cs">
       <DependentUpon>VoxelMapView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\FirstTimeSetup.xaml.cs">
+      <DependentUpon>FirstTimeSetup.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ModsControl.xaml.cs">
       <DependentUpon>ModsControl.xaml</DependentUpon>
@@ -294,6 +301,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Entities\VoxelMapView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\FirstTimeSetup.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

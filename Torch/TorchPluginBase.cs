@@ -15,6 +15,7 @@ namespace Torch
 {
     public abstract class TorchPluginBase : ITorchPlugin
     {
+        public string StoragePath { get; internal set; }
         public Guid Id { get; }
         public Version Version { get; }
         public string Name { get; }

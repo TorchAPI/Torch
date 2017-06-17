@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -15,14 +16,17 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml.Serialization;
 using NLog;
 using Sandbox;
 using Sandbox.Engine.Networking;
 using Sandbox.Engine.Utils;
 using Torch.Server.ViewModels;
 using Torch.Views;
+using VRage;
 using VRage.Dedicated;
 using VRage.Game;
+using VRage.ObjectBuilders;
 using Path = System.IO.Path;
 
 namespace Torch.Server.Views
@@ -32,6 +36,7 @@ namespace Torch.Server.Views
     /// </summary>
     public partial class ConfigControl : UserControl
     {
+        private readonly Logger Log = LogManager.GetLogger("Config");
         public MyConfigDedicated<MyObjectBuilder_SessionSettings> Config { get; set; }
         private ConfigDedicatedViewModel _viewModel;
         private string _configPath;
@@ -43,22 +48,23 @@ namespace Torch.Server.Views
 
         public void SaveConfig()
         {
-            Config.Save(_configPath);
+            _viewModel.Save(_configPath);
+            Log.Info("Saved DS config.");
             try
             {
-                var checkpoint = MyLocalCache.LoadCheckpoint(_viewModel.LoadWorld, out ulong size);
+                var checkpoint = MyLocalCache.LoadCheckpoint(_viewModel.LoadWorld, out _);
                 checkpoint.Settings = _viewModel.SessionSettings;
                 checkpoint.Mods.Clear();
                 foreach (var modId in _viewModel.Mods)
                     checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(modId));
 
                 MyLocalCache.SaveCheckpoint(checkpoint, _viewModel.LoadWorld);
+                Log.Info("Saved world config.");
             }
             catch (Exception e)
             {
-                var log = LogManager.GetLogger("Torch");
-                log.Error("Failed to overwrite sandbox config, changes will not appear on server");
-                log.Error(e);
+                Log.Error("Failed to write sandbox config, changes will not appear on server");
+                Log.Error(e);
             }
         }
 
@@ -77,6 +83,18 @@ namespace Torch.Server.Views
             Config.Load(path);
             _configPath = path;
 
+            var checkpoint = MyLocalCache.LoadCheckpoint(Config.LoadWorld, out ulong _);
+            if (checkpoint == null)
+            {
+                Log.Error("Failed to load checkpoint when loading DS config.");
+            }
+            else
+            {
+                Config.Mods.Clear();
+                foreach (var mod in checkpoint.Mods)
+                    Config.Mods.Add(mod.PublishedFileId);
+            }
+
             _viewModel = new ConfigDedicatedViewModel(Config);
             var worldFolders = Directory.EnumerateDirectories(Path.Combine(torchConfig.InstancePath, "Saves"));
             
@@ -86,6 +104,7 @@ namespace Torch.Server.Views
             DataContext = _viewModel;
         }
 
+        /*
         private void Banned_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             var editor = new CollectionEditor {Owner = Window.GetWindow(this)};
@@ -102,11 +121,27 @@ namespace Torch.Server.Views
         {
             var editor = new CollectionEditor { Owner = Window.GetWindow(this) };
             editor.Edit(_viewModel.Mods, "Mods");
-        }
+        }*/
 
         private void Save_OnClick(object sender, RoutedEventArgs e)
         {
             SaveConfig();
+        }
+
+        private void RemoveLimit_OnClick(object sender, RoutedEventArgs e)
+        {
+            var vm = (BlockLimitViewModel)((Button)sender).DataContext;
+            _viewModel.SessionSettings.BlockLimits.Remove(vm);
+        }
+
+        private void AddLimit_OnClick(object sender, RoutedEventArgs e)
+        {
+            _viewModel.SessionSettings.BlockLimits.Add(new BlockLimitViewModel(_viewModel.SessionSettings, "", 0));
+        }
+
+        private void NewWorld_OnClick(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Feature coming soon :)");
         }
     }
 }

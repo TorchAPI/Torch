@@ -14,30 +14,46 @@ namespace Torch.Server.ViewModels
     {
         private MyConfigDedicated<MyObjectBuilder_SessionSettings> _config;
 
-        public ConfigDedicatedViewModel()
+        public ConfigDedicatedViewModel() : this(new MyConfigDedicated<MyObjectBuilder_SessionSettings>(""))
         {
-            _config = new MyConfigDedicated<MyObjectBuilder_SessionSettings>("");
-            SessionSettings = new SessionSettingsViewModel(_config.SessionSettings);
-            Administrators = new ObservableCollection<string>(_config.Administrators);
-            Banned = new ObservableCollection<ulong>(_config.Banned);
-            Mods = new ObservableCollection<ulong>(_config.Mods);
+
         }
 
         public ConfigDedicatedViewModel(MyConfigDedicated<MyObjectBuilder_SessionSettings> configDedicated)
         {
             _config = configDedicated;
             SessionSettings = new SessionSettingsViewModel(_config.SessionSettings);
-            Administrators = new ObservableCollection<string>(_config.Administrators);
-            Banned = new ObservableCollection<ulong>(_config.Banned);
-            Mods = new ObservableCollection<ulong>(_config.Mods);
+            Administrators = string.Join("\r\n", _config.Administrators);
+            Banned = string.Join("\r\n", _config.Banned);
+            Mods = string.Join("\r\n", _config.Mods);
+        }
+
+        public void Save(string path = null)
+        {
+            _config.Administrators.Clear();
+            foreach (var admin in Administrators.Split('\r', '\n'))
+                if (!string.IsNullOrEmpty(admin))
+                    _config.Administrators.Add(admin);
+
+            _config.Banned.Clear();
+            foreach (var banned in Banned.Split('\r', '\n'))
+                if (!string.IsNullOrEmpty(banned))
+                    _config.Banned.Add(ulong.Parse(banned));
+
+            _config.Mods.Clear();
+            foreach (var mod in Mods.Split('\r', '\n'))
+                if (!string.IsNullOrEmpty(mod))
+                    _config.Mods.Add(ulong.Parse(mod));
+
+            _config.Save(path);
         }
 
         public SessionSettingsViewModel SessionSettings { get; }
 
         public ObservableCollection<string> WorldPaths { get; } = new ObservableCollection<string>();
-        public ObservableCollection<string> Administrators { get; }
-        public ObservableCollection<ulong> Banned { get; }
-        public ObservableCollection<ulong> Mods { get; }
+        public string Administrators { get; set; }
+        public string Banned { get; set; }
+        public string Mods { get; set; }
 
         public int AsteroidAmount
         {

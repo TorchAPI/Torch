@@ -64,8 +64,25 @@ namespace Torch.Server
         {
             //Can't use Message.Text directly because of object ownership in WPF.
             var text = Message.Text;
-            _server.Multiplayer.SendMessage(text);
+            var commands = ((TorchBase)_server).Commands;
+            string response = null;
+            if (commands.IsCommand(text))
+            {
+                _server.Multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", text));
+                _server.InvokeBlocking(() =>
+                {
+                    response = commands.HandleCommandFromServer(text);
+                });
+            }
+            else
+            {
+                _server.Multiplayer.SendMessage(text);
+            }
+            if (!string.IsNullOrEmpty(response))
+                _server.Multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", response));
             Message.Text = "";
+            var sto = false;
+            Refresh(null, ref sto);
         }
     }
 }

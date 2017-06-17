@@ -9,35 +9,49 @@
         Title="Torch">
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Margin="5,5,5,5" Orientation="Horizontal">
-            <Button x:Name="BtnStart" Content="Start" Height="24" Width="75" Margin="5,0,5,0" HorizontalAlignment="Left" Click="BtnStart_Click" IsDefault="True"/>
-            <Button x:Name="BtnStop" Content="Stop" Height="24" Width="75" Margin="5,0,5,0" HorizontalAlignment="Left" Click="BtnStop_Click" IsEnabled="False"/>
-            <Button x:Name="BtnRestart" Content="Restart" Height="24" Width="75" Margin="5,0,5,0" HorizontalAlignment="Left" Click="BtnRestart_Click"/>
-            <Label x:Name="LabelSimulation" Content="Sim Ratio: 0.00"/>
-            <Label x:Name="LabelUptime" Content="Uptime: 0d 0h 0m"/>
+            <Button x:Name="BtnStart" Content="Start" Height="24" Width="75" Margin="5,0,5,0"
+                    HorizontalAlignment="Left" Click="BtnStart_Click" IsDefault="True" />
+            <Button x:Name="BtnStop" Content="Stop" Height="24" Width="75" Margin="5,0,5,0" HorizontalAlignment="Left"
+                    Click="BtnStop_Click" IsEnabled="False" />
+            <Label>
+                <Label.Content>
+                    <TextBlock Text="{Binding State, StringFormat=Status: {0}}"></TextBlock>
+                </Label.Content>
+            </Label>
+            <Label x:Name="LabelSimulation">
+                <Label.Content>
+                    <TextBlock Text="{Binding SimulationRatio, StringFormat=Simulation: {0:0.00}}" />
+                </Label.Content>
+            </Label>
+            <Label x:Name="LabelUptime">
+                <Label.Content>
+                    <TextBlock Text="{Binding ElapsedPlayTime, StringFormat=Uptime: {0:g}}"/>
+                </Label.Content>
+            </Label>
         </StackPanel>
         <TabControl x:Name="TabControl" DockPanel.Dock="Bottom" Margin="5,0,5,5">
             <TabItem Header="Configuration">
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top">
-                        <Label Content="Instance Path: " Margin="3"/>
-                        <TextBox x:Name="InstancePathBox" Margin="3" Height="20" TextChanged="InstancePathBox_OnTextChanged" IsEnabled="False"/>
+                        <Label Content="Instance Path: " Margin="3" />
+                        <TextBox x:Name="InstancePathBox" Margin="3" Height="20"
+                                 TextChanged="InstancePathBox_OnTextChanged" IsEnabled="False" />
                     </DockPanel>
-                    <views:ConfigControl x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom"/>
+                    <views:ConfigControl x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom" />
                 </DockPanel>
             </TabItem>
             <TabItem Header="Chat/Players">
                 <DockPanel>
-                    <local:PlayerListControl x:Name="PlayerList" DockPanel.Dock="Right" Width="250" IsEnabled="False"/>
-                    <local:ChatControl x:Name="Chat" IsEnabled="False"/>
+                    <local:PlayerListControl x:Name="PlayerList" DockPanel.Dock="Right" Width="250" IsEnabled="False" />
+                    <local:ChatControl x:Name="Chat" IsEnabled="False" />
                 </DockPanel>
             </TabItem>
             <TabItem Header="Entity Manager">
-                <views:EntitiesControl/>
+                <views:EntitiesControl />
             </TabItem>
             <TabItem Header="Plugins">
-                <views:PluginsControl x:Name="Plugins"/>
+                <views:PluginsControl x:Name="Plugins" />
             </TabItem>
         </TabControl>
     </DockPanel>
 </Window>
-

@@ -31,6 +31,8 @@ namespace Torch.Commands
         /// </summary>
         public string RawArgs { get; }
 
+        public string Response { get; private set; }
+
         public CommandContext(ITorchBase torch, ITorchPlugin plugin, IMyPlayer player, string rawArgs = null, List<string> args = null)
         {
             Torch = torch;
@@ -42,7 +44,10 @@ namespace Torch.Commands
 
         public void Respond(string message, string sender = "Server", string font = MyFontEnum.Blue)
         {
-            Torch.Multiplayer.SendMessage(message, sender, Player.IdentityId, font);
+            Response = message;
+
+            if (Player != null)
+                Torch.Multiplayer.SendMessage(message, sender, Player.IdentityId, font);
         }
     }
 }

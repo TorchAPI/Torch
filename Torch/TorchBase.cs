@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,8 +17,11 @@ using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using SpaceEngineers.Game;
 using Torch.API;
+using Torch.Commands;
 using Torch.Managers;
 using VRage.FileSystem;
+using VRage.Game.ObjectBuilder;
+using VRage.ObjectBuilders;
 using VRage.Plugins;
 using VRage.Scripting;
 using VRage.Utils;
@@ -40,6 +44,7 @@ namespace Torch
         public IMultiplayer Multiplayer { get; protected set; }
         public EntityManager Entities { get; protected set; }
         public NetworkManager Network { get; protected set; }
+        public CommandManager Commands { get; protected set; }
         public event Action SessionLoading;
         public event Action SessionLoaded;
         public event Action SessionUnloading;
@@ -60,6 +65,7 @@ namespace Torch
             Multiplayer = new MultiplayerManager(this);
             Entities = new EntityManager(this);
             Network = NetworkManager.Instance;
+            Commands = new CommandManager(this);
         }
 
         public bool IsOnGameThread()
@@ -147,10 +153,6 @@ namespace Torch
                 {
                     action.Invoke();
                 }
-                catch (Exception ex)
-                {
-                    //log
-                }
                 finally
                 {
                     e.Set();
@@ -167,10 +169,19 @@ namespace Torch
         {
             Debug.Assert(!_init, "Torch instance is already initialized.");
 
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
+
+            /*
+            if (Directory.Exists("DedicatedServer64"))
+            {
+                Log.Debug("Inserting DedicatedServer64 before MyPerGameSettings assembly paths");
+                MyPerGameSettings.GameModAssembly = $"DedicatedServer64\\{MyPerGameSettings.GameModAssembly}";
+                MyPerGameSettings.GameModObjBuildersAssembly = $"DedicatedServer64\\{MyPerGameSettings.GameModObjBuildersAssembly}";
+                MyPerGameSettings.SandboxAssembly = $"DedicatedServer64\\{MyPerGameSettings.SandboxAssembly}";
+                MyPerGameSettings.SandboxGameAssembly = $"DedicatedServer64\\{MyPerGameSettings.SandboxGameAssembly}";
+            }*/
+
             TorchVersion = Assembly.GetEntryAssembly().GetName().Version;
             GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
             var verInfo = $"Torch {TorchVersion}, SE {GameVersion}";
@@ -188,7 +199,7 @@ namespace Torch
             MySession.AfterLoading += () => SessionLoaded?.Invoke();
             MySession.OnUnloading += () => SessionUnloading?.Invoke();
             MySession.OnUnloaded += () => SessionUnloaded?.Invoke();
-            InitUpdater();
+            RegisterVRagePlugin();
 
             _init = true;
         }
@@ -196,7 +207,7 @@ namespace Torch
         /// <summary>
         /// Hook into the VRage plugin system for updates.
         /// </summary>
-        private void InitUpdater()
+        private void RegisterVRagePlugin()
         {
             var fieldName = "m_plugins";
             var pluginList = typeof(MyPlugins).GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as List<IPlugin>;
@@ -204,20 +215,6 @@ namespace Torch
                 throw new TypeLoadException($"{fieldName} field not found in {nameof(MyPlugins)}");
 
             pluginList.Add(this);
-        }
-
-
-        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            var ex = (Exception)e.ExceptionObject;
-            Log.Fatal(ex);
-            if (ex is ReflectionTypeLoadException rex)
-            {
-                foreach (var x in rex.LoaderExceptions)
-                    Log.Fatal(x);
-            }
-            Console.ReadLine();
-            Environment.Exit(-1);
         }
 
         public abstract void Start();

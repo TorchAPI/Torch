@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox.ModAPI;
+using Torch;
 using Torch.Commands.Permissions;
 using Torch.Managers;
 using VRage.Game.ModAPI;
@@ -26,10 +27,17 @@ namespace Torch.Commands
             Console.WriteLine(commandManager.Commands.GetTreeString());
         }
 #endif
+        [Command("crash", "Causes the server to crash for testing purposes")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void Crash()
+        {
+            throw new Exception("Crash triggered by Torch command");
+        }
+
         [Command("help", "Displays help for a command")]
         public void Help()
         {
-            var commandManager = ((PluginManager)Context.Torch.Plugins).Commands;
+            var commandManager = ((TorchBase)Context.Torch).Commands;
             commandManager.Commands.GetNode(Context.Args, out CommandTree.CommandNode node);
 
             if (node != null)
@@ -42,10 +50,11 @@ namespace Torch.Commands
                 if (command != null)
                 {
                     sb.AppendLine($"Syntax: {command.SyntaxHelp}");
-                    sb.AppendLine(command.HelpText);
+                    sb.Append(command.HelpText);
                 }
 
-               sb.AppendLine($"Subcommands: {string.Join(", ", children)}");
+                if (node.Subcommands.Count() != 0)
+                    sb.Append($"\nSubcommands: {string.Join(", ", children)}");
 
                 Context.Respond(sb.ToString());
             }

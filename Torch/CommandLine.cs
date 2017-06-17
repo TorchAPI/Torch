@@ -5,25 +5,20 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Torch.Server
+namespace Torch
 {
     public class CommandLine
     {
-        public TorchConfig Config { get; }
-        private string _argPrefix;
+        private readonly string _argPrefix;
 
-        [Arg("instancepath", "Server data folder where saves and mods are stored")]
-        public string InstancePath { get => Config.InstancePath; set => Config.InstancePath = value; }
-
-        public CommandLine(TorchConfig config, string argPrefix)
+        public CommandLine(string argPrefix = "-")
         {
-            Config = config;
             _argPrefix = argPrefix;
         }
 
         public PropertyInfo[] GetArgs()
         {
-            return typeof(CommandLine).GetProperties().Where(p => p.HasAttribute<ArgAttribute>()).ToArray();
+            return GetType().GetProperties().Where(p => p.HasAttribute<ArgAttribute>()).ToArray();
         }
 
         public string GetHelp()
@@ -33,18 +28,43 @@ namespace Torch.Server
             foreach (var property in GetArgs())
             {
                 var attr = property.GetCustomAttribute<ArgAttribute>();
-                sb.AppendLine($"{_argPrefix}{attr.Name.PadRight(20)}{attr.Description}");
+                sb.AppendLine($"{_argPrefix}{attr.Name.PadRight(24)}{attr.Description}");
             }
 
             return sb.ToString();
         }
 
-        public void Run(string[] args)
+        public override string ToString()
         {
+            var args = new List<string>();
+            foreach (var prop in GetArgs())
+            {
+                var attr = prop.GetCustomAttribute<ArgAttribute>();
+                if (prop.PropertyType == typeof(bool) && (bool)prop.GetValue(this))
+                {
+                    args.Add($"{_argPrefix}{attr.Name}");
+                }
+                else if (prop.PropertyType == typeof(string))
+                {
+                    var str = (string)prop.GetValue(this);
+                    if (string.IsNullOrEmpty(str))
+                        continue;
+                    args.Add($"{_argPrefix}{attr.Name} \"{str}\"");
+                }
+            }
+
+            return string.Join(" ", args);
+        }
+
+        public bool Parse(string[] args)
+        {
+            if (args.Length == 0)
+                return true;
+
             if (args[0] == $"{_argPrefix}help")
             {
                 Console.WriteLine(GetHelp());
-                return;
+                return false;
             }
 
             var properties = GetArgs();
@@ -71,16 +91,18 @@ namespace Torch.Server
                                 property.SetValue(this, args[++i]);
                         }
                     }
-                    catch (Exception e)
+                    catch
                     {
                         Console.WriteLine($"Error parsing arg {argName}");
                     }
                 }
             }
-            
+
+            return true;
+
         }
 
-        private class ArgAttribute : Attribute
+        public class ArgAttribute : Attribute
         {
             public string Name { get; }
             public string Description { get; }

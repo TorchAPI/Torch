@@ -124,6 +124,7 @@
     <Compile Include="ChatMessage.cs" />
     <Compile Include="Collections\KeyTree.cs" />
     <Compile Include="Collections\RollingAverage.cs" />
+    <Compile Include="CommandLine.cs" />
     <Compile Include="Commands\CategoryAttribute.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\CommandAttribute.cs" />

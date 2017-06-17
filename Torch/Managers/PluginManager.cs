@@ -30,7 +30,6 @@ namespace Torch.Managers
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
 
         public List<ITorchPlugin> Plugins { get; } = new List<ITorchPlugin>();
-        public CommandManager Commands { get; private set; }
 
         public float LastUpdateMs => _lastUpdateMs;
         private volatile float _lastUpdateMs;
@@ -51,7 +50,8 @@ namespace Torch.Managers
         public void UpdatePlugins()
         {
             var s = Stopwatch.StartNew();
-            Parallel.ForEach(Plugins, p => p.Update());
+            foreach (var plugin in Plugins)
+                plugin.Update();
             s.Stop();
             _lastUpdateMs = (float)s.Elapsed.TotalMilliseconds;
         }
@@ -100,9 +100,9 @@ namespace Torch.Managers
         /// </summary>
         public void Init()
         {
-            Commands = new CommandManager(_torch);
+            var commands = ((TorchBase)_torch).Commands;
 
-            if (_torch.Config.EnableAutomaticUpdates)
+            if (_torch.Config.AutomaticUpdates)
                 DownloadPlugins();
             else
                 _log.Warn("Automatic plugin updates are disabled.");
@@ -111,6 +111,7 @@ namespace Torch.Managers
             var dlls = Directory.GetFiles(PluginDir, "*.dll", SearchOption.AllDirectories);
             foreach (var dllPath in dlls)
             {
+                _log.Debug($"Loading plugin {dllPath}");
                 var asm = Assembly.UnsafeLoadFrom(dllPath);
 
                 foreach (var type in asm.GetExportedTypes())
@@ -119,14 +120,15 @@ namespace Torch.Managers
                     {
                         try
                         {
-                            var plugin = (ITorchPlugin)Activator.CreateInstance(type);
+                            var plugin = (TorchPluginBase)Activator.CreateInstance(type);
                             if (plugin.Id == default(Guid))
                                 throw new TypeLoadException($"Plugin '{type.FullName}' is missing a {nameof(PluginAttribute)}");
 
                             _log.Info($"Loading plugin {plugin.Name} ({plugin.Version})");
+                            plugin.StoragePath = new FileInfo(asm.Location).Directory.FullName;
                             Plugins.Add(plugin);
 
-                            Commands.RegisterPluginCommands(plugin);
+                            commands.RegisterPluginCommands(plugin);
                         }
                         catch (Exception e)
                         {

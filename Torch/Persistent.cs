@@ -16,11 +16,17 @@ namespace Torch
     {
         [JsonIgnore]
         public string Path { get; set; }
-        public T Data { get; private set; } = new T();
+        public T Data { get; private set; }
 
         ~Persistent()
         {
             Dispose();
+        }
+
+        public Persistent(string path, T data = default(T))
+        {
+            Path = path;
+            Data = data;
         }
 
         public void Save(string path = null)
@@ -38,7 +44,7 @@ namespace Torch
 
         public static Persistent<T> Load(string path, bool saveIfNew = true)
         {
-            var config = new Persistent<T> { Path = path };
+            var config = new Persistent<T>(path, new T());
 
             if (File.Exists(path))
             {

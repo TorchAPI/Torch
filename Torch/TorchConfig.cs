@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Xml.Serialization;
 using NLog;
 using Sandbox.ModAPI.Ingame;
-using VRageMath;
 
 namespace Torch
 {
@@ -17,14 +17,17 @@ namespace Torch
 
         public string InstancePath { get; set; }
         public string InstanceName { get; set; }
+#warning World Path not implemented
+        public string WorldPath { get; set; }
         //public int Autosave { get; set; }
         //public bool AutoRestart { get; set; }
         //public bool LogChat { get; set; }
-        public bool EnableAutomaticUpdates { get; set; } = true;
+        public bool AutomaticUpdates { get; set; } = true;
         public bool RedownloadPlugins { get; set; }
+        public bool RestartOnCrash { get; set; }
         public List<string> Plugins { get; set; } = new List<string>();
-        public Vector2I WindowSize { get; set; } = new Vector2I(800, 600);
-        public Vector2I WindowPosition { get; set; } = new Vector2I();
+        public Point WindowSize { get; set; } = new Point(800, 600);
+        public Point WindowPosition { get; set; } = new Point();
         [NonSerialized]
         private string _path;
 
@@ -33,7 +36,7 @@ namespace Torch
         public TorchConfig(string instanceName = "Torch", string instancePath = null, int autosaveInterval = 5, bool autoRestart = false)
         {
             InstanceName = instanceName;
-            InstancePath = instancePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Torch", InstanceName);
+            InstancePath = instancePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpaceEngineersDedicated");
             //Autosave = autosaveInterval;
             //AutoRestart = autoRestart;
         }
@@ -68,7 +71,7 @@ namespace Torch
             try
             {
                 var serializer = new XmlSerializer(typeof(TorchConfig));
-                using (var f = File.OpenWrite(path))
+                using (var f = File.Create(path))
                 {
                     serializer.Serialize(f, this);
                 }

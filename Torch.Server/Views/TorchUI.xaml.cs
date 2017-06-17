@@ -19,7 +19,6 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Sandbox;
 using Torch.API;
-using VRageMath;
 using Timer = System.Timers.Timer;
 
 namespace Torch.Server
@@ -31,26 +30,20 @@ namespace Torch.Server
     {
         private TorchServer _server;
         private TorchConfig _config;
-        private DateTime _startTime;
-        private readonly Timer _uiUpdate = new Timer
-        {
-            Interval = 1000,
-            AutoReset = true,
-        };
 
         public TorchUI(TorchServer server)
         {
             _config = (TorchConfig)server.Config;
             _server = server;
             InitializeComponent();
-            _startTime = DateTime.Now;
-            _uiUpdate.Elapsed += UiUpdate_Elapsed;
 
             Left = _config.WindowPosition.X;
             Top = _config.WindowPosition.Y;
             Width = _config.WindowSize.X;
             Height = _config.WindowSize.Y;
 
+            //TODO: data binding for whole server
+            DataContext = server;
             Chat.BindServer(server);
             PlayerList.BindServer(server);
             Plugins.BindServer(server);
@@ -69,47 +62,33 @@ namespace Torch.Server
             });
         }
 
-        private void UiUpdate_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            UpdateUptime();
-        }
-
-        private void UpdateUptime()
-        {
-            var currentTime = DateTime.Now;
-            var uptime = currentTime - _startTime;
-
-            Dispatcher.Invoke(() => LabelUptime.Content = $"Uptime: {uptime.Days}d {uptime.Hours}h {uptime.Minutes}m");
-        }
-
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
-            _startTime = DateTime.Now;
+            _config.Save();
             Chat.IsEnabled = true;
             PlayerList.IsEnabled = true;
             ((Button) sender).IsEnabled = false;
             BtnStop.IsEnabled = true;
-            _uiUpdate.Start();
             ConfigControl.SaveConfig();
             new Thread(_server.Start).Start();
         }
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
         {
+            _config.Save();
             Chat.IsEnabled = false;
             PlayerList.IsEnabled = false;
             ((Button) sender).IsEnabled = false;
             //HACK: Uncomment when restarting is possible.
             //BtnStart.IsEnabled = true;
-            _uiUpdate.Stop();
             _server.Stop();
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            var newSize = new Vector2I((int)Width, (int)Height);
+            var newSize = new Point((int)Width, (int)Height);
             _config.WindowSize = newSize;
-            var newPos = new Vector2I((int)Left, (int)Top);
+            var newPos = new Point((int)Left, (int)Top);
             _config.WindowPosition = newPos;
             _config.Save();
 
@@ -124,7 +103,7 @@ namespace Torch.Server
 
         private void InstancePathBox_OnTextChanged(object sender, TextChangedEventArgs e)
         {
-            var name = (sender as TextBox).Text;
+            var name = ((TextBox)sender).Text;
 
             _config.InstancePath = name;
 

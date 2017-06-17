@@ -69,28 +69,51 @@ namespace Torch.Commands
             }
         }
 
+        public string HandleCommandFromServer(string message)
+        {
+            var cmdText = new string(message.Skip(1).ToArray());
+            var command = Commands.GetCommand(cmdText, out string argText);
+            var cmdPath = string.Join(".", command.Path);
+
+            var splitArgs = Regex.Matches(argText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
+            _log.Trace($"Invoking {cmdPath} for server.");
+            var context = new CommandContext(_torch, command.Plugin, null, argText, splitArgs);
+            if (command.TryInvoke(context))
+                _log.Info($"Server ran command '{message}'");
+            else
+                context.Respond($"Invalid Syntax: {command.SyntaxHelp}");
+
+            return context.Response;
+        }
+
         public void HandleCommand(ChatMsg msg, ref bool sendToOthers)
         {
-            if (msg.Text.Length < 1 || msg.Text[0] != Prefix)
+            HandleCommand(msg.Text, msg.Author, ref sendToOthers);
+        }
+
+        public void HandleCommand(string message, ulong steamId, ref bool sendToOthers, bool serverConsole = false)
+        {
+
+            if (message.Length < 1 || message[0] != Prefix)
                 return;
 
             sendToOthers = false;
 
-            var player = _torch.Multiplayer.GetPlayerBySteamId(msg.Author);
+            var player = _torch.Multiplayer.GetPlayerBySteamId(steamId);
             if (player == null)
             {
-                _log.Error($"Command {msg.Text} invoked by nonexistant player");
+                _log.Error($"Command {message} invoked by nonexistant player");
                 return;
             }
 
-            var cmdText = new string(msg.Text.Skip(1).ToArray());
+            var cmdText = new string(message.Skip(1).ToArray());
             var command = Commands.GetCommand(cmdText, out string argText);
 
             if (command != null)
             {
                 var cmdPath = string.Join(".", command.Path);
 
-                if (!HasPermission(msg.Author, command))
+                if (!HasPermission(steamId, command))
                 {
                     _log.Info($"{player.DisplayName} tried to use command {cmdPath} without permission");
                     _torch.Multiplayer.SendMessage($"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", playerId: player.IdentityId);
@@ -103,7 +126,7 @@ namespace Torch.Commands
                 _torch.Invoke(() =>
                 {
                     if (command.TryInvoke(context))
-                        _log.Info($"Player {player.DisplayName} ran command '{msg.Text}'");
+                        _log.Info($"Player {player.DisplayName} ran command '{message}'");
                     else
                         context.Respond($"Invalid Syntax: {command.SyntaxHelp}");
                 });

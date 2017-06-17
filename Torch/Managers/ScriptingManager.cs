@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Sandbox.ModAPI;
 using Torch.API;
+using Torch.API.ModAPI;
 using Torch.API.ModAPI.Ingame;
 using VRage.Scripting;
 
@@ -19,6 +21,12 @@ namespace Torch.Managers
             MyScriptCompiler.Static.AddConditionalCompilationSymbols("TORCH");
             MyScriptCompiler.Static.AddReferencedAssemblies(typeof(ITorchBase).Assembly.Location);
             MyScriptCompiler.Static.AddImplicitIngameNamespacesFromTypes(typeof(GridExtensions));
+
+            using (var whitelist = _whitelist.OpenBatch())
+            {
+                //whitelist.AllowNamespaceOfTypes(MyWhitelistTarget.ModApi, typeof(TorchAPIGateway));
+                whitelist.AllowNamespaceOfTypes(MyWhitelistTarget.Both, typeof(GridExtensions));
+            }
 
             /*
             //dump whitelist

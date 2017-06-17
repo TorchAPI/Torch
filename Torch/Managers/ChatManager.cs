@@ -27,7 +27,15 @@ namespace Torch.Managers
 
         public void Init()
         {
-            NetworkManager.Instance.RegisterNetworkHandlers(new ChatIntercept());
+            try
+            {
+                NetworkManager.Instance.RegisterNetworkHandlers(new ChatIntercept());
+            }
+            catch
+            {
+                _log.Error("Failed to initialize network intercept, command hiding will not work! Falling back to another method.");
+                MyMultiplayer.Static.ChatMessageReceived += Static_ChatMessageReceived;
+            }
         }
 
         private void Static_ChatMessageReceived(ulong arg1, string arg2, SteamSDK.ChatEntryTypeEnum arg3)
