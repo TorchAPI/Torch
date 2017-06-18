@@ -17,6 +17,8 @@ Torch is the successor to SE Server Extender and gives server admins the tools t
 ### Manual (for hosting companies or the paranoid)
 * Install the Space Engineers DS and then unzip the Torch files into the server's DedicatedServer64 directory. It will automatically detect the manual install and disable automatic updates.
 
+In both cases you will need to set the InstancePath in TorchConfig.xml to an existing dedicated server instance as Torch can't fully generate it on its own yet.
+
 # Official Plugins
 Install plugins by unzipping them into the 'Plugins' folder which should be in the same location as the Torch files. If it doesn't exist you can simply create it.
 * [Essentials](https://github.com/TorchAPI/Essentials): Adds a slew of chat commands and other tools to help manage your server.
