@@ -1,6 +1,6 @@
-Please complete the following tasks before submitting your issue:
 - [ ] Verify that this issue is related to Torch and not a Torch plugin or the vanilla game
 - [ ] Ensure that the issue is reproducible for testing (provide a link to a test world if necessary)
+- [ ] Is this a suggestion?
 
 **Torch Version:** 1.x.xxx.xxx **SE Version:** 1.xxx.xxx
 
