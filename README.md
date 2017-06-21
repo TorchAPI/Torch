@@ -11,6 +11,9 @@ Torch is the successor to SE Server Extender and gives server admins the tools t
 * Extensible using the Torch plugin system
 
 # Installation Guide
+
+Note: Until Torch is in a stable, nearly feature complete state there will not be any binaries available. You'll have to compile the solution yourself.
+
 ### Automatic (recommended)
 * Unzip Torch to its own folder, run Torch.Server.exe and enter 'y' in the prompt for automatic updates. Torch will automatically download the Space Engineers files and generate all of the configs/folders necessary.
 
