@@ -51,10 +51,12 @@
     <Reference Include="Microsoft.CodeAnalysis, Version=1.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\Microsoft.CodeAnalysis.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp, Version=1.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.4.1\lib\net45\NLog.dll</HintPath>
@@ -63,30 +65,37 @@
     <Reference Include="Sandbox.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\Sandbox.Common.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Sandbox.Game, Version=0.1.6305.30774, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\Sandbox.Game.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Sandbox.Graphics, Version=0.1.6305.30761, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\Sandbox.Graphics.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SpaceEngineers.Game, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\SpaceEngineers.Game.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SpaceEngineers.ObjectBuilders, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SpaceEngineers.ObjectBuilders.XmlSerializers, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.XmlSerializers.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SteamSDK, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\SteamSDK.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration.Install" />
@@ -107,6 +116,7 @@
     <Reference Include="VRage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Audio, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -115,53 +125,64 @@
     <Reference Include="VRage.Dedicated, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Dedicated.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Game, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Game.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Game.XmlSerializers, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Game.XmlSerializers.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Input, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Input.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Library, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Library.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Math, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Math.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Native, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Native.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.OpenVRWrapper, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.OpenVRWrapper.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Render, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Render.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Render11, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Render11.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Scripting, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Scripting.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Managers\DSConfigManager.cs" />
+    <Compile Include="Managers\ConfigManager.cs" />
     <Compile Include="TorchCli.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -171,6 +192,7 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo1.cs" />
     <Compile Include="ServerStatistics.cs" />
+    <Compile Include="TorchConfig.cs" />
     <Compile Include="TorchService.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -187,6 +209,7 @@
     <Compile Include="ViewModels\Entities\EntityViewModel.cs" />
     <Compile Include="ViewModels\Entities\FloatingObjectViewModel.cs" />
     <Compile Include="ViewModels\Entities\GridViewModel.cs" />
+    <Compile Include="ViewModels\ILazyLoad.cs" />
     <Compile Include="ViewModels\PluginManagerViewModel.cs" />
     <Compile Include="ViewModels\PluginViewModel.cs" />
     <Compile Include="ViewModels\SessionSettingsViewModel.cs" />

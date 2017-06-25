@@ -9,12 +9,10 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Principal;
-using System.Text;
 using System.Threading;
-using Havok;
 using Microsoft.Xml.Serialization.GeneratedAssembly;
-using Sandbox.Game.Entities.Cube;
 using Sandbox.Game.Multiplayer;
+using Sandbox.ModAPI;
 using SteamSDK;
 using Torch.API;
 using VRage.Dedicated;
@@ -25,8 +23,8 @@ using VRage.Game.SessionComponents;
 using VRage.Library;
 using VRage.ObjectBuilders;
 using VRage.Plugins;
-using VRage.Trace;
 using VRage.Utils;
+#pragma warning disable 618
 
 namespace Torch.Server
 {
@@ -44,6 +42,7 @@ namespace Torch.Server
         private TimeSpan _elapsedPlayTime;
         private float _simRatio;
         private readonly AutoResetEvent _stopHandle = new AutoResetEvent(false);
+        private Timer _watchdog;
 
         public TorchServer(TorchConfig config = null)
         {
@@ -171,6 +170,27 @@ namespace Torch.Server
             base.Update();
             SimulationRatio = Sync.ServerSimulationRatio;
             ElapsedPlayTime = MySession.Static?.ElapsedPlayTime ?? default(TimeSpan);
+
+            if (_watchdog == null)
+            {
+                Log.Info("Starting server watchdog.");
+                _watchdog = new Timer(CheckServerResponding, this, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+            }
+        }
+
+        private static void CheckServerResponding(object state)
+        {
+            var mre = new ManualResetEvent(false);
+            ((TorchServer)state).Invoke(() => mre.Set());
+            if (!mre.WaitOne(TimeSpan.FromSeconds(30)))
+            {
+                var mainThread = MySandboxGame.Static.UpdateThread;
+                mainThread.Suspend();
+                var stackTrace = new StackTrace(mainThread, true);
+                throw new TimeoutException($"Server watchdog detected that the server was frozen for at least 30 seconds.\n{stackTrace}");
+            }
+
+            Log.Debug("Server watchdog responded");
         }
 
         /// <summary>

@@ -19,8 +19,11 @@ using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
+using SharpDX.Toolkit.Collections;
 using SteamSDK;
 using Torch.API;
+using Torch.API.Managers;
+using Torch.Commands;
 using Torch.ViewModels;
 using VRage.Game;
 using VRage.Game.ModAPI;
@@ -33,39 +36,44 @@ namespace Torch.Managers
     /// <summary>
     /// Provides a proxy to the game's multiplayer-related functions.
     /// </summary>
-    public class MultiplayerManager : IMultiplayer
+    public class MultiplayerManager : Manager, IMultiplayerManager
     {
-        public event Action<ulong> PlayerJoined;
-        public event Action<ulong, ConnectionState> PlayerLeft;
+        public event Action<IPlayer> PlayerJoined;
+        public event Action<IPlayer> PlayerLeft;
         public event MessageReceivedDel MessageReceived;
 
-        public List<IChatMessage> ChatHistory { get; } = new List<IChatMessage>();
-        public Dictionary<ulong, IMyPlayer> Players { get; } = new Dictionary<ulong, IMyPlayer>();
+        public MTObservableCollection<IChatMessage> ChatHistory { get; } = new MTObservableCollection<IChatMessage>();
+        public ObservableDictionary<ulong, PlayerViewModel> Players { get; } = new ObservableDictionary<ulong, PlayerViewModel>();
         public IMyPlayer LocalPlayer => MySession.Static.LocalHumanPlayer;
-        private readonly ITorchBase _torch;
-        private static Logger _log = LogManager.GetLogger(nameof(MultiplayerManager));
-        private static Logger _chatLog = LogManager.GetLogger("Chat");
+        private static readonly Logger _log = LogManager.GetLogger(nameof(MultiplayerManager));
+        private static readonly Logger _chatLog = LogManager.GetLogger("Chat");
         private Dictionary<MyPlayer.PlayerId, MyPlayer> _onlinePlayers;
 
-        internal MultiplayerManager(ITorchBase torch)
+        internal MultiplayerManager(ITorchBase torch) : base(torch)
         {
-            _torch = torch;
-            _torch.SessionLoaded += OnSessionLoaded;
-            ChatManager.Instance.MessageRecieved += Instance_MessageRecieved;
+            
+        }
+
+        /// <inheritdoc />
+        public override void Init()
+        {
+            Torch.SessionLoaded += OnSessionLoaded;
+            Torch.GetManager<ChatManager>().MessageRecieved += Instance_MessageRecieved;
         }
 
         private void Instance_MessageRecieved(ChatMsg msg, ref bool sendToOthers)
         {
             var message = ChatMessage.FromChatMsg(msg);
             ChatHistory.Add(message);
+            _chatLog.Info($"{message.Name}: {message.Message}");
             MessageReceived?.Invoke(message, ref sendToOthers);
         }
 
-        public void KickPlayer(ulong steamId) => _torch.Invoke(() => MyMultiplayer.Static.KickClient(steamId));
+        public void KickPlayer(ulong steamId) => Torch.Invoke(() => MyMultiplayer.Static.KickClient(steamId));
 
         public void BanPlayer(ulong steamId, bool banned = true)
         {
-            _torch.Invoke(() =>
+            Torch.Invoke(() =>
             {
                 MyMultiplayer.Static.BanClient(steamId, banned);
                 if (_gameOwnerIds.ContainsKey(steamId))
@@ -94,9 +102,18 @@ namespace Torch.Managers
         /// </summary>
         public void SendMessage(string message, string author = "Server", long playerId = 0, string font = MyFontEnum.Red)
         {
-            var msg = new ScriptedChatMsg {Author = author, Font = font, Target = playerId, Text = message};
-            MyMultiplayerBase.SendScriptedChatMessage(ref msg);
-            ChatHistory.Add(new ChatMessage(DateTime.Now, 0, author, message));
+            ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", message));
+            var commands = Torch.GetManager<CommandManager>();
+            if (commands.IsCommand(message))
+            {
+                var response = commands.HandleCommandFromServer(message);
+                ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", response));
+            }
+            else
+            {
+                var msg = new ScriptedChatMsg { Author = author, Font = font, Target = playerId, Text = message };
+                MyMultiplayerBase.SendScriptedChatMessage(ref msg);
+            }
         }
 
         private void OnSessionLoaded()
@@ -122,7 +139,9 @@ namespace Torch.Managers
         private void OnClientLeft(ulong steamId, ChatMemberStateChangeEnum stateChange)
         {
             _log.Info($"{GetSteamUsername(steamId)} disconnected ({(ConnectionState)stateChange}).");
-            PlayerLeft?.Invoke(steamId, (ConnectionState)stateChange);
+            Players.TryGetValue(steamId, out PlayerViewModel vm);
+            PlayerLeft?.Invoke(vm ?? new PlayerViewModel(steamId));
+            Players.Remove(steamId);
         }
 
         //TODO: Split the following into a new file?
@@ -130,7 +149,7 @@ namespace Torch.Managers
         //This lets us have a server set to private (admins only) or friends (friends of all listed admins)
         private List<ulong> _members;
         private HashSet<ulong> _waitingForGroup;
-        private HashSet<ulong> _waitingForFriends;
+        //private HashSet<ulong> _waitingForFriends;
         private Dictionary<ulong, ulong> _gameOwnerIds = new Dictionary<ulong, ulong>();
         //private IMultiplayer _multiplayerImplementation;
 
@@ -272,7 +291,9 @@ namespace Torch.Managers
         private void UserAccepted(ulong steamId)
         {
             typeof(MyDedicatedServerBase).GetMethod("UserAccepted", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(MyMultiplayer.Static, new object[] {steamId});
-            PlayerJoined?.Invoke(steamId);
+            var vm = new PlayerViewModel(steamId);
+            Players.Add(steamId, vm);
+            PlayerJoined?.Invoke(vm);
         }
 
         private void UserRejected(ulong steamId, JoinResult reason)

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Torch.API;
+using Torch.API.Managers;
 using Torch.API.Plugins;
 
 namespace Torch.Server.ViewModels
@@ -15,7 +16,7 @@ namespace Torch.Server.ViewModels
         private PluginViewModel _selectedPlugin;
         public PluginViewModel SelectedPlugin
         {
-            get { return _selectedPlugin; }
+            get => _selectedPlugin;
             set { _selectedPlugin = value; OnPropertyChanged(); }
         }
 

@@ -10,7 +10,7 @@
             <Button x:Name="Send" Content="Send" DockPanel.Dock="Right" Width="50" Margin="5,5,5,5" Click="SendButton_Click"></Button>
             <TextBox x:Name="Message" DockPanel.Dock="Left" Margin="5,5,5,5" KeyDown="Message_OnKeyDown"></TextBox>
         </DockPanel>
-        <ListView x:Name="ChatItems" Margin="5,5,5,5">
+        <ListView x:Name="ChatItems" ItemsSource="{Binding ChatHistory}" Margin="5,5,5,5">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel>

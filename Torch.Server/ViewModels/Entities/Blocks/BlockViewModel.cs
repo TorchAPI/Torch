@@ -47,6 +47,9 @@ namespace Torch.Server.ViewModels.Blocks
         public BlockViewModel(IMyTerminalBlock block, EntityTreeViewModel tree) : base(block, tree)
         {
             Block = block;
+            if (Block == null)
+                return;
+
             var propList = new List<ITerminalProperty>();
             block.GetProperties(propList);
             foreach (var prop in propList)

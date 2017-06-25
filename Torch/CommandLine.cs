@@ -3,31 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Torch
 {
     public class CommandLine
     {
         private readonly string _argPrefix;
+        private readonly Dictionary<ArgAttribute, PropertyInfo> _args = new Dictionary<ArgAttribute, PropertyInfo>();
 
         public CommandLine(string argPrefix = "-")
         {
             _argPrefix = argPrefix;
-        }
-
-        public PropertyInfo[] GetArgs()
-        {
-            return GetType().GetProperties().Where(p => p.HasAttribute<ArgAttribute>()).ToArray();
+            foreach (var prop in GetType().GetProperties())
+            {
+                if (prop.HasAttribute<ArgAttribute>())
+                    _args.Add(prop.GetCustomAttribute<ArgAttribute>(), prop);
+            }
         }
 
         public string GetHelp()
         {
             var sb = new StringBuilder();
 
-            foreach (var property in GetArgs())
+            foreach (var property in _args)
             {
-                var attr = property.GetCustomAttribute<ArgAttribute>();
+                var attr = property.Key;
                 sb.AppendLine($"{_argPrefix}{attr.Name.PadRight(24)}{attr.Description}");
             }
 
@@ -37,16 +37,16 @@ namespace Torch
         public override string ToString()
         {
             var args = new List<string>();
-            foreach (var prop in GetArgs())
+            foreach (var prop in _args)
             {
-                var attr = prop.GetCustomAttribute<ArgAttribute>();
-                if (prop.PropertyType == typeof(bool) && (bool)prop.GetValue(this))
+                var attr = prop.Key;
+                if (prop.Value.PropertyType == typeof(bool) && (bool)prop.Value.GetValue(this))
                 {
                     args.Add($"{_argPrefix}{attr.Name}");
                 }
-                else if (prop.PropertyType == typeof(string))
+                else if (prop.Value.PropertyType == typeof(string))
                 {
-                    var str = (string)prop.GetValue(this);
+                    var str = (string)prop.Value.GetValue(this);
                     if (string.IsNullOrEmpty(str))
                         continue;
                     args.Add($"{_argPrefix}{attr.Name} \"{str}\"");
@@ -67,16 +67,14 @@ namespace Torch
                 return false;
             }
 
-            var properties = GetArgs();
-
             for (var i = 0; i < args.Length; i++)
             {
                 if (!args[i].StartsWith(_argPrefix))
                     continue;
 
-                foreach (var property in properties)
+                foreach (var property in _args)
                 {
-                    var argName = property.GetCustomAttribute<ArgAttribute>()?.Name;
+                    var argName = property.Key.Name;
                     if (argName == null)
                         continue;
 
@@ -84,11 +82,11 @@ namespace Torch
                     {
                         if (string.Compare(argName, 0, args[i], 1, argName.Length, StringComparison.InvariantCultureIgnoreCase) == 0)
                         {
-                            if (property.PropertyType == typeof(bool))
-                                property.SetValue(this, true);
+                            if (property.Value.PropertyType == typeof(bool))
+                                property.Value.SetValue(this, true);
 
-                            if (property.PropertyType == typeof(string))
-                                property.SetValue(this, args[++i]);
+                            if (property.Value.PropertyType == typeof(string))
+                                property.Value.SetValue(this, args[++i]);
                         }
                     }
                     catch

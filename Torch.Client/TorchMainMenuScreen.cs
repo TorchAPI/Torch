@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable 618
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,7 @@ namespace Torch.Client
         public override void RecreateControls(bool constructor)
         {
             base.RecreateControls(constructor);
+
             var buttonSize = MyGuiControlButton.GetVisualStyle(MyGuiControlButtonStyleEnum.Default).NormalTexture.MinSizeGui;
             Vector2 leftButtonPositionOrigin = MyGuiManager.ComputeFullscreenGuiCoordinate(MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_BOTTOM) + new Vector2(buttonSize.X / 2f, 0f);
             var btn = MakeButton(leftButtonPositionOrigin - 9 * MyGuiConstants.MENU_BUTTONS_POSITION_DELTA, MyStringId.GetOrCompute("Torch"), TorchButtonClicked);

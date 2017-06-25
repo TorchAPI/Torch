@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using NLog;
 using Sandbox.Engine.Multiplayer;
+using Torch.API;
+using Torch.API.Managers;
 using VRage;
 using VRage.Library.Collections;
 using VRage.Network;
@@ -13,9 +15,9 @@ using VRage.Utils;
 
 namespace Torch.Managers
 {
-    public class ChatManager
+    [Manager]
+    public class ChatManager : Manager
     {
-        public static ChatManager Instance { get; } = new ChatManager();
         private static Logger _log = LogManager.GetLogger(nameof(ChatManager));
 
         public delegate void MessageRecievedDel(ChatMsg msg, ref bool sendToOthers);
@@ -25,11 +27,16 @@ namespace Torch.Managers
         internal void RaiseMessageRecieved(ChatMsg msg, ref bool sendToOthers) =>
             MessageRecieved?.Invoke(msg, ref sendToOthers);
 
-        public void Init()
+        public ChatManager(ITorchBase torchInstance) : base(torchInstance)
+        {
+            
+        }
+
+        public override void Init()
         {
             try
             {
-                NetworkManager.Instance.RegisterNetworkHandlers(new ChatIntercept());
+                Torch.GetManager<INetworkManager>().RegisterNetworkHandler(new ChatIntercept(this));
             }
             catch
             {
@@ -45,43 +52,50 @@ namespace Torch.Managers
 
             RaiseMessageRecieved(msg, ref sendToOthers);
         }
-    }
 
-    internal class ChatIntercept : NetworkHandlerBase
-    {
-        private bool? _unitTestResult;
-        public override bool CanHandle(CallSite site)
+        internal class ChatIntercept : NetworkHandlerBase, INetworkHandler
         {
-            if (site.MethodInfo.Name != "OnChatMessageRecieved")
-                return false;
+            private ChatManager _chatManager;
+            private bool? _unitTestResult;
 
-            if (_unitTestResult.HasValue)
-                return _unitTestResult.Value;
-
-            var parameters = site.MethodInfo.GetParameters();
-            if (parameters.Length != 1)
+            public ChatIntercept(ChatManager chatManager)
             {
-                _unitTestResult = false;
-                return false;
+                _chatManager = chatManager;
             }
 
-            if (parameters[0].ParameterType != typeof(ChatMsg))
-                _unitTestResult = false;
+            public override bool CanHandle(CallSite site)
+            {
+                if (site.MethodInfo.Name != "OnChatMessageRecieved")
+                    return false;
 
-            _unitTestResult = true;
+                if (_unitTestResult.HasValue)
+                    return _unitTestResult.Value;
 
-            return _unitTestResult.Value;
-        }
+                var parameters = site.MethodInfo.GetParameters();
+                if (parameters.Length != 1)
+                {
+                    _unitTestResult = false;
+                    return false;
+                }
 
-        public override bool Handle(ulong remoteUserId, CallSite site, BitStream stream, object obj, MyPacket packet)
-        {
-            var msg = new ChatMsg();
-            Serialize(site.MethodInfo, stream, ref msg);
+                if (parameters[0].ParameterType != typeof(ChatMsg))
+                    _unitTestResult = false;
 
-            bool sendToOthers = true;
-            ChatManager.Instance.RaiseMessageRecieved(msg, ref sendToOthers);
+                _unitTestResult = true;
 
-            return !sendToOthers;
+                return _unitTestResult.Value;
+            }
+
+            public override bool Handle(ulong remoteUserId, CallSite site, BitStream stream, object obj, MyPacket packet)
+            {
+                var msg = new ChatMsg();
+                Serialize(site.MethodInfo, stream, ref msg);
+
+                bool sendToOthers = true;
+                _chatManager.RaiseMessageRecieved(msg, ref sendToOthers);
+
+                return !sendToOthers;
+            }
         }
     }
 }

@@ -42,6 +42,9 @@ namespace Torch.Server
         [STAThread]
         public static void Main(string[] args)
         {
+            //Ensures that all the files are downloaded in the Torch directory.
+            Directory.SetCurrentDirectory(new FileInfo(typeof(Program).Assembly.Location).Directory.ToString());
+
             IsManualInstall = Directory.GetCurrentDirectory().Contains("DedicatedServer64");
             if (!IsManualInstall)
                 AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
@@ -72,7 +75,7 @@ namespace Torch.Server
 
                 if (!IsManualInstall)
                 {
-                    new DSConfigManager().CreateInstance("Instance");
+                    new ConfigManager().CreateInstance("Instance");
                     options.InstancePath = Path.GetFullPath("Instance");
 
                     _log.Warn("Would you like to enable automatic updates? (Y/n):");
@@ -81,7 +84,10 @@ namespace Torch.Server
                     var autoUpdate = !input.Equals("n", StringComparison.InvariantCultureIgnoreCase);
                     options.AutomaticUpdates = autoUpdate;
                     if (autoUpdate)
-                        _log.Info("Automatic updates enabled.");
+                    {
+                        _log.Info("Automatic updates enabled, updating server.");
+                        RunSteamCmd();
+                    }
                 }
 
                 //var setupDialog = new FirstTimeSetup { DataContext = options };
@@ -267,11 +273,10 @@ quit";
         {
             try
             {
-                var basePath = Path.GetDirectoryName(typeof(Program).Assembly.Location) ?? AppDomain.CurrentDomain.BaseDirectory;
-                string asmPath = Path.Combine(basePath, "DedicatedServer64", new AssemblyName(args.Name).Name + ".dll");
+                var basePath = Path.Combine(Path.GetDirectoryName(typeof(Program).Assembly.Location), "DedicatedServer64");
+                string asmPath = Path.Combine(basePath, new AssemblyName(args.Name).Name + ".dll");
                 if (File.Exists(asmPath))
                     return Assembly.LoadFrom(asmPath);
-                
             }
             catch
             {

@@ -9,26 +9,13 @@ namespace Torch.Server.ViewModels
 {
     public class SteamUserViewModel : ViewModel
     {
-        private string _name;
-        public string Name { get => _name; set { } }
-
-        private ulong _id;
-
-        public ulong SteamId
-        {
-            get => _id;
-            set
-            {
-                _id = value;
-                OnPropertyChanged();
-                //TODO: resolve user name
-                OnPropertyChanged(nameof(Name));
-            }
-        }
+        public string Name { get; }
+        public ulong SteamId { get; }
 
         public SteamUserViewModel(ulong id)
         {
             SteamId = id;
+            Name = SteamAPI.Instance.Friends.GetPersonaName(id);
         }
 
         public SteamUserViewModel() : this(0) { }

@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using NLog;
 using Torch.Server.ViewModels;
 using Torch.Server.ViewModels.Blocks;
 using Torch.Server.ViewModels.Entities;
@@ -63,6 +64,14 @@ namespace Torch.Server.Views
         private void Stop_OnClick(object sender, RoutedEventArgs e)
         {
             TorchBase.Instance.Invoke(() => Entities.CurrentEntity?.Entity.Physics?.ClearSpeed());
+        }
+
+        private void TreeViewItem_OnExpanded(object sender, RoutedEventArgs e)
+        {
+            LogManager.GetLogger("EntitiesControl").Debug(nameof(TreeViewItem_OnExpanded));
+            var item = (TreeViewItem)e.Source;
+            if (item.DataContext is ILazyLoad l)
+                l.Load();
         }
     }
 }

@@ -18,7 +18,7 @@
                         Margin="3" />
                 <Button Content="Stop" Click="Stop_OnClick" IsEnabled="{Binding CurrentEntity.CanStop}" Margin="3" />
             </StackPanel>
-            <TreeView Width="300" Margin="3" DockPanel.Dock="Top" SelectedItemChanged="TreeView_OnSelectedItemChanged">
+            <TreeView Width="300" Margin="3" DockPanel.Dock="Top" SelectedItemChanged="TreeView_OnSelectedItemChanged" TreeViewItem.Expanded="TreeViewItem_OnExpanded">
                 <TreeView.Resources>
                     <HierarchicalDataTemplate DataType="{x:Type entities:GridViewModel}" ItemsSource="{Binding Blocks}">
                         <TextBlock Text="{Binding DescriptiveName}" />
@@ -30,12 +30,12 @@
                         <TextBlock Text="{Binding Name}"/>
                     </HierarchicalDataTemplate>
                 </TreeView.Resources>
-                <TreeViewItem ItemsSource="{Binding Grids}" IsExpanded="true">
+                <TreeViewItem ItemsSource="{Binding Grids}">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding Grids.Count, StringFormat=Grids ({0})}" />
                     </TreeViewItem.Header>
                 </TreeViewItem>
-                <TreeViewItem ItemsSource="{Binding Characters}" IsExpanded="true">
+                <TreeViewItem ItemsSource="{Binding Characters}">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding Characters.Count, StringFormat=Characters ({0})}" />
                     </TreeViewItem.Header>
@@ -45,7 +45,7 @@
                         </DataTemplate>
                     </TreeViewItem.ItemTemplate>
                 </TreeViewItem>
-                <TreeViewItem ItemsSource="{Binding VoxelMaps}" IsExpanded="true">
+                <TreeViewItem ItemsSource="{Binding VoxelMaps}">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding VoxelMaps.Count, StringFormat=Voxel Maps ({0})}" />
                     </TreeViewItem.Header>
@@ -55,7 +55,7 @@
                         </DataTemplate>
                     </TreeViewItem.ItemTemplate>
                 </TreeViewItem>
-                <TreeViewItem ItemsSource="{Binding FloatingObjects}" IsExpanded="true">
+                <TreeViewItem ItemsSource="{Binding FloatingObjects}">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding FloatingObjects.Count, StringFormat=Floating Objects ({0})}" />
                     </TreeViewItem.Header>

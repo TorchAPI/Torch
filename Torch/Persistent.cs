@@ -9,12 +9,11 @@ using Newtonsoft.Json;
 namespace Torch
 {
     /// <summary>
-    /// Class that manages saving <see cref="T"/> to disk using JSON serialization.
+    /// Simple class that manages saving <see cref="T"/> to disk using JSON serialization.
     /// </summary>
     /// <typeparam name="T">Data class</typeparam>
     public class Persistent<T> : IDisposable where T : new()
     {
-        [JsonIgnore]
         public string Path { get; set; }
         public T Data { get; private set; }
 
@@ -64,7 +63,14 @@ namespace Torch
 
         public void Dispose()
         {
-            Save();
+            try
+            {
+                Save();
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 

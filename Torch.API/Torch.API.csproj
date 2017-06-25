@@ -35,6 +35,7 @@
     <Reference Include="HavokWrapper, Version=1.0.6278.22649, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\HavokWrapper.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="NLog">
       <HintPath>..\packages\NLog.4.4.1\lib\net45\NLog.dll</HintPath>
@@ -45,30 +46,37 @@
     <Reference Include="Sandbox.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\Sandbox.Common.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Sandbox.Game, Version=0.1.6305.30774, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\Sandbox.Game.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Sandbox.Graphics, Version=0.1.6305.30761, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\Sandbox.Graphics.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SpaceEngineers.Game, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\SpaceEngineers.Game.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SpaceEngineers.ObjectBuilders, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SpaceEngineers.ObjectBuilders.XmlSerializers, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.XmlSerializers.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SteamSDK, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\SteamSDK.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -85,59 +93,75 @@
     <Reference Include="System.Xml" />
     <Reference Include="VRage">
       <HintPath>..\GameBinaries\VRage.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Audio, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Audio.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Dedicated">
       <HintPath>..\GameBinaries\VRage.Dedicated.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Game, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Game.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Game.XmlSerializers, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Game.XmlSerializers.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Input, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Input.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Library">
       <HintPath>..\GameBinaries\VRage.Library.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Math, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Math.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Native, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Native.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.OpenVRWrapper, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.OpenVRWrapper.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Render, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Render.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Render11, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Render11.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Scripting, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Scripting.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConnectionState.cs" />
     <Compile Include="IChatMessage.cs" />
-    <Compile Include="IMultiplayer.cs" />
-    <Compile Include="IPluginManager.cs" />
+    <Compile Include="Managers\IManager.cs" />
+    <Compile Include="Managers\IMultiplayerManager.cs" />
+    <Compile Include="IPlayer.cs" />
+    <Compile Include="Managers\INetworkManager.cs" />
+    <Compile Include="Managers\IPluginManager.cs" />
     <Compile Include="ITorchConfig.cs" />
     <Compile Include="Plugins\ITorchPlugin.cs" />
     <Compile Include="IServerControls.cs" />

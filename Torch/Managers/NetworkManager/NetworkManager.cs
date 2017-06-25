@@ -7,25 +7,31 @@ using System.Threading.Tasks;
 using NLog;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
+using Torch.API;
+using Torch.API.Managers;
 using VRage;
 using VRage.Library.Collections;
 using VRage.Network;
 
 namespace Torch.Managers
 {
-    public class NetworkManager
+    public class NetworkManager : Manager, INetworkManager
     {
         private static Logger _log = LogManager.GetLogger(nameof(NetworkManager));
-        public static NetworkManager Instance { get; } = new NetworkManager();
 
         private const string MyTransportLayerField = "TransportLayer";
         private const string TypeTableField = "m_typeTable";
         private const string TransportHandlersField = "m_handlers";
         private MyTypeTable m_typeTable = new MyTypeTable();
-        private HashSet<NetworkHandlerBase> _networkHandlers = new HashSet<NetworkHandlerBase>();
+        private HashSet<INetworkHandler> _networkHandlers = new HashSet<INetworkHandler>();
         private bool _init;
 
-        private bool ReflectionUnitTest(bool suppress = false)
+        public NetworkManager(ITorchBase torchInstance) : base(torchInstance)
+        {
+
+        }
+
+        private static bool ReflectionUnitTest(bool suppress = false)
         {
             try
             {
@@ -57,7 +63,7 @@ namespace Torch.Managers
         /// <summary>
         /// Loads the network intercept system
         /// </summary>
-        public void Init()
+        public override void Init()
         {
             if (_init)
                 return;
@@ -196,10 +202,10 @@ namespace Torch.Managers
             }
         }
 
-        private void RegisterNetworkHandler(NetworkHandlerBase handler)
+        public void RegisterNetworkHandler(INetworkHandler handler)
         {
             var handlerType = handler.GetType().FullName;
-            var toRemove = new List<NetworkHandlerBase>();
+            var toRemove = new List<INetworkHandler>();
             foreach (var item in _networkHandlers)
             {
                 if (item.GetType().FullName == handlerType)
@@ -216,7 +222,7 @@ namespace Torch.Managers
             _networkHandlers.Add(handler);
         }
 
-        public void RegisterNetworkHandlers(params NetworkHandlerBase[] handlers)
+        public void RegisterNetworkHandlers(params INetworkHandler[] handlers)
         {
             foreach (var handler in handlers)
                 RegisterNetworkHandler(handler);

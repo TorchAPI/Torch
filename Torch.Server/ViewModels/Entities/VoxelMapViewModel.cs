@@ -3,7 +3,6 @@ using System.Linq;
 using Sandbox.Game.Entities;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
-using VRage.Library.Collections;
 
 namespace Torch.Server.ViewModels.Entities
 {
@@ -11,7 +10,7 @@ namespace Torch.Server.ViewModels.Entities
     {
         private MyVoxelBase Voxel => (MyVoxelBase)Entity;
 
-        public override string Name => Voxel.StorageName;
+        public override string Name => string.IsNullOrEmpty(Voxel.StorageName) ? "Unnamed" : Voxel.StorageName;
 
         public override bool CanStop => false;
 
@@ -19,6 +18,9 @@ namespace Torch.Server.ViewModels.Entities
 
         public void UpdateAttachedGrids()
         {
+            //TODO: fix
+            return;
+
             AttachedGrids.Clear();
             var box = Entity.WorldAABB;
             var entities = new List<MyEntity>();

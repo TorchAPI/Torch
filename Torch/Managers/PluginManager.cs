@@ -13,6 +13,7 @@ using NLog;
 using Sandbox;
 using Sandbox.ModAPI;
 using Torch.API;
+using Torch.API.Managers;
 using Torch.API.Plugins;
 using Torch.Commands;
 using Torch.Managers;

@@ -13,27 +13,6 @@ namespace Torch.Commands
 {
     public class TorchCommands : CommandModule
     {
-#if DEBUG
-        [Command("fixit")]
-        public void Fixit()
-        {
-            Environment.Exit(0);
-        }
-
-        [Command("dbgcmd")]
-        public void Dbgcmd()
-        {
-            var commandManager = ((PluginManager)Context.Torch.Plugins).Commands;
-            Console.WriteLine(commandManager.Commands.GetTreeString());
-        }
-#endif
-        [Command("crash", "Causes the server to crash for testing purposes")]
-        [Permission(MyPromoteLevel.Admin)]
-        public void Crash()
-        {
-            throw new Exception("Crash triggered by Torch command");
-        }
-
         [Command("help", "Displays help for a command")]
         public void Help()
         {

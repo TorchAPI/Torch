@@ -37,7 +37,7 @@ namespace Torch.Updater
             }
 
             var gitClient = new GitHubClient(new ProductHeaderValue("Torch"));
-            var releases = await gitClient.Repository.Release.GetAll(split[0], split[1]);
+            var releases = await gitClient.Repository.Release.GetAll(split[0], split[1]).ConfigureAwait(false);
 
             if (releases.Count == 0)
             {
@@ -62,14 +62,14 @@ namespace Torch.Updater
             if (force || latestVersion > currentVersion)
             {
                 var webClient = new WebClient();
-                var assets = await gitClient.Repository.Release.GetAllAssets(split[0], split[1], releases[0].Id);
+                var assets = await gitClient.Repository.Release.GetAllAssets(split[0], split[1], releases[0].Id).ConfigureAwait(false);
                 foreach (var asset in assets)
                 {
                     if (asset.Name.EndsWith(".zip"))
                     {
                         Log.Debug(asset.BrowserDownloadUrl);
                         var localPath = Path.Combine(Path.GetTempPath(), asset.Name);
-                        await webClient.DownloadFileTaskAsync(new Uri(asset.BrowserDownloadUrl), localPath);
+                        await webClient.DownloadFileTaskAsync(new Uri(asset.BrowserDownloadUrl), localPath).ConfigureAwait(false);
                         UnzipPlugin(localPath);
                         Log.Info($"Downloaded update for {manifest.Repository}");
                         return;

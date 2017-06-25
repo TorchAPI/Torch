@@ -52,7 +52,13 @@ namespace Torch.Server.Views
             Log.Info("Saved DS config.");
             try
             {
-                var checkpoint = MyLocalCache.LoadCheckpoint(Config.LoadWorld, out _);
+                //var checkpoint = MyLocalCache.LoadCheckpoint(Config.LoadWorld, out _);
+                MyObjectBuilderSerializer.DeserializeXML(Path.Combine(Config.LoadWorld, "Sandbox.sbc"), out MyObjectBuilder_Checkpoint checkpoint, out ulong sizeInBytes);
+                if (checkpoint == null)
+                {
+                    Log.Error($"Failed to load {Config.LoadWorld}, checkpoint null ({sizeInBytes} bytes, instance {TorchBase.Instance.Config.InstancePath})");
+                    return;
+                }
                 checkpoint.Settings = Config.SessionSettings;
                 checkpoint.Mods.Clear();
                 foreach (var modId in Config.Mods)
@@ -75,6 +81,7 @@ namespace Torch.Server.Views
 
             if (!File.Exists(path))
             {
+                Log.Error($"Failed to load dedicated config at {path}");
                 DataContext = null;
                 return;
             }

@@ -17,8 +17,10 @@ using Sandbox;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
+using Sandbox.ModAPI;
 using SteamSDK;
 using Torch.API;
+using Torch.Managers;
 using VRage.Game.ModAPI;
 
 namespace Torch.Server
@@ -38,18 +40,7 @@ namespace Torch.Server
         public void BindServer(ITorchServer server)
         {
             _server = server;
-            //server.Multiplayer.PlayerJoined += Refresh;
-            //server.Multiplayer.PlayerLeft += Refresh;
-            Refresh();
-        }
-
-        private void Refresh(IMyPlayer player = null)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                PlayerList.ItemsSource = null;
-                //PlayerList.ItemsSource = _server.Multiplayer.Players;
-            });
+            DataContext = (MultiplayerManager)_server.Multiplayer;
         }
 
         private void KickButton_Click(object sender, RoutedEventArgs e)

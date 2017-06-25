@@ -5,10 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Torch.Server.Views"
         xmlns:torch="clr-namespace:Torch;assembly=Torch"
+        xmlns:server="clr-namespace:Torch.Server"
         mc:Ignorable="d"
         Title="Torch First Time Setup" Height="200" Width="500">
     <Window.DataContext>
-        <torch:TorchConfig/>
+        <server:TorchConfig/>
     </Window.DataContext>
     <StackPanel>
         <DockPanel ToolTip="This should be set to the folder that contains your mods and saves.">

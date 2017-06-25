@@ -17,6 +17,7 @@ using Sandbox.ModAPI;
 using SpaceEngineers.Game.Entities.Blocks;
 using SpaceEngineers.Game.ModAPI;
 using Torch.API;
+using Torch.API.Managers;
 using Torch.API.Plugins;
 using VRage;
 using VRage.Collections;
@@ -31,14 +32,13 @@ using VRageMath;
 
 namespace Torch.Managers
 {
-    public class EntityManager
+    public class EntityManager : Manager
     {
-        private readonly ITorchBase _torch;
         private static readonly Logger Log = LogManager.GetLogger(nameof(EntityManager));
 
-        public EntityManager(ITorchBase torch)
+        public EntityManager(ITorchBase torch) : base(torch)
         {
-            _torch = torch;
+
         }
 
         public void ExportGrid(IMyCubeGrid grid, string path)

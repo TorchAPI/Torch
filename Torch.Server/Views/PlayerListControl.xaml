@@ -10,7 +10,7 @@
             <Button x:Name="KickButton" Content="Kick" Margin="5,5,5,5" Click="KickButton_Click"/>
             <Button x:Name="BanButton" Content="Ban" Margin="5,5,5,5" Click="BanButton_Click"/>
         </StackPanel>
-        <ListView x:Name="PlayerList" DockPanel.Dock="Top" Margin="5,5,5,5">
+        <ListView x:Name="PlayerList" ItemsSource="{Binding Players}" DockPanel.Dock="Top" Margin="5,5,5,5">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel>

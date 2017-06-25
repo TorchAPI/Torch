@@ -17,8 +17,10 @@ using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using SpaceEngineers.Game;
 using Torch.API;
+using Torch.API.Managers;
 using Torch.Commands;
 using Torch.Managers;
+using VRage.Collections;
 using VRage.FileSystem;
 using VRage.Game.ObjectBuilder;
 using VRage.ObjectBuilders;
@@ -41,14 +43,15 @@ namespace Torch
         public Version GameVersion { get; private set; }
         public string[] RunArgs { get; set; }
         public IPluginManager Plugins { get; protected set; }
-        public IMultiplayer Multiplayer { get; protected set; }
+        public IMultiplayerManager Multiplayer { get; protected set; }
         public EntityManager Entities { get; protected set; }
-        public NetworkManager Network { get; protected set; }
+        public INetworkManager Network { get; protected set; }
         public CommandManager Commands { get; protected set; }
         public event Action SessionLoading;
         public event Action SessionLoaded;
         public event Action SessionUnloading;
         public event Action SessionUnloaded;
+        private HashSet<IManager> _managers;
 
         private bool _init;
 
@@ -61,11 +64,40 @@ namespace Torch
 
             TorchVersion = Assembly.GetExecutingAssembly().GetName().Version; 
             RunArgs = new string[0];
+
             Plugins = new PluginManager(this);
             Multiplayer = new MultiplayerManager(this);
             Entities = new EntityManager(this);
-            Network = NetworkManager.Instance;
+            Network = new NetworkManager(this);
             Commands = new CommandManager(this);
+
+            _managers = new HashSet<IManager>
+            {
+                Plugins,
+                Multiplayer,
+                Entities,
+                Network,
+                Commands
+            };
+        }
+
+        public HashSetReader<IManager> GetManagers()
+        {
+            return new HashSetReader<IManager>(_managers);
+        }
+
+        public T GetManager<T>() where T : class, IManager
+        {
+            return _managers.FirstOrDefault(m => m is T) as T;
+        }
+
+        public bool AddManager<T>(T manager) where T : class, IManager
+        {
+            if (_managers.Any(x => x is T))
+                return false;
+
+            _managers.Add(manager);
+            return true;
         }
 
         public bool IsOnGameThread()
@@ -91,9 +123,9 @@ namespace Torch
                         if (!e.WaitOne(60000))
                         {
                             Log.Error("Save failed!");
-                            Multiplayer.SendMessage("Save timed out!", author: "Error");
+                            Multiplayer.SendMessage("Save timed out!", "Error");
                         }
-                    });
+                    }).ConfigureAwait(false);
                 }
             }
             else
@@ -233,8 +265,8 @@ namespace Torch
         /// <inheritdoc />
         public virtual void Init(object gameInstance)
         {
-            Network.Init();
-            ChatManager.Instance.Init();
+            foreach (var manager in _managers)
+                manager.Init();
         }
 
         /// <inheritdoc />

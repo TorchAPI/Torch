@@ -19,6 +19,7 @@ using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.World;
 using SteamSDK;
 using Torch.API;
+using Torch.Managers;
 
 namespace Torch.Server
 {
@@ -27,7 +28,8 @@ namespace Torch.Server
     /// </summary>
     public partial class ChatControl : UserControl
     {
-        private ITorchServer _server;
+        private TorchBase _server;
+        private MultiplayerManager _multiplayer;
 
         public ChatControl()
         {
@@ -36,17 +38,9 @@ namespace Torch.Server
 
         public void BindServer(ITorchServer server)
         {
-            _server = server;
-            server.Multiplayer.MessageReceived += Refresh;
-        }
-
-        private void Refresh(IChatMessage chatItem, ref bool sendToOthers)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                ChatItems.ItemsSource = null;
-                ChatItems.ItemsSource = _server.Multiplayer.ChatHistory;
-            });
+            _server = (TorchBase)server;
+            _multiplayer = (MultiplayerManager)server.Multiplayer;
+            DataContext = _multiplayer;
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
@@ -64,11 +58,11 @@ namespace Torch.Server
         {
             //Can't use Message.Text directly because of object ownership in WPF.
             var text = Message.Text;
-            var commands = ((TorchBase)_server).Commands;
+            var commands = _server.Commands;
             string response = null;
             if (commands.IsCommand(text))
             {
-                _server.Multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", text));
+                 _multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", text));
                 _server.InvokeBlocking(() =>
                 {
                     response = commands.HandleCommandFromServer(text);
@@ -79,10 +73,8 @@ namespace Torch.Server
                 _server.Multiplayer.SendMessage(text);
             }
             if (!string.IsNullOrEmpty(response))
-                _server.Multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", response));
+                _multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", response));
             Message.Text = "";
-            var sto = false;
-            Refresh(null, ref sto);
         }
     }
 }

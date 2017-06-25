@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
 using Sandbox.Engine.Utils;
 using VRage.Game;
 using VRage.Game.ModAPI;
@@ -12,6 +13,7 @@ namespace Torch.Server.ViewModels
 {
     public class ConfigDedicatedViewModel : ViewModel
     {
+        private static readonly Logger Log = LogManager.GetLogger("Config");
         private MyConfigDedicated<MyObjectBuilder_SessionSettings> _config;
 
         public ConfigDedicatedViewModel() : this(new MyConfigDedicated<MyObjectBuilder_SessionSettings>(""))
@@ -42,7 +44,12 @@ namespace Torch.Server.ViewModels
 
             _config.Mods.Clear();
             foreach (var mod in Mods.Split(newline, StringSplitOptions.RemoveEmptyEntries))
-                _config.Mods.Add(ulong.Parse(mod));
+            {
+                if (ulong.TryParse(mod, out ulong modId))
+                    _config.Mods.Add(modId);
+                else
+                    Log.Warn($"'{mod}' is not a valid mod ID.");
+            }
 
             _config.Save(path);
         }

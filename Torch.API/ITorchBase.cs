@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Torch.API.Managers;
 using VRage.Game.ModAPI;
 
 namespace Torch.API
@@ -14,7 +15,7 @@ namespace Torch.API
         event Action SessionUnloading;
         event Action SessionUnloaded;
         ITorchConfig Config { get; }
-        IMultiplayer Multiplayer { get; }
+        IMultiplayerManager Multiplayer { get; }
         IPluginManager Plugins { get; }
         Version TorchVersion { get; }
         void Invoke(Action action);
@@ -25,6 +26,7 @@ namespace Torch.API
         void Start();
         void Stop();
         void Init();
+        T GetManager<T>() where T : class, IManager;
     }
 
     public interface ITorchServer : ITorchBase
