@@ -68,8 +68,8 @@ namespace Torch.Server.Views
 
         private void TreeViewItem_OnExpanded(object sender, RoutedEventArgs e)
         {
-            LogManager.GetLogger("EntitiesControl").Debug(nameof(TreeViewItem_OnExpanded));
-            var item = (TreeViewItem)e.Source;
+            //Exact item that was expanded.
+            var item = (TreeViewItem)e.OriginalSource;
             if (item.DataContext is ILazyLoad l)
                 l.Load();
         }

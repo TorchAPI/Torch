@@ -29,7 +29,7 @@ namespace Torch.Server.Views.Entities
 
         private void VoxelMapView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            ((VoxelMapViewModel)e.NewValue).UpdateAttachedGrids();
+            Task.Run(() => ((VoxelMapViewModel)e.NewValue).UpdateAttachedGrids()).Wait();
         }
     }
 }

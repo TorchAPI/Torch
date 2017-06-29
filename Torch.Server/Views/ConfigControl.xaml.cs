@@ -40,6 +40,7 @@ namespace Torch.Server.Views
         public MyConfigDedicated<MyObjectBuilder_SessionSettings> Config { get; set; }
         private ConfigDedicatedViewModel _viewModel;
         private string _configPath;
+        private TorchConfig _torchConfig;
 
         public ConfigControl()
         {
@@ -76,6 +77,8 @@ namespace Torch.Server.Views
 
         public void LoadDedicatedConfig(TorchConfig torchConfig)
         {
+            _torchConfig = torchConfig;
+            DataContext = null;
             MySandboxGame.Config = new MyConfig(MyPerServerSettings.GameNameSafe + ".cfg");
             var path = Path.Combine(torchConfig.InstancePath, "SpaceEngineers-Dedicated.cfg");
 
@@ -90,45 +93,38 @@ namespace Torch.Server.Views
             Config.Load(path);
             _configPath = path;
 
-            var checkpoint = MyLocalCache.LoadCheckpoint(Config.LoadWorld, out ulong _);
-            if (checkpoint == null)
-            {
-                Log.Error("Failed to load checkpoint when loading DS config.");
-            }
-            else
-            {
-                Config.Mods.Clear();
-                foreach (var mod in checkpoint.Mods)
-                    Config.Mods.Add(mod.PublishedFileId);
-            }
-
             _viewModel = new ConfigDedicatedViewModel(Config);
             var worldFolders = Directory.EnumerateDirectories(Path.Combine(torchConfig.InstancePath, "Saves"));
             
             foreach (var f in worldFolders)
                 _viewModel.WorldPaths.Add(f);
 
+            LoadWorldMods();
             DataContext = _viewModel;
         }
 
-        /*
-        private void Banned_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void LoadWorldMods()
         {
-            var editor = new CollectionEditor {Owner = Window.GetWindow(this)};
-            editor.Edit(_viewModel.Banned, "Banned Players");
-        }
+            var sandboxPath = Path.Combine(Config.LoadWorld, "Sandbox.sbc");
 
-        private void Administrators_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            var editor = new CollectionEditor { Owner = Window.GetWindow(this) };
-            editor.Edit(_viewModel.Administrators, "Administrators");
-        }
+            if (!File.Exists(sandboxPath))
+                return;
 
-        private void Mods_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            var editor = new CollectionEditor { Owner = Window.GetWindow(this) };
-            editor.Edit(_viewModel.Mods, "Mods");
-        }*/
+            MyObjectBuilderSerializer.DeserializeXML(sandboxPath, out MyObjectBuilder_Checkpoint checkpoint, out ulong sizeInBytes);
+            if (checkpoint == null)
+            {
+                Log.Error($"Failed to load {Config.LoadWorld}, checkpoint null ({sizeInBytes} bytes, instance {TorchBase.Instance.Config.InstancePath})");
+                return;
+            }
+
+            var sb = new StringBuilder();
+            foreach (var mod in checkpoint.Mods)
+                sb.AppendLine(mod.PublishedFileId.ToString());
+
+            _viewModel.Mods = sb.ToString();
+
+            Log.Info("Loaded mod list from world");
+        }
 
         private void Save_OnClick(object sender, RoutedEventArgs e)
         {
@@ -149,6 +145,16 @@ namespace Torch.Server.Views
         private void NewWorld_OnClick(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("Feature coming soon :)");
+        }
+
+        private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            //The control doesn't update the binding before firing the event.
+            if (e.AddedItems.Count > 0)
+            {
+                Config.LoadWorld = (string)e.AddedItems[0];
+                LoadWorldMods();
+            }
         }
     }
 }

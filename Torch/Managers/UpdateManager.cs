@@ -11,7 +11,7 @@ namespace Torch.Managers
     /// <summary>
     /// Handles updating of the DS and Torch plugins.
     /// </summary>
-    public class UpdateManager
+    public class UpdateManager : IDisposable
     {
         private Timer _updatePollTimer;
 
@@ -23,6 +23,12 @@ namespace Torch.Managers
         private void CheckForUpdates(object state)
         {
             
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            _updatePollTimer?.Dispose();
         }
     }
 }

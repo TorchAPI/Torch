@@ -27,6 +27,7 @@ namespace Torch.Managers
         /// <param name="site"></param>
         /// <param name="stream"></param>
         /// <param name="obj"></param>
+        /// <param name="packet"></param>
         /// <returns></returns>
         public abstract bool Handle(ulong remoteUserId, CallSite site, BitStream stream, object obj, MyPacket packet);
         

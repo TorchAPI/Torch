@@ -83,11 +83,13 @@ namespace Torch.Managers
 
         public IMyPlayer GetPlayerByName(string name)
         {
+            ValidateOnlinePlayersList();
             return _onlinePlayers.FirstOrDefault(x => x.Value.DisplayName == name).Value;
         }
 
         public IMyPlayer GetPlayerBySteamId(ulong steamId)
         {
+            ValidateOnlinePlayersList();
             _onlinePlayers.TryGetValue(new MyPlayer.PlayerId(steamId), out MyPlayer p);
             return p;
         }
@@ -116,12 +118,18 @@ namespace Torch.Managers
             }
         }
 
+        private void ValidateOnlinePlayersList()
+        {
+            if (_onlinePlayers == null)
+                _onlinePlayers = MySession.Static.Players.GetPrivateField<Dictionary<MyPlayer.PlayerId, MyPlayer>>("m_players");
+        }
+
         private void OnSessionLoaded()
         {
             MyMultiplayer.Static.ClientKicked += OnClientKicked;
             MyMultiplayer.Static.ClientLeft += OnClientLeft;
 
-            _onlinePlayers = MySession.Static.Players.GetPrivateField<Dictionary<MyPlayer.PlayerId, MyPlayer>>("m_players");
+            ValidateOnlinePlayersList();
 
             //TODO: Move these with the methods?
             RemoveHandlers();

@@ -19,7 +19,6 @@ namespace Torch.Server
         public TorchService()
         {
             ServiceName = Name;
-            EventLog.Log = "Application";
 
             CanHandlePowerEvent = true;
             CanHandleSessionChangeEvent = false;

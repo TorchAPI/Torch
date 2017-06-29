@@ -18,6 +18,7 @@ using Sandbox.ModAPI;
 using SpaceEngineers.Game;
 using Torch.API;
 using Torch.API.Managers;
+using Torch.API.ModAPI;
 using Torch.Commands;
 using Torch.Managers;
 using VRage.Collections;
@@ -30,6 +31,9 @@ using VRage.Utils;
 
 namespace Torch
 {
+    /// <summary>
+    /// Base class for code shared between the Torch client and server.
+    /// </summary>
     public abstract class TorchBase : ViewModel, ITorchBase, IPlugin
     {
         /// <summary>
@@ -51,10 +55,14 @@ namespace Torch
         public event Action SessionLoaded;
         public event Action SessionUnloading;
         public event Action SessionUnloaded;
-        private HashSet<IManager> _managers;
+        private readonly List<IManager> _managers;
 
         private bool _init;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if a TorchBase instance already exists.</exception>
         protected TorchBase()
         {
             if (Instance != null)
@@ -71,19 +79,15 @@ namespace Torch
             Network = new NetworkManager(this);
             Commands = new CommandManager(this);
 
-            _managers = new HashSet<IManager>
-            {
-                Plugins,
-                Multiplayer,
-                Entities,
-                Network,
-                Commands
-            };
+            _managers = new List<IManager> {Network, Commands, Plugins, Multiplayer, Entities, new ChatManager(this)};
+
+
+            TorchAPI.Instance = this;
         }
 
-        public HashSetReader<IManager> GetManagers()
+        public ListReader<IManager> GetManagers()
         {
-            return new HashSetReader<IManager>(_managers);
+            return new ListReader<IManager>(_managers);
         }
 
         public T GetManager<T>() where T : class, IManager
@@ -120,11 +124,11 @@ namespace Torch
 
                     await Task.Run(() =>
                     {
-                        if (!e.WaitOne(60000))
-                        {
-                            Log.Error("Save failed!");
-                            Multiplayer.SendMessage("Save timed out!", "Error");
-                        }
+                        if (e.WaitOne(60000))
+                            return;
+
+                        Log.Error("Save failed!");
+                        Multiplayer.SendMessage("Save timed out!", "Error");
                     }).ConfigureAwait(false);
                 }
             }
@@ -251,7 +255,7 @@ namespace Torch
 
         public virtual void Start()
         {
-            Plugins.Init();
+            
         }
 
         public virtual void Stop() { }

@@ -5,13 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Sandbox.ModAPI;
 using Torch.API;
+using Torch.API.Managers;
 using Torch.API.ModAPI;
 using Torch.API.ModAPI.Ingame;
 using VRage.Scripting;
 
 namespace Torch.Managers
 {
-    public class ScriptingManager
+    public class ScriptingManager : IManager
     {
         private MyScriptWhitelist _whitelist;
 
@@ -24,7 +25,7 @@ namespace Torch.Managers
 
             using (var whitelist = _whitelist.OpenBatch())
             {
-                //whitelist.AllowNamespaceOfTypes(MyWhitelistTarget.ModApi, typeof(TorchAPIGateway));
+                whitelist.AllowNamespaceOfTypes(MyWhitelistTarget.ModApi, typeof(TorchAPI));
                 whitelist.AllowNamespaceOfTypes(MyWhitelistTarget.Both, typeof(GridExtensions));
             }
 

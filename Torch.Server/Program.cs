@@ -25,10 +25,11 @@ using System.IO.Compression;
 using System.Net;
 using Torch.Server.Managers;
 using VRage.FileSystem;
+using VRageRender;
 
 namespace Torch.Server
 {
-    public static class Program
+    internal static class Program
     {
         private static ITorchServer _server;
         private static Logger _log = LogManager.GetLogger("Torch");
@@ -45,7 +46,7 @@ namespace Torch.Server
             //Ensures that all the files are downloaded in the Torch directory.
             Directory.SetCurrentDirectory(new FileInfo(typeof(Program).Assembly.Location).Directory.ToString());
 
-            IsManualInstall = Directory.GetCurrentDirectory().Contains("DedicatedServer64");
+            IsManualInstall = File.Exists("SpaceEngineersDedicated.exe");
             if (!IsManualInstall)
                 AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
@@ -75,7 +76,7 @@ namespace Torch.Server
 
                 if (!IsManualInstall)
                 {
-                    new ConfigManager().CreateInstance("Instance");
+                    //new ConfigManager().CreateInstance("Instance");
                     options.InstancePath = Path.GetFullPath("Instance");
 
                     _log.Warn("Would you like to enable automatic updates? (Y/n):");
@@ -256,16 +257,16 @@ quit";
             _server = new TorchServer(options);
             _server.Init();
 
+            if (cli.NoGui || cli.Autostart)
+            {
+                new Thread(() => _server.Start()).Start();
+            }
+
             if (!cli.NoGui)
             {
                 var ui = new TorchUI((TorchServer)_server);
                 ui.LoadConfig(options);
                 ui.ShowDialog();
-            }
-
-            if (cli.NoGui || cli.Autostart)
-            {
-                _server.Start();
             }
         }
 
@@ -304,7 +305,8 @@ quit";
                 _cli.WaitForPID = Process.GetCurrentProcess().Id.ToString();
                 Process.Start(exe, _cli.ToString());
             }
-            Environment.Exit(-1);
+            //1627 = Function failed during execution.
+            Environment.Exit(1627);
         }
     }
 }

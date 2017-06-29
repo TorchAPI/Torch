@@ -58,6 +58,9 @@ namespace Torch.Server
         {
             //Can't use Message.Text directly because of object ownership in WPF.
             var text = Message.Text;
+            if (string.IsNullOrEmpty(text))
+                return;
+
             var commands = _server.Commands;
             string response = null;
             if (commands.IsCommand(text))

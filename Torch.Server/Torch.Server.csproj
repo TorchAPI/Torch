@@ -35,6 +35,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
+    <DocumentationFile>bin\x64\Release\Torch.Server.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>Torch.Server.Program</StartupObject>
@@ -218,6 +219,7 @@
     <Compile Include="Views\AddWorkshopItemsDialog.xaml.cs">
       <DependentUpon>AddWorkshopItemsDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\Converters\InverseBooleanConverter.cs" />
     <Compile Include="Views\Converters\Vector3DConverter.cs" />
     <Compile Include="Views\Entities\Blocks\BlockView.xaml.cs">
       <DependentUpon>BlockView.xaml</DependentUpon>

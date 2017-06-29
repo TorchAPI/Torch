@@ -17,7 +17,7 @@ namespace Torch.Server.ViewModels
         public string BlockType { get => _blockType; set { _blockType = value; OnPropertyChanged(); } }
         public short Limit { get => _limit; set { _limit = value; OnPropertyChanged(); } }
 
-        public CommandBinding Delete { get; } = new CommandBinding(new DeleteCommand());
+        //public CommandBinding Delete { get; } = new CommandBinding(new DeleteCommand());
 
         public BlockLimitViewModel(SessionSettingsViewModel sessionSettings, string blockType, short limit)
         {
@@ -26,6 +26,7 @@ namespace Torch.Server.ViewModels
             _limit = limit;
         }
 
+        /* TODO: figure out how WPF commands work
         public class DeleteCommand : ICommand
         {
             /// <inheritdoc />
@@ -42,6 +43,6 @@ namespace Torch.Server.ViewModels
 
             /// <inheritdoc />
             public event EventHandler CanExecuteChanged;
-        }
+        }*/
     }
 }

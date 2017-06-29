@@ -3,6 +3,7 @@ using System.Linq;
 using Sandbox.Game.Entities;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
+using System.Threading.Tasks;
 
 namespace Torch.Server.ViewModels.Entities
 {
@@ -10,13 +11,13 @@ namespace Torch.Server.ViewModels.Entities
     {
         private MyVoxelBase Voxel => (MyVoxelBase)Entity;
 
-        public override string Name => string.IsNullOrEmpty(Voxel.StorageName) ? "Unnamed" : Voxel.StorageName;
+        public override string Name => string.IsNullOrEmpty(Voxel.StorageName) ? "UnnamedProcedural" : Voxel.StorageName;
 
         public override bool CanStop => false;
 
         public MTObservableCollection<GridViewModel> AttachedGrids { get; } = new MTObservableCollection<GridViewModel>();
 
-        public void UpdateAttachedGrids()
+        public async Task UpdateAttachedGrids()
         {
             //TODO: fix
             return;
@@ -24,7 +25,7 @@ namespace Torch.Server.ViewModels.Entities
             AttachedGrids.Clear();
             var box = Entity.WorldAABB;
             var entities = new List<MyEntity>();
-            MyGamePruningStructure.GetTopMostEntitiesInBox(ref box, entities, MyEntityQueryType.Static);
+            await TorchBase.Instance.InvokeAsync(() => MyEntities.GetTopMostEntitiesInBox(ref box, entities)).ConfigureAwait(false);
             foreach (var entity in entities.Where(e => e is IMyCubeGrid))
             {
                 var gridModel = Tree.Grids.FirstOrDefault(g => g.Entity.EntityId == entity.EntityId);

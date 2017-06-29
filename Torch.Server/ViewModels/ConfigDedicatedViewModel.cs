@@ -57,9 +57,12 @@ namespace Torch.Server.ViewModels
         public SessionSettingsViewModel SessionSettings { get; }
 
         public ObservableCollection<string> WorldPaths { get; } = new ObservableCollection<string>();
-        public string Administrators { get; set; }
-        public string Banned { get; set; }
-        public string Mods { get; set; }
+        private string _administrators;
+        public string Administrators { get => _administrators; set { _administrators = value; OnPropertyChanged(); } }
+        private string _banned;
+        public string Banned { get => _banned; set { _banned = value; OnPropertyChanged(); } }
+        private string _mods;
+        public string Mods { get => _mods; set { _mods = value; OnPropertyChanged(); } }
 
         public int AsteroidAmount
         {

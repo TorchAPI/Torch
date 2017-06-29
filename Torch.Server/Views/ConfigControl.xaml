@@ -14,7 +14,7 @@
         <DockPanel DockPanel.Dock="Top">
             <Label Content="World:" DockPanel.Dock="Left" />
             <Button Content="New World" Margin="3" DockPanel.Dock="Right" Click="NewWorld_OnClick"/>
-            <ComboBox Text="{Binding LoadWorld}" ItemsSource="{Binding WorldPaths}" IsEditable="True" Margin="3" />
+            <ComboBox Text="{Binding LoadWorld}" ItemsSource="{Binding WorldPaths}" IsEditable="True" Margin="3" SelectionChanged="Selector_OnSelectionChanged"/>
         </DockPanel>
         <DockPanel DockPanel.Dock="Bottom">
             <StackPanel DockPanel.Dock="Left">

@@ -30,6 +30,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>bin\x64\Release\Torch.API.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HavokWrapper, Version=1.0.6278.22649, Culture=neutral, processorArchitecture=AMD64">
@@ -168,10 +169,10 @@
     <Compile Include="ITorchBase.cs" />
     <Compile Include="Plugins\IWpfPlugin.cs" />
     <Compile Include="ModAPI\Ingame\GridExtensions.cs" />
-    <Compile Include="ModAPI\TorchAPIGateway.cs" />
     <Compile Include="Plugins\PluginAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerState.cs" />
+    <Compile Include="ModAPI\TorchAPI.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
