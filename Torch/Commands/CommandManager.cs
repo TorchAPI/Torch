@@ -76,6 +76,8 @@ namespace Torch.Commands
         {
             var cmdText = new string(message.Skip(1).ToArray());
             var command = Commands.GetCommand(cmdText, out string argText);
+            if (command == null)
+                return null;
             var cmdPath = string.Join(".", command.Path);
 
             var splitArgs = Regex.Matches(argText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();

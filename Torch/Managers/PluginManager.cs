@@ -129,7 +129,7 @@ namespace Torch.Managers
                                 throw new TypeLoadException($"Plugin '{type.FullName}' is missing a {nameof(PluginAttribute)}");
 
                             _log.Info($"Loading plugin {plugin.Name} ({plugin.Version})");
-                            plugin.StoragePath = new FileInfo(asm.Location).Directory.FullName;
+                            plugin.StoragePath = _torch.Config.InstancePath;
                             Plugins.Add(plugin);
 
                             commands.RegisterPluginCommands(plugin);

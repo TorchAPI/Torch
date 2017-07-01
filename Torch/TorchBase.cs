@@ -231,13 +231,39 @@ namespace Torch
             Log.Info($"Executing assembly: {Assembly.GetEntryAssembly().FullName}");
             Log.Info($"Executing directory: {AppDomain.CurrentDomain.BaseDirectory}");
 
-            MySession.OnLoading += () => SessionLoading?.Invoke();
-            MySession.AfterLoading += () => SessionLoaded?.Invoke();
-            MySession.OnUnloading += () => SessionUnloading?.Invoke();
-            MySession.OnUnloaded += () => SessionUnloaded?.Invoke();
+            MySession.OnLoading += OnSessionLoading;
+            MySession.AfterLoading += OnSessionLoaded;
+            MySession.OnUnloading += OnSessionUnloading;
+            MySession.OnUnloaded += OnSessionUnloaded;
             RegisterVRagePlugin();
 
             _init = true;
+        }
+
+        private void OnSessionLoading()
+        {
+            Log.Debug("Session loading");
+            foreach (var manager in _managers)
+                manager.Init();
+            SessionLoading?.Invoke();
+        }
+
+        private void OnSessionLoaded()
+        {
+            Log.Debug("Session loaded");
+            SessionLoaded?.Invoke();
+        }
+
+        private void OnSessionUnloading()
+        {
+            Log.Debug("Session unloading");
+            SessionUnloading?.Invoke();
+        }
+
+        private void OnSessionUnloaded()
+        {
+            Log.Debug("Session unloaded");
+            SessionUnloaded?.Invoke();
         }
 
         /// <summary>
@@ -269,8 +295,7 @@ namespace Torch
         /// <inheritdoc />
         public virtual void Init(object gameInstance)
         {
-            foreach (var manager in _managers)
-                manager.Init();
+
         }
 
         /// <inheritdoc />

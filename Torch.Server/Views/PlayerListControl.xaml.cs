@@ -21,6 +21,7 @@ using Sandbox.ModAPI;
 using SteamSDK;
 using Torch.API;
 using Torch.Managers;
+using Torch.ViewModels;
 using VRage.Game.ModAPI;
 
 namespace Torch.Server
@@ -45,20 +46,14 @@ namespace Torch.Server
 
         private void KickButton_Click(object sender, RoutedEventArgs e)
         {
-            var player = PlayerList.SelectedItem as IMyPlayer;
-            if (player != null)
-            {
-                _server.Multiplayer.KickPlayer(player.SteamUserId);
-            }
+            var player = (KeyValuePair<ulong, PlayerViewModel>)PlayerList.SelectedItem;
+            _server.Multiplayer.KickPlayer(player.Key);
         }
 
         private void BanButton_Click(object sender, RoutedEventArgs e)
         {
-            var player = PlayerList.SelectedItem as IMyPlayer;
-            if (player != null)
-            {
-                _server.Multiplayer.BanPlayer(player.SteamUserId);
-            }
+            var player = (KeyValuePair<ulong, PlayerViewModel>) PlayerList.SelectedItem;
+            _server.Multiplayer.BanPlayer(player.Key);
         }
     }
 }

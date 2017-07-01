@@ -145,6 +145,7 @@
   <ItemGroup>
     <Compile Include="ChatMessage.cs" />
     <Compile Include="Collections\KeyTree.cs" />
+    <Compile Include="Collections\ObservableDictionary.cs" />
     <Compile Include="Collections\RollingAverage.cs" />
     <Compile Include="CommandLine.cs" />
     <Compile Include="Commands\CategoryAttribute.cs" />

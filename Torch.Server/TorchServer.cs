@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Threading;
 using Microsoft.Xml.Serialization.GeneratedAssembly;
+using Sandbox.Engine.Analytics;
 using Sandbox.Game.Multiplayer;
 using Sandbox.ModAPI;
 using SteamSDK;
@@ -35,9 +36,11 @@ namespace Torch.Server
         public TimeSpan ElapsedPlayTime { get => _elapsedPlayTime; set { _elapsedPlayTime = value; OnPropertyChanged(); } }
         public Thread GameThread { get; private set; }
         public ServerState State { get => _state; private set { _state = value; OnPropertyChanged(); } }
+        public bool IsRunning { get => _isRunning; set { _isRunning = value; OnPropertyChanged(); } }
         public string InstanceName => Config?.InstanceName;
         public string InstancePath => Config?.InstancePath;
 
+        private bool _isRunning;
         private ServerState _state;
         private TimeSpan _elapsedPlayTime;
         private float _simRatio;
@@ -47,6 +50,7 @@ namespace Torch.Server
         public TorchServer(TorchConfig config = null)
         {
             Config = config ?? new TorchConfig();
+            MyFakes.ENABLE_INFINARIO = false;
         }
 
         public override void Init()
@@ -55,7 +59,6 @@ namespace Torch.Server
 
             Log.Info($"Init server '{Config.InstanceName}' at '{Config.InstancePath}'");
 
-            MyFakes.ENABLE_INFINARIO = false;
             MyPerGameSettings.SendLogToKeen = false;
             MyPerServerSettings.GameName = MyPerGameSettings.GameName;
             MyPerServerSettings.GameNameSafe = MyPerGameSettings.GameNameSafe;
@@ -171,10 +174,10 @@ namespace Torch.Server
             SimulationRatio = Sync.ServerSimulationRatio;
             ElapsedPlayTime = MySession.Static?.ElapsedPlayTime ?? default(TimeSpan);
 
-            if (_watchdog == null)
+            if (_watchdog == null && Instance.Config.TickTimeout > 0)
             {
                 Log.Info("Starting server watchdog.");
-                _watchdog = new Timer(CheckServerResponding, this, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+                _watchdog = new Timer(CheckServerResponding, this, TimeSpan.Zero, TimeSpan.FromSeconds(Instance.Config.TickTimeout));
             }
         }
 
@@ -182,12 +185,12 @@ namespace Torch.Server
         {
             var mre = new ManualResetEvent(false);
             ((TorchServer)state).Invoke(() => mre.Set());
-            if (!mre.WaitOne(TimeSpan.FromSeconds(30)))
+            if (!mre.WaitOne(TimeSpan.FromSeconds(Instance.Config.TickTimeout)))
             {
                 var mainThread = MySandboxGame.Static.UpdateThread;
                 mainThread.Suspend();
                 var stackTrace = new StackTrace(mainThread, true);
-                throw new TimeoutException($"Server watchdog detected that the server was frozen for at least 30 seconds.\n{stackTrace}");
+                throw new TimeoutException($"Server watchdog detected that the server was frozen for at least {Instance.Config.TickTimeout} seconds.\n{stackTrace}");
             }
 
             Log.Debug("Server watchdog responded");

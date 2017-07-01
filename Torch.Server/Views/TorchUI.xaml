@@ -42,8 +42,8 @@
             </TabItem>
             <TabItem Header="Chat/Players">
                 <DockPanel>
-                    <local:PlayerListControl x:Name="PlayerList" DockPanel.Dock="Right" Width="250" IsEnabled="False" />
-                    <local:ChatControl x:Name="Chat" IsEnabled="False" />
+                    <local:PlayerListControl x:Name="PlayerList" DockPanel.Dock="Right" Width="250" />
+                    <local:ChatControl x:Name="Chat" />
                 </DockPanel>
             </TabItem>
             <TabItem Header="Entity Manager">

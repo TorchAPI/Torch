@@ -7,6 +7,7 @@
         bool RedownloadPlugins { get; set; }
         bool AutomaticUpdates { get; set; }
         bool RestartOnCrash { get; set; }
+        int TickTimeout { get; set; }
 
         bool Save(string path = null);
     }

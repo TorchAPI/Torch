@@ -14,6 +14,7 @@ namespace Torch.Commands
     public class TorchCommands : CommandModule
     {
         [Command("help", "Displays help for a command")]
+        [Permission(MyPromoteLevel.None)]
         public void Help()
         {
             var commandManager = ((TorchBase)Context.Torch).Commands;
@@ -45,6 +46,7 @@ namespace Torch.Commands
         }
 
         [Command("ver", "Shows the running Torch version.")]
+        [Permission(MyPromoteLevel.None)]
         public void Version()
         {
             var ver = Context.Torch.TorchVersion;
@@ -52,6 +54,7 @@ namespace Torch.Commands
         }
 
         [Command("plugins", "Lists the currently loaded plugins.")]
+        [Permission(MyPromoteLevel.None)]
         public void Plugins()
         {
             var plugins = Context.Torch.Plugins.Select(p => p.Name);
@@ -59,7 +62,6 @@ namespace Torch.Commands
         }
 
         [Command("stop", "Stops the server.")]
-        [Permission(MyPromoteLevel.Admin)]
         public void Stop()
         {
             Context.Respond("Stopping server.");

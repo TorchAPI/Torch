@@ -19,10 +19,10 @@ using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
-using SharpDX.Toolkit.Collections;
 using SteamSDK;
 using Torch.API;
 using Torch.API.Managers;
+using Torch.Collections;
 using Torch.Commands;
 using Torch.ViewModels;
 using VRage.Game;
@@ -126,6 +126,7 @@ namespace Torch.Managers
 
         private void OnSessionLoaded()
         {
+            _log.Info("Initializing Steam auth");
             MyMultiplayer.Static.ClientKicked += OnClientKicked;
             MyMultiplayer.Static.ClientLeft += OnClientLeft;
 
@@ -137,6 +138,7 @@ namespace Torch.Managers
             SteamServerAPI.Instance.GameServer.UserGroupStatus += UserGroupStatus;
             _members = (List<ulong>)typeof(MyDedicatedServerBase).GetField("m_members", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(MyMultiplayer.Static);
             _waitingForGroup = (HashSet<ulong>)typeof(MyDedicatedServerBase).GetField("m_waitingForGroup", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(MyMultiplayer.Static);
+            _log.Info("Steam auth initialized");
         }
 
         private void OnClientKicked(ulong steamId)
@@ -146,9 +148,11 @@ namespace Torch.Managers
 
         private void OnClientLeft(ulong steamId, ChatMemberStateChangeEnum stateChange)
         {
-            _log.Info($"{GetSteamUsername(steamId)} disconnected ({(ConnectionState)stateChange}).");
             Players.TryGetValue(steamId, out PlayerViewModel vm);
-            PlayerLeft?.Invoke(vm ?? new PlayerViewModel(steamId));
+            if (vm == null)
+                vm = new PlayerViewModel(steamId);
+            _log.Info($"{vm.Name} ({vm.SteamId}) {(ConnectionState)stateChange}.");
+            PlayerLeft?.Invoke(vm);
             Players.Remove(steamId);
         }
 
@@ -174,6 +178,7 @@ namespace Torch.Managers
                     if (handle.Method.Name == "GameServer_ValidateAuthTicketResponse")
                     {
                         SteamServerAPI.Instance.GameServer.ValidateAuthTicketResponse -= handle as ValidateAuthTicketResponse;
+                        _log.Debug("Removed GameServer_ValidateAuthTicketResponse");
                     }
                 }
             }
@@ -186,6 +191,7 @@ namespace Torch.Managers
                     if (handle.Method.Name == "GameServer_UserGroupStatus")
                     {
                         SteamServerAPI.Instance.GameServer.UserGroupStatus -= handle as UserGroupStatus;
+                        _log.Debug("Removed GameServer_UserGroupStatus");
                     }
                 }
             }
@@ -299,7 +305,8 @@ namespace Torch.Managers
         private void UserAccepted(ulong steamId)
         {
             typeof(MyDedicatedServerBase).GetMethod("UserAccepted", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(MyMultiplayer.Static, new object[] {steamId});
-            var vm = new PlayerViewModel(steamId);
+            var vm = new PlayerViewModel(steamId) {State = ConnectionState.Connected};
+            _log.Info($"Player {vm.Name} joined ({vm.SteamId})");
             Players.Add(steamId, vm);
             PlayerJoined?.Invoke(vm);
         }

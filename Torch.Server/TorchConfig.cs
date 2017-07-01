@@ -15,15 +15,19 @@ namespace Torch.Server
         public string InstanceName { get; set; }
 #warning World Path not implemented
         public string WorldPath { get; set; }
-        //public int Autosave { get; set; }
-        //public bool AutoRestart { get; set; }
-        //public bool LogChat { get; set; }
         public bool AutomaticUpdates { get; set; } = true;
         public bool RedownloadPlugins { get; set; }
         public bool RestartOnCrash { get; set; }
+        /// <summary>
+        /// How long in seconds to wait before automatically resetting a frozen server.
+        /// </summary>
+        public int TickTimeout { get; set; } = 60;
+        /// <summary>
+        /// A list of plugins to install or update. TODO
+        /// </summary>
         public List<string> Plugins { get; set; } = new List<string>();
-        public Point WindowSize { get; set; } = new Point(800, 600);
-        public Point WindowPosition { get; set; } = new Point();
+        internal Point WindowSize { get; set; } = new Point(800, 600);
+        internal Point WindowPosition { get; set; } = new Point();
         [NonSerialized]
         private string _path;
 

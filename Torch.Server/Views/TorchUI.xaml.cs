@@ -65,8 +65,6 @@ namespace Torch.Server
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
             _config.Save();
-            Chat.IsEnabled = true;
-            PlayerList.IsEnabled = true;
             ((Button) sender).IsEnabled = false;
             BtnStop.IsEnabled = true;
             ConfigControl.SaveConfig();
@@ -76,8 +74,6 @@ namespace Torch.Server
         private void BtnStop_Click(object sender, RoutedEventArgs e)
         {
             _config.Save();
-            Chat.IsEnabled = false;
-            PlayerList.IsEnabled = false;
             ((Button) sender).IsEnabled = false;
             //HACK: Uncomment when restarting is possible.
             //BtnStart.IsEnabled = true;

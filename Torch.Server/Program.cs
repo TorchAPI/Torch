@@ -291,6 +291,8 @@ quit";
         {
             var ex = (Exception)e.ExceptionObject;
             _log.Fatal(ex);
+            Console.WriteLine("Exiting in 5 seconds.");
+            Thread.Sleep(5000);
             if (_restartOnCrash)
             {
                 /* Throws an exception somehow and I'm too lazy to debug it.

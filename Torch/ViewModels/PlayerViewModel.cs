@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Sandbox.Engine.Multiplayer;
 using SteamSDK;
 using Torch.API;
+using VRage.Replication;
 
 namespace Torch.ViewModels
 {
@@ -18,7 +20,7 @@ namespace Torch.ViewModels
         public PlayerViewModel(ulong steamId, string name = null)
         {
             SteamId = steamId;
-            Name = name ?? SteamAPI.Instance?.Friends?.GetPersonaName(steamId) ?? "???";
+            Name = name ?? ((MyDedicatedServerBase)MyMultiplayerMinimalBase.Instance).GetMemberName(steamId);
         }
     }
 }

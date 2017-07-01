@@ -41,7 +41,7 @@ namespace Torch.Server.Views
             {
                 Entities.CurrentEntity = vm;
                 if (e.NewValue is GridViewModel gvm)
-                    EditorFrame.Content = new Entities.GridView { DataContext = gvm};
+                    EditorFrame.Content = new Entities.GridView {DataContext = gvm};
                 if (e.NewValue is BlockViewModel bvm)
                     EditorFrame.Content = new BlockView {DataContext = bvm};
                 if (e.NewValue is VoxelMapViewModel vvm)
