@@ -67,5 +67,16 @@ namespace Torch.Commands
             Context.Respond("Stopping server.");
             Context.Torch.Stop();
         }
+        
+        /// <summary>
+        /// Initializes a save of the game.
+        /// Caller id defaults to 0 in the case of triggering the chat command from server.
+        /// </summary>
+        [Command("save", "Saves the game.")]
+        public void Save()
+        {
+            Context.Respond("Saving game.");
+            Context.Torch.Save(Context.Player?.IdentityId ?? 0);
+        }
     }
 }

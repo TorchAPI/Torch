@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -74,6 +74,12 @@ namespace Torch.API
         /// Stop the Torch instance.
         /// </summary>
         void Stop();
+      
+        /// <summary>
+        /// Initializes a save of the game.
+        /// </summary>
+        /// <param name="callerId">Id of the player who initiated the save.</param>
+        void Save(long callerId);
 
         /// <summary>
         /// Initialize the Torch instance.

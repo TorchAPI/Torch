@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -123,10 +123,24 @@ namespace Torch
             return true;
         }
 
-        public async Task SaveGameAsync()
+        public bool IsOnGameThread()
+        {
+            return Thread.CurrentThread.ManagedThreadId == MySandboxGame.Static.UpdateThread.ManagedThreadId;
+        }
+
+        public async Task SaveGameAsync(Action<SaveGameStatus> callback)
         {
             Log.Info("Saving game");
-            if (MySandboxGame.IsGameReady && !MyAsyncSaving.InProgress && Sync.IsServer && !(MySession.Static.LocalCharacter?.IsDead ?? true))
+
+            if (!MySandboxGame.IsGameReady)
+            {
+                callback?.Invoke(SaveGameStatus.GameNotReady);
+            }
+            else if(MyAsyncSaving.InProgress)
+            {
+                callback?.Invoke(SaveGameStatus.SaveInProgress);
+            }
+            else
             {
                 using (var e = new AutoResetEvent(false))
                 {
@@ -139,16 +153,14 @@ namespace Torch
                     await Task.Run(() =>
                     {
                         if (e.WaitOne(60000))
+                        {
+                            callback?.Invoke(SaveGameStatus.Success);
                             return;
-
-                        Log.Error("Save failed!");
-                        Multiplayer.SendMessage("Save timed out!", "Error");
+                        }
+                        
+                        callback?.Invoke(SaveGameStatus.TimedOut);
                     }).ConfigureAwait(false);
                 }
-            }
-            else
-            {
-                Log.Error("Cannot save");
             }
         }
 
@@ -293,7 +305,13 @@ namespace Torch
             pluginList.Add(this);
         }
 
-        /// <inheritdoc />
+        /// <inheritdoc/>
+        public virtual void Save(long callerId)
+        {
+
+        }
+
+        /// <inheritdoc 
         public virtual void Start()
         {
             
