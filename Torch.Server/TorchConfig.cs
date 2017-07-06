@@ -7,25 +7,54 @@ using NLog;
 
 namespace Torch.Server
 {
-    public class TorchConfig : ITorchConfig
+    public class TorchConfig : CommandLine, ITorchConfig
     {
         private static Logger _log = LogManager.GetLogger("Config");
 
+        /// <inheritdoc />
+        [Arg("instancepath", "Server data folder where saves and mods are stored.")]
         public string InstancePath { get; set; }
-        public string InstanceName { get; set; }
-#warning World Path not implemented
-        public string WorldPath { get; set; }
-        public bool AutomaticUpdates { get; set; } = true;
-        public bool RedownloadPlugins { get; set; }
+
+        /// <inheritdoc />
+        [XmlIgnore, Arg("noupdate", "Disable automatically downloading game and plugin updates.")]
+        public bool NoUpdate { get => false; set => GetTorchUpdates = GetPluginUpdates = !value; }
+
+        /// <inheritdoc />
+        [XmlIgnore, Arg("update", "Manually check for and install updates.")]
+        public bool Update { get; set; }
+
+        /// <inheritdoc />
+        [XmlIgnore, Arg("autostart", "Start the server immediately.")]
+        public bool Autostart { get; set; }
+
+        /// <inheritdoc />
+        [Arg("restartoncrash", "Automatically restart the server if it crashes.")]
         public bool RestartOnCrash { get; set; }
-        /// <summary>
-        /// How long in seconds to wait before automatically resetting a frozen server.
-        /// </summary>
+
+        /// <inheritdoc />
+        [XmlIgnore, Arg("nogui", "Do not show the Torch UI.")]
+        public bool NoGui { get; set; }
+
+        /// <inheritdoc />
+        [XmlIgnore, Arg("waitforpid", "Makes Torch wait for another process to exit.")]
+        public string WaitForPID { get; set; }
+
+        /// <inheritdoc />
+        [Arg("instancename", "The name of the Torch instance.")]
+        public string InstanceName { get; set; }
+
+        /// <inheritdoc />
+        public bool GetTorchUpdates { get; set; } = true;
+
+        /// <inheritdoc />
+        public bool GetPluginUpdates { get; set; } = true;
+
+        /// <inheritdoc />
         public int TickTimeout { get; set; } = 60;
-        /// <summary>
-        /// A list of plugins to install or update. TODO
-        /// </summary>
+
+        /// <inheritdoc />
         public List<string> Plugins { get; set; } = new List<string>();
+
         internal Point WindowSize { get; set; } = new Point(800, 600);
         internal Point WindowPosition { get; set; } = new Point();
         [NonSerialized]

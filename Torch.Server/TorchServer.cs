@@ -16,6 +16,7 @@ using Sandbox.Game.Multiplayer;
 using Sandbox.ModAPI;
 using SteamSDK;
 using Torch.API;
+using Torch.Managers;
 using VRage.Dedicated;
 using VRage.FileSystem;
 using VRage.Game;
@@ -37,7 +38,9 @@ namespace Torch.Server
         public Thread GameThread { get; private set; }
         public ServerState State { get => _state; private set { _state = value; OnPropertyChanged(); } }
         public bool IsRunning { get => _isRunning; set { _isRunning = value; OnPropertyChanged(); } }
+        /// <inheritdoc />
         public string InstanceName => Config?.InstanceName;
+        /// <inheritdoc />
         public string InstancePath => Config?.InstancePath;
 
         private bool _isRunning;
@@ -53,6 +56,7 @@ namespace Torch.Server
             MyFakes.ENABLE_INFINARIO = false;
         }
 
+        /// <inheritdoc />
         public override void Init()
         {
             base.Init();
@@ -81,7 +85,7 @@ namespace Torch.Server
             RuntimeHelpers.RunClassConstructor(typeof(MyObjectBuilder_Base).TypeHandle);
         }
 
-        public void InvokeBeforeRun()
+        private void InvokeBeforeRun()
         {
             
             var contentPath = "Content";
@@ -91,16 +95,7 @@ namespace Torch.Server
                 Log.Debug("MyFileSystem already initialized");
             else
             {
-                if (Program.IsManualInstall)
-                {
-                    var rootPath = new FileInfo(MyFileSystem.ExePath).Directory.FullName;
-                    contentPath = Path.Combine(rootPath, "Content");
-                }
-                else
-                {
-                    MyFileSystem.ExePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DedicatedServer64");
-                }
-
+                MyFileSystem.ExePath = Path.Combine(GetManager<FilesystemManager>().TorchDirectory, "DedicatedServer64");
                 MyFileSystem.Init(contentPath, InstancePath);
             }
 
@@ -132,14 +127,13 @@ namespace Torch.Server
             MySandboxGame.Config.Load();
         }
 
-        /// <summary>
-        /// Start server on the current thread.
-        /// </summary>
+        /// <inheritdoc />
         public override void Start()
         {
             if (State != ServerState.Stopped)
                 return;
 
+            IsRunning = true;
             GameThread = Thread.CurrentThread;
             Config.Save();
             State = ServerState.Starting;
@@ -196,9 +190,7 @@ namespace Torch.Server
             Log.Debug("Server watchdog responded");
         }
 
-        /// <summary>
-        /// Stop the server.
-        /// </summary>
+        /// <inheritdoc />
         public override void Stop()
         {
             if (State == ServerState.Stopped)
@@ -220,6 +212,12 @@ namespace Torch.Server
             Log.Info("Server stopped.");
             _stopHandle.Set();
             State = ServerState.Stopped;
+            IsRunning = false;
+        }
+
+        public void Restart()
+        {
+            
         }
     }
 }

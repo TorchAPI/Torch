@@ -9,6 +9,7 @@ using Sandbox;
 using Sandbox.Engine.Platform;
 using Sandbox.Engine.Utils;
 using Sandbox.Game;
+using Sandbox.ModAPI;
 using SpaceEngineers.Game;
 using Torch.API;
 using VRage.FileSystem;

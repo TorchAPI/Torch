@@ -65,18 +65,12 @@ namespace Torch.Server
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
             _config.Save();
-            ((Button) sender).IsEnabled = false;
-            BtnStop.IsEnabled = true;
             ConfigControl.SaveConfig();
             new Thread(_server.Start).Start();
         }
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
         {
-            _config.Save();
-            ((Button) sender).IsEnabled = false;
-            //HACK: Uncomment when restarting is possible.
-            //BtnStart.IsEnabled = true;
             _server.Stop();
         }
 

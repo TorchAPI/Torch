@@ -33,20 +33,21 @@ using VRage.Utils;
 
 namespace Torch.Managers
 {
-    /// <summary>
-    /// Provides a proxy to the game's multiplayer-related functions.
-    /// </summary>
+    /// <inheritdoc />
     public class MultiplayerManager : Manager, IMultiplayerManager
     {
+        /// <inheritdoc />
         public event Action<IPlayer> PlayerJoined;
+        /// <inheritdoc />
         public event Action<IPlayer> PlayerLeft;
+        /// <inheritdoc />
         public event MessageReceivedDel MessageReceived;
 
         public MTObservableCollection<IChatMessage> ChatHistory { get; } = new MTObservableCollection<IChatMessage>();
         public ObservableDictionary<ulong, PlayerViewModel> Players { get; } = new ObservableDictionary<ulong, PlayerViewModel>();
         public IMyPlayer LocalPlayer => MySession.Static.LocalHumanPlayer;
-        private static readonly Logger _log = LogManager.GetLogger(nameof(MultiplayerManager));
-        private static readonly Logger _chatLog = LogManager.GetLogger("Chat");
+        private static readonly Logger Log = LogManager.GetLogger(nameof(MultiplayerManager));
+        private static readonly Logger ChatLog = LogManager.GetLogger("Chat");
         private Dictionary<MyPlayer.PlayerId, MyPlayer> _onlinePlayers;
 
         internal MultiplayerManager(ITorchBase torch) : base(torch)
@@ -65,12 +66,14 @@ namespace Torch.Managers
         {
             var message = ChatMessage.FromChatMsg(msg);
             ChatHistory.Add(message);
-            _chatLog.Info($"{message.Name}: {message.Message}");
+            ChatLog.Info($"{message.Name}: {message.Message}");
             MessageReceived?.Invoke(message, ref sendToOthers);
         }
 
+        /// <inheritdoc />
         public void KickPlayer(ulong steamId) => Torch.Invoke(() => MyMultiplayer.Static.KickClient(steamId));
 
+        /// <inheritdoc />
         public void BanPlayer(ulong steamId, bool banned = true)
         {
             Torch.Invoke(() =>
@@ -81,12 +84,14 @@ namespace Torch.Managers
             });
         }
 
+        /// <inheritdoc />
         public IMyPlayer GetPlayerByName(string name)
         {
             ValidateOnlinePlayersList();
             return _onlinePlayers.FirstOrDefault(x => x.Value.DisplayName == name).Value;
         }
 
+        /// <inheritdoc />
         public IMyPlayer GetPlayerBySteamId(ulong steamId)
         {
             ValidateOnlinePlayersList();
@@ -94,14 +99,13 @@ namespace Torch.Managers
             return p;
         }
 
+        /// <inheritdoc />
         public string GetSteamUsername(ulong steamId)
         {
             return MyMultiplayer.Static.GetMemberName(steamId);
         }
 
-        /// <summary>
-        /// Send a message in chat.
-        /// </summary>
+        /// <inheritdoc />
         public void SendMessage(string message, string author = "Server", long playerId = 0, string font = MyFontEnum.Red)
         {
             ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", message));
@@ -126,7 +130,7 @@ namespace Torch.Managers
 
         private void OnSessionLoaded()
         {
-            _log.Info("Initializing Steam auth");
+            Log.Info("Initializing Steam auth");
             MyMultiplayer.Static.ClientKicked += OnClientKicked;
             MyMultiplayer.Static.ClientLeft += OnClientLeft;
 
@@ -138,7 +142,7 @@ namespace Torch.Managers
             SteamServerAPI.Instance.GameServer.UserGroupStatus += UserGroupStatus;
             _members = (List<ulong>)typeof(MyDedicatedServerBase).GetField("m_members", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(MyMultiplayer.Static);
             _waitingForGroup = (HashSet<ulong>)typeof(MyDedicatedServerBase).GetField("m_waitingForGroup", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(MyMultiplayer.Static);
-            _log.Info("Steam auth initialized");
+            Log.Info("Steam auth initialized");
         }
 
         private void OnClientKicked(ulong steamId)
@@ -151,7 +155,7 @@ namespace Torch.Managers
             Players.TryGetValue(steamId, out PlayerViewModel vm);
             if (vm == null)
                 vm = new PlayerViewModel(steamId);
-            _log.Info($"{vm.Name} ({vm.SteamId}) {(ConnectionState)stateChange}.");
+            Log.Info($"{vm.Name} ({vm.SteamId}) {(ConnectionState)stateChange}.");
             PlayerLeft?.Invoke(vm);
             Players.Remove(steamId);
         }
@@ -178,7 +182,7 @@ namespace Torch.Managers
                     if (handle.Method.Name == "GameServer_ValidateAuthTicketResponse")
                     {
                         SteamServerAPI.Instance.GameServer.ValidateAuthTicketResponse -= handle as ValidateAuthTicketResponse;
-                        _log.Debug("Removed GameServer_ValidateAuthTicketResponse");
+                        Log.Debug("Removed GameServer_ValidateAuthTicketResponse");
                     }
                 }
             }
@@ -191,7 +195,7 @@ namespace Torch.Managers
                     if (handle.Method.Name == "GameServer_UserGroupStatus")
                     {
                         SteamServerAPI.Instance.GameServer.UserGroupStatus -= handle as UserGroupStatus;
-                        _log.Debug("Removed GameServer_UserGroupStatus");
+                        Log.Debug("Removed GameServer_UserGroupStatus");
                     }
                 }
             }
@@ -200,16 +204,16 @@ namespace Torch.Managers
         //Largely copied from SE
         private void ValidateAuthTicketResponse(ulong steamID, AuthSessionResponseEnum response, ulong ownerSteamID)
         {
-            _log.Info($"Server ValidateAuthTicketResponse ({response}), owner: {ownerSteamID}");
+            Log.Info($"Server ValidateAuthTicketResponse ({response}), owner: {ownerSteamID}");
 
             if (steamID != ownerSteamID)
             {
-                _log.Info($"User {steamID} is using a game owned by {ownerSteamID}. Tracking...");
+                Log.Info($"User {steamID} is using a game owned by {ownerSteamID}. Tracking...");
                 _gameOwnerIds[steamID] = ownerSteamID;
                 
                 if (MySandboxGame.ConfigDedicated.Banned.Contains(ownerSteamID))
                 {
-                    _log.Info($"Game owner {ownerSteamID} is banned. Banning and rejecting client {steamID}...");
+                    Log.Info($"Game owner {ownerSteamID} is banned. Banning and rejecting client {steamID}...");
                     UserRejected(steamID, JoinResult.BannedByAdmins);
                     BanPlayer(steamID);
                 }
@@ -306,7 +310,7 @@ namespace Torch.Managers
         {
             typeof(MyDedicatedServerBase).GetMethod("UserAccepted", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(MyMultiplayer.Static, new object[] {steamId});
             var vm = new PlayerViewModel(steamId) {State = ConnectionState.Connected};
-            _log.Info($"Player {vm.Name} joined ({vm.SteamId})");
+            Log.Info($"Player {vm.Name} joined ({vm.SteamId})");
             Players.Add(steamId, vm);
             PlayerJoined?.Invoke(vm);
         }

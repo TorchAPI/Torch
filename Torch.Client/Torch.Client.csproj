@@ -45,6 +45,10 @@
       <HintPath>..\packages\NLog.4.4.1\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Sandbox.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GameBinaries\Sandbox.Common.dll</HintPath>
+    </Reference>
     <Reference Include="Sandbox.Game">
       <HintPath>..\GameBinaries\Sandbox.Game.dll</HintPath>
       <Private>False</Private>

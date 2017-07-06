@@ -5,42 +5,30 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using NLog;
-using Sandbox;
-using Sandbox.ModAPI;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
 using Torch.Commands;
-using Torch.Managers;
-using Torch.Updater;
-using VRage.Plugins;
 using VRage.Collections;
-using VRage.Library.Collections;
 
 namespace Torch.Managers
 {
-    public class PluginManager : IPluginManager
+    /// <inheritdoc />
+    public class PluginManager : Manager, IPluginManager
     {
-        private readonly ITorchBase _torch;
         private static Logger _log = LogManager.GetLogger(nameof(PluginManager));
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+        private UpdateManager _updateManager;
 
-        public List<ITorchPlugin> Plugins { get; } = new List<ITorchPlugin>();
-
-        public float LastUpdateMs => _lastUpdateMs;
-        private volatile float _lastUpdateMs;
+        /// <inheritdoc />
+        public ObservableCollection<ITorchPlugin> Plugins { get; } = new ObservableCollection<ITorchPlugin>();
 
         public event Action<List<ITorchPlugin>> PluginsLoaded;
 
-        public PluginManager(ITorchBase torch)
+        public PluginManager(ITorchBase torchInstance) : base(torchInstance)
         {
-            _torch = torch;
-
             if (!Directory.Exists(PluginDir))
                 Directory.CreateDirectory(PluginDir);
         }
@@ -50,11 +38,8 @@ namespace Torch.Managers
         /// </summary>
         public void UpdatePlugins()
         {
-            var s = Stopwatch.StartNew();
             foreach (var plugin in Plugins)
                 plugin.Update();
-            s.Stop();
-            _lastUpdateMs = (float)s.Elapsed.TotalMilliseconds;
         }
 
         /// <summary>
@@ -70,40 +55,42 @@ namespace Torch.Managers
 
         private void DownloadPlugins()
         {
-            _log.Info("Downloading plugins");
-            var updater = new PluginUpdater(this);
-
             var folders = Directory.GetDirectories(PluginDir);
             var taskList = new List<Task>();
-            if (_torch.Config.RedownloadPlugins)
-                _log.Warn("Force downloading all plugins because the RedownloadPlugins flag is set in the config");
+
+            //Copy list because we don't want to modify the config.
+            var toDownload = Torch.Config.Plugins.ToList();
 
             foreach (var folder in folders)
             {
                 var manifestPath = Path.Combine(folder, "manifest.xml");
                 if (!File.Exists(manifestPath))
                 {
-                    _log.Info($"No manifest in {folder}, skipping");
+                    _log.Debug($"No manifest in {folder}, skipping");
                     continue;
                 }
 
-                _log.Info($"Checking for updates for {folder}");
                 var manifest = PluginManifest.Load(manifestPath);
-                taskList.Add(updater.CheckAndUpdate(manifest, _torch.Config.RedownloadPlugins));
+                toDownload.Remove(manifest.Repository);
+                taskList.Add(_updateManager.CheckAndUpdatePlugin(manifest));
+            }
+
+            foreach (var repository in toDownload)
+            {
+                var manifest = new PluginManifest {Repository = repository, Version = "0.0"};
+                taskList.Add(_updateManager.CheckAndUpdatePlugin(manifest));
             }
 
             Task.WaitAll(taskList.ToArray());
-            _torch.Config.RedownloadPlugins = false;
         }
 
-        /// <summary>
-        /// Loads and creates instances of all plugins in the <see cref="PluginDir"/> folder.
-        /// </summary>
-        public void Init()
+        /// <inheritdoc />
+        public override void Init()
         {
-            var commands = ((TorchBase)_torch).Commands;
+            _updateManager = Torch.GetManager<UpdateManager>();
+            var commands = Torch.GetManager<CommandManager>();
 
-            if (_torch.Config.AutomaticUpdates)
+            if (Torch.Config.GetPluginUpdates)
                 DownloadPlugins();
             else
                 _log.Warn("Automatic plugin updates are disabled.");
@@ -129,7 +116,7 @@ namespace Torch.Managers
                                 throw new TypeLoadException($"Plugin '{type.FullName}' is missing a {nameof(PluginAttribute)}");
 
                             _log.Info($"Loading plugin {plugin.Name} ({plugin.Version})");
-                            plugin.StoragePath = _torch.Config.InstancePath;
+                            plugin.StoragePath = Torch.Config.InstancePath;
                             Plugins.Add(plugin);
 
                             commands.RegisterPluginCommands(plugin);
@@ -143,8 +130,8 @@ namespace Torch.Managers
                 }
             }
 
-            Plugins.ForEach(p => p.Init(_torch));
-            PluginsLoaded?.Invoke(Plugins);
+            Plugins.ForEach(p => p.Init(Torch));
+            PluginsLoaded?.Invoke(Plugins.ToList());
         }
 
         public IEnumerator<ITorchPlugin> GetEnumerator()

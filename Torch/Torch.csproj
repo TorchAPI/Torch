@@ -81,6 +81,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -160,19 +162,19 @@
     <Compile Include="Commands\TorchCommands.cs" />
     <Compile Include="Managers\ChatManager.cs" />
     <Compile Include="Managers\EntityManager.cs" />
+    <Compile Include="Managers\FilesystemManager.cs" />
     <Compile Include="Managers\Manager.cs" />
     <Compile Include="Managers\NetworkManager\NetworkHandlerBase.cs" />
     <Compile Include="Managers\NetworkManager\NetworkManager.cs" />
     <Compile Include="Managers\MultiplayerManager.cs" />
     <Compile Include="Managers\UpdateManager.cs" />
     <Compile Include="Persistent.cs" />
-    <Compile Include="Updater\PluginManifest.cs" />
+    <Compile Include="PluginManifest.cs" />
     <Compile Include="Reflection.cs" />
     <Compile Include="Managers\ScriptingManager.cs" />
     <Compile Include="TorchBase.cs" />
     <Compile Include="SteamService.cs" />
     <Compile Include="TorchPluginBase.cs" />
-    <Compile Include="Updater\PluginUpdater.cs" />
     <Compile Include="ViewModels\ModViewModel.cs" />
     <Compile Include="Collections\MTObservableCollection.cs" />
     <Compile Include="Extensions\MyPlayerCollectionExtensions.cs" />
