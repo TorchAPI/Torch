@@ -31,6 +31,14 @@ using VRage.Utils;
 
 namespace Torch
 {
+    public enum SaveGameStatus : byte
+    {
+        Success = 0,
+        SaveInProgress = 1,
+        GameNotReady = 2,
+        TimedOut = 3
+    };
+
     /// <summary>
     /// Base class for code shared between the Torch client and server.
     /// </summary>
@@ -109,10 +117,19 @@ namespace Torch
             return Thread.CurrentThread.ManagedThreadId == MySandboxGame.Static.UpdateThread.ManagedThreadId;
         }
 
-        public async Task SaveGameAsync()
+        public async Task SaveGameAsync(Action<SaveGameStatus> callback)
         {
             Log.Info("Saving game");
-            if (MySandboxGame.IsGameReady && !MyAsyncSaving.InProgress && Sync.IsServer && !(MySession.Static.LocalCharacter?.IsDead ?? true))
+
+            if (!MySandboxGame.IsGameReady)
+            {
+                callback(SaveGameStatus.GameNotReady);
+            }
+            else if(MyAsyncSaving.InProgress)
+            {
+                callback(SaveGameStatus.SaveInProgress);
+            }
+            else
             {
                 using (var e = new AutoResetEvent(false))
                 {
@@ -125,16 +142,12 @@ namespace Torch
                     await Task.Run(() =>
                     {
                         if (e.WaitOne(60000))
-                            return;
-
-                        Log.Error("Save failed!");
-                        Multiplayer.SendMessage("Save timed out!", "Error");
+                            callback(SaveGameStatus.Success);
+                        return;
+                        
+                        callback(SaveGameStatus.TimedOut);
                     }).ConfigureAwait(false);
                 }
-            }
-            else
-            {
-                Log.Error("Cannot save");
             }
         }
 
@@ -277,6 +290,11 @@ namespace Torch
                 throw new TypeLoadException($"{fieldName} field not found in {nameof(MyPlugins)}");
 
             pluginList.Add(this);
+        }
+
+        public virtual void Save(long callerId)
+        {
+
         }
 
         public virtual void Start()

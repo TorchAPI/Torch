@@ -67,5 +67,12 @@ namespace Torch.Commands
             Context.Respond("Stopping server.");
             Context.Torch.Stop();
         }
+
+        [Command("save", "Saves the game.")]
+        public void Save()
+        {
+            Context.Respond("Saving game.");
+            Context.Torch.Save(Context.Player?.IdentityId ?? 0);
+        }
     }
 }

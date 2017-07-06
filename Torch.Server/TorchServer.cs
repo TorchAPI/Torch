@@ -221,5 +221,35 @@ namespace Torch.Server
             _stopHandle.Set();
             State = ServerState.Stopped;
         }
+
+        public override void Save(long callerId)
+        {
+            base.SaveGameAsync((statusCode) => SaveCompleted(statusCode, callerId));
+        }
+
+        private void SaveCompleted(SaveGameStatus statusCode, long callerId)
+        {
+            switch (statusCode)
+            {
+                case SaveGameStatus.Success:
+                    Log.Info("Save completed.");
+                    Multiplayer.SendMessage("Saved game.", playerId: callerId);
+                    break;
+                case SaveGameStatus.SaveInProgress:
+                    Log.Error("Save failed, a save is already in progress.");
+                    Multiplayer.SendMessage("Save failed, a save is already in progress.", playerId: callerId, font: MyFontEnum.Red);
+                    break;
+                case SaveGameStatus.GameNotReady:
+                    Log.Error("Save failed, game was not ready.");
+                    Multiplayer.SendMessage("Save failed, game was not ready.", playerId: callerId, font: MyFontEnum.Red);
+                    break;
+                case SaveGameStatus.TimedOut:
+                    Log.Error("Save failed, save timed out.");
+                    Multiplayer.SendMessage("Save failed, save timed out.", playerId: callerId, font: MyFontEnum.Red);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }

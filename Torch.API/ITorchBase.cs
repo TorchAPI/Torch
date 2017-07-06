@@ -25,6 +25,7 @@ namespace Torch.API
         bool IsOnGameThread();
         void Start();
         void Stop();
+        void Save(long callerId);
         void Init();
         T GetManager<T>() where T : class, IManager;
     }
