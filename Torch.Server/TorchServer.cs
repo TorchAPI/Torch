@@ -222,11 +222,17 @@ namespace Torch.Server
             State = ServerState.Stopped;
         }
 
+        /// <inheritdoc/>
         public override void Save(long callerId)
         {
             base.SaveGameAsync((statusCode) => SaveCompleted(statusCode, callerId));
         }
 
+        /// <summary>
+        /// Callback for when save has finished.
+        /// </summary>
+        /// <param name="statusCode">Return code of the save operation</param>
+        /// <param name="callerId">Caller of the save operation</param>
         private void SaveCompleted(SaveGameStatus statusCode, long callerId)
         {
             switch (statusCode)

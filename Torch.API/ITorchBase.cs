@@ -25,6 +25,10 @@ namespace Torch.API
         bool IsOnGameThread();
         void Start();
         void Stop();
+        /// <summary>
+        /// Initializes a save of the game.
+        /// </summary>
+        /// <param name="callerId">Id of the player who initiated the save.</param>
         void Save(long callerId);
         void Init();
         T GetManager<T>() where T : class, IManager;

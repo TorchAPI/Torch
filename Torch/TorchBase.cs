@@ -31,14 +31,6 @@ using VRage.Utils;
 
 namespace Torch
 {
-    public enum SaveGameStatus : byte
-    {
-        Success = 0,
-        SaveInProgress = 1,
-        GameNotReady = 2,
-        TimedOut = 3
-    };
-
     /// <summary>
     /// Base class for code shared between the Torch client and server.
     /// </summary>
@@ -123,11 +115,11 @@ namespace Torch
 
             if (!MySandboxGame.IsGameReady)
             {
-                callback(SaveGameStatus.GameNotReady);
+                callback?.Invoke(SaveGameStatus.GameNotReady);
             }
             else if(MyAsyncSaving.InProgress)
             {
-                callback(SaveGameStatus.SaveInProgress);
+                callback?.Invoke(SaveGameStatus.SaveInProgress);
             }
             else
             {
@@ -142,10 +134,12 @@ namespace Torch
                     await Task.Run(() =>
                     {
                         if (e.WaitOne(60000))
-                            callback(SaveGameStatus.Success);
-                        return;
+                        {
+                            callback?.Invoke(SaveGameStatus.Success);
+                            return;
+                        }
                         
-                        callback(SaveGameStatus.TimedOut);
+                        callback?.Invoke(SaveGameStatus.TimedOut);
                     }).ConfigureAwait(false);
                 }
             }
@@ -292,6 +286,7 @@ namespace Torch
             pluginList.Add(this);
         }
 
+        /// <inheritdoc/>
         public virtual void Save(long callerId)
         {
 
