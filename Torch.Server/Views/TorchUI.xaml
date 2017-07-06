@@ -5,14 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Torch.Server"
         xmlns:views="clr-namespace:Torch.Server.Views"
+        xmlns:converters="clr-namespace:Torch.Server.Views.Converters"
         mc:Ignorable="d"
         Title="Torch">
+    <Window.Resources>
+        <converters:InverseBooleanConverter x:Key="inverseBool"/>
+    </Window.Resources>
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Margin="5,5,5,5" Orientation="Horizontal">
             <Button x:Name="BtnStart" Content="Start" Height="24" Width="75" Margin="5,0,5,0"
-                    HorizontalAlignment="Left" Click="BtnStart_Click" IsDefault="True" />
+                    HorizontalAlignment="Left" Click="BtnStart_Click" IsDefault="True" IsEnabled="{Binding IsRunning, Converter={StaticResource inverseBool}}"/>
             <Button x:Name="BtnStop" Content="Stop" Height="24" Width="75" Margin="5,0,5,0" HorizontalAlignment="Left"
-                    Click="BtnStop_Click" IsEnabled="False" />
+                    Click="BtnStop_Click" IsEnabled="{Binding IsRunning}" />
             <Label>
                 <Label.Content>
                     <TextBlock Text="{Binding State, StringFormat=Status: {0}}"></TextBlock>
@@ -37,13 +41,13 @@
                         <TextBox x:Name="InstancePathBox" Margin="3" Height="20"
                                  TextChanged="InstancePathBox_OnTextChanged" IsEnabled="False" />
                     </DockPanel>
-                    <views:ConfigControl x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom" />
+                    <views:ConfigControl x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom" IsEnabled="{Binding IsRunning, Converter={StaticResource inverseBool}}"/>
                 </DockPanel>
             </TabItem>
             <TabItem Header="Chat/Players">
                 <DockPanel>
                     <local:PlayerListControl x:Name="PlayerList" DockPanel.Dock="Right" Width="250" />
-                    <local:ChatControl x:Name="Chat" />
+                    <local:ChatControl x:Name="Chat" IsEnabled="{Binding IsRunning}"/>
                 </DockPanel>
             </TabItem>
             <TabItem Header="Entity Manager">

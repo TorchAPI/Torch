@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -41,6 +42,17 @@ namespace Torch.Server
             _server = (TorchBase)server;
             _multiplayer = (MultiplayerManager)server.Multiplayer;
             DataContext = _multiplayer;
+            _multiplayer.ChatHistory.CollectionChanged += ChatHistory_CollectionChanged;
+        }
+
+        private void ChatHistory_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (VisualTreeHelper.GetChildrenCount(ChatItems) > 0)
+            {
+                Border border = (Border)VisualTreeHelper.GetChild(ChatItems, 0);
+                ScrollViewer scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
+                scrollViewer.ScrollToBottom();
+            }
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)

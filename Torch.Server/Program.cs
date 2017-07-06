@@ -34,8 +34,8 @@ namespace Torch.Server
         private static ITorchServer _server;
         private static Logger _log = LogManager.GetLogger("Torch");
         private static bool _restartOnCrash;
-        public static bool IsManualInstall;
-        private static TorchCli _cli;
+        private static TorchConfig _config;
+        private static bool _steamCmdDone;
 
         /// <summary>
         /// This method must *NOT* load any types/assemblies from the vanilla game, otherwise automatic updates will fail.
@@ -46,10 +46,10 @@ namespace Torch.Server
             //Ensures that all the files are downloaded in the Torch directory.
             Directory.SetCurrentDirectory(new FileInfo(typeof(Program).Assembly.Location).Directory.ToString());
 
-            IsManualInstall = File.Exists("SpaceEngineersDedicated.exe");
-            if (!IsManualInstall)
-                AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+            foreach (var file in Directory.GetFiles(Directory.GetCurrentDirectory(), "*.old"))
+                File.Delete(file);
 
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             if (!Environment.UserInteractive)
@@ -63,50 +63,40 @@ namespace Torch.Server
 
             var configName = "TorchConfig.xml";
             var configPath = Path.Combine(Directory.GetCurrentDirectory(), configName);
-            TorchConfig options;
             if (File.Exists(configName))
             {
                 _log.Info($"Loading config {configPath}");
-                options = TorchConfig.LoadFrom(configPath);
+                _config = TorchConfig.LoadFrom(configPath);
             }
             else
             {
                 _log.Info($"Generating default config at {configPath}");
-                options = new TorchConfig();
+                _config = new TorchConfig {InstancePath = Path.GetFullPath("Instance")};
 
-                if (!IsManualInstall)
+                _log.Warn("Would you like to enable automatic updates? (Y/n):");
+
+                var input = Console.ReadLine() ?? "";
+                var autoUpdate = string.IsNullOrEmpty(input) || input.Equals("y", StringComparison.InvariantCultureIgnoreCase);
+                _config.GetTorchUpdates = _config.GetPluginUpdates = autoUpdate;
+                if (autoUpdate)
                 {
-                    //new ConfigManager().CreateInstance("Instance");
-                    options.InstancePath = Path.GetFullPath("Instance");
-
-                    _log.Warn("Would you like to enable automatic updates? (Y/n):");
-
-                    var input = Console.ReadLine() ?? "";
-                    var autoUpdate = !input.Equals("n", StringComparison.InvariantCultureIgnoreCase);
-                    options.AutomaticUpdates = autoUpdate;
-                    if (autoUpdate)
-                    {
-                        _log.Info("Automatic updates enabled, updating server.");
-                        RunSteamCmd();
-                    }
+                    _log.Info("Automatic updates enabled.");
+                    RunSteamCmd();
                 }
 
-                //var setupDialog = new FirstTimeSetup { DataContext = options };
-                //setupDialog.ShowDialog();
-                options.Save(configPath);
+                _config.Save(configPath);
             }
 
-            _cli = new TorchCli { Config = options };
-            if (!_cli.Parse(args))
+            if (!_config.Parse(args))
                 return;
 
-            _log.Debug(_cli.ToString());
+            _log.Debug(_config.ToString());
 
-            if (!string.IsNullOrEmpty(_cli.WaitForPID))
+            if (!string.IsNullOrEmpty(_config.WaitForPID))
             {
                 try
                 {
-                    var pid = int.Parse(_cli.WaitForPID);
+                    var pid = int.Parse(_config.WaitForPID);
                     var waitProc = Process.GetProcessById(pid);
                     _log.Warn($"Waiting for process {pid} to exit.");
                     waitProc.WaitForExit();
@@ -117,18 +107,13 @@ namespace Torch.Server
                 }
             }
 
-            _restartOnCrash = _cli.RestartOnCrash;
+            _restartOnCrash = _config.RestartOnCrash;
 
-            if (options.AutomaticUpdates || _cli.Update)
+            if (_config.GetTorchUpdates || _config.Update)
             {
-                if (IsManualInstall)
-                    _log.Warn("Detected manual install, won't attempt to update DS");
-                else
-                {
-                    RunSteamCmd();
-                }
+                RunSteamCmd();
             }
-            RunServer(options, _cli);
+            RunServer(_config);
         }
 
         private const string STEAMCMD_DIR = "steamcmd";
@@ -142,6 +127,9 @@ quit";
 
         public static void RunSteamCmd()
         {
+            if (_steamCmdDone)
+                return;
+
             var log = LogManager.GetLogger("SteamCMD");
 
             if (!Directory.Exists(STEAMCMD_DIR))
@@ -187,38 +175,40 @@ quit";
                 log.Info(cmd.StandardOutput.ReadLine());
                 Thread.Sleep(100);
             }
+
+            _steamCmdDone = true;
         }
 
-        public static void RunServer(TorchConfig options, TorchCli cli)
+        public static void RunServer(TorchConfig config)
         {
 
 
             /*
-            if (!parser.ParseArguments(args, options))
+            if (!parser.ParseArguments(args, config))
             {
                 _log.Error($"Parsing arguments failed: {string.Join(" ", args)}");
                 return;
             }
 
-            if (!string.IsNullOrEmpty(options.Config) && File.Exists(options.Config))
+            if (!string.IsNullOrEmpty(config.Config) && File.Exists(config.Config))
             {
-                options = ServerConfig.LoadFrom(options.Config);
-                parser.ParseArguments(args, options);
+                config = ServerConfig.LoadFrom(config.Config);
+                parser.ParseArguments(args, config);
             }*/
 
             //RestartOnCrash autostart autosave=15 
             //gamepath ="C:\Program Files\Space Engineers DS" instance="Hydro Survival" instancepath="C:\ProgramData\SpaceEngineersDedicated\Hydro Survival"
 
             /*
-            if (options.InstallService)
+            if (config.InstallService)
             {
-                var serviceName = $"\"Torch - {options.InstanceName}\"";
+                var serviceName = $"\"Torch - {config.InstanceName}\"";
                 // Working on installing the service properly instead of with sc.exe
                 _log.Info($"Installing service '{serviceName}");
                 var exePath = $"\"{Assembly.GetExecutingAssembly().Location}\"";
                 var createInfo = new ServiceCreateInfo
                 {
-                    Name = options.InstanceName,
+                    Name = config.InstanceName,
                     BinaryPath = exePath,
                 };
                 _log.Info("Service Installed");
@@ -238,7 +228,7 @@ quit";
                 return;
             }
 
-            if (options.UninstallService)
+            if (config.UninstallService)
             {
                 _log.Info("Uninstalling Torch service");
                 var startInfo = new ProcessStartInfo
@@ -254,18 +244,18 @@ quit";
                 return;
             }*/
 
-            _server = new TorchServer(options);
+            _server = new TorchServer(config);
             _server.Init();
 
-            if (cli.NoGui || cli.Autostart)
+            if (config.NoGui || config.Autostart)
             {
                 new Thread(() => _server.Start()).Start();
             }
 
-            if (!cli.NoGui)
+            if (!config.NoGui)
             {
                 var ui = new TorchUI((TorchServer)_server);
-                ui.LoadConfig(options);
+                ui.LoadConfig(config);
                 ui.ShowDialog();
             }
         }
@@ -295,17 +285,9 @@ quit";
             Thread.Sleep(5000);
             if (_restartOnCrash)
             {
-                /* Throws an exception somehow and I'm too lazy to debug it.
-                try
-                {
-                    if (MySession.Static != null && MySession.Static.AutoSaveInMinutes > 0)
-                        MySession.Static.Save();
-                }
-                catch { }*/
-
                 var exe = typeof(Program).Assembly.Location;
-                _cli.WaitForPID = Process.GetCurrentProcess().Id.ToString();
-                Process.Start(exe, _cli.ToString());
+                _config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
+                Process.Start(exe, _config.ToString());
             }
             //1627 = Function failed during execution.
             Environment.Exit(1627);

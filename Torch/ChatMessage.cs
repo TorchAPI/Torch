@@ -10,7 +10,7 @@ using VRage.Network;
 
 namespace Torch
 {
-    public struct ChatMessage : IChatMessage
+    public class ChatMessage : IChatMessage
     {
         public DateTime Timestamp { get; }
         public ulong SteamId { get; }

@@ -9,6 +9,7 @@ using System.Windows.Threading;
 
 namespace Torch.Collections
 {
+    [Serializable]
     public class ObservableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, INotifyCollectionChanged, INotifyPropertyChanged
     {
         /// <inheritdoc />

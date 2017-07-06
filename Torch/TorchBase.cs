@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -41,22 +41,38 @@ namespace Torch
         /// Use only if necessary, prefer dependency injection.
         /// </summary>
         public static ITorchBase Instance { get; private set; }
+        /// <inheritdoc />
         public ITorchConfig Config { get; protected set; }
-        protected static Logger Log { get; } = LogManager.GetLogger("Torch");
+        /// <inheritdoc />
         public Version TorchVersion { get; protected set; }
+        /// <inheritdoc />
         public Version GameVersion { get; private set; }
+        /// <inheritdoc />
         public string[] RunArgs { get; set; }
+        /// <inheritdoc />
         public IPluginManager Plugins { get; protected set; }
+        /// <inheritdoc />
         public IMultiplayerManager Multiplayer { get; protected set; }
+        /// <inheritdoc />
         public EntityManager Entities { get; protected set; }
+        /// <inheritdoc />
         public INetworkManager Network { get; protected set; }
+        /// <inheritdoc />
         public CommandManager Commands { get; protected set; }
+        /// <inheritdoc />
         public event Action SessionLoading;
+        /// <inheritdoc />
         public event Action SessionLoaded;
+        /// <inheritdoc />
         public event Action SessionUnloading;
+        /// <inheritdoc />
         public event Action SessionUnloaded;
-        private readonly List<IManager> _managers;
 
+        /// <summary>
+        /// Common log for the Torch instance.
+        /// </summary>
+        protected static Logger Log { get; } = LogManager.GetLogger("Torch");
+        private readonly List<IManager> _managers;
         private bool _init;
 
         /// <summary>
@@ -79,22 +95,25 @@ namespace Torch
             Network = new NetworkManager(this);
             Commands = new CommandManager(this);
 
-            _managers = new List<IManager> {Network, Commands, Plugins, Multiplayer, Entities, new ChatManager(this)};
+            _managers = new List<IManager> { new FilesystemManager(this), new UpdateManager(this), Network, Commands, Plugins, Multiplayer, Entities, new ChatManager(this), };
 
 
             TorchAPI.Instance = this;
         }
 
+        /// <inheritdoc />
         public ListReader<IManager> GetManagers()
         {
             return new ListReader<IManager>(_managers);
         }
 
+        /// <inheritdoc />
         public T GetManager<T>() where T : class, IManager
         {
             return _managers.FirstOrDefault(m => m is T) as T;
         }
 
+        /// <inheritdoc />
         public bool AddManager<T>(T manager) where T : class, IManager
         {
             if (_managers.Any(x => x is T))
@@ -208,6 +227,7 @@ namespace Torch
 
         #endregion
 
+        /// <inheritdoc />
         public virtual void Init()
         {
             Debug.Assert(!_init, "Torch instance is already initialized.");
@@ -243,15 +263,14 @@ namespace Torch
             MySession.OnUnloading += OnSessionUnloading;
             MySession.OnUnloaded += OnSessionUnloaded;
             RegisterVRagePlugin();
-
+            foreach (var manager in _managers)
+                manager.Init();
             _init = true;
         }
 
         private void OnSessionLoading()
         {
             Log.Debug("Session loading");
-            foreach (var manager in _managers)
-                manager.Init();
             SessionLoading?.Invoke();
         }
 
@@ -292,11 +311,13 @@ namespace Torch
 
         }
 
+        /// <inheritdoc 
         public virtual void Start()
         {
             
         }
 
+        /// <inheritdoc />
         public virtual void Stop() { }
 
         /// <inheritdoc />

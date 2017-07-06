@@ -65,6 +65,11 @@ namespace Torch.Managers
         /// </summary>
         public override void Init()
         {
+            Torch.SessionLoaded += OnSessionLoaded;
+        }
+
+        private void OnSessionLoaded()
+        {
             if (_init)
                 return;
 
