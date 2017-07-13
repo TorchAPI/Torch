@@ -14,7 +14,6 @@ Torch is the successor to SE Server Extender and gives server admins the tools t
 To build Torch you must first have a complete SE Dedicated installation somewhere. Before you open the solution, run the Setup batch file and enter the path of that installation's DedicatedServer64 folder. The script will make a symlink to that folder so the Torch solution can find the DLL references it needs.
 
 # Installation Guide
-Note: Until Torch is in a stable, nearly feature complete state there will not be any binaries available. You'll have to compile the solution yourself.
 
 ### Automatic (recommended)
 * Unzip Torch to its own folder, run Torch.Server.exe and enter 'y' in the prompt for automatic updates. Torch will automatically download the Space Engineers files and generate all of the configs/folders necessary.
