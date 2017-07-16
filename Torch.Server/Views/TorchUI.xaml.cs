@@ -47,6 +47,7 @@ namespace Torch.Server
             Chat.BindServer(server);
             PlayerList.BindServer(server);
             Plugins.BindServer(server);
+            LoadConfig((TorchConfig)server.Config);
         }
 
         public void LoadConfig(TorchConfig config)

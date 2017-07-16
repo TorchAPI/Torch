@@ -6,7 +6,10 @@ using System.Text;
 
 namespace Torch
 {
-    public class CommandLine
+    /// <summary>
+    /// Base class that adds tools for setting type properties through the command line.
+    /// </summary>
+    public abstract class CommandLine
     {
         private readonly string _argPrefix;
         private readonly Dictionary<ArgAttribute, PropertyInfo> _args = new Dictionary<ArgAttribute, PropertyInfo>();

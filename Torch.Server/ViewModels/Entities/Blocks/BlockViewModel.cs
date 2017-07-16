@@ -15,7 +15,7 @@ namespace Torch.Server.ViewModels.Blocks
     public class BlockViewModel : EntityViewModel
     {
         public IMyTerminalBlock Block { get; }
-        public MTObservableCollection<PropertyViewModel> Properties { get; } = new MTObservableCollection<PropertyViewModel>();
+        public ObservableList<PropertyViewModel> Properties { get; } = new ObservableList<PropertyViewModel>();
 
         public string FullName => $"{Block.CubeGrid.CustomName} - {Block.CustomName}";
 
@@ -24,8 +24,11 @@ namespace Torch.Server.ViewModels.Blocks
             get => Block?.CustomName ?? "null";
             set
             {
-                TorchBase.Instance.InvokeBlocking(() => Block.CustomName = value); 
-                OnPropertyChanged();
+                TorchBase.Instance.Invoke(() =>
+                {
+                    Block.CustomName = value;
+                    OnPropertyChanged();
+                }); 
             }
         }
 
@@ -37,8 +40,11 @@ namespace Torch.Server.ViewModels.Blocks
             get => ((MySlimBlock)Block.SlimBlock).BuiltBy;
             set
             {
-                TorchBase.Instance.InvokeBlocking(() => ((MySlimBlock)Block.SlimBlock).TransferAuthorship(value));
-                OnPropertyChanged();
+                TorchBase.Instance.Invoke(() =>
+                {
+                    ((MySlimBlock)Block.SlimBlock).TransferAuthorship(value);
+                    OnPropertyChanged();
+                });
             }
         }
 

@@ -24,7 +24,7 @@ namespace Torch.Server
         public bool Update { get; set; }
 
         /// <inheritdoc />
-        [XmlIgnore, Arg("autostart", "Start the server immediately.")]
+        [Arg("autostart", "Start the server immediately.")]
         public bool Autostart { get; set; }
 
         /// <inheritdoc />
@@ -32,7 +32,7 @@ namespace Torch.Server
         public bool RestartOnCrash { get; set; }
 
         /// <inheritdoc />
-        [XmlIgnore, Arg("nogui", "Do not show the Torch UI.")]
+        [Arg("nogui", "Do not show the Torch UI.")]
         public bool NoGui { get; set; }
 
         /// <inheritdoc />

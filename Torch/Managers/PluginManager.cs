@@ -23,9 +23,9 @@ namespace Torch.Managers
         private UpdateManager _updateManager;
 
         /// <inheritdoc />
-        public ObservableCollection<ITorchPlugin> Plugins { get; } = new ObservableCollection<ITorchPlugin>();
+        public IList<ITorchPlugin> Plugins { get; } = new ObservableList<ITorchPlugin>();
 
-        public event Action<List<ITorchPlugin>> PluginsLoaded;
+        public event Action<IList<ITorchPlugin>> PluginsLoaded;
 
         public PluginManager(ITorchBase torchInstance) : base(torchInstance)
         {

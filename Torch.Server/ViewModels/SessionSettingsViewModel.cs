@@ -35,7 +35,7 @@ namespace Torch.Server.ViewModels
                 BlockLimits.Add(new BlockLimitViewModel(this, limit.Key, limit.Value));
         }
 
-        public MTObservableCollection<BlockLimitViewModel> BlockLimits { get; } = new MTObservableCollection<BlockLimitViewModel>();
+        public ObservableList<BlockLimitViewModel> BlockLimits { get; } = new ObservableList<BlockLimitViewModel>();
 
         #region Multipliers
 

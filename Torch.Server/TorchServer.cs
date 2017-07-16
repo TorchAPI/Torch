@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Xml.Serialization.GeneratedAssembly;
 using Sandbox.Engine.Analytics;
 using Sandbox.Game.Multiplayer;
@@ -20,6 +21,7 @@ using Torch.Managers;
 using VRage.Dedicated;
 using VRage.FileSystem;
 using VRage.Game;
+using VRage.Game.ModAPI;
 using VRage.Game.ObjectBuilder;
 using VRage.Game.SessionComponents;
 using VRage.Library;
@@ -49,6 +51,7 @@ namespace Torch.Server
         private float _simRatio;
         private readonly AutoResetEvent _stopHandle = new AutoResetEvent(false);
         private Timer _watchdog;
+        private Stopwatch _uptime;
 
         public TorchServer(TorchConfig config = null)
         {
@@ -133,6 +136,7 @@ namespace Torch.Server
             if (State != ServerState.Stopped)
                 return;
 
+            _uptime = Stopwatch.StartNew();
             IsRunning = true;
             GameThread = Thread.CurrentThread;
             Config.Save();
@@ -166,7 +170,8 @@ namespace Torch.Server
         {
             base.Update();
             SimulationRatio = Sync.ServerSimulationRatio;
-            ElapsedPlayTime = MySession.Static?.ElapsedPlayTime ?? default(TimeSpan);
+            var elapsed = TimeSpan.FromSeconds(Math.Floor(_uptime.Elapsed.TotalSeconds));
+            ElapsedPlayTime = elapsed;
 
             if (_watchdog == null && Instance.Config.TickTimeout > 0)
             {
@@ -215,15 +220,21 @@ namespace Torch.Server
             IsRunning = false;
         }
 
-        public void Restart()
+        /// <summary>
+        /// Restart the program. DOES NOT SAVE!
+        /// </summary>
+        public override void Restart()
         {
-            
+            var exe = Assembly.GetExecutingAssembly().Location;
+            ((TorchConfig)Config).WaitForPID = Process.GetCurrentProcess().Id.ToString();
+            Process.Start(exe, Config.ToString());
+            Environment.Exit(0);
         }
 
         /// <inheritdoc/>
-        public override void Save(long callerId)
+        public override Task Save(long callerId)
         {
-            base.SaveGameAsync((statusCode) => SaveCompleted(statusCode, callerId));
+            return SaveGameAsync(statusCode => SaveCompleted(statusCode, callerId));
         }
 
         /// <summary>
@@ -231,7 +242,7 @@ namespace Torch.Server
         /// </summary>
         /// <param name="statusCode">Return code of the save operation</param>
         /// <param name="callerId">Caller of the save operation</param>
-        private void SaveCompleted(SaveGameStatus statusCode, long callerId)
+        private void SaveCompleted(SaveGameStatus statusCode, long callerId = 0)
         {
             switch (statusCode)
             {

@@ -53,7 +53,6 @@ namespace Torch.Server.Views
             Log.Info("Saved DS config.");
             try
             {
-                //var checkpoint = MyLocalCache.LoadCheckpoint(Config.LoadWorld, out _);
                 MyObjectBuilderSerializer.DeserializeXML(Path.Combine(Config.LoadWorld, "Sandbox.sbc"), out MyObjectBuilder_Checkpoint checkpoint, out ulong sizeInBytes);
                 if (checkpoint == null)
                 {

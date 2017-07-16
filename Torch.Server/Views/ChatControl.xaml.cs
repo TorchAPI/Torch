@@ -41,8 +41,10 @@ namespace Torch.Server
         {
             _server = (TorchBase)server;
             _multiplayer = (MultiplayerManager)server.Multiplayer;
+            ChatItems.Items.Clear();
             DataContext = _multiplayer;
-            _multiplayer.ChatHistory.CollectionChanged += ChatHistory_CollectionChanged;
+            if (_multiplayer.ChatHistory is INotifyCollectionChanged ncc)
+                ncc.CollectionChanged += ChatHistory_CollectionChanged;
         }
 
         private void ChatHistory_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -74,22 +76,26 @@ namespace Torch.Server
                 return;
 
             var commands = _server.Commands;
-            string response = null;
             if (commands.IsCommand(text))
             {
                  _multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", text));
-                _server.InvokeBlocking(() =>
+                _server.Invoke(() =>
                 {
-                    response = commands.HandleCommandFromServer(text);
+                    var response = commands.HandleCommandFromServer(text);
+                    Dispatcher.BeginInvoke(() => OnMessageEntered_Callback(response));
                 });
             }
             else
             {
                 _server.Multiplayer.SendMessage(text);
             }
+            Message.Text = "";
+        }
+
+        private void OnMessageEntered_Callback(string response)
+        {
             if (!string.IsNullOrEmpty(response))
                 _multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", response));
-            Message.Text = "";
         }
     }
 }

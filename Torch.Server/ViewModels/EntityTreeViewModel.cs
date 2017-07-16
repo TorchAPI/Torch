@@ -3,22 +3,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
 using Torch.Server.ViewModels.Entities;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
+using System.Windows.Threading;
+using NLog;
 
 namespace Torch.Server.ViewModels
 {
     public class EntityTreeViewModel : ViewModel
     {
-        public MTObservableCollection<GridViewModel> Grids { get; set; } = new MTObservableCollection<GridViewModel>();
-        public MTObservableCollection<CharacterViewModel> Characters { get; set; } = new MTObservableCollection<CharacterViewModel>();
-        public MTObservableCollection<EntityViewModel> FloatingObjects { get; set; } = new MTObservableCollection<EntityViewModel>();
-        public MTObservableCollection<VoxelMapViewModel> VoxelMaps { get; set; } = new MTObservableCollection<VoxelMapViewModel>();
+        //TODO: these should be sorted sets for speed
+        public ObservableList<GridViewModel> Grids { get; set; } = new ObservableList<GridViewModel>();
+        public ObservableList<CharacterViewModel> Characters { get; set; } = new ObservableList<CharacterViewModel>();
+        public ObservableList<EntityViewModel> FloatingObjects { get; set; } = new ObservableList<EntityViewModel>();
+        public ObservableList<VoxelMapViewModel> VoxelMaps { get; set; } = new ObservableList<VoxelMapViewModel>();
+        public Dispatcher ControlDispatcher => _control.Dispatcher;
 
         private EntityViewModel _currentEntity;
+        private UserControl _control;
 
         public EntityViewModel CurrentEntity
         {
@@ -26,7 +32,12 @@ namespace Torch.Server.ViewModels
             set { _currentEntity = value; OnPropertyChanged(); }
         }
 
-        public EntityTreeViewModel()
+        public EntityTreeViewModel(UserControl control)
+        {
+            _control = control;
+        }
+
+        public void Init()
         {
             MyEntities.OnEntityAdd += MyEntities_OnEntityAdd;
             MyEntities.OnEntityRemove += MyEntities_OnEntityRemove;
@@ -56,20 +67,16 @@ namespace Torch.Server.ViewModels
             switch (obj)
             {
                 case MyCubeGrid grid:
-                    if (Grids.All(g => g.Entity.EntityId != obj.EntityId))
-                        Grids.Add(new GridViewModel(grid, this));
+                    Grids.Insert(new GridViewModel(grid, this), g => g.Name);
                     break;
                 case MyCharacter character:
-                    if (Characters.All(g => g.Entity.EntityId != obj.EntityId))
-                        Characters.Add(new CharacterViewModel(character, this));
+                    Characters.Insert(new CharacterViewModel(character, this), c => c.Name);
                     break;
                 case MyFloatingObject floating:
-                    if (FloatingObjects.All(g => g.Entity.EntityId != obj.EntityId))
-                        FloatingObjects.Add(new FloatingObjectViewModel(floating, this));
+                    FloatingObjects.Insert(new FloatingObjectViewModel(floating, this), f => f.Name);
                     break;
                 case MyVoxelBase voxel:
-                    if (VoxelMaps.All(g => g.Entity.EntityId != obj.EntityId))
-                        VoxelMaps.Add(new VoxelMapViewModel(voxel, this));
+                    VoxelMaps.Insert(new VoxelMapViewModel(voxel, this), v => v.Name);
                     break;
             }
         }

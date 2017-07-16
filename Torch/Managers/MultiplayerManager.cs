@@ -16,6 +16,7 @@ using NLog;
 using Torch;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
+using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
@@ -43,7 +44,7 @@ namespace Torch.Managers
         /// <inheritdoc />
         public event MessageReceivedDel MessageReceived;
 
-        public MTObservableCollection<IChatMessage> ChatHistory { get; } = new MTObservableCollection<IChatMessage>();
+        public IList<IChatMessage> ChatHistory { get; } = new ObservableList<IChatMessage>();
         public ObservableDictionary<ulong, PlayerViewModel> Players { get; } = new ObservableDictionary<ulong, PlayerViewModel>();
         public IMyPlayer LocalPlayer => MySession.Static.LocalHumanPlayer;
         private static readonly Logger Log = LogManager.GetLogger(nameof(MultiplayerManager));
@@ -99,6 +100,17 @@ namespace Torch.Managers
             return p;
         }
 
+        public ulong GetSteamId(long identityId)
+        {
+            foreach (var kv in _onlinePlayers)
+            {
+                if (kv.Value.Identity.IdentityId == identityId)
+                    return kv.Key.SteamId;
+            }
+
+            return 0;
+        }
+
         /// <inheritdoc />
         public string GetSteamUsername(ulong steamId)
         {
@@ -108,17 +120,24 @@ namespace Torch.Managers
         /// <inheritdoc />
         public void SendMessage(string message, string author = "Server", long playerId = 0, string font = MyFontEnum.Red)
         {
-            ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", message));
+            ChatHistory.Add(new ChatMessage(DateTime.Now, 0, author, message));
             var commands = Torch.GetManager<CommandManager>();
             if (commands.IsCommand(message))
             {
                 var response = commands.HandleCommandFromServer(message);
-                ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", response));
+                ChatHistory.Add(new ChatMessage(DateTime.Now, 0, author, response));
             }
             else
             {
                 var msg = new ScriptedChatMsg { Author = author, Font = font, Target = playerId, Text = message };
                 MyMultiplayerBase.SendScriptedChatMessage(ref msg);
+                var character = MySession.Static.Players.TryGetIdentity(playerId)?.Character;
+                var steamId = GetSteamId(playerId);
+                if (character == null)
+                    return;
+
+                var addToGlobalHistoryMethod = typeof(MyCharacter).GetMethod("OnGlobalMessageSuccess", BindingFlags.Instance | BindingFlags.NonPublic);
+                Torch.GetManager<NetworkManager>().RaiseEvent(addToGlobalHistoryMethod, character, steamId, steamId, message);
             }
         }
 

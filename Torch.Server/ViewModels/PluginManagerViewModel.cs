@@ -11,7 +11,7 @@ namespace Torch.Server.ViewModels
 {
     public class PluginManagerViewModel : ViewModel
     {
-        public MTObservableCollection<PluginViewModel> Plugins { get; } = new MTObservableCollection<PluginViewModel>();
+        public ObservableList<PluginViewModel> Plugins { get; } = new ObservableList<PluginViewModel>();
 
         private PluginViewModel _selectedPlugin;
         public PluginViewModel SelectedPlugin
@@ -24,10 +24,12 @@ namespace Torch.Server.ViewModels
 
         public PluginManagerViewModel(IPluginManager pluginManager)
         {
+            foreach (var plugin in pluginManager)
+                Plugins.Add(new PluginViewModel(plugin));
             pluginManager.PluginsLoaded += PluginManager_PluginsLoaded;
         }
 
-        private void PluginManager_PluginsLoaded(List<ITorchPlugin> obj)
+        private void PluginManager_PluginsLoaded(IList<ITorchPlugin> obj)
         {
             Plugins.Clear();
             foreach (var plugin in obj)

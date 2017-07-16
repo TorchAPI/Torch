@@ -21,7 +21,7 @@ namespace Torch.Commands
         public CommandTree Commands { get; set; } = new CommandTree();
         private Logger _log = LogManager.GetLogger(nameof(CommandManager));
 
-        public CommandManager(ITorchBase torch, char prefix = '/') : base(torch)
+        public CommandManager(ITorchBase torch, char prefix = '!') : base(torch)
         {
             Prefix = prefix;
         }

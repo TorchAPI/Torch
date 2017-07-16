@@ -11,6 +11,7 @@
             <TextBox x:Name="Message" DockPanel.Dock="Left" Margin="5,5,5,5" KeyDown="Message_OnKeyDown"></TextBox>
         </DockPanel>
         <ListView x:Name="ChatItems" ItemsSource="{Binding ChatHistory}" Margin="5,5,5,5">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled"/>
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel>

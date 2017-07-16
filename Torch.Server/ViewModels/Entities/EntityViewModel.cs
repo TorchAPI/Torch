@@ -40,6 +40,7 @@ namespace Torch.Server.ViewModels.Entities
         public EntityViewModel(IMyEntity entity, EntityTreeViewModel tree)
         {
             Entity = entity;
+            Tree = tree;
         }
 
         public EntityViewModel()

@@ -100,6 +100,8 @@ namespace Torch.Server
                     var waitProc = Process.GetProcessById(pid);
                     _log.Warn($"Waiting for process {pid} to exit.");
                     waitProc.WaitForExit();
+                    _log.Info("Continuing in 5 seconds.");
+                    Thread.Sleep(5000);
                 }
                 catch
                 {
@@ -245,8 +247,8 @@ quit";
             }*/
 
             _server = new TorchServer(config);
-            _server.Init();
 
+            _server.Init();
             if (config.NoGui || config.Autostart)
             {
                 new Thread(() => _server.Start()).Start();
@@ -255,7 +257,6 @@ quit";
             if (!config.NoGui)
             {
                 var ui = new TorchUI((TorchServer)_server);
-                ui.LoadConfig(config);
                 ui.ShowDialog();
             }
         }

@@ -146,6 +146,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChatMessage.cs" />
+    <Compile Include="Collections\ObservableList.cs" />
+    <Compile Include="DispatcherExtensions.cs" />
     <Compile Include="SaveGameStatus.cs" />
     <Compile Include="Collections\KeyTree.cs" />
     <Compile Include="Collections\ObservableDictionary.cs" />

@@ -74,12 +74,17 @@ namespace Torch.API
         /// Stop the Torch instance.
         /// </summary>
         void Stop();
-      
+
+        /// <summary>
+        /// Restart the Torch instance.
+        /// </summary>
+        void Restart();
+
         /// <summary>
         /// Initializes a save of the game.
         /// </summary>
         /// <param name="callerId">Id of the player who initiated the save.</param>
-        void Save(long callerId);
+        Task Save(long callerId);
 
         /// <summary>
         /// Initialize the Torch instance.

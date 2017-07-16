@@ -311,7 +311,7 @@ namespace Torch.Managers
             var parameters = method.GetParameters();
             for (var i = 0; i < parameters.Length; i++)
             {
-                if (argTypes[i] != parameters[i].ParameterType)
+                if (argTypes[i + 1] != parameters[i].ParameterType)
                     throw new TypeLoadException($"Type mismatch on method parameters. Expected {string.Join(", ", parameters.Select(p => p.ParameterType.ToString()))} got {string.Join(", ", argTypes.Select(t => t.ToString()))}");
             }
 

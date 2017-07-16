@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -10,15 +9,18 @@ using System.Windows.Threading;
 
 namespace Torch
 {
+    [Obsolete("Use ObservableList<T>.")]
     public class MTObservableCollection<T> : ObservableCollection<T>
     {
         public override event NotifyCollectionChangedEventHandler CollectionChanged;
+
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             NotifyCollectionChangedEventHandler collectionChanged = CollectionChanged;
             if (collectionChanged != null)
-                foreach (NotifyCollectionChangedEventHandler nh in collectionChanged.GetInvocationList())
+                foreach (var del in collectionChanged.GetInvocationList())
                 {
+                    var nh = (NotifyCollectionChangedEventHandler)del;
                     var dispObj = nh.Target as DispatcherObject;
 
                     var dispatcher = dispObj?.Dispatcher;

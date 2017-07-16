@@ -15,7 +15,7 @@ namespace Torch.Server.ViewModels.Entities
 
         public override bool CanStop => false;
 
-        public MTObservableCollection<GridViewModel> AttachedGrids { get; } = new MTObservableCollection<GridViewModel>();
+        public ObservableList<GridViewModel> AttachedGrids { get; } = new ObservableList<GridViewModel>();
 
         public async Task UpdateAttachedGrids()
         {

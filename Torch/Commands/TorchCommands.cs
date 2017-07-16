@@ -45,6 +45,42 @@ namespace Torch.Commands
             }
         }
 
+        [Command("longhelp", "Get verbose help. Will send a long message, check the Comms tab.")]
+        public void LongHelp()
+        {
+            var commandManager = Context.Torch.GetManager<CommandManager>();
+            commandManager.Commands.GetNode(Context.Args, out CommandTree.CommandNode node);
+
+            if (node != null)
+            {
+                var command = node.Command;
+                var children = node.Subcommands.Select(x => x.Key);
+
+                var sb = new StringBuilder();
+
+                if (command != null)
+                {
+                    sb.AppendLine($"Syntax: {command.SyntaxHelp}");
+                    sb.Append(command.HelpText);
+                }
+
+                if (node.Subcommands.Count() != 0)
+                    sb.Append($"\nSubcommands: {string.Join(", ", children)}");
+
+                Context.Respond(sb.ToString());
+            }
+            else
+            {
+                var sb = new StringBuilder("Available commands:\n");
+                foreach (var command in commandManager.Commands.WalkTree())
+                {
+                    if (command.IsCommand)
+                        sb.AppendLine($"{command.Command.SyntaxHelp}\n    {command.Command.HelpText}");
+                }
+                Context.Respond(sb.ToString());
+            }
+        }
+
         [Command("ver", "Shows the running Torch version.")]
         [Permission(MyPromoteLevel.None)]
         public void Version()
@@ -62,10 +98,21 @@ namespace Torch.Commands
         }
 
         [Command("stop", "Stops the server.")]
-        public void Stop()
+        public void Stop(bool save = true)
         {
             Context.Respond("Stopping server.");
+            if (save)
+                Context.Torch.Save(Context.Player?.IdentityId ?? 0).Wait();
             Context.Torch.Stop();
+        }
+
+        [Command("restart", "Restarts the server.")]
+        public void Restart(bool save = true)
+        {
+            Context.Respond("Restarting server.");
+            if (save)
+                Context.Torch.Save(Context.Player?.IdentityId ?? 0).Wait();
+            Context.Torch.Restart();
         }
         
         /// <summary>

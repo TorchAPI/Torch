@@ -8,9 +8,6 @@
              xmlns:entities="clr-namespace:Torch.Server.ViewModels.Entities"
              xmlns:blocks="clr-namespace:Torch.Server.ViewModels.Blocks"
              mc:Ignorable="d">
-    <UserControl.DataContext>
-        <viewModels:EntityTreeViewModel />
-    </UserControl.DataContext>
     <DockPanel>
         <DockPanel DockPanel.Dock="Left">
             <StackPanel DockPanel.Dock="Bottom">

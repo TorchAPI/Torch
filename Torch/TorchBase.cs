@@ -128,7 +128,7 @@ namespace Torch
             return Thread.CurrentThread.ManagedThreadId == MySandboxGame.Static.UpdateThread.ManagedThreadId;
         }
 
-        public async Task SaveGameAsync(Action<SaveGameStatus> callback)
+        public Task SaveGameAsync(Action<SaveGameStatus> callback)
         {
             Log.Info("Saving game");
 
@@ -142,26 +142,17 @@ namespace Torch
             }
             else
             {
-                using (var e = new AutoResetEvent(false))
-                {
-                    MyAsyncSaving.Start(() =>
-                    {
-                        MySector.ResetEyeAdaptation = true;
-                        e.Set();
-                    });
+                var e = new AutoResetEvent(false);
+                MyAsyncSaving.Start(() => e.Set());
 
-                    await Task.Run(() =>
-                    {
-                        if (e.WaitOne(60000))
-                        {
-                            callback?.Invoke(SaveGameStatus.Success);
-                            return;
-                        }
-                        
-                        callback?.Invoke(SaveGameStatus.TimedOut);
-                    }).ConfigureAwait(false);
-                }
+                return Task.Run(() =>
+                {
+                    callback?.Invoke(e.WaitOne(5000) ? SaveGameStatus.Success : SaveGameStatus.TimedOut);
+                    e.Dispose();
+                });
             }
+
+            return Task.CompletedTask;
         }
 
         #region Game Actions
@@ -306,19 +297,28 @@ namespace Torch
         }
 
         /// <inheritdoc/>
-        public virtual void Save(long callerId)
+        public virtual Task Save(long callerId)
         {
-
+            return Task.CompletedTask;
         }
 
-        /// <inheritdoc 
+        /// <inheritdoc/> 
         public virtual void Start()
         {
             
         }
 
         /// <inheritdoc />
-        public virtual void Stop() { }
+        public virtual void Stop()
+        {
+            
+        }
+
+        /// <inheritdoc />
+        public virtual void Restart()
+        {
+            
+        }
 
         /// <inheritdoc />
         public virtual void Dispose()

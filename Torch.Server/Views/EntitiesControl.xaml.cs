@@ -27,12 +27,14 @@ namespace Torch.Server.Views
     /// </summary>
     public partial class EntitiesControl : UserControl
     {
-        public EntityTreeViewModel Entities { get; set; } = new EntityTreeViewModel();
+        public EntityTreeViewModel Entities { get; set; }
 
         public EntitiesControl()
         {
             InitializeComponent();
+            Entities = new EntityTreeViewModel(this);
             DataContext = Entities;
+            Entities.Init();
         }
 
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)

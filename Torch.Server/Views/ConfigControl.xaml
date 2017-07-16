@@ -80,7 +80,7 @@
                             </DockPanel>
                             <Button Content="Add" Margin="3" Click="AddLimit_OnClick" />
                             <ListView ItemsSource="{Binding BlockLimits}" Margin="3">
-                                <ListBox.ItemTemplate>
+                                <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBox Text="{Binding BlockType}" Width="150" Margin="3" />
@@ -88,7 +88,7 @@
                                             <Button Content=" X " Margin="3" Click="RemoveLimit_OnClick" />
                                         </StackPanel>
                                     </DataTemplate>
-                                </ListBox.ItemTemplate>
+                                </ListView.ItemTemplate>
                             </ListView>
                         </StackPanel>
                     </Expander>

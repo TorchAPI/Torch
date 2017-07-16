@@ -1,6 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using NLog;
 using Sandbox.Game.Entities;
+using Sandbox.Game.Multiplayer;
+using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using Torch.Server.ViewModels.Blocks;
 
@@ -9,17 +12,16 @@ namespace Torch.Server.ViewModels.Entities
     public class GridViewModel : EntityViewModel, ILazyLoad
     {
         private MyCubeGrid Grid => (MyCubeGrid)Entity;
-        public MTObservableCollection<BlockViewModel> Blocks { get; } = new MTObservableCollection<BlockViewModel>();
-        private static readonly Logger Log = LogManager.GetLogger(nameof(GridViewModel));
+        public ObservableList<BlockViewModel> Blocks { get; } = new ObservableList<BlockViewModel>();
 
         /// <inheritdoc />
-        public string DescriptiveName => $"{Name} ({Grid.BlocksCount} blocks)";
+        public string DescriptiveName { get; }
 
         public GridViewModel() { }
 
         public GridViewModel(MyCubeGrid grid, EntityTreeViewModel tree) : base(grid, tree)
         {
-            Log.Debug($"Creating model {Grid.DisplayName}");
+            DescriptiveName = $"{grid.DisplayName} ({grid.BlocksCount} blocks)";
             Blocks.Add(new BlockViewModel(null, Tree));
         }
 
@@ -28,7 +30,6 @@ namespace Torch.Server.ViewModels.Entities
             if (obj.FatBlock != null)
                 Blocks.RemoveWhere(b => b.Block.EntityId == obj.FatBlock?.EntityId);
 
-            Blocks.Sort(b => b.Block.GetType().AssemblyQualifiedName);
             OnPropertyChanged(nameof(Name));
         }
 
@@ -36,9 +37,8 @@ namespace Torch.Server.ViewModels.Entities
         {
             var block = obj.FatBlock as IMyTerminalBlock;
             if (block != null)
-                Blocks.Add(new BlockViewModel(block, Tree));
+                Blocks.Insert(new BlockViewModel(block, Tree), b => b.Name);
 
-            Blocks.Sort(b => b.Block.GetType().AssemblyQualifiedName);
             OnPropertyChanged(nameof(Name));
         }
 
@@ -48,20 +48,23 @@ namespace Torch.Server.ViewModels.Entities
             if (_load)
                 return;
 
-            Log.Debug($"Loading model {Grid.DisplayName}");
             _load = true;
             Blocks.Clear();
-            TorchBase.Instance.InvokeBlocking(() =>
+            TorchBase.Instance.Invoke(() =>
             {
                 foreach (var block in Grid.GetFatBlocks().Where(b => b is IMyTerminalBlock))
                 {
                     Blocks.Add(new BlockViewModel((IMyTerminalBlock)block, Tree));
                 }
-            });
-            Blocks.Sort(b => b.Block.GetType().AssemblyQualifiedName);
 
-            Grid.OnBlockAdded += Grid_OnBlockAdded;
-            Grid.OnBlockRemoved += Grid_OnBlockRemoved;
+                Grid.OnBlockAdded += Grid_OnBlockAdded;
+                Grid.OnBlockRemoved += Grid_OnBlockRemoved;
+
+                Tree.ControlDispatcher.BeginInvoke(() =>
+                {
+                    Blocks.Sort(b => b.Block.CustomName);
+                });
+            });
         }
     }
 }

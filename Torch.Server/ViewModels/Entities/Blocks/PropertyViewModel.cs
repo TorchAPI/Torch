@@ -16,17 +16,15 @@ namespace Torch.Server.ViewModels.Blocks
 
         public T Value
         {
-            get
-            {
-                var val = default(T);
-                TorchBase.Instance.InvokeBlocking(() => val = _prop.GetValue(Block.Block));
-                return val;
-            }
+            get => _prop.GetValue(Block.Block);
             set
             {
-                TorchBase.Instance.InvokeBlocking(() => _prop.SetValue(Block.Block, value));
-                OnPropertyChanged();
-                Block.RefreshModel();
+                TorchBase.Instance.Invoke(() =>
+                {
+                    _prop.SetValue(Block.Block, value);
+                    OnPropertyChanged();
+                    Block.RefreshModel();
+                });
             }
         }
 
