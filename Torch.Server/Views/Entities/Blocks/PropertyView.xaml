@@ -10,13 +10,17 @@
     <UserControl.Resources>
         <converters:StringIdConverter x:Key="StringIdConverter"/>
     </UserControl.Resources>
-    <DockPanel x:Name="Dock">
-        <Label x:Name="Label" Width="150" VerticalAlignment="Center" DockPanel.Dock="Left">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Label Grid.Column="0" x:Name="Label" Width="150" VerticalAlignment="Center">
             <Label.Content>
                 <TextBlock Text="{Binding Name, StringFormat={}{0}: }" />
             </Label.Content>
             </Label>
-            <Frame x:Name="Frame" DockPanel.Dock="Right" NavigationUIVisibility="Hidden"/>
-        </DockPanel>
+            <Frame Grid.Column="1" x:Name="Frame" NavigationUIVisibility="Hidden"/>
+        </Grid>
 </UserControl>
 

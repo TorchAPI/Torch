@@ -8,14 +8,17 @@
              xmlns:entities="clr-namespace:Torch.Server.ViewModels.Entities"
              xmlns:blocks="clr-namespace:Torch.Server.ViewModels.Blocks"
              mc:Ignorable="d">
-    <DockPanel>
-        <DockPanel DockPanel.Dock="Left">
-            <StackPanel DockPanel.Dock="Bottom">
-                <Button Content="Delete" Click="Delete_OnClick" IsEnabled="{Binding CurrentEntity.CanDelete}"
-                        Margin="3" />
-                <Button Content="Stop" Click="Stop_OnClick" IsEnabled="{Binding CurrentEntity.CanStop}" Margin="3" />
-            </StackPanel>
-            <TreeView Width="300" Margin="3" DockPanel.Dock="Top" SelectedItemChanged="TreeView_OnSelectedItemChanged" TreeViewItem.Expanded="TreeViewItem_OnExpanded">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition MinWidth="300" Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TreeView Grid.Row="0" Margin="3" DockPanel.Dock="Top" SelectedItemChanged="TreeView_OnSelectedItemChanged" TreeViewItem.Expanded="TreeViewItem_OnExpanded">
                 <TreeView.Resources>
                     <HierarchicalDataTemplate DataType="{x:Type entities:GridViewModel}" ItemsSource="{Binding Blocks}">
                         <TextBlock Text="{Binding DescriptiveName}" />
@@ -63,7 +66,12 @@
                     </TreeViewItem.ItemTemplate>
                 </TreeViewItem>
             </TreeView>
-        </DockPanel>
-        <Frame x:Name="EditorFrame" Margin="3" NavigationUIVisibility="Hidden" />
-    </DockPanel>
+            <StackPanel Grid.Row="1" DockPanel.Dock="Bottom">
+                <Button Content="Delete" Click="Delete_OnClick" IsEnabled="{Binding CurrentEntity.CanDelete}"
+                        Margin="3" />
+                <Button Content="Stop" Click="Stop_OnClick" IsEnabled="{Binding CurrentEntity.CanStop}" Margin="3" />
+            </StackPanel>
+        </Grid>
+        <Frame Grid.Column="1" x:Name="EditorFrame" Margin="3" NavigationUIVisibility="Hidden" />
+    </Grid>
 </UserControl>

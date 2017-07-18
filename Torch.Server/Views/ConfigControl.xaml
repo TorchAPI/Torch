@@ -10,15 +10,27 @@
     <UserControl.DataContext>
         <viewModels:ConfigDedicatedViewModel />
     </UserControl.DataContext>
-    <DockPanel>
-        <DockPanel DockPanel.Dock="Top">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0">
             <Label Content="World:" DockPanel.Dock="Left" />
             <Button Content="New World" Margin="3" DockPanel.Dock="Right" Click="NewWorld_OnClick"/>
             <ComboBox Text="{Binding LoadWorld}" ItemsSource="{Binding WorldPaths}" IsEditable="True" Margin="3" SelectionChanged="Selector_OnSelectionChanged"/>
         </DockPanel>
-        <DockPanel DockPanel.Dock="Bottom">
-            <StackPanel DockPanel.Dock="Left">
-                <ScrollViewer IsEnabled="True">
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <ScrollViewer Grid.Row="0" Margin="3">
                     <StackPanel Orientation="Horizontal">
                         <StackPanel Margin="3" DockPanel.Dock="Left">
                             <Label Content="Server Name" />
@@ -37,24 +49,6 @@
                             <CheckBox IsChecked="{Binding PauseGameWhenEmpty}" Content="Pause When Empty" Margin="3" />
                         </StackPanel>
                         <StackPanel Margin="3">
-                            <!--
-                            <ListBox ItemsSource="{Binding Banned}" Width="130" Margin="3,0,3,3" Height="100"
-                                     MouseDoubleClick="Banned_OnMouseDoubleClick" /> -->
-                            <!--
-                            <ListBox ItemsSource="{Binding Administrators}" Width="130" Margin="3,0,3,3" Height="100"
-                                     MouseDoubleClick="Administrators_OnMouseDoubleClick">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBox Text="{Binding SteamId}" Width="100"/>
-                                            <Label Content="{Binding Name}"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox> -->
-                            <!--
-                            <ListBox ItemsSource="{Binding Mods}" Width="130" Margin="3,0,3,3" Height="100"
-                                     MouseDoubleClick="Mods_OnMouseDoubleClick" /> -->
                             <Label Content="Mods" />
                             <TextBox Text="{Binding Mods}" Margin="3" Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"/>
                             <Label Content="Administrators" />
@@ -64,20 +58,20 @@
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
-                <Button Content="Save Config" Margin="3" Click="Save_OnClick" />
-            </StackPanel>
-            <ScrollViewer Margin="3" DockPanel.Dock="Right" IsEnabled="True">
+                <Button Grid.Row="1" Content="Save Config" Margin="3" Click="Save_OnClick" />
+            </Grid>
+            <ScrollViewer Grid.Column="1" Margin="3">
                 <StackPanel DataContext="{Binding SessionSettings}">
                     <Expander Header="Block Limits">
                         <StackPanel Margin="10,0,0,0">
-                            <DockPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding MaxBlocksPerPlayer}" Margin="3" Width="70" />
                                 <Label Content="Max Blocks Per Player" />
-                            </DockPanel>
-                            <DockPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding MaxGridSize}" Margin="3" Width="70" />
                                 <Label Content="Max Grid Size" />
-                            </DockPanel>
+                            </StackPanel>
                             <Button Content="Add" Margin="3" Click="AddLimit_OnClick" />
                             <ListView ItemsSource="{Binding BlockLimits}" Margin="3">
                                 <ListView.ItemTemplate>
@@ -94,30 +88,30 @@
                     </Expander>
                     <Expander Header="Multipliers">
                         <StackPanel Margin="10,0,0,0">
-                            <DockPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding InventorySizeMultiplier}" Margin="3" Width="70" />
                                 <Label Content="Inventory Size" />
-                            </DockPanel>
-                            <DockPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding RefinerySpeedMultiplier}" Margin="3" Width="70" />
                                 <Label Content="Refinery Speed" />
-                            </DockPanel>
-                            <DockPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding AssemblerEfficiencyMultiplier}" Margin="3" Width="70" />
                                 <Label Content="Assembler Efficiency" />
-                            </DockPanel>
-                            <DockPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding AssemblerSpeedMultiplier}" Margin="3" Width="70" />
                                 <Label Content="Assembler Speed" />
-                            </DockPanel>
-                            <DockPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding GrinderSpeedMultiplier}" Margin="3" Width="70" />
                                 <Label Content="Grinder Speed" />
-                            </DockPanel>
-                            <DockPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding HackSpeedMultiplier}" Margin="3" Width="70" />
                                 <Label Content="Hacking Speed" />
-                            </DockPanel>
+                            </StackPanel>
                         </StackPanel>
                     </Expander>
                     <Expander Header="NPCs">
@@ -131,14 +125,14 @@
                     </Expander>
                     <Expander Header="Environment">
                         <StackPanel Margin="10,0,0,0">
-                            <DockPanel ToolTip="Increases physics precision at the cost of performance.">
+                            <StackPanel Orientation="Horizontal" ToolTip="Increases physics precision at the cost of performance.">
                                 <TextBox Text="{Binding PhysicsIterations}" Margin="3" Width="70" />
                                 <Label Content="Physics Iterations" />
-                            </DockPanel>
-                            <DockPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding MaxFloatingObjects}" Margin="3" Width="70" />
                                 <Label Content="Max Floating Objects" />
-                            </DockPanel>
+                            </StackPanel>
                             <CheckBox IsChecked="{Binding EnableRealisticSound}" Content="Enable Realistic Sound"
                                       Margin="3" />
                             <CheckBox IsChecked="{Binding EnableAirtightness}" Content="Enable Airtightness" Margin="3" />
@@ -149,41 +143,41 @@
                             <CheckBox IsChecked="{Binding EnableVoxelDestruction}" Content="Enable Voxel Destruction"
                                       Margin="3" />
                             <CheckBox IsChecked="{Binding EnableSunRotation}" Content="Enable Sun Rotation" Margin="3" />
-                            <DockPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding SunRotationInterval}" Margin="3" Width="70" />
                                 <Label Content="Sun Rotation Interval (mins)" />
-                            </DockPanel>
+                            </StackPanel>
                             <CheckBox IsChecked="{Binding EnableFlora}" Content="Enable Flora" Margin="3" />
-                            <DockPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding FloraDensity}" Margin="3" Width="70" />
                                 <Label Content="Flora Density" />
-                            </DockPanel>
-                            <DockPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding FloraDensityMultiplier}" Margin="3" Width="70" />
                                 <Label Content="Flora Density Multiplier" />
-                            </DockPanel>
-                            <DockPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding ViewDistance}" Margin="3" Width="70" />
                                 <Label Content="View Distance (meters)" />
-                            </DockPanel>
-                            <DockPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding WorldSize}" Margin="3" Width="70" />
                                 <Label Content="World Size (km)" />
-                            </DockPanel>
-                            <DockPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <ComboBox SelectedItem="{Binding EnvironmentHostility}"
                                           ItemsSource="{Binding EnvironmentHostilityValues}" Margin="3" Width="100"
                                           DockPanel.Dock="Left" />
                                 <Label Content="Environment Hostility" />
-                            </DockPanel>
+                            </StackPanel>
                         </StackPanel>
                     </Expander>
                     <Expander Header="Players">
                         <StackPanel Margin="10,0,0,0">
-                            <DockPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding MaxPlayers}" Margin="3" Width="70" />
                                 <Label Content="Max Players" />
-                            </DockPanel>
+                            </StackPanel>
                             <CheckBox IsChecked="{Binding EnableThirdPerson}" Content="Enable 3rd Person Camera"
                                       Margin="3" />
                             <CheckBox IsChecked="{Binding EnableJetpack}" Content="Enable Jetpack" Margin="3" />
@@ -191,20 +185,20 @@
                             <CheckBox IsChecked="{Binding EnableCopyPaste}" Content="Enable Copy/Paste" Margin="3" />
                             <CheckBox IsChecked="{Binding ShowPlayerNamesOnHud}" Content="Show Player Names on HUD"
                                       Margin="3" />
-                            <DockPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding SpawnTimeMultiplier}" Margin="3" Width="70" />
                                 <Label Content="Respawn Time Multiplier" />
-                            </DockPanel>
+                            </StackPanel>
                             <CheckBox IsChecked="{Binding ResetOwnership}" Content="Reset Ownership" Margin="3" />
                             <CheckBox IsChecked="{Binding SpawnWithTools}" Content="Spawn With Tools" Margin="3" />
                         </StackPanel>
                     </Expander>
                     <Expander Header="Miscellaneous">
                         <StackPanel Margin="10,0,0,0">
-                            <DockPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding AutosaveInterval}" Margin="3" Width="70" />
                                 <Label Content="Autosave Interval (minutes)" />
-                            </DockPanel>
+                            </StackPanel>
                             <CheckBox IsChecked="{Binding EnableConvertToStation}" Content="Enable Convert to Station"
                                       Margin="3" />
 
@@ -223,19 +217,19 @@
                             <CheckBox IsChecked="{Binding EnableWeapons}" Content="Enable Weapons" Margin="3" />
                             <CheckBox IsChecked="{Binding EnableIngameScripts}" Content="Enable Ingame Scripts"
                                       Margin="3" />
-                            <DockPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <ComboBox SelectedItem="{Binding GameMode}" ItemsSource="{Binding GameModeValues}"
                                           Margin="3" Width="100" DockPanel.Dock="Left" />
                                 <Label Content="Game Mode" />
-                            </DockPanel>
-                            <DockPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding MaxBackupSaves}" Margin="3" Width="70" />
                                 <Label Content="Max Backup Saves" />
-                            </DockPanel>
+                            </StackPanel>
                         </StackPanel>
                     </Expander>
                 </StackPanel>
             </ScrollViewer>
-        </DockPanel>
-    </DockPanel>
+        </Grid>
+    </Grid>
 </UserControl>

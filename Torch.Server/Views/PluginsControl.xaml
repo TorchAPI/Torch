@@ -10,21 +10,26 @@
     <UserControl.DataContext>
         <viewModels:PluginManagerViewModel/>
     </UserControl.DataContext>
-    <DockPanel>
-        <DockPanel>
-            <Button Content="Open Folder" Margin="3" DockPanel.Dock="Bottom" IsEnabled="false"></Button>
-            <ListView Width="150" ItemsSource="{Binding Plugins}" SelectedItem="{Binding SelectedPlugin}" Margin="3">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="150"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <ListView Grid.Row="0" ItemsSource="{Binding Plugins}" SelectedItem="{Binding SelectedPlugin}" Margin="3">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Name}"/>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-        </DockPanel>
-        <StackPanel Margin="3">
-            <Label Content="{Binding SelectedPlugin.Name}" FontSize="16"/>
-            <Frame NavigationUIVisibility="Hidden" Content="{Binding SelectedPlugin.Control}"/>
-        </StackPanel>
-    </DockPanel>
+            <Button Grid.Row="1" Content="Open Folder" Margin="3" DockPanel.Dock="Bottom" IsEnabled="false"/>
+        </Grid>
+        <Frame Grid.Column="1" NavigationUIVisibility="Hidden" Content="{Binding SelectedPlugin.Control}"/>
+    </Grid>
 </UserControl>
 

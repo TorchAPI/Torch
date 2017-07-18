@@ -32,10 +32,10 @@ namespace Torch.Server.Views.Blocks
         {
             switch (args.NewValue)
             {
-                case PropertyViewModel<bool> vmBool:
+                case PropertyViewModel<bool> _:
                     InitBool();
                     break;
-                case PropertyViewModel<StringBuilder> vmSb:
+                case PropertyViewModel<StringBuilder> _:
                     InitStringBuilder();
                     break;
                 default:

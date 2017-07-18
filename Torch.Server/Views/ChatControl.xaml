@@ -5,12 +5,12 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Torch.Server"
              mc:Ignorable="d">
-    <DockPanel>
-        <DockPanel DockPanel.Dock="Bottom">
-            <Button x:Name="Send" Content="Send" DockPanel.Dock="Right" Width="50" Margin="5,5,5,5" Click="SendButton_Click"></Button>
-            <TextBox x:Name="Message" DockPanel.Dock="Left" Margin="5,5,5,5" KeyDown="Message_OnKeyDown"></TextBox>
-        </DockPanel>
-        <ListView x:Name="ChatItems" ItemsSource="{Binding ChatHistory}" Margin="5,5,5,5">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <ListView Grid.Row="0" x:Name="ChatItems" ItemsSource="{Binding ChatHistory}" Margin="5,5,5,5">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled"/>
             <ListView.ItemTemplate>
                 <DataTemplate>
@@ -24,5 +24,13 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-    </DockPanel>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="1" x:Name="Send" Content="Send" DockPanel.Dock="Right" Width="50" Margin="5,5,5,5" Click="SendButton_Click"></Button>
+            <TextBox Grid.Column="0" x:Name="Message" DockPanel.Dock="Left" Margin="5,5,5,5" KeyDown="Message_OnKeyDown"></TextBox>
+        </Grid>
+    </Grid>
 </UserControl>

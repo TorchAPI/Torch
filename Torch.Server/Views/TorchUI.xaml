@@ -9,12 +9,16 @@
         mc:Ignorable="d"
         Title="Torch">
     <Window.Resources>
-        <converters:InverseBooleanConverter x:Key="inverseBool"/>
+        <converters:InverseBooleanConverter x:Key="InverseBool"/>
     </Window.Resources>
-    <DockPanel>
-        <StackPanel DockPanel.Dock="Top" Margin="5,5,5,5" Orientation="Horizontal">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Margin="5,5,5,5" Orientation="Horizontal">
             <Button x:Name="BtnStart" Content="Start" Height="24" Width="75" Margin="5,0,5,0"
-                    HorizontalAlignment="Left" Click="BtnStart_Click" IsDefault="True" IsEnabled="{Binding IsRunning, Converter={StaticResource inverseBool}}"/>
+                    HorizontalAlignment="Left" Click="BtnStart_Click" IsDefault="True" IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}"/>
             <Button x:Name="BtnStop" Content="Stop" Height="24" Width="75" Margin="5,0,5,0" HorizontalAlignment="Left"
                     Click="BtnStop_Click" IsEnabled="{Binding IsRunning}" />
             <Label>
@@ -33,22 +37,34 @@
                 </Label.Content>
             </Label>
         </StackPanel>
-        <TabControl x:Name="TabControl" DockPanel.Dock="Bottom" Margin="5,0,5,5">
+        <TabControl Grid.Row="1" Height="Auto" x:Name="TabControl" Margin="5,0,5,5">
             <TabItem Header="Configuration">
-                <DockPanel>
-                    <DockPanel DockPanel.Dock="Top">
-                        <Label Content="Instance Path: " Margin="3" />
-                        <TextBox x:Name="InstancePathBox" Margin="3" Height="20"
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" Content="Instance Path: " Margin="3" />
+                        <TextBox Grid.Column="1" x:Name="InstancePathBox" Margin="3" Height="20"
                                  TextChanged="InstancePathBox_OnTextChanged" IsEnabled="False" />
-                    </DockPanel>
-                    <views:ConfigControl x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom" IsEnabled="{Binding IsRunning, Converter={StaticResource inverseBool}}"/>
-                </DockPanel>
+                    </Grid>
+                    <views:ConfigControl Grid.Row="1" x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom" IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}"/>
+                </Grid>
             </TabItem>
             <TabItem Header="Chat/Players">
-                <DockPanel>
-                    <local:PlayerListControl x:Name="PlayerList" DockPanel.Dock="Right" Width="250" />
-                    <local:ChatControl x:Name="Chat" IsEnabled="{Binding IsRunning}"/>
-                </DockPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="250"/>
+                    </Grid.ColumnDefinitions>
+                    <local:ChatControl Grid.Column="0" x:Name="Chat" IsEnabled="{Binding IsRunning}"/>
+                    <local:PlayerListControl Grid.Column="1" x:Name="PlayerList" DockPanel.Dock="Right"/>
+                </Grid>
             </TabItem>
             <TabItem Header="Entity Manager">
                 <views:EntitiesControl />
@@ -57,5 +73,5 @@
                 <views:PluginsControl x:Name="Plugins" />
             </TabItem>
         </TabControl>
-    </DockPanel>
+    </Grid>
 </Window>
