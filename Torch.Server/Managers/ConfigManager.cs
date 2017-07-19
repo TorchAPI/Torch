@@ -56,6 +56,8 @@ namespace Torch.Server.Managers
             Directory.CreateDirectory(savesPath);
             var modsPath = Path.Combine(path, "Mods");
             Directory.CreateDirectory(modsPath);
+            var configPath = Path.Combine(path, "SpaceEngineers-Dedicated.cfg");
+            new MyConfigDedicated<MyObjectBuilder_SessionSettings>(configPath).Save();
             LoadInstance(path);
         }
     }

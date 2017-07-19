@@ -37,6 +37,11 @@ namespace Torch.Server.ViewModels.Entities
 
         public virtual bool CanDelete => !(Entity is IMyCharacter);
 
+        public virtual void Delete()
+        {
+            Entity.Close();
+        }
+
         public EntityViewModel(IMyEntity entity, EntityTreeViewModel tree)
         {
             Entity = entity;

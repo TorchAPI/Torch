@@ -18,6 +18,7 @@ using Sandbox.ModAPI;
 using SteamSDK;
 using Torch.API;
 using Torch.Managers;
+using Torch.Server.Managers;
 using VRage.Dedicated;
 using VRage.FileSystem;
 using VRage.Game;
@@ -55,6 +56,7 @@ namespace Torch.Server
 
         public TorchServer(TorchConfig config = null)
         {
+            AddManager(new ConfigManager(this));
             Config = config ?? new TorchConfig();
             MyFakes.ENABLE_INFINARIO = false;
         }
@@ -85,7 +87,11 @@ namespace Torch.Server
             MyPlugins.RegisterSandboxGameAssemblyFile(MyPerGameSettings.SandboxGameAssembly);
             MyPlugins.Load();
             MyGlobalTypeMetadata.Static.Init();
-            RuntimeHelpers.RunClassConstructor(typeof(MyObjectBuilder_Base).TypeHandle);
+
+            if (!Directory.Exists(Config.InstancePath))
+                GetManager<ConfigManager>().CreateInstance(Config.InstancePath);
+
+            Plugins.LoadPlugins();
         }
 
         private void InvokeBeforeRun()

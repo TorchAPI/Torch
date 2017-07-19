@@ -60,7 +60,7 @@ namespace Torch.Server.Views
         {
             if (Entities.CurrentEntity?.Entity is IMyCharacter)
                 return;
-            TorchBase.Instance.Invoke(() => Entities.CurrentEntity?.Entity.Close());
+            TorchBase.Instance.Invoke(() => Entities.CurrentEntity?.Delete());
         }
 
         private void Stop_OnClick(object sender, RoutedEventArgs e)

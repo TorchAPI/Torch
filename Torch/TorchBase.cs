@@ -226,16 +226,6 @@ namespace Torch
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
 
-            /*
-            if (Directory.Exists("DedicatedServer64"))
-            {
-                Log.Debug("Inserting DedicatedServer64 before MyPerGameSettings assembly paths");
-                MyPerGameSettings.GameModAssembly = $"DedicatedServer64\\{MyPerGameSettings.GameModAssembly}";
-                MyPerGameSettings.GameModObjBuildersAssembly = $"DedicatedServer64\\{MyPerGameSettings.GameModObjBuildersAssembly}";
-                MyPerGameSettings.SandboxAssembly = $"DedicatedServer64\\{MyPerGameSettings.SandboxAssembly}";
-                MyPerGameSettings.SandboxGameAssembly = $"DedicatedServer64\\{MyPerGameSettings.SandboxGameAssembly}";
-            }*/
-
             TorchVersion = Assembly.GetEntryAssembly().GetName().Version;
             GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
             var verInfo = $"Torch {TorchVersion}, SE {GameVersion}";

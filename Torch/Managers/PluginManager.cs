@@ -85,7 +85,7 @@ namespace Torch.Managers
         }
 
         /// <inheritdoc />
-        public override void Init()
+        public void LoadPlugins()
         {
             _updateManager = Torch.GetManager<UpdateManager>();
             var commands = Torch.GetManager<CommandManager>();

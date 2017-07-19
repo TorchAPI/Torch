@@ -30,5 +30,10 @@ namespace Torch.API.Managers
         /// Disposes all loaded plugins.
         /// </summary>
         void DisposePlugins();
+
+        /// <summary>
+        /// Load plugins.
+        /// </summary>
+        void LoadPlugins();
     }
 }

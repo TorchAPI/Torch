@@ -23,6 +23,7 @@ using Torch.Server.Views;
 using VRage.Game.ModAPI;
 using System.IO.Compression;
 using System.Net;
+using System.Security.Policy;
 using Torch.Server.Managers;
 using VRage.FileSystem;
 using VRageRender;
@@ -61,36 +62,21 @@ namespace Torch.Server
                 return;
             }
 
-            var configName = "TorchConfig.xml";
-            var configPath = Path.Combine(Directory.GetCurrentDirectory(), configName);
-            if (File.Exists(configName))
+            //CommandLine reflection triggers assembly loading, so DS update must be completely separated.
+            if (!args.Contains("-noupdate"))
             {
-                _log.Info($"Loading config {configPath}");
-                _config = TorchConfig.LoadFrom(configPath);
-            }
-            else
-            {
-                _log.Info($"Generating default config at {configPath}");
-                _config = new TorchConfig {InstancePath = Path.GetFullPath("Instance")};
-
-                _log.Warn("Would you like to enable automatic updates? (Y/n):");
-
-                var input = Console.ReadLine() ?? "";
-                var autoUpdate = string.IsNullOrEmpty(input) || input.Equals("y", StringComparison.InvariantCultureIgnoreCase);
-                _config.GetTorchUpdates = _config.GetPluginUpdates = autoUpdate;
-                if (autoUpdate)
+                if (!Directory.Exists("DedicatedServer64"))
                 {
-                    _log.Info("Automatic updates enabled.");
-                    RunSteamCmd();
+                    _log.Error("Game libraries not found. Press the Enter key to install the dedicated server.");
+                    Console.ReadLine();
                 }
-
-                _config.Save(configPath);
+                RunSteamCmd();
             }
+
+            InitConfig();
 
             if (!_config.Parse(args))
                 return;
-
-            _log.Debug(_config.ToString());
 
             if (!string.IsNullOrEmpty(_config.WaitForPID))
             {
@@ -110,12 +96,24 @@ namespace Torch.Server
             }
 
             _restartOnCrash = _config.RestartOnCrash;
-
-            if (_config.GetTorchUpdates || _config.Update)
-            {
-                RunSteamCmd();
-            }
             RunServer(_config);
+        }
+
+        public static void InitConfig()
+        {
+            var configName = "Torch.cfg";
+            var configPath = Path.Combine(Directory.GetCurrentDirectory(), configName);
+            if (File.Exists(configName))
+            {
+                _log.Info($"Loading config {configPath}");
+                _config = TorchConfig.LoadFrom(configPath);
+            }
+            else
+            {
+                _log.Info($"Generating default config at {configPath}");
+                _config = new TorchConfig { InstancePath = Path.GetFullPath("Instance") };
+                _config.Save(configPath);
+            }
         }
 
         private const string STEAMCMD_DIR = "steamcmd";

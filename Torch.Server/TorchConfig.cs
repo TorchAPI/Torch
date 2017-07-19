@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 using NLog;
 
 namespace Torch.Server
@@ -16,11 +17,11 @@ namespace Torch.Server
         public string InstancePath { get; set; }
 
         /// <inheritdoc />
-        [XmlIgnore, Arg("noupdate", "Disable automatically downloading game and plugin updates.")]
+        [JsonIgnore, Arg("noupdate", "Disable automatically downloading game and plugin updates.")]
         public bool NoUpdate { get => false; set => GetTorchUpdates = GetPluginUpdates = !value; }
 
         /// <inheritdoc />
-        [XmlIgnore, Arg("update", "Manually check for and install updates.")]
+        [JsonIgnore, Arg("update", "Manually check for and install updates.")]
         public bool Update { get; set; }
 
         /// <inheritdoc />
@@ -36,7 +37,7 @@ namespace Torch.Server
         public bool NoGui { get; set; }
 
         /// <inheritdoc />
-        [XmlIgnore, Arg("waitforpid", "Makes Torch wait for another process to exit.")]
+        [JsonIgnore, Arg("waitforpid", "Makes Torch wait for another process to exit.")]
         public string WaitForPID { get; set; }
 
         /// <inheritdoc />
@@ -53,33 +54,26 @@ namespace Torch.Server
         public int TickTimeout { get; set; } = 60;
 
         /// <inheritdoc />
-        public List<string> Plugins { get; set; } = new List<string>();
+        public List<string> Plugins { get; set; } = new List<string> {"TorchAPI/Concealment", "TorchAPI/Essentials"};
 
         internal Point WindowSize { get; set; } = new Point(800, 600);
         internal Point WindowPosition { get; set; } = new Point();
-        [NonSerialized]
+        [JsonIgnore]
         private string _path;
 
         public TorchConfig() : this("Torch") { }
 
-        public TorchConfig(string instanceName = "Torch", string instancePath = null, int autosaveInterval = 5, bool autoRestart = false)
+        public TorchConfig(string instanceName = "Torch", string instancePath = null)
         {
             InstanceName = instanceName;
             InstancePath = instancePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpaceEngineersDedicated");
-            //Autosave = autosaveInterval;
-            //AutoRestart = autoRestart;
         }
 
         public static TorchConfig LoadFrom(string path)
         {
             try
             {
-                var serializer = new XmlSerializer(typeof(TorchConfig));
-                TorchConfig config;
-                using (var f = File.OpenRead(path))
-                {
-                    config = (TorchConfig)serializer.Deserialize(f);
-                }
+                var config = JsonConvert.DeserializeObject<TorchConfig>(File.ReadAllText(path));
                 config._path = path;
                 return config;
             }
@@ -99,11 +93,8 @@ namespace Torch.Server
 
             try
             {
-                var serializer = new XmlSerializer(typeof(TorchConfig));
-                using (var f = File.Create(path))
-                {
-                    serializer.Serialize(f, this);
-                }
+                var str = JsonConvert.SerializeObject(this);
+                File.WriteAllText(path, str);
                 return true;
             }
             catch (Exception e)

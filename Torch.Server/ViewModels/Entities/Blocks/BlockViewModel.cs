@@ -50,6 +50,12 @@ namespace Torch.Server.ViewModels.Blocks
 
         public override bool CanStop => false;
 
+        /// <inheritdoc />
+        public override void Delete()
+        {
+            Block.CubeGrid.RazeBlock(Block.Position);
+        }
+
         public BlockViewModel(IMyTerminalBlock block, EntityTreeViewModel tree) : base(block, tree)
         {
             Block = block;

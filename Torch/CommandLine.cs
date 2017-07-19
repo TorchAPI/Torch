@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -14,7 +13,7 @@ namespace Torch
         private readonly string _argPrefix;
         private readonly Dictionary<ArgAttribute, PropertyInfo> _args = new Dictionary<ArgAttribute, PropertyInfo>();
 
-        public CommandLine(string argPrefix = "-")
+        protected CommandLine(string argPrefix = "-")
         {
             _argPrefix = argPrefix;
             foreach (var prop in GetType().GetProperties())
