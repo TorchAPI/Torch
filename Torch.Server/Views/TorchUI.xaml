@@ -18,7 +18,7 @@
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Margin="5,5,5,5" Orientation="Horizontal">
             <Button x:Name="BtnStart" Content="Start" Height="24" Width="75" Margin="5,0,5,0"
-                    HorizontalAlignment="Left" Click="BtnStart_Click" IsDefault="True" IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}"/>
+                    HorizontalAlignment="Left" Click="BtnStart_Click" IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}"/>
             <Button x:Name="BtnStop" Content="Stop" Height="24" Width="75" Margin="5,0,5,0" HorizontalAlignment="Left"
                     Click="BtnStop_Click" IsEnabled="{Binding IsRunning}" />
             <Label>
@@ -51,7 +51,7 @@
                         </Grid.ColumnDefinitions>
                         <Label Grid.Column="0" Content="Instance Path: " Margin="3" />
                         <TextBox Grid.Column="1" x:Name="InstancePathBox" Margin="3" Height="20"
-                                 TextChanged="InstancePathBox_OnTextChanged" IsEnabled="False" />
+                                 LostKeyboardFocus="InstancePathBox_OnLostKeyboardFocus" />
                     </Grid>
                     <views:ConfigControl Grid.Row="1" x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom" IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}"/>
                 </Grid>

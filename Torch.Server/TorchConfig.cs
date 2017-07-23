@@ -12,17 +12,24 @@ namespace Torch.Server
     {
         private static Logger _log = LogManager.GetLogger("Config");
 
+        public bool ShouldUpdatePlugins => (GetPluginUpdates && !NoUpdate) || ForceUpdate;
+        public bool ShouldUpdateTorch => (GetTorchUpdates && !NoUpdate) || ForceUpdate;
+
+        /// <inheritdoc />
+        [Arg("instancename", "The name of the Torch instance.")]
+        public string InstanceName { get; set; }
+
         /// <inheritdoc />
         [Arg("instancepath", "Server data folder where saves and mods are stored.")]
         public string InstancePath { get; set; }
 
         /// <inheritdoc />
         [JsonIgnore, Arg("noupdate", "Disable automatically downloading game and plugin updates.")]
-        public bool NoUpdate { get => false; set => GetTorchUpdates = GetPluginUpdates = !value; }
+        public bool NoUpdate { get; set; }
 
         /// <inheritdoc />
-        [JsonIgnore, Arg("update", "Manually check for and install updates.")]
-        public bool Update { get; set; }
+        [JsonIgnore, Arg("forceupdate", "Manually check for and install updates.")]
+        public bool ForceUpdate { get; set; }
 
         /// <inheritdoc />
         [Arg("autostart", "Start the server immediately.")]
@@ -41,10 +48,6 @@ namespace Torch.Server
         public string WaitForPID { get; set; }
 
         /// <inheritdoc />
-        [Arg("instancename", "The name of the Torch instance.")]
-        public string InstanceName { get; set; }
-
-        /// <inheritdoc />
         public bool GetTorchUpdates { get; set; } = true;
 
         /// <inheritdoc />
@@ -54,7 +57,7 @@ namespace Torch.Server
         public int TickTimeout { get; set; } = 60;
 
         /// <inheritdoc />
-        public List<string> Plugins { get; set; } = new List<string> {"TorchAPI/Concealment", "TorchAPI/Essentials"};
+        public List<string> Plugins { get; set; } = new List<string>();
 
         internal Point WindowSize { get; set; } = new Point(800, 600);
         internal Point WindowPosition { get; set; } = new Point();
@@ -73,9 +76,13 @@ namespace Torch.Server
         {
             try
             {
-                var config = JsonConvert.DeserializeObject<TorchConfig>(File.ReadAllText(path));
-                config._path = path;
-                return config;
+                var ser = new XmlSerializer(typeof(TorchConfig));
+                using (var f = File.OpenRead(path))
+                {
+                    var config = (TorchConfig)ser.Deserialize(f);
+                    config._path = path;
+                    return config;
+                }
             }
             catch (Exception e)
             {
@@ -93,8 +100,9 @@ namespace Torch.Server
 
             try
             {
-                var str = JsonConvert.SerializeObject(this);
-                File.WriteAllText(path, str);
+                var ser = new XmlSerializer(typeof(TorchConfig));
+                using (var f = File.Create(path))
+                    ser.Serialize(f, this);
                 return true;
             }
             catch (Exception e)

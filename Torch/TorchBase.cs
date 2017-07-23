@@ -228,7 +228,7 @@ namespace Torch
 
             TorchVersion = Assembly.GetEntryAssembly().GetName().Version;
             GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
-            var verInfo = $"Torch {TorchVersion}, SE {GameVersion}";
+            var verInfo = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}";
             Console.Title = verInfo;
 #if DEBUG
             Log.Info("DEBUG");

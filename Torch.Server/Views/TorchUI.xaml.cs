@@ -19,6 +19,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Sandbox;
 using Torch.API;
+using Torch.Server.Managers;
 using Timer = System.Timers.Timer;
 
 namespace Torch.Server
@@ -58,7 +59,6 @@ namespace Torch.Server
             _config = config;
             Dispatcher.Invoke(() =>
             {
-                ConfigControl.LoadDedicatedConfig(config);
                 InstancePathBox.Text = config.InstancePath;
             });
         }
@@ -66,7 +66,6 @@ namespace Torch.Server
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
             _config.Save();
-            ConfigControl.SaveConfig();
             new Thread(_server.Start).Start();
         }
 
@@ -92,13 +91,15 @@ namespace Torch.Server
             //MySandboxGame.Static.Invoke(MySandboxGame.ReloadDedicatedServerSession); use i
         }
 
-        private void InstancePathBox_OnTextChanged(object sender, TextChangedEventArgs e)
+        private void InstancePathBox_OnLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
             var name = ((TextBox)sender).Text;
 
-            _config.InstancePath = name;
+            if (!Directory.Exists(name))
+                return;
 
-            LoadConfig(_config);
+            _config.InstancePath = name;
+            _server.GetManager<InstanceManager>().LoadInstance(_config.InstancePath);
         }
     }
 }

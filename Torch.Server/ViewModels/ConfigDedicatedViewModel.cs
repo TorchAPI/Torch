@@ -15,6 +15,7 @@ namespace Torch.Server.ViewModels
     {
         private static readonly Logger Log = LogManager.GetLogger("Config");
         private MyConfigDedicated<MyObjectBuilder_SessionSettings> _config;
+        public MyConfigDedicated<MyObjectBuilder_SessionSettings> Model => _config;
 
         public ConfigDedicatedViewModel() : this(new MyConfigDedicated<MyObjectBuilder_SessionSettings>(""))
         {
@@ -54,7 +55,8 @@ namespace Torch.Server.ViewModels
             _config.Save(path);
         }
 
-        public SessionSettingsViewModel SessionSettings { get; }
+        private SessionSettingsViewModel _sessionSettings;
+        public SessionSettingsViewModel SessionSettings { get => _sessionSettings; set { _sessionSettings = value; OnPropertyChanged(); } }
 
         public ObservableList<string> WorldPaths { get; } = new ObservableList<string>();
         private string _administrators;

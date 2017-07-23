@@ -6,12 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Xml.Serialization;
 
 namespace Torch
 {
     /// <summary>
-    /// Simple class that manages saving <see cref="Persistent{T}.Data"/> to disk using JSON serialization.
+    /// Simple class that manages saving <see cref="Persistent{T}.Data"/> to disk using XML serialization.
     /// Can automatically save on changes by implementing <see cref="INotifyPropertyChanged"/> in the data class.
     /// </summary>
     /// <typeparam name="T">Data class type</typeparam>
@@ -19,7 +19,6 @@ namespace Torch
     {
         public string Path { get; set; }
         public T Data { get; private set; }
-        private Timer _saveTimer;
 
         ~Persistent()
         {
@@ -28,7 +27,6 @@ namespace Torch
 
         public Persistent(string path, T data = default(T))
         {
-            _saveTimer = new Timer(Callback);
             Path = path;
             Data = data;
             if (Data is INotifyPropertyChanged npc)
@@ -36,11 +34,6 @@ namespace Torch
         }
 
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            _saveTimer.Change(5000, -1);
-        }
-
-        private void Callback(object state)
         {
             Save();
         }
@@ -50,11 +43,10 @@ namespace Torch
             if (path == null)
                 path = Path;
 
+            var ser = new XmlSerializer(typeof(T));
             using (var f = File.Create(path))
             {
-                var writer = new StreamWriter(f);
-                writer.Write(JsonConvert.SerializeObject(Data, Formatting.Indented));
-                writer.Flush();
+                ser.Serialize(f, Data);
             }
         }
 
@@ -64,10 +56,10 @@ namespace Torch
 
             if (File.Exists(path))
             {
+                var ser = new XmlSerializer(typeof(T));
                 using (var f = File.OpenRead(path))
                 {
-                    var reader = new StreamReader(f);
-                    config.Data = JsonConvert.DeserializeObject<T>(reader.ReadToEnd());
+                    config.Data = (T)ser.Deserialize(f);
                 }
             }
             else if (saveIfNew)
@@ -84,7 +76,6 @@ namespace Torch
             {
                 if (Data is INotifyPropertyChanged npc)
                     npc.PropertyChanged -= OnPropertyChanged;
-                _saveTimer.Dispose();
                 Save();
             }
             catch

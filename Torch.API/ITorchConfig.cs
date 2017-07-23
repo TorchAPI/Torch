@@ -4,44 +4,21 @@ namespace Torch
 {
     public interface ITorchConfig
     {
-        /// <summary>
-        /// (server) Name of the instance.
-        /// </summary>
-        string InstanceName { get; set; }
-
-        /// <summary>
-        /// (server) Dedicated instance path.
-        /// </summary>
-        string InstancePath { get; set; }
-
-        /// <summary>
-        /// Enable automatic Torch updates.
-        /// </summary>
-        bool GetTorchUpdates { get; set; }
-
-        /// <summary>
-        /// Enable automatic Torch updates.
-        /// </summary>
+        bool Autostart { get; set; }
+        bool ForceUpdate { get; set; }
         bool GetPluginUpdates { get; set; }
-
-        /// <summary>
-        /// Restart Torch automatically if it crashes.
-        /// </summary>
+        bool GetTorchUpdates { get; set; }
+        string InstanceName { get; set; }
+        string InstancePath { get; set; }
+        bool NoGui { get; set; }
+        bool NoUpdate { get; set; }
+        List<string> Plugins { get; set; }
         bool RestartOnCrash { get; set; }
-
-        /// <summary>
-        /// Time-out in seconds for the Torch watchdog (to detect a hung session).
-        /// </summary>
+        bool ShouldUpdatePlugins { get; }
+        bool ShouldUpdateTorch { get; }
         int TickTimeout { get; set; }
+        string WaitForPID { get; set; }
 
-        /// <summary>
-        /// A list of plugins that should be installed.
-        /// </summary>
-        List<string> Plugins { get; }
-        
-        /// <summary>
-        /// Saves the config.
-        /// </summary>
         bool Save(string path = null);
     }
 }

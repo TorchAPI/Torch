@@ -71,7 +71,7 @@ namespace Torch.Managers
                 }
 
                 var manifest = PluginManifest.Load(manifestPath);
-                toDownload.Remove(manifest.Repository);
+                toDownload.RemoveAll(x => string.Compare(manifest.Repository, x, StringComparison.InvariantCultureIgnoreCase) == 0);
                 taskList.Add(_updateManager.CheckAndUpdatePlugin(manifest));
             }
 
@@ -90,7 +90,7 @@ namespace Torch.Managers
             _updateManager = Torch.GetManager<UpdateManager>();
             var commands = Torch.GetManager<CommandManager>();
 
-            if (Torch.Config.GetPluginUpdates)
+            if (Torch.Config.ShouldUpdatePlugins)
                 DownloadPlugins();
             else
                 _log.Warn("Automatic plugin updates are disabled.");

@@ -40,8 +40,7 @@ namespace Torch.Commands
             }
             else
             {
-                var topNodeNames = commandManager.Commands.Root.Select(x => x.Key);
-                Context.Respond($"Top level commands: {string.Join(", ", topNodeNames)}");
+                Context.Respond($"Use the {commandManager.Prefix}longhelp command and check your Comms menu for a full list of commands.");
             }
         }
 

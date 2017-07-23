@@ -158,12 +158,12 @@
   <ItemGroup>
     <Compile Include="ConnectionState.cs" />
     <Compile Include="IChatMessage.cs" />
+    <Compile Include="ITorchConfig.cs" />
     <Compile Include="Managers\IManager.cs" />
     <Compile Include="Managers\IMultiplayerManager.cs" />
     <Compile Include="IPlayer.cs" />
     <Compile Include="Managers\INetworkManager.cs" />
     <Compile Include="Managers\IPluginManager.cs" />
-    <Compile Include="ITorchConfig.cs" />
     <Compile Include="Plugins\ITorchPlugin.cs" />
     <Compile Include="IServerControls.cs" />
     <Compile Include="ITorchBase.cs" />

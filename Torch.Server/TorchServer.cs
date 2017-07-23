@@ -41,6 +41,7 @@ namespace Torch.Server
         public Thread GameThread { get; private set; }
         public ServerState State { get => _state; private set { _state = value; OnPropertyChanged(); } }
         public bool IsRunning { get => _isRunning; set { _isRunning = value; OnPropertyChanged(); } }
+        public InstanceManager DedicatedInstance { get; }
         /// <inheritdoc />
         public string InstanceName => Config?.InstanceName;
         /// <inheritdoc />
@@ -56,7 +57,8 @@ namespace Torch.Server
 
         public TorchServer(TorchConfig config = null)
         {
-            AddManager(new ConfigManager(this));
+            DedicatedInstance = new InstanceManager(this);
+            AddManager(DedicatedInstance);
             Config = config ?? new TorchConfig();
             MyFakes.ENABLE_INFINARIO = false;
         }
@@ -64,9 +66,8 @@ namespace Torch.Server
         /// <inheritdoc />
         public override void Init()
         {
-            base.Init();
-
             Log.Info($"Init server '{Config.InstanceName}' at '{Config.InstancePath}'");
+            base.Init();
 
             MyPerGameSettings.SendLogToKeen = false;
             MyPerServerSettings.GameName = MyPerGameSettings.GameName;
@@ -78,7 +79,6 @@ namespace Torch.Server
             MyFinalBuildConstants.APP_VERSION = MyPerGameSettings.BasicGameInfo.GameVersion;
 
             MyObjectBuilderSerializer.RegisterFromAssembly(typeof(MyObjectBuilder_CheckpointSerializer).Assembly);
-            
             InvokeBeforeRun();
 
             MyPlugins.RegisterGameAssemblyFile(MyPerGameSettings.GameModAssembly);
@@ -88,26 +88,11 @@ namespace Torch.Server
             MyPlugins.Load();
             MyGlobalTypeMetadata.Static.Init();
 
-            if (!Directory.Exists(Config.InstancePath))
-                GetManager<ConfigManager>().CreateInstance(Config.InstancePath);
-
             Plugins.LoadPlugins();
         }
 
         private void InvokeBeforeRun()
         {
-            
-            var contentPath = "Content";
-
-            var privateContentPath = typeof(MyFileSystem).GetField("m_contentPath", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as string;
-            if (privateContentPath != null)
-                Log.Debug("MyFileSystem already initialized");
-            else
-            {
-                MyFileSystem.ExePath = Path.Combine(GetManager<FilesystemManager>().TorchDirectory, "DedicatedServer64");
-                MyFileSystem.Init(contentPath, InstancePath);
-            }
-
             MySandboxGame.Log.Init("SpaceEngineers-Dedicated.log", MyFinalBuildConstants.APP_VERSION_STRING);
             MySandboxGame.Log.WriteLine("Steam build: Always true");
             MySandboxGame.Log.WriteLine("Environment.ProcessorCount: " + MyEnvironment.ProcessorCount);
@@ -142,6 +127,7 @@ namespace Torch.Server
             if (State != ServerState.Stopped)
                 return;
 
+            DedicatedInstance.SaveConfig();
             _uptime = Stopwatch.StartNew();
             IsRunning = true;
             GameThread = Thread.CurrentThread;
@@ -179,10 +165,10 @@ namespace Torch.Server
             var elapsed = TimeSpan.FromSeconds(Math.Floor(_uptime.Elapsed.TotalSeconds));
             ElapsedPlayTime = elapsed;
 
-            if (_watchdog == null && Instance.Config.TickTimeout > 0)
+            if (_watchdog == null && Config.TickTimeout > 0)
             {
                 Log.Info("Starting server watchdog.");
-                _watchdog = new Timer(CheckServerResponding, this, TimeSpan.Zero, TimeSpan.FromSeconds(Instance.Config.TickTimeout));
+                _watchdog = new Timer(CheckServerResponding, this, TimeSpan.Zero, TimeSpan.FromSeconds(Config.TickTimeout));
             }
         }
 
@@ -195,7 +181,7 @@ namespace Torch.Server
                 var mainThread = MySandboxGame.Static.UpdateThread;
                 mainThread.Suspend();
                 var stackTrace = new StackTrace(mainThread, true);
-                throw new TimeoutException($"Server watchdog detected that the server was frozen for at least {Instance.Config.TickTimeout} seconds.\n{stackTrace}");
+                throw new TimeoutException($"Server watchdog detected that the server was frozen for at least {((TorchServer)state).Config.TickTimeout} seconds.\n{stackTrace}");
             }
 
             Log.Debug("Server watchdog responded");

@@ -54,9 +54,10 @@ namespace Torch.Managers
                 var zip = latest.Assets.FirstOrDefault(x => x.Name.Contains(".zip"));
                 return new Tuple<Version, string>(new Version(latest.TagName ?? "0"), zip?.BrowserDownloadUrl);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 _log.Error($"An error occurred getting release information for '{owner}/{name}'");
+                _log.Error(e);
                 return new Tuple<Version, string>(new Version(), null);
             }
         }
