@@ -26,4 +26,5 @@ Install plugins by unzipping them into the 'Plugins' folder which should be in t
 * [Essentials](https://github.com/TorchAPI/Essentials): Adds a slew of chat commands and other tools to help manage your server.
 * [Concealment](https://github.com/TorchAPI/Concealment): Adds game logic and physics optimizations that significantly improve sim speed.
 
-If you have a more enjoyable server experience because of Torch, please consider supporting us on [Patreon](https://www.patreon.com/bePatron?u=847269)!
+If you have a more enjoyable server experience because of Torch, please consider supporting us on Patreon.
+[![Patreon](http://i.imgur.com/VzzIMgn.png)](https://www.patreon.com/bePatron?u=847269)!
