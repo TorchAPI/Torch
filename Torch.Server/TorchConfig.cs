@@ -24,11 +24,11 @@ namespace Torch.Server
         public string InstancePath { get; set; }
 
         /// <inheritdoc />
-        [JsonIgnore, Arg("noupdate", "Disable automatically downloading game and plugin updates.")]
+        [XmlIgnore, Arg("noupdate", "Disable automatically downloading game and plugin updates.")]
         public bool NoUpdate { get; set; }
 
         /// <inheritdoc />
-        [JsonIgnore, Arg("forceupdate", "Manually check for and install updates.")]
+        [XmlIgnore, Arg("forceupdate", "Manually check for and install updates.")]
         public bool ForceUpdate { get; set; }
 
         /// <inheritdoc />
@@ -44,7 +44,7 @@ namespace Torch.Server
         public bool NoGui { get; set; }
 
         /// <inheritdoc />
-        [JsonIgnore, Arg("waitforpid", "Makes Torch wait for another process to exit.")]
+        [XmlIgnore, Arg("waitforpid", "Makes Torch wait for another process to exit.")]
         public string WaitForPID { get; set; }
 
         /// <inheritdoc />
@@ -61,7 +61,7 @@ namespace Torch.Server
 
         internal Point WindowSize { get; set; } = new Point(800, 600);
         internal Point WindowPosition { get; set; } = new Point();
-        [JsonIgnore]
+        [XmlIgnore]
         private string _path;
 
         public TorchConfig() : this("Torch") { }
