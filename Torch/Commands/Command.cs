@@ -8,6 +8,7 @@ using NLog;
 using Torch.API;
 using Torch.API.Plugins;
 using Torch.Commands.Permissions;
+using VRage.Game;
 using VRage.Game.ModAPI;
 
 namespace Torch.Commands
@@ -26,6 +27,7 @@ namespace Torch.Commands
         private readonly MethodInfo _method;
         private ParameterInfo[] _parameters;
         private int? _requiredParamCount;
+        private static readonly Logger Log = LogManager.GetLogger(nameof(Command));
 
         public Command(ITorchPlugin plugin, MethodInfo commandMethod)
         {
@@ -84,31 +86,41 @@ namespace Torch.Commands
 
         public bool TryInvoke(CommandContext context)
         {
-            var parameters = new object[_parameters.Length];
-
-            if (context.Args.Count < _requiredParamCount)
-                return false;
-
-            //Convert args from string
-            for (var i = 0; i < _parameters.Length && i < context.Args.Count; i++)
+            try
             {
-                if (context.Args[i].TryConvert(_parameters[i].ParameterType, out object obj))
-                    parameters[i] = obj;
-                else
+                var parameters = new object[_parameters.Length];
+
+                if (context.Args.Count < _requiredParamCount)
                     return false;
-            }
 
-            //Fill remaining parameters with default values
-            for (var i = 0; i < parameters.Length; i++)
+                //Convert args from string
+                for (var i = 0; i < _parameters.Length && i < context.Args.Count; i++)
+                {
+                    if (context.Args[i].TryConvert(_parameters[i].ParameterType, out object obj))
+                        parameters[i] = obj;
+                    else
+                        return false;
+                }
+
+                //Fill remaining parameters with default values
+                for (var i = 0; i < parameters.Length; i++)
+                {
+                    if (parameters[i] == null)
+                        parameters[i] = _parameters[i].DefaultValue;
+                }
+
+                var moduleInstance = (CommandModule)Activator.CreateInstance(Module);
+                moduleInstance.Context = context;
+                _method.Invoke(moduleInstance, parameters);
+                return true;
+            }
+            catch (Exception e)
             {
-                if (parameters[i] == null)
-                    parameters[i] = _parameters[i].DefaultValue;
+                context.Respond(e.Message, "Error", MyFontEnum.Red);
+                Log.Error($"Command '{SyntaxHelp}' from '{Plugin.Name ?? "Torch"}' threw an exception. Args: {string.Join(", ", context.Args)}");
+                Log.Error(e);
+                return true;
             }
-
-            var moduleInstance = (CommandModule)Activator.CreateInstance(Module);
-            moduleInstance.Context = context;
-            _method.Invoke(moduleInstance, parameters);
-            return true;
         }
     }
 
