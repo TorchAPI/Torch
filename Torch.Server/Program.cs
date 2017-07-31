@@ -84,10 +84,14 @@ namespace Torch.Server
                 {
                     var pid = int.Parse(_config.WaitForPID);
                     var waitProc = Process.GetProcessById(pid);
-                    _log.Warn($"Waiting for process {pid} to exit.");
-                    waitProc.WaitForExit();
                     _log.Info("Continuing in 5 seconds.");
                     Thread.Sleep(5000);
+                    if (!waitProc.HasExited)
+                    {
+                        _log.Warn($"Killing old process {pid}.");
+                        waitProc.Kill();
+                    }
+                        
                 }
                 catch
                 {

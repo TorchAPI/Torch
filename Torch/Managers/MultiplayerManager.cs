@@ -120,6 +120,9 @@ namespace Torch.Managers
         /// <inheritdoc />
         public void SendMessage(string message, string author = "Server", long playerId = 0, string font = MyFontEnum.Red)
         {
+            if (string.IsNullOrEmpty(message))
+                return;
+
             ChatHistory.Add(new ChatMessage(DateTime.Now, 0, author, message));
             var commands = Torch.GetManager<CommandManager>();
             if (commands.IsCommand(message))

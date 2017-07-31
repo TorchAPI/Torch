@@ -126,8 +126,7 @@ namespace Torch.Managers
                 }
                 catch (Exception ex)
                 {
-                    _log.Fatal(ex);
-                    _log.Fatal(ex, "~Error processing event!");
+                    _log.Error(ex);
                     //crash after logging, bad things could happen if we continue on with bad data
                     throw;
                 }
@@ -200,8 +199,8 @@ namespace Torch.Managers
             }
             catch (Exception ex)
             {
-                _log.Fatal(ex);
-                _log.Fatal(ex, "Error when returning control to game server!");
+                _log.Error(ex, "Error processing network event!");
+                _log.Error(ex);
                 //crash after logging, bad things could happen if we continue on with bad data
                 throw;
             }

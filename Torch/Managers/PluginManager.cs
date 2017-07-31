@@ -121,9 +121,10 @@ namespace Torch.Managers
 
                             commands.RegisterPluginCommands(plugin);
                         }
-                        catch
+                        catch (Exception e)
                         {
                             _log.Error($"Error loading plugin '{type.FullName}'");
+                            _log.Error(e);
                             throw;
                         }
                     }

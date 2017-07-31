@@ -1,4 +1,4 @@
-# Torch 1.1.205.478
+# Torch 1.1.207.7
 * Notes
     - This release makes significant changes to TorchConfig.xml. It has been renamed to Torch.cfg and has different options.
 * Features

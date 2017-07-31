@@ -45,6 +45,8 @@ namespace Torch.Server.Managers
             MyFileSystem.Reset();
             MyFileSystem.ExePath = Path.Combine(Torch.GetManager<FilesystemManager>().TorchDirectory, "DedicatedServer64");
             MyFileSystem.Init("Content", path);
+            //Initializes saves path. Why this isn't in Init() we may never know.
+            MyFileSystem.InitUserSpecific(null);
 
             var configPath = Path.Combine(path, CONFIG_NAME);
             if (!File.Exists(configPath))
@@ -68,6 +70,8 @@ namespace Torch.Server.Managers
                 return;
             }
 
+            LoadWorldMods();
+
             /*
             if (string.IsNullOrEmpty(DedicatedConfig.LoadWorld))
             {
@@ -85,7 +89,7 @@ namespace Torch.Server.Managers
 
         private void LoadWorldMods(bool modsOnly = true)
         {
-            if (DedicatedConfig.LoadWorld == null)
+            if (string.IsNullOrEmpty(DedicatedConfig.LoadWorld))
                 return;
 
             var sandboxPath = Path.Combine(DedicatedConfig.LoadWorld, "Sandbox.sbc");

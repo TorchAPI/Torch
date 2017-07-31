@@ -40,7 +40,7 @@ namespace Torch.Commands
 
         public bool IsCommand(string command)
         {
-            return command.Length > 1 && command[0] == Prefix;
+            return !string.IsNullOrEmpty(command) && command[0] == Prefix;
         }
 
         public void RegisterCommandModule(Type moduleType, ITorchPlugin plugin = null)
