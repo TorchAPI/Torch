@@ -39,7 +39,7 @@
         </StackPanel>
         <TabControl Grid.Row="1" Height="Auto" x:Name="TabControl" Margin="5,0,5,5">
             <TabItem Header="Configuration">
-                <Grid>
+                <Grid IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition/>

@@ -34,7 +34,10 @@ namespace Torch.Server.Managers
         /// <inheritdoc />
         public override void Init()
         {
-            LoadInstance(Torch.Config.InstancePath);
+            MyFileSystem.ExePath = Path.Combine(Torch.GetManager<FilesystemManager>().TorchDirectory, "DedicatedServer64");
+            MyFileSystem.Init("Content", Torch.Config.InstancePath);
+            //Initializes saves path. Why this isn't in Init() we may never know.
+            MyFileSystem.InitUserSpecific(null);
         }
 
         public void LoadInstance(string path, bool validate = true)
@@ -70,7 +73,7 @@ namespace Torch.Server.Managers
                 return;
             }
 
-            LoadWorldMods();
+            ImportWorldConfig();
 
             /*
             if (string.IsNullOrEmpty(DedicatedConfig.LoadWorld))
@@ -83,11 +86,11 @@ namespace Torch.Server.Managers
         public void SelectWorld(string worldPath, bool modsOnly = true)
         {
             DedicatedConfig.LoadWorld = worldPath;
-            LoadWorldMods(modsOnly);
+            ImportWorldConfig(modsOnly);
         }
 
 
-        private void LoadWorldMods(bool modsOnly = true)
+        private void ImportWorldConfig(bool modsOnly = true)
         {
             if (string.IsNullOrEmpty(DedicatedConfig.LoadWorld))
                 return;
@@ -112,14 +115,14 @@ namespace Torch.Server.Managers
 
                 DedicatedConfig.Mods = sb.ToString();
 
-                Log.Info("Loaded mod list from world");
+                Log.Debug("Loaded mod list from world");
 
                 if (!modsOnly)
                     DedicatedConfig.SessionSettings = new SessionSettingsViewModel(checkpoint.Settings);
             }
             catch (Exception e)
             {
-                Log.Error($"Error loading mod list from world '{DedicatedConfig.LoadWorld}'.");
+                Log.Error($"Error loading mod list from world, verify that your mod list is accurate. '{DedicatedConfig.LoadWorld}'.");
                 Log.Error(e);
             }
         }

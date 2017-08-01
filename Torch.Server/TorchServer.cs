@@ -67,7 +67,6 @@ namespace Torch.Server
         public override void Init()
         {
             Log.Info($"Init server '{Config.InstanceName}' at '{Config.InstancePath}'");
-            MyObjectBuilderSerializer.RegisterFromAssembly(typeof(MyObjectBuilder_CheckpointSerializer).Assembly);
             base.Init();
 
             MyPerGameSettings.SendLogToKeen = false;
@@ -80,6 +79,7 @@ namespace Torch.Server
             MyFinalBuildConstants.APP_VERSION = MyPerGameSettings.BasicGameInfo.GameVersion;
             InvokeBeforeRun();
 
+            MyObjectBuilderSerializer.RegisterFromAssembly(typeof(MyObjectBuilder_CheckpointSerializer).Assembly);
             MyPlugins.RegisterGameAssemblyFile(MyPerGameSettings.GameModAssembly);
             MyPlugins.RegisterGameObjectBuildersAssemblyFile(MyPerGameSettings.GameModObjBuildersAssembly);
             MyPlugins.RegisterSandboxAssemblyFile(MyPerGameSettings.SandboxAssembly);
@@ -87,6 +87,7 @@ namespace Torch.Server
             MyPlugins.Load();
             MyGlobalTypeMetadata.Static.Init();
 
+            GetManager<InstanceManager>().LoadInstance(Config.InstancePath);
             Plugins.LoadPlugins();
         }
 

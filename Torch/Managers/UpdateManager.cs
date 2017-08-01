@@ -67,27 +67,35 @@ namespace Torch.Managers
             if (!Torch.Config.GetPluginUpdates)
                 return;
 
-            var name = manifest.Repository.Split('/');
-            if (name.Length != 2)
+            try
             {
-                _log.Error($"'{manifest.Repository}' is not a valid GitHub repository.");
-                return;
-            }
+                var name = manifest.Repository.Split('/');
+                if (name.Length != 2)
+                {
+                    _log.Error($"'{manifest.Repository}' is not a valid GitHub repository.");
+                    return;
+                }
 
-            var currentVersion = new Version(manifest.Version);
-            var releaseInfo = await GetLatestRelease(name[0], name[1]).ConfigureAwait(false);
-            if (releaseInfo.Item1 > currentVersion)
-            {
-                _log.Warn($"Updating {manifest.Repository} from version {currentVersion} to version {releaseInfo.Item1}");
-                var updateName = Path.Combine(_fsManager.TempDirectory, $"{name[0]}_{name[1]}.zip");
-                var updatePath = Path.Combine(_torchDir, "Plugins");
-                await new WebClient().DownloadFileTaskAsync(new Uri(releaseInfo.Item2), updateName).ConfigureAwait(false);
-                UpdateFromZip(updateName, updatePath);
-                File.Delete(updateName);
+                var currentVersion = new Version(manifest.Version);
+                var releaseInfo = await GetLatestRelease(name[0], name[1]).ConfigureAwait(false);
+                if (releaseInfo.Item1 > currentVersion)
+                {
+                    _log.Warn($"Updating {manifest.Repository} from version {currentVersion} to version {releaseInfo.Item1}");
+                    var updateName = Path.Combine(_fsManager.TempDirectory, $"{name[0]}_{name[1]}.zip");
+                    var updatePath = Path.Combine(_torchDir, "Plugins");
+                    await new WebClient().DownloadFileTaskAsync(new Uri(releaseInfo.Item2), updateName).ConfigureAwait(false);
+                    UpdateFromZip(updateName, updatePath);
+                    File.Delete(updateName);
+                }
+                else
+                {
+                    _log.Info($"{manifest.Repository} is up to date. ({currentVersion})");
+                }
             }
-            else
+            catch (Exception e)
             {
-                _log.Info($"{manifest.Repository} is up to date. ({currentVersion})");
+                _log.Error($"An error occured downloading the plugin update for {manifest.Repository}.");
+                _log.Error(e);
             }
         }
 
@@ -96,18 +104,26 @@ namespace Torch.Managers
             if (!Torch.Config.GetTorchUpdates)
                 return;
 
-            var releaseInfo = await GetLatestRelease("TorchAPI", "Torch").ConfigureAwait(false);
-            if (releaseInfo.Item1 > Torch.TorchVersion)
+            try
             {
-                _log.Warn($"Updating Torch from version {Torch.TorchVersion} to version {releaseInfo.Item1}");
-                var updateName = Path.Combine(_fsManager.TempDirectory, "torchupdate.zip");
-                new WebClient().DownloadFile(new Uri(releaseInfo.Item2), updateName);
-                UpdateFromZip(updateName, _torchDir);
-                File.Delete(updateName);
+                var releaseInfo = await GetLatestRelease("TorchAPI", "Torch").ConfigureAwait(false);
+                if (releaseInfo.Item1 > Torch.TorchVersion)
+                {
+                    _log.Warn($"Updating Torch from version {Torch.TorchVersion} to version {releaseInfo.Item1}");
+                    var updateName = Path.Combine(_fsManager.TempDirectory, "torchupdate.zip");
+                    new WebClient().DownloadFile(new Uri(releaseInfo.Item2), updateName);
+                    UpdateFromZip(updateName, _torchDir);
+                    File.Delete(updateName);
+                }
+                else
+                {
+                    _log.Info("Torch is up to date.");
+                }
             }
-            else
+            catch (Exception e)
             {
-                _log.Info("Torch is up to date.");
+                _log.Error("An error occured downloading the Torch update.");
+                _log.Error(e);
             }
         }
 
