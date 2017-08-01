@@ -67,6 +67,7 @@ namespace Torch.Server
         public override void Init()
         {
             Log.Info($"Init server '{Config.InstanceName}' at '{Config.InstancePath}'");
+            MyObjectBuilderSerializer.RegisterFromAssembly(typeof(MyObjectBuilder_CheckpointSerializer).Assembly);
             base.Init();
 
             MyPerGameSettings.SendLogToKeen = false;
@@ -77,8 +78,6 @@ namespace Torch.Server
             MySessionComponentExtDebug.ForceDisable = true;
             MyPerServerSettings.AppId = 244850;
             MyFinalBuildConstants.APP_VERSION = MyPerGameSettings.BasicGameInfo.GameVersion;
-
-            MyObjectBuilderSerializer.RegisterFromAssembly(typeof(MyObjectBuilder_CheckpointSerializer).Assembly);
             InvokeBeforeRun();
 
             MyPlugins.RegisterGameAssemblyFile(MyPerGameSettings.GameModAssembly);
@@ -143,6 +142,8 @@ namespace Torch.Server
             VRage.Service.ExitListenerSTA.OnExit += delegate { MySandboxGame.Static?.Exit(); };
 
             base.Start();
+            //Stops RunInternal from calling MyFileSystem.InitUserSpecific(null), we call it in InstanceManager.
+            MySandboxGame.IsReloading = true;
             runInternal.Invoke(null, null);
 
             MySandboxGame.Log.Close();

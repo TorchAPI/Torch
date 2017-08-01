@@ -97,23 +97,31 @@ namespace Torch.Server.Managers
             if (!File.Exists(sandboxPath))
                 return;
 
-            MyObjectBuilderSerializer.DeserializeXML(sandboxPath, out MyObjectBuilder_Checkpoint checkpoint, out ulong sizeInBytes);
-            if (checkpoint == null)
+            try
             {
-                Log.Error($"Failed to load {DedicatedConfig.LoadWorld}, checkpoint null ({sizeInBytes} bytes, instance {TorchBase.Instance.Config.InstancePath})");
-                return;
+                MyObjectBuilderSerializer.DeserializeXML(sandboxPath, out MyObjectBuilder_Checkpoint checkpoint, out ulong sizeInBytes);
+                if (checkpoint == null)
+                {
+                    Log.Error($"Failed to load {DedicatedConfig.LoadWorld}, checkpoint null ({sizeInBytes} bytes, instance {TorchBase.Instance.Config.InstancePath})");
+                    return;
+                }
+
+                var sb = new StringBuilder();
+                foreach (var mod in checkpoint.Mods)
+                    sb.AppendLine(mod.PublishedFileId.ToString());
+
+                DedicatedConfig.Mods = sb.ToString();
+
+                Log.Info("Loaded mod list from world");
+
+                if (!modsOnly)
+                    DedicatedConfig.SessionSettings = new SessionSettingsViewModel(checkpoint.Settings);
             }
-
-            var sb = new StringBuilder();
-            foreach (var mod in checkpoint.Mods)
-                sb.AppendLine(mod.PublishedFileId.ToString());
-
-            DedicatedConfig.Mods = sb.ToString();
-
-            Log.Info("Loaded mod list from world");
-
-            if (!modsOnly)
-                DedicatedConfig.SessionSettings = new SessionSettingsViewModel(checkpoint.Settings);
+            catch (Exception e)
+            {
+                Log.Error($"Error loading mod list from world '{DedicatedConfig.LoadWorld}'.");
+                Log.Error(e);
+            }
         }
 
         public void SaveConfig()
