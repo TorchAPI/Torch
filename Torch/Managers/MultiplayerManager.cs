@@ -28,6 +28,7 @@ using Torch.Commands;
 using Torch.ViewModels;
 using VRage.Game;
 using VRage.Game.ModAPI;
+using VRage.GameServices;
 using VRage.Library.Collections;
 using VRage.Network;
 using VRage.Utils;
@@ -169,10 +170,10 @@ namespace Torch.Managers
 
         private void OnClientKicked(ulong steamId)
         {
-            OnClientLeft(steamId, ChatMemberStateChangeEnum.Kicked);
+            OnClientLeft(steamId, MyChatMemberStateChangeEnum.Kicked);
         }
 
-        private void OnClientLeft(ulong steamId, ChatMemberStateChangeEnum stateChange)
+        private void OnClientLeft(ulong steamId, MyChatMemberStateChangeEnum stateChange)
         {
             Players.TryGetValue(steamId, out PlayerViewModel vm);
             if (vm == null)

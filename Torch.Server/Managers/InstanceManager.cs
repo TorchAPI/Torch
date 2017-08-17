@@ -129,7 +129,7 @@ namespace Torch.Server.Managers
 
         public void SaveConfig()
         {
-            DedicatedConfig.Model.Save();
+            DedicatedConfig.Save();
             Log.Info("Saved dedicated config.");
 
             try

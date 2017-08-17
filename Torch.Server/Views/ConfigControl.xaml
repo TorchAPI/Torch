@@ -105,6 +105,10 @@
                                 <Label Content="Assembler Speed" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
+                                <TextBox Text="{Binding WelderSpeedMultiplier}" Margin="3" Width="70" />
+                                <Label Content="Welder Speed" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBox Text="{Binding GrinderSpeedMultiplier}" Margin="3" Width="70" />
                                 <Label Content="Grinder Speed" />
                             </StackPanel>

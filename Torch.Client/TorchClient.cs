@@ -11,6 +11,7 @@ using Sandbox.Engine.Utils;
 using Sandbox.Game;
 using Sandbox.ModAPI;
 using SpaceEngineers.Game;
+using VRage.Steam;
 using Torch.API;
 using VRage.FileSystem;
 using VRageRender;
@@ -22,7 +23,6 @@ namespace Torch.Client
         private MyCommonProgramStartup _startup;
         private IMyRender _renderer;
         private const uint APP_ID = 244850;
-        private VRageGameServices _services;
 
         public override void Init()
         {
@@ -59,7 +59,6 @@ namespace Torch.Client
 
                 InitializeRender();
 
-                _services = new VRageGameServices(mySteamService);
                 if (!Game.IsDedicated)
                     MyFileSystem.InitUserSpecific(mySteamService.UserId.ToString());
             }
@@ -85,7 +84,7 @@ namespace Torch.Client
 
         public override void Start()
         {
-            using (var spaceEngineersGame = new SpaceEngineersGame(_services, RunArgs))
+            using (var spaceEngineersGame = new SpaceEngineersGame(RunArgs))
             {
                 Log.Info("Starting client");
                 spaceEngineersGame.OnGameLoaded += SpaceEngineersGame_OnGameLoaded;

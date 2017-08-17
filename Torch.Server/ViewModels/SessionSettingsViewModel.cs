@@ -74,6 +74,12 @@ namespace Torch.Server.ViewModels
         {
             get => _settings.HackSpeedMultiplier; set { _settings.HackSpeedMultiplier = value; OnPropertyChanged(); }
         }
+
+        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.WelderSpeedMultiplier"/>
+        public float WelderSpeedMultiplier
+        {
+            get => _settings.WelderSpeedMultiplier; set { _settings.WelderSpeedMultiplier = value; OnPropertyChanged(); }
+        }
         #endregion
 
         #region NPCs

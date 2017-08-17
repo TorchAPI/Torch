@@ -1,34 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Xml.Serialization;
-using NLog;
-using Sandbox;
-using Sandbox.Engine.Networking;
-using Sandbox.Engine.Utils;
 using Torch.Server.Managers;
 using Torch.Server.ViewModels;
-using Torch.Views;
-using VRage;
-using VRage.Dedicated;
-using VRage.Game;
-using VRage.ObjectBuilders;
-using Path = System.IO.Path;
 
 namespace Torch.Server.Views
 {

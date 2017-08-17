@@ -6,6 +6,7 @@ using System.IO.Packaging;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
@@ -52,7 +53,8 @@ namespace Torch.Managers
                     return new Tuple<Version, string>(new Version(), null);
 
                 var zip = latest.Assets.FirstOrDefault(x => x.Name.Contains(".zip"));
-                return new Tuple<Version, string>(new Version(latest.TagName ?? "0"), zip?.BrowserDownloadUrl);
+                var versionName = Regex.Match(latest.TagName, "(\\d+\\.)+\\d+").ToString();
+                return new Tuple<Version, string>(new Version(string.IsNullOrWhiteSpace(versionName) ? versionName : "0.0"), zip?.BrowserDownloadUrl);
             }
             catch (Exception e)
             {
@@ -114,6 +116,7 @@ namespace Torch.Managers
                     new WebClient().DownloadFile(new Uri(releaseInfo.Item2), updateName);
                     UpdateFromZip(updateName, _torchDir);
                     File.Delete(updateName);
+                    _log.Warn($"Torch version {releaseInfo.Item1} has been installed, please restart Torch to finish the process.");
                 }
                 else
                 {

@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using Sandbox.ModAPI;
 using Torch;
 using Torch.Commands.Permissions;
@@ -106,12 +109,48 @@ namespace Torch.Commands
         }
 
         [Command("restart", "Restarts the server.")]
-        public void Restart(bool save = true)
+        public void Restart(int countdownSeconds = 10, bool save = true)
         {
-            Context.Respond("Restarting server.");
-            if (save)
-                Context.Torch.Save(Context.Player?.IdentityId ?? 0).Wait();
-            Context.Torch.Restart();
+            Task.Run(() =>
+            {
+                var countdown = RestartCountdown(countdownSeconds).GetEnumerator();
+                while (countdown.MoveNext())
+                {
+                    Thread.Sleep(1000);
+                }
+            });
+        }
+
+        private IEnumerable RestartCountdown(int countdown)
+        {
+            for (var i = countdown; i >= 0; i--)
+            {
+                if (i >= 60 && i % 60 == 0)
+                {
+                    Context.Torch.Multiplayer.SendMessage($"Restarting server in {i / 60} minute{Pluralize(i / 60)}.");
+                    yield return null;
+                }
+                else if (i > 0)
+                {
+                    if (i < 11)
+                        Context.Torch.Multiplayer.SendMessage($"Restarting server in {i} second{Pluralize(i)}.");
+                    yield return null;
+                }
+                else
+                {
+                    Context.Torch.Invoke(() =>
+                    {
+                        Context.Torch.Save(0).Wait();
+                        Context.Torch.Restart();
+                    });
+                    yield break;
+                }
+            }
+        }
+
+        private string Pluralize(int num)
+        {
+            return num == 1 ? "" : "s";
         }
         
         /// <summary>

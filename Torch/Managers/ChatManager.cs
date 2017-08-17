@@ -45,7 +45,7 @@ namespace Torch.Managers
             }
         }
 
-        private void Static_ChatMessageReceived(ulong arg1, string arg2, SteamSDK.ChatEntryTypeEnum arg3)
+        private void Static_ChatMessageReceived(ulong arg1, string arg2)
         {
             var msg = new ChatMsg {Author = arg1, Text = arg2};
             var sendToOthers = true;

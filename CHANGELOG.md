@@ -1,3 +1,12 @@
+# Torch 1.1.229.265
+* Features
+    - Added more lenient version parsing for plugins (v#.# should work)
+    - Added countdown option to restart command (!restart [seconds])
+* Fixes
+    - General fixes to work with the latest SE version
+    - Fixed config changes not saving
+    - (hopefully) Fixed issue causing crashes on servers using the Windows Classic theme
+
 # Torch 1.1.207.7
 * Notes
     - This release makes significant changes to TorchConfig.xml. It has been renamed to Torch.cfg and has different options.

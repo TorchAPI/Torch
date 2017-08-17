@@ -65,7 +65,7 @@ namespace Torch.Server
 
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
-            _config.Save();
+            _server.GetManager<InstanceManager>().SaveConfig();
             new Thread(_server.Start).Start();
         }
 
@@ -80,7 +80,6 @@ namespace Torch.Server
             _config.WindowSize = newSize;
             var newPos = new Point((int)Left, (int)Top);
             _config.WindowPosition = newPos;
-            _config.Save();
 
             if (_server?.State == ServerState.Running)
                 _server.Stop();

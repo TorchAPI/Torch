@@ -49,12 +49,15 @@ namespace Torch.Server
 
         private void ChatHistory_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            ChatItems.ScrollToItem(ChatItems.Items.Count - 1);
+            /*
             if (VisualTreeHelper.GetChildrenCount(ChatItems) > 0)
             {
+                
                 Border border = (Border)VisualTreeHelper.GetChild(ChatItems, 0);
                 ScrollViewer scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
                 scrollViewer.ScrollToBottom();
-            }
+            }*/
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)

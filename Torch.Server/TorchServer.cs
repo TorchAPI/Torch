@@ -79,7 +79,7 @@ namespace Torch.Server
             MyFinalBuildConstants.APP_VERSION = MyPerGameSettings.BasicGameInfo.GameVersion;
             InvokeBeforeRun();
 
-            MyObjectBuilderSerializer.RegisterFromAssembly(typeof(MyObjectBuilder_CheckpointSerializer).Assembly);
+            //MyObjectBuilderSerializer.RegisterFromAssembly(typeof(MyObjectBuilder_CheckpointSerializer).Assembly);
             MyPlugins.RegisterGameAssemblyFile(MyPerGameSettings.GameModAssembly);
             MyPlugins.RegisterGameObjectBuildersAssemblyFile(MyPerGameSettings.GameModObjBuildersAssembly);
             MyPlugins.RegisterSandboxAssemblyFile(MyPerGameSettings.SandboxAssembly);
@@ -131,7 +131,6 @@ namespace Torch.Server
             _uptime = Stopwatch.StartNew();
             IsRunning = true;
             GameThread = Thread.CurrentThread;
-            Config.Save();
             State = ServerState.Starting;
             Log.Info("Starting server.");
 

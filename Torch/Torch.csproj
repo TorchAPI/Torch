@@ -142,6 +142,9 @@
       <HintPath>..\GameBinaries\VRage.Scripting.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="VRage.Steam">
+      <HintPath>..\..\..\..\..\..\..\steamcmd\steamapps\common\SpaceEngineersDedicatedServer\DedicatedServer64\VRage.Steam.dll</HintPath>
+    </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
