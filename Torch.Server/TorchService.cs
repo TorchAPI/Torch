@@ -31,7 +31,7 @@ namespace Torch.Server
         {
             base.OnStart(args);
 
-            string configName = args.Length > 0 ? args[0] : "TorchConfig.xml";
+            string configName = args.Length > 0 ? args[0] : "Torch.cfg";
             var options = new TorchConfig("Torch");
             if (File.Exists(configName))
                 options = TorchConfig.LoadFrom(configName);
