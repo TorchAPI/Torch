@@ -16,6 +16,24 @@ namespace Torch.Managers
 
     public abstract class Manager : IManager
     {
+        /// <summary>
+        /// Indicates a field is a dependency of this parent manager.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// public class NetworkManager : Manager { }
+        /// public class ChatManager : Manager {
+        ///     [Dependency(Optional = false)]
+        ///     private NetworkManager _network;
+        /// }
+        /// </code>
+        /// </example>
+        [AttributeUsage(AttributeTargets.Field)]
+        public class DependencyAttribute : Attribute
+        {
+            public bool Optional { get; set; } = false;
+        }
+
         protected ITorchBase Torch { get; }
 
         protected Manager(ITorchBase torchInstance)
