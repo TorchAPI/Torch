@@ -25,6 +25,8 @@ namespace Torch.Server.Managers
         private const string CONFIG_NAME = "SpaceEngineers-Dedicated.cfg";
         public ConfigDedicatedViewModel DedicatedConfig { get; set; }
         private static readonly Logger Log = LogManager.GetLogger(nameof(InstanceManager));
+        [Dependency]
+        private FilesystemManager _filesystemManager;
 
         public InstanceManager(ITorchBase torchInstance) : base(torchInstance)
         {
@@ -34,7 +36,7 @@ namespace Torch.Server.Managers
         /// <inheritdoc />
         public override void Init()
         {
-            MyFileSystem.ExePath = Path.Combine(Torch.GetManager<FilesystemManager>().TorchDirectory, "DedicatedServer64");
+            MyFileSystem.ExePath = Path.Combine(_filesystemManager.TorchDirectory, "DedicatedServer64");
             MyFileSystem.Init("Content", Torch.Config.InstancePath);
             //Initializes saves path. Why this isn't in Init() we may never know.
             MyFileSystem.InitUserSpecific(null);
@@ -46,7 +48,7 @@ namespace Torch.Server.Managers
                 ValidateInstance(path);
 
             MyFileSystem.Reset();
-            MyFileSystem.ExePath = Path.Combine(Torch.GetManager<FilesystemManager>().TorchDirectory, "DedicatedServer64");
+            MyFileSystem.ExePath = Path.Combine(_filesystemManager.TorchDirectory, "DedicatedServer64");
             MyFileSystem.Init("Content", path);
             //Initializes saves path. Why this isn't in Init() we may never know.
             MyFileSystem.InitUserSpecific(null);

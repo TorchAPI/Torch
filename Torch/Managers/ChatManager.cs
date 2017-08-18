@@ -27,6 +27,9 @@ namespace Torch.Managers
         internal void RaiseMessageRecieved(ChatMsg msg, ref bool sendToOthers) =>
             MessageRecieved?.Invoke(msg, ref sendToOthers);
 
+        [Dependency]
+        private INetworkManager _networkManager;
+
         public ChatManager(ITorchBase torchInstance) : base(torchInstance)
         {
             
@@ -36,7 +39,7 @@ namespace Torch.Managers
         {
             try
             {
-                Torch.GetManager<INetworkManager>().RegisterNetworkHandler(new ChatIntercept(this));
+                _networkManager.RegisterNetworkHandler(new ChatIntercept(this));
             }
             catch
             {

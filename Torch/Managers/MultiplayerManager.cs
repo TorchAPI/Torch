@@ -52,6 +52,13 @@ namespace Torch.Managers
         private static readonly Logger ChatLog = LogManager.GetLogger("Chat");
         private Dictionary<MyPlayer.PlayerId, MyPlayer> _onlinePlayers;
 
+        [Dependency]
+        private ChatManager _chatManager;
+        [Dependency]
+        private CommandManager _commandManager;
+        [Dependency]
+        private NetworkManager _networkManager;
+
         internal MultiplayerManager(ITorchBase torch) : base(torch)
         {
             
@@ -61,7 +68,7 @@ namespace Torch.Managers
         public override void Init()
         {
             Torch.SessionLoaded += OnSessionLoaded;
-            Torch.GetManager<ChatManager>().MessageRecieved += Instance_MessageRecieved;
+            _chatManager.MessageRecieved += Instance_MessageRecieved;
         }
 
         private void Instance_MessageRecieved(ChatMsg msg, ref bool sendToOthers)
@@ -125,10 +132,9 @@ namespace Torch.Managers
                 return;
 
             ChatHistory.Add(new ChatMessage(DateTime.Now, 0, author, message));
-            var commands = Torch.GetManager<CommandManager>();
-            if (commands.IsCommand(message))
+            if (_commandManager.IsCommand(message))
             {
-                var response = commands.HandleCommandFromServer(message);
+                var response = _commandManager.HandleCommandFromServer(message);
                 ChatHistory.Add(new ChatMessage(DateTime.Now, 0, author, response));
             }
             else
@@ -141,7 +147,7 @@ namespace Torch.Managers
                     return;
 
                 var addToGlobalHistoryMethod = typeof(MyCharacter).GetMethod("OnGlobalMessageSuccess", BindingFlags.Instance | BindingFlags.NonPublic);
-                Torch.GetManager<NetworkManager>().RaiseEvent(addToGlobalHistoryMethod, character, steamId, steamId, message);
+                _networkManager.RaiseEvent(addToGlobalHistoryMethod, character, steamId, steamId, message);
             }
         }
 

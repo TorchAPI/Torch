@@ -20,6 +20,8 @@ namespace Torch.Commands
 
         public CommandTree Commands { get; set; } = new CommandTree();
         private Logger _log = LogManager.GetLogger(nameof(CommandManager));
+        [Dependency]
+        private ChatManager _chatManager;
 
         public CommandManager(ITorchBase torch, char prefix = '!') : base(torch)
         {
@@ -29,7 +31,7 @@ namespace Torch.Commands
         public override void Init()
         {
             RegisterCommandModule(typeof(TorchCommands));
-            Torch.GetManager<ChatManager>().MessageRecieved += HandleCommand;
+            _chatManager.MessageRecieved += HandleCommand;
         }
 
         public bool HasPermission(ulong steamId, Command command)

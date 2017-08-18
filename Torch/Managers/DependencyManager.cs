@@ -176,6 +176,16 @@ namespace Torch.Managers
                 // tmpQueue.Sort(); If we have priorities this is where to sort them.
                 _orderedManagers.AddRange(tmpQueue);
             }
+            _log.Debug("Dependency tree satisfied.  Load order is:");
+            foreach (ManagerInstance manager in _orderedManagers)
+            {
+                _log.Debug("   - {0}", manager.Instance.GetType().FullName);
+                _log.Debug("        - Dependencies: {0}",
+                    string.Join(", ", manager.Dependencies.Select(x => x.DependencyType.Name + (x.Optional ? " (Optional)" : ""))));
+                _log.Debug("        - Dependents: {0}",
+                    string.Join(", ", manager.Dependents.Select(x => x.Instance.GetType().Name)));
+            }
+
             #endregion
 
             // Updates the dependency fields with the correct manager instances
@@ -184,7 +194,7 @@ namespace Torch.Managers
             {
                 manager.Dependents.Clear();
                 foreach (DependencyInfo dependency in manager.Dependencies)
-                    dependency.Field.SetValue(manager.Instance, _dependencySatisfaction.GetValueOrDefault(dependency.DependencyType));
+                    dependency.Field.SetValue(manager.Instance, _dependencySatisfaction.GetValueOrDefault(dependency.DependencyType)?.Instance);
             }
             #endregion
         }

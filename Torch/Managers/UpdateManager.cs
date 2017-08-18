@@ -25,6 +25,7 @@ namespace Torch.Managers
         private GitHubClient _gitClient = new GitHubClient(new ProductHeaderValue("Torch"));
         private string _torchDir = new FileInfo(typeof(UpdateManager).Assembly.Location).DirectoryName;
         private Logger _log = LogManager.GetLogger(nameof(UpdateManager));
+        [Dependency]
         private FilesystemManager _fsManager;
 
         public UpdateManager(ITorchBase torchInstance) : base(torchInstance)
@@ -35,7 +36,6 @@ namespace Torch.Managers
         /// <inheritdoc />
         public override void Init()
         {
-            _fsManager = Torch.GetManager<FilesystemManager>();
             CheckAndUpdateTorch();
         }
 

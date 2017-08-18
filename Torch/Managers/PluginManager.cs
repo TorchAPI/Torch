@@ -20,7 +20,10 @@ namespace Torch.Managers
     {
         private static Logger _log = LogManager.GetLogger(nameof(PluginManager));
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+        [Dependency]
         private UpdateManager _updateManager;
+        [Dependency]
+        private CommandManager _commandManager;
 
         /// <inheritdoc />
         public IList<ITorchPlugin> Plugins { get; } = new ObservableList<ITorchPlugin>();
@@ -87,9 +90,6 @@ namespace Torch.Managers
         /// <inheritdoc />
         public void LoadPlugins()
         {
-            _updateManager = Torch.GetManager<UpdateManager>();
-            var commands = Torch.GetManager<CommandManager>();
-
             if (Torch.Config.ShouldUpdatePlugins)
                 DownloadPlugins();
             else
@@ -119,7 +119,7 @@ namespace Torch.Managers
                             plugin.StoragePath = Torch.Config.InstancePath;
                             Plugins.Add(plugin);
 
-                            commands.RegisterPluginCommands(plugin);
+                            _commandManager.RegisterPluginCommands(plugin);
                         }
                         catch (Exception e)
                         {
