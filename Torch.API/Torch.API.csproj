@@ -157,6 +157,8 @@
     <Compile Include="ConnectionState.cs" />
     <Compile Include="IChatMessage.cs" />
     <Compile Include="ITorchConfig.cs" />
+    <Compile Include="Managers\DependencyManagerExtensions.cs" />
+    <Compile Include="Managers\DependencyProviderExtensions.cs" />
     <Compile Include="Managers\IDependencyManager.cs" />
     <Compile Include="Managers\IDependencyProvider.cs" />
     <Compile Include="Managers\IManager.cs" />
