@@ -63,7 +63,7 @@ namespace Torch.Managers
         /// <summary>
         /// Loads the network intercept system
         /// </summary>
-        public override void Init()
+        public override void Attach()
         {
             Torch.SessionLoaded += OnSessionLoaded;
         }

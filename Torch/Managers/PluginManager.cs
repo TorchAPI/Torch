@@ -48,7 +48,7 @@ namespace Torch.Managers
         /// <summary>
         /// Unloads all plugins.
         /// </summary>
-        public override void Dispose()
+        public override void Detach()
         {
             foreach (var plugin in Plugins)
                 plugin.Dispose();

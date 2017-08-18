@@ -16,7 +16,7 @@ namespace Torch.Managers
     {
         private MyScriptWhitelist _whitelist;
 
-        public void Init()
+        public void Attach()
         {
             _whitelist = MyScriptCompiler.Static.Whitelist;
             MyScriptCompiler.Static.AddConditionalCompilationSymbols("TORCH");
@@ -41,7 +41,7 @@ namespace Torch.Managers
             Log.Info(whitelist);*/
         }
 
-        public void Dispose()
+        public void Detach()
         {
             // TODO unregister whitelist patches
         }

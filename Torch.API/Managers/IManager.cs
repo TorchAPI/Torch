@@ -12,13 +12,13 @@ namespace Torch.API.Managers
     public interface IManager
     {
         /// <summary>
-        /// Initializes the manager. Called once this manager's dependencies have been initialized.
+        /// Attaches the manager to the session. Called once this manager's dependencies have been attached.
         /// </summary>
-        void Init();
+        void Attach();
 
         /// <summary>
-        /// Disposes the manager.  Called before this manager's dependencies are disposed.
+        /// Detaches the manager from the session.  Called before this manager's dependencies are detached.
         /// </summary>
-        void Dispose();
+        void Detach();
     }
 }

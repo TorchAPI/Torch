@@ -38,25 +38,25 @@ namespace Torch.API.Managers
         bool RemoveManager(IManager manager);
 
         /// <summary>
-        /// Initializes the dependency manager, and all its registered managers.
+        /// Sorts the dependency manager, then attaches all its registered managers in <see cref="AttachOrder" />
         /// </summary>
-        void Init();
+        void Attach();
 
         /// <summary>
-        /// Disposes the dependency manager, and all its registered managers.
+        /// Detaches all registered managers in <see cref="DetachOrder"/>
         /// </summary>
-        void Dispose();
+        void Detach();
 
         /// <summary>
-        /// The order that managers should be loaded in.  (Dependencies, then dependents)
+        /// The order that managers should be attached in.  (Dependencies, then dependents)
         /// </summary>
         /// <exception cref="InvalidOperationException">When trying to determine load order before this dependency manager is initialized</exception>
-        IEnumerable<IManager> LoadOrder { get; }
+        IEnumerable<IManager> AttachOrder { get; }
 
         /// <summary>
-        /// The order that managers should be unloaded in.  (Dependents, then dependencies)
+        /// The order that managers should be detached in.  (Dependents, then dependencies)
         /// </summary>
         /// <exception cref="InvalidOperationException">When trying to determine unload order before this dependency manager is initialized</exception>
-        IEnumerable<IManager> UnloadOrder { get; }
+        IEnumerable<IManager> DetachOrder { get; }
     }
 }

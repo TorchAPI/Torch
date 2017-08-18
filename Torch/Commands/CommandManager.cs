@@ -28,7 +28,7 @@ namespace Torch.Commands
             Prefix = prefix;
         }
 
-        public override void Init()
+        public override void Attach()
         {
             RegisterCommandModule(typeof(TorchCommands));
             _chatManager.MessageRecieved += HandleCommand;

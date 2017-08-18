@@ -250,7 +250,7 @@ namespace Torch
             MySession.OnUnloading += OnSessionUnloading;
             MySession.OnUnloaded += OnSessionUnloaded;
             RegisterVRagePlugin();
-            Managers.Init();
+            Managers.Attach();
             _init = true;
         }
 
@@ -318,7 +318,7 @@ namespace Torch
         /// <inheritdoc />
         public virtual void Dispose()
         {
-            Managers.Dispose();
+            Managers.Detach();
         }
 
         /// <inheritdoc />

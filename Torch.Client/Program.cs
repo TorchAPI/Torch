@@ -31,9 +31,6 @@ namespace Torch.Client
             }
         }
 
-        private static readonly string[] _steamInstallDirectories = new[] {
-            @"C:\Program Files\Steam\", @"C:\Program Files (x86)\Steam\"
-        };
         private const string _steamSpaceEngineersDirectory = @"steamapps\common\SpaceEngineers\";
         private const string _spaceEngineersVerifyFile = SpaceEngineersBinaries + @"\SpaceEngineers.exe";
 
@@ -76,15 +73,18 @@ namespace Torch.Client
         private static void SetupSpaceEngInstallAlias()
         {
             string spaceEngineersDirectory = null;
-            foreach (string steamDir in _steamInstallDirectories)
+
+            // TODO look at Steam/config/Config.VDF?  Has alternate directories.
+            var steamDir =
+                Microsoft.Win32.Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Valve\\Steam", "SteamPath", null) as string;
+            if (steamDir != null)
             {
                 spaceEngineersDirectory = Path.Combine(steamDir, _steamSpaceEngineersDirectory);
+                // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
                 if (File.Exists(Path.Combine(spaceEngineersDirectory, _spaceEngineersVerifyFile)))
-                {
                     _log.Debug("Found Space Engineers in {0}", spaceEngineersDirectory);
-                    break;
-                }
-                _log.Debug("Couldn't find Space Engineers in {0}", spaceEngineersDirectory);
+                else
+                    _log.Debug("Couldn't find Space Engineers in {0}", spaceEngineersDirectory);
             }
             if (spaceEngineersDirectory == null)
             {
@@ -149,7 +149,7 @@ namespace Torch.Client
                 _log.Error("Unable to create junction link {0} => {1}", linkName, targetDir);
             return cmd.ExitCode == 0;
         }
-        
+
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             var ex = (Exception)e.ExceptionObject;

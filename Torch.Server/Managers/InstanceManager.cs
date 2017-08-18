@@ -34,7 +34,7 @@ namespace Torch.Server.Managers
         }
 
         /// <inheritdoc />
-        public override void Init()
+        public override void Attach()
         {
             MyFileSystem.ExePath = Path.Combine(_filesystemManager.TorchDirectory, "DedicatedServer64");
             MyFileSystem.Init("Content", Torch.Config.InstancePath);

@@ -19,7 +19,7 @@ namespace Torch.Managers
     /// <summary>
     /// Handles updating of the DS and Torch plugins.
     /// </summary>
-    public class UpdateManager : Manager, IDisposable
+    public class UpdateManager : Manager
     {
         private Timer _updatePollTimer;
         private GitHubClient _gitClient = new GitHubClient(new ProductHeaderValue("Torch"));
@@ -34,7 +34,7 @@ namespace Torch.Managers
         }
 
         /// <inheritdoc />
-        public override void Init()
+        public override void Attach()
         {
             CheckAndUpdateTorch();
         }
@@ -146,7 +146,7 @@ namespace Torch.Managers
         }
 
         /// <inheritdoc />
-        public override void Dispose()
+        public override void Detach()
         {
             _updatePollTimer?.Dispose();
         }

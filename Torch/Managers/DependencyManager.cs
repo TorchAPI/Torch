@@ -241,26 +241,26 @@ namespace Torch.Managers
         /// <summary>
         /// Initializes the dependency manager, and all its registered managers.
         /// </summary>
-        public void Init()
+        public void Attach()
         {
             if (_initialized)
                 throw new InvalidOperationException("Can't start the dependency manager more than once");
             _initialized = true;
             Sort();
             foreach (ManagerInstance manager in _orderedManagers)
-                manager.Instance.Init();
+                manager.Instance.Attach();
         }
 
         /// <summary>
         /// Disposes the dependency manager, and all its registered managers.
         /// </summary>
-        public void Dispose()
+        public void Detach()
         {
             if (!_initialized)
                 throw new InvalidOperationException("Can't dispose an uninitialized dependency manager");
             for (int i = _orderedManagers.Count - 1; i >= 0; i--)
             {
-                _orderedManagers[i].Instance.Dispose();
+                _orderedManagers[i].Instance.Detach();
                 foreach (DependencyInfo field in _orderedManagers[i].Dependencies)
                     field.Field.SetValue(_orderedManagers[i].Instance, null);
             }
@@ -268,7 +268,7 @@ namespace Torch.Managers
         }
 
         /// <inheritdoc/>
-        public IEnumerable<IManager> LoadOrder
+        public IEnumerable<IManager> AttachOrder
         {
             get
             {
@@ -280,7 +280,7 @@ namespace Torch.Managers
         }
 
         /// <inheritdoc/>
-        public IEnumerable<IManager> UnloadOrder
+        public IEnumerable<IManager> DetachOrder
         {
             get
             {

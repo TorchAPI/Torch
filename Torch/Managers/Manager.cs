@@ -63,12 +63,12 @@ namespace Torch.Managers
             Torch = torchInstance;
         }
 
-        public virtual void Init()
+        public virtual void Attach()
         {
             
         }
 
-        public virtual void Dispose()
+        public virtual void Detach()
         {
             
         }

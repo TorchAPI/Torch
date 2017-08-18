@@ -65,7 +65,7 @@ namespace Torch.Managers
         }
 
         /// <inheritdoc />
-        public override void Init()
+        public override void Attach()
         {
             Torch.SessionLoaded += OnSessionLoaded;
             _chatManager.MessageRecieved += Instance_MessageRecieved;

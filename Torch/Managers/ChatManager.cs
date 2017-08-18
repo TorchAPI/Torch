@@ -35,7 +35,7 @@ namespace Torch.Managers
             
         }
 
-        public override void Init()
+        public override void Attach()
         {
             try
             {
