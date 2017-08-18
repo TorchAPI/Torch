@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using Sandbox.ModAPI;
 using Torch;
+using Torch.API.Managers;
 using Torch.Commands.Permissions;
 using Torch.Managers;
 using VRage.Game.ModAPI;
@@ -50,7 +51,7 @@ namespace Torch.Commands
         [Command("longhelp", "Get verbose help. Will send a long message, check the Comms tab.")]
         public void LongHelp()
         {
-            var commandManager = Context.Torch.GetManager<CommandManager>();
+            var commandManager = Context.Torch.Managers.GetManager<CommandManager>();
             commandManager.Commands.GetNode(Context.Args, out CommandTree.CommandNode node);
 
             if (node != null)

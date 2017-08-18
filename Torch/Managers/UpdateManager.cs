@@ -146,7 +146,7 @@ namespace Torch.Managers
         }
 
         /// <inheritdoc />
-        public void Dispose()
+        public override void Dispose()
         {
             _updatePollTimer?.Dispose();
         }

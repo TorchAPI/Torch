@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using Torch.API.Managers;
 using Torch.Server.Managers;
 using Torch.Server.ViewModels;
 
@@ -15,7 +16,7 @@ namespace Torch.Server.Views
         public ConfigControl()
         {
             InitializeComponent();
-            _instanceManager = TorchBase.Instance.GetManager<InstanceManager>();
+            _instanceManager = TorchBase.Instance.Managers.GetManager<InstanceManager>();
             DataContext = _instanceManager.DedicatedConfig;
         }
 

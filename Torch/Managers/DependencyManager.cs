@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,20 +8,22 @@ using Torch.API.Managers;
 
 namespace Torch.Managers
 {
-    public sealed class DependencyManager
+    public sealed class DependencyManager : IDependencyManager
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         private class DependencyInfo
         {
+            private readonly Manager.DependencyAttribute _attribute;
             internal Type DependencyType => Field.FieldType;
             internal FieldInfo Field { get; private set; }
-            internal bool Optional { get; private set; }
+            internal bool Optional => _attribute.Optional;
+            internal bool Ordered => _attribute.Ordered;
 
             public DependencyInfo(FieldInfo field)
             {
                 Field = field;
-                Optional = field.GetCustomAttribute<Manager.DependencyAttribute>().Optional;
+                _attribute = field.GetCustomAttribute<Manager.DependencyAttribute>();
             }
         }
 
@@ -69,18 +72,14 @@ namespace Torch.Managers
         private readonly Dictionary<Type, ManagerInstance> _dependencySatisfaction;
         private readonly List<ManagerInstance> _registeredManagers;
         private readonly List<ManagerInstance> _orderedManagers;
-        private readonly DependencyManager _parentManager;
+        private readonly IDependencyProvider[] _parentProviders;
 
-        public DependencyManager(DependencyManager parent = null)
+        public DependencyManager(params IDependencyProvider[] parents)
         {
             _dependencySatisfaction = new Dictionary<Type, ManagerInstance>();
             _registeredManagers = new List<ManagerInstance>();
             _orderedManagers = new List<ManagerInstance>();
-            _parentManager = parent;
-            if (parent == null)
-                return;
-            foreach (KeyValuePair<Type, ManagerInstance> kv in parent._dependencySatisfaction)
-                _dependencySatisfaction.Add(kv.Key, kv.Value);
+            _parentProviders = parents.Distinct().ToArray();
         }
 
         private void AddDependencySatisfaction(ManagerInstance instance)
@@ -100,16 +99,7 @@ namespace Torch.Managers
                 AddDependencySatisfaction(manager);
         }
 
-        /// <summary>
-        /// Registers the given manager into the dependency system.
-        /// </summary>
-        /// <remarks>
-        /// This method only returns false when there is already a manager registered with a type derived from this given manager,
-        /// or when the given manager is derived from an already existing manager.
-        /// </remarks>
-        /// <param name="manager">Manager to register</param>
-        /// <exception cref="InvalidOperationException">When adding a new manager to an initialized dependency manager</exception>
-        /// <returns>true if added, false if not</returns>
+        /// <inheritdoc/>
         public bool AddManager(IManager manager)
         {
             if (_initialized)
@@ -122,16 +112,13 @@ namespace Torch.Managers
             if (_registeredManagers.Any(x => manager.GetType().IsInstanceOfType(x.Instance)))
                 return false;
 
-            var instance = new ManagerInstance(manager);
+            ManagerInstance instance = new ManagerInstance(manager);
             _registeredManagers.Add(instance);
             AddDependencySatisfaction(instance);
             return true;
         }
 
-        /// <summary>
-        /// Clears all managers registered with this dependency manager
-        /// </summary>
-        /// <exception cref="InvalidOperationException">When removing managers from an initialized dependency manager</exception>
+        /// <inheritdoc/>
         public void ClearManagers()
         {
             if (_initialized)
@@ -141,19 +128,14 @@ namespace Torch.Managers
             _dependencySatisfaction.Clear();
         }
 
-        /// <summary>
-        /// Removes a single manager from this dependency manager.
-        /// </summary>
-        /// <param name="manager">The manager to remove</param>
-        /// <returns>true if successful, false if the manager wasn't found</returns>
-        /// <exception cref="InvalidOperationException">When removing managers from an initialized dependency manager</exception>
+        /// <inheritdoc/>
         public bool RemoveManager(IManager manager)
         {
             if (_initialized)
                 throw new InvalidOperationException("Can't remove managers from an initialized dependency manager");
             if (manager == null)
                 return false;
-            for (var i = 0; i < _registeredManagers.Count; i++)
+            for (int i = 0; i < _registeredManagers.Count; i++)
                 if (_registeredManagers[i].Instance == manager)
                 {
                     _registeredManagers.RemoveAtFast(i);
@@ -161,29 +143,6 @@ namespace Torch.Managers
                     return true;
                 }
             return false;
-        }
-
-        /// <summary>
-        /// Removes a single manager from this dependency manager.
-        /// </summary>
-        /// <param name="type">The dependency type to remove</param>
-        /// <returns>The manager that was removed, or null if one wasn't removed</returns>
-        /// <exception cref="InvalidOperationException">When removing managers from an initialized dependency manager</exception>
-        public IManager RemoveManager(Type type)
-        {
-            IManager mgr = GetManager(type);
-            return RemoveManager(mgr) ? mgr : null;
-        }
-
-        /// <summary>
-        /// Removes a single manager from this dependency manager.
-        /// </summary>
-        /// <typeparam name="T">The dependency type to remove</typeparam>
-        /// <returns>The manager that was removed, or null if one wasn't removed</returns>
-        /// <exception cref="InvalidOperationException">When removing managers from an initialized dependency manager</exception>
-        public IManager RemoveManager<T>()
-        {
-            return RemoveManager(typeof(T));
         }
 
         private void Sort()
@@ -205,10 +164,13 @@ namespace Torch.Managers
                 {
                     if (_dependencySatisfaction.TryGetValue(dependency.DependencyType, out var dependencyInstance))
                     {
-                        inFactor++;
-                        dependencyInstance.Dependents.Add(manager);
+                        if (dependency.Ordered)
+                        {
+                            inFactor++;
+                            dependencyInstance.Dependents.Add(manager);
+                        }
                     }
-                    else if (!dependency.Optional && _parentManager?.GetManager(dependency.DependencyType) == null)
+                    else if (!dependency.Optional && _parentProviders.All(x => x.GetManager(dependency.DependencyType) == null))
                         _log.Warn("Unable to satisfy dependency {0} ({1}) of {2}.", dependency.DependencyType.Name,
                             dependency.Field.Name, manager.Instance.GetType().Name);
                 }
@@ -305,28 +267,43 @@ namespace Torch.Managers
             _initialized = false;
         }
 
+        /// <inheritdoc/>
+        public IEnumerable<IManager> LoadOrder
+        {
+            get
+            {
+                if (!_initialized)
+                    throw new InvalidOperationException("Can't determine dependency load order when uninitialized");
+                foreach (ManagerInstance k in _orderedManagers)
+                    yield return k.Instance;
+            }
+        }
 
-        /// <summary>
-        /// Gets the manager that provides the given type.  If there is no such manager, returns null.
-        /// </summary>
-        /// <param name="type">Type of manager</param>
-        /// <returns>manager, or null if none exists</returns>
+        /// <inheritdoc/>
+        public IEnumerable<IManager> UnloadOrder
+        {
+            get
+            {
+                if (!_initialized)
+                    throw new InvalidOperationException("Can't determine dependency load order when uninitialized");
+                for (int i = _orderedManagers.Count - 1; i >= 0; i--)
+                    yield return _orderedManagers[i].Instance;
+            }
+        }
+
+        /// <inheritdoc/>
         public IManager GetManager(Type type)
         {
             // ReSharper disable once ConvertIfStatementToReturnStatement
             if (_dependencySatisfaction.TryGetValue(type, out ManagerInstance mgr))
                 return mgr.Instance;
-            return _parentManager?.GetManager(type);
-        }
-
-        /// <summary>
-        /// Gets the manager that provides the given type.  If there is no such manager, returns null.
-        /// </summary>
-        /// <typeparam name="T">Type of manager</typeparam>
-        /// <returns>manager, or null if none exists</returns>
-        public T GetManager<T>() where T : class, IManager
-        {
-            return (T)GetManager(typeof(T));
+            foreach (IDependencyProvider provider in _parentProviders)
+            {
+                IManager entry = provider.GetManager(type);
+                if (entry != null)
+                    return entry;
+            }
+            return null;
         }
     }
 }
