@@ -41,6 +41,11 @@ namespace Torch.Managers
             Log.Info(whitelist);*/
         }
 
+        public void Dispose()
+        {
+            // TODO unregister whitelist patches
+        }
+
         public void UnwhitelistType(Type t)
         {
             throw new NotImplementedException();

@@ -45,5 +45,10 @@ namespace Torch.Managers
         {
             
         }
+
+        public virtual void Dispose()
+        {
+            
+        }
     }
 }

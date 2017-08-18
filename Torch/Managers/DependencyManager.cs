@@ -69,12 +69,35 @@ namespace Torch.Managers
         private readonly Dictionary<Type, ManagerInstance> _dependencySatisfaction;
         private readonly List<ManagerInstance> _registeredManagers;
         private readonly List<ManagerInstance> _orderedManagers;
+        private readonly DependencyManager _parentManager;
 
-        public DependencyManager()
+        public DependencyManager(DependencyManager parent = null)
         {
             _dependencySatisfaction = new Dictionary<Type, ManagerInstance>();
             _registeredManagers = new List<ManagerInstance>();
             _orderedManagers = new List<ManagerInstance>();
+            _parentManager = parent;
+            if (parent == null)
+                return;
+            foreach (KeyValuePair<Type, ManagerInstance> kv in parent._dependencySatisfaction)
+                _dependencySatisfaction.Add(kv.Key, kv.Value);
+        }
+
+        private void AddDependencySatisfaction(ManagerInstance instance)
+        {
+            foreach (Type supplied in instance.SuppliedManagers)
+                if (_dependencySatisfaction.ContainsKey(supplied))
+                    // When we already have a manager supplying this component we have to unregister it.
+                    _dependencySatisfaction[supplied] = null;
+                else
+                    _dependencySatisfaction.Add(supplied, instance);
+        }
+
+        private void RebuildDependencySatisfaction()
+        {
+            _dependencySatisfaction.Clear();
+            foreach (ManagerInstance manager in _registeredManagers)
+                AddDependencySatisfaction(manager);
         }
 
         /// <summary>
@@ -85,26 +108,82 @@ namespace Torch.Managers
         /// or when the given manager is derived from an already existing manager.
         /// </remarks>
         /// <param name="manager">Manager to register</param>
+        /// <exception cref="InvalidOperationException">When adding a new manager to an initialized dependency manager</exception>
         /// <returns>true if added, false if not</returns>
         public bool AddManager(IManager manager)
         {
+            if (_initialized)
+                throw new InvalidOperationException("Can't add new managers to an initialized dependency manager");
             // Protect against adding a manager derived from an existing manager
             if (_registeredManagers.Any(x => x.Instance.GetType().IsInstanceOfType(manager)))
                 return false;
             // Protect against adding a manager when an existing manager derives from it.
+            // ReSharper disable once ConvertIfStatementToReturnStatement
             if (_registeredManagers.Any(x => manager.GetType().IsInstanceOfType(x.Instance)))
                 return false;
 
             var instance = new ManagerInstance(manager);
             _registeredManagers.Add(instance);
-
-            foreach (Type supplied in instance.SuppliedManagers)
-                if (_dependencySatisfaction.ContainsKey(supplied))
-                    // When we already have a manager supplying this component we have to unregister it.
-                    _dependencySatisfaction[supplied] = null;
-                else
-                    _dependencySatisfaction.Add(supplied, instance);
+            AddDependencySatisfaction(instance);
             return true;
+        }
+
+        /// <summary>
+        /// Clears all managers registered with this dependency manager
+        /// </summary>
+        /// <exception cref="InvalidOperationException">When removing managers from an initialized dependency manager</exception>
+        public void ClearManagers()
+        {
+            if (_initialized)
+                throw new InvalidOperationException("Can't remove managers from an initialized dependency manager");
+
+            _registeredManagers.Clear();
+            _dependencySatisfaction.Clear();
+        }
+
+        /// <summary>
+        /// Removes a single manager from this dependency manager.
+        /// </summary>
+        /// <param name="manager">The manager to remove</param>
+        /// <returns>true if successful, false if the manager wasn't found</returns>
+        /// <exception cref="InvalidOperationException">When removing managers from an initialized dependency manager</exception>
+        public bool RemoveManager(IManager manager)
+        {
+            if (_initialized)
+                throw new InvalidOperationException("Can't remove managers from an initialized dependency manager");
+            if (manager == null)
+                return false;
+            for (var i = 0; i < _registeredManagers.Count; i++)
+                if (_registeredManagers[i].Instance == manager)
+                {
+                    _registeredManagers.RemoveAtFast(i);
+                    RebuildDependencySatisfaction();
+                    return true;
+                }
+            return false;
+        }
+
+        /// <summary>
+        /// Removes a single manager from this dependency manager.
+        /// </summary>
+        /// <param name="type">The dependency type to remove</param>
+        /// <returns>The manager that was removed, or null if one wasn't removed</returns>
+        /// <exception cref="InvalidOperationException">When removing managers from an initialized dependency manager</exception>
+        public IManager RemoveManager(Type type)
+        {
+            IManager mgr = GetManager(type);
+            return RemoveManager(mgr) ? mgr : null;
+        }
+
+        /// <summary>
+        /// Removes a single manager from this dependency manager.
+        /// </summary>
+        /// <typeparam name="T">The dependency type to remove</typeparam>
+        /// <returns>The manager that was removed, or null if one wasn't removed</returns>
+        /// <exception cref="InvalidOperationException">When removing managers from an initialized dependency manager</exception>
+        public IManager RemoveManager<T>()
+        {
+            return RemoveManager(typeof(T));
         }
 
         private void Sort()
@@ -113,11 +192,7 @@ namespace Torch.Managers
             #region Reset
             _orderedManagers.Clear();
             foreach (ManagerInstance manager in _registeredManagers)
-            {
                 manager.Dependents.Clear();
-                foreach (DependencyInfo dependency in manager.Dependencies)
-                    dependency.Field.SetValue(manager.Instance, null);
-            }
             #endregion
 
             // Creates the dependency graph
@@ -133,7 +208,7 @@ namespace Torch.Managers
                         inFactor++;
                         dependencyInstance.Dependents.Add(manager);
                     }
-                    else if (!dependency.Optional)
+                    else if (!dependency.Optional && _parentManager?.GetManager(dependency.DependencyType) == null)
                         _log.Warn("Unable to satisfy dependency {0} ({1}) of {2}.", dependency.DependencyType.Name,
                             dependency.Field.Name, manager.Instance.GetType().Name);
                 }
@@ -194,24 +269,54 @@ namespace Torch.Managers
             {
                 manager.Dependents.Clear();
                 foreach (DependencyInfo dependency in manager.Dependencies)
-                    dependency.Field.SetValue(manager.Instance, _dependencySatisfaction.GetValueOrDefault(dependency.DependencyType)?.Instance);
+                    dependency.Field.SetValue(manager.Instance, GetManager(dependency.DependencyType));
             }
             #endregion
         }
 
-        private bool _initiated = false;
+        private bool _initialized = false;
 
         /// <summary>
         /// Initializes the dependency manager, and all its registered managers.
         /// </summary>
         public void Init()
         {
-            if (_initiated)
+            if (_initialized)
                 throw new InvalidOperationException("Can't start the dependency manager more than once");
-            _initiated = true;
+            _initialized = true;
             Sort();
             foreach (ManagerInstance manager in _orderedManagers)
                 manager.Instance.Init();
+        }
+
+        /// <summary>
+        /// Disposes the dependency manager, and all its registered managers.
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_initialized)
+                throw new InvalidOperationException("Can't dispose an uninitialized dependency manager");
+            for (int i = _orderedManagers.Count - 1; i >= 0; i--)
+            {
+                _orderedManagers[i].Instance.Dispose();
+                foreach (DependencyInfo field in _orderedManagers[i].Dependencies)
+                    field.Field.SetValue(_orderedManagers[i].Instance, null);
+            }
+            _initialized = false;
+        }
+
+
+        /// <summary>
+        /// Gets the manager that provides the given type.  If there is no such manager, returns null.
+        /// </summary>
+        /// <param name="type">Type of manager</param>
+        /// <returns>manager, or null if none exists</returns>
+        public IManager GetManager(Type type)
+        {
+            // ReSharper disable once ConvertIfStatementToReturnStatement
+            if (_dependencySatisfaction.TryGetValue(type, out ManagerInstance mgr))
+                return mgr.Instance;
+            return _parentManager?.GetManager(type);
         }
 
         /// <summary>
@@ -221,7 +326,7 @@ namespace Torch.Managers
         /// <returns>manager, or null if none exists</returns>
         public T GetManager<T>() where T : class, IManager
         {
-            return (T)_dependencySatisfaction.GetValueOrDefault(typeof(T))?.Instance;
+            return (T)GetManager(typeof(T));
         }
     }
 }
