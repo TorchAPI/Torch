@@ -72,7 +72,10 @@ namespace Torch
         /// Common log for the Torch instance.
         /// </summary>
         protected static Logger Log { get; } = LogManager.GetLogger("Torch");
-        private readonly List<IManager> _managers;
+
+        /// <inheritdoc/>
+        public IDependencyManager Managers { get; }
+
         private bool _init;
 
         /// <summary>
@@ -89,38 +92,37 @@ namespace Torch
             TorchVersion = Assembly.GetExecutingAssembly().GetName().Version; 
             RunArgs = new string[0];
 
+            Managers = new DependencyManager();
+
             Plugins = new PluginManager(this);
             Multiplayer = new MultiplayerManager(this);
             Entities = new EntityManager(this);
             Network = new NetworkManager(this);
             Commands = new CommandManager(this);
 
-            _managers = new List<IManager> { new FilesystemManager(this), new UpdateManager(this), Network, Commands, Plugins, Multiplayer, Entities, new ChatManager(this), };
+            Managers.AddManager(new FilesystemManager(this));
+            Managers.AddManager(new UpdateManager(this));
+            Managers.AddManager(Network);
+            Managers.AddManager(Commands);
+            Managers.AddManager(Plugins);
+            Managers.AddManager(Multiplayer);
+            Managers.AddManager(Entities);
+            Managers.AddManager(new ChatManager(this));
 
 
             TorchAPI.Instance = this;
         }
 
         /// <inheritdoc />
-        public ListReader<IManager> GetManagers()
-        {
-            return new ListReader<IManager>(_managers);
-        }
-
-        /// <inheritdoc />
         public T GetManager<T>() where T : class, IManager
         {
-            return _managers.FirstOrDefault(m => m is T) as T;
+            return Managers.GetManager<T>();
         }
 
         /// <inheritdoc />
         public bool AddManager<T>(T manager) where T : class, IManager
         {
-            if (_managers.Any(x => x is T))
-                return false;
-
-            _managers.Add(manager);
-            return true;
+            return Managers.AddManager(manager);
         }
 
         public bool IsOnGameThread()
@@ -248,8 +250,7 @@ namespace Torch
             MySession.OnUnloading += OnSessionUnloading;
             MySession.OnUnloaded += OnSessionUnloaded;
             RegisterVRagePlugin();
-            foreach (var manager in _managers)
-                manager.Init();
+            Managers.Attach();
             _init = true;
         }
 
@@ -317,7 +318,7 @@ namespace Torch
         /// <inheritdoc />
         public virtual void Dispose()
         {
-            Plugins.DisposePlugins();
+            Managers.Detach();
         }
 
         /// <inheritdoc />

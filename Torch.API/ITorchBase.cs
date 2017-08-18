@@ -44,6 +44,9 @@ namespace Torch.API
         /// <inheritdoc cref="IPluginManager"/>
         IPluginManager Plugins { get; }
 
+        /// <inheritdoc cref="IDependencyManager"/>
+        IDependencyManager Managers { get; }
+
         /// <summary>
         /// The binary version of the current instance.
         /// </summary>
@@ -90,12 +93,6 @@ namespace Torch.API
         /// Initialize the Torch instance.
         /// </summary>
         void Init();
-
-        /// <summary>
-        /// Get an <see cref="IManager"/> that is part of the Torch instance.
-        /// </summary>
-        /// <typeparam name="T">Manager type</typeparam>
-        T GetManager<T>() where T : class, IManager;
     }
 
     /// <summary>

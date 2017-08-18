@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 using System.Windows;
 using Sandbox;
+using Sandbox.Engine.Networking;
 using Sandbox.Engine.Platform;
-using Sandbox.Engine.Utils;
 using Sandbox.Game;
-using Sandbox.ModAPI;
 using SpaceEngineers.Game;
 using VRage.Steam;
 using Torch.API;
+using VRage;
 using VRage.FileSystem;
 using VRageRender;
+using VRageRender.ExternalApp;
 
 namespace Torch.Client
 {
@@ -24,47 +23,49 @@ namespace Torch.Client
         private IMyRender _renderer;
         private const uint APP_ID = 244850;
 
+        public TorchClient()
+        {
+            Config = new TorchClientConfig();
+        }
+
         public override void Init()
         {
+            Directory.SetCurrentDirectory(Program.SpaceEngineersInstallAlias);
+            MyFileSystem.ExePath = Path.Combine(Program.SpaceEngineersInstallAlias, Program.SpaceEngineersBinaries);
             Log.Info("Initializing Torch Client");
             base.Init();
-
-            if (!File.Exists("steam_appid.txt"))
-            {
-                Directory.SetCurrentDirectory(Path.GetDirectoryName(typeof(VRage.FastResourceLock).Assembly.Location) + "\\..");
-            }
-
+            
             SpaceEngineersGame.SetupBasicGameInfo();
             _startup = new MyCommonProgramStartup(RunArgs);
             if (_startup.PerformReporting())
-                return;
+                throw new InvalidOperationException("Torch client won't launch when started in error reporting mode");
 
             _startup.PerformAutoconnect();
             if (!_startup.CheckSingleInstance())
-                return;
+                throw new InvalidOperationException("Only one instance of Space Engineers can be running at a time.");
 
             var appDataPath = _startup.GetAppDataPath();
             MyInitializer.InvokeBeforeRun(APP_ID, MyPerGameSettings.BasicGameInfo.ApplicationName, appDataPath);
             MyInitializer.InitCheckSum();
+            _startup.InitSplashScreen();
             if (!_startup.Check64Bit())
-                return;
+                throw new InvalidOperationException("Torch requires a 64bit operating system");
 
             _startup.DetectSharpDxLeaksBeforeRun();
-            using (var mySteamService = new SteamService(Game.IsDedicated, APP_ID))
-            {
-                _renderer = null;
-                SpaceEngineersGame.SetupPerGameSettings();
+            var steamService = new SteamService(Game.IsDedicated, APP_ID);
+            MyServiceManager.Instance.AddService(steamService);
+            _renderer = null;
+            SpaceEngineersGame.SetupPerGameSettings();
+            // I'm sorry, but it's what Keen does in SpaceEngineers.MyProgram
+#pragma warning disable 612
+            SpaceEngineersGame.SetupRender();
+#pragma warning restore 612
+            InitializeRender();
+            if (!_startup.CheckSteamRunning())
+                throw new InvalidOperationException("Space Engineers requires steam to be running");
 
-                OverrideMenus();
-
-                InitializeRender();
-
-                if (!Game.IsDedicated)
-                    MyFileSystem.InitUserSpecific(mySteamService.UserId.ToString());
-            }
-
-            _startup.DetectSharpDxLeaksAfterRun();
-            MyInitializer.InvokeAfterRun();
+            if (!Game.IsDedicated)
+                MyFileSystem.InitUserSpecific(MyGameService.UserId.ToString());
         }
 
         private void OverrideMenus()
@@ -81,19 +82,46 @@ namespace Torch.Client
 
             MyPerGameSettings.GUI.MainMenu = typeof(TorchMainMenuScreen);
         }
-
+        
         public override void Start()
         {
             using (var spaceEngineersGame = new SpaceEngineersGame(RunArgs))
             {
                 Log.Info("Starting client");
+                OverrideMenus();
                 spaceEngineersGame.OnGameLoaded += SpaceEngineersGame_OnGameLoaded;
-                spaceEngineersGame.Run();
+                spaceEngineersGame.OnGameExit += Dispose;
+                spaceEngineersGame.Run(false, _startup.DisposeSplashScreen);
             }
+        }
+
+        private void SetRenderWindowTitle(string title)
+        {
+            MyRenderThread renderThread = MySandboxGame.Static?.GameRenderComponent?.RenderThread;
+            if (renderThread == null)
+                return;
+            FieldInfo renderWindowField = typeof(MyRenderThread).GetField("m_renderWindow",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            if (renderWindowField == null)
+                return;
+            var window = renderWindowField.GetValue(MySandboxGame.Static.GameRenderComponent.RenderThread) as System.Windows.Forms.Form;
+            if (window != null)
+                renderThread.Invoke(() =>
+                {
+                    window.Text = title;
+                });
         }
 
         private void SpaceEngineersGame_OnGameLoaded(object sender, EventArgs e)
         {
+            SetRenderWindowTitle($"Space Engineers v{GameVersion} with Torch v{TorchVersion}");
+        }
+
+        public override void Dispose()
+        {
+            MyGameService.ShutDown();
+            _startup.DetectSharpDxLeaksAfterRun();
+            MyInitializer.InvokeAfterRun();
         }
 
         public override void Stop()

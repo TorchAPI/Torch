@@ -27,11 +27,6 @@ namespace Torch.API.Managers
         void UpdatePlugins();
 
         /// <summary>
-        /// Disposes all loaded plugins.
-        /// </summary>
-        void DisposePlugins();
-
-        /// <summary>
         /// Load plugins.
         /// </summary>
         void LoadPlugins();
