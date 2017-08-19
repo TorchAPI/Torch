@@ -16,6 +16,7 @@ using NLog;
 using Torch;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
+using Sandbox.Engine.Networking;
 using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
@@ -31,6 +32,7 @@ using VRage.Game.ModAPI;
 using VRage.GameServices;
 using VRage.Library.Collections;
 using VRage.Network;
+using VRage.Steam;
 using VRage.Utils;
 
 namespace Torch.Managers
@@ -61,7 +63,7 @@ namespace Torch.Managers
 
         internal MultiplayerManager(ITorchBase torch) : base(torch)
         {
-            
+
         }
 
         /// <inheritdoc />
@@ -166,11 +168,22 @@ namespace Torch.Managers
             ValidateOnlinePlayersList();
 
             //TODO: Move these with the methods?
-            RemoveHandlers();
-            SteamServerAPI.Instance.GameServer.ValidateAuthTicketResponse += ValidateAuthTicketResponse;
-            SteamServerAPI.Instance.GameServer.UserGroupStatus += UserGroupStatus;
-            _members = (List<ulong>)typeof(MyDedicatedServerBase).GetField("m_members", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(MyMultiplayer.Static);
-            _waitingForGroup = (HashSet<ulong>)typeof(MyDedicatedServerBase).GetField("m_waitingForGroup", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(MyMultiplayer.Static);
+            if (!RemoveHandlers())
+            {
+                Log.Error("Steam auth failed to initialize");
+                return;
+            }
+            MyGameService.GameServer.ValidateAuthTicketResponse += ValidateAuthTicketResponse;
+            MyGameService.GameServer.UserGroupStatusResponse += UserGroupStatusResponse;
+            _members = MyMultiplayer.Static.GetPrivateField<List<ulong>>("m_members", true);
+            if (_members == null)
+                throw new InvalidOperationException("Unable to get m_members from MyMultiplayer.Static.  Is this a dedicated server?");
+            _waitingForGroup = MyMultiplayer.Static.GetPrivateField<HashSet<ulong>>("m_waitingForGroup", true);
+            if (_waitingForGroup == null)
+                throw new InvalidOperationException("Unable to get m_waitingForGroup from MyMultiplayer.Static.  Is this a dedicated server?");
+            _kickedClients = MyMultiplayer.Static.GetPrivateField<Dictionary<ulong, int>>("m_kickedClients", true);
+            if (_kickedClients == null)
+                throw new InvalidOperationException("Unable to get m_kickedClients from MyMultiplayer.Static.  Is this a dedicated server?");
             Log.Info("Steam auth initialized");
         }
 
@@ -194,6 +207,7 @@ namespace Torch.Managers
         //This lets us have a server set to private (admins only) or friends (friends of all listed admins)
         private List<ulong> _members;
         private HashSet<ulong> _waitingForGroup;
+        private Dictionary<ulong, int> _kickedClients;
         //private HashSet<ulong> _waitingForFriends;
         private Dictionary<ulong, ulong> _gameOwnerIds = new Dictionary<ulong, ulong>();
         //private IMultiplayer _multiplayerImplementation;
@@ -201,149 +215,116 @@ namespace Torch.Managers
         /// <summary>
         /// Removes Keen's hooks into some Steam events so we have full control over client authentication
         /// </summary>
-        private static void RemoveHandlers()
+        private static bool RemoveHandlers()
         {
-            var eventField = typeof(GameServer).GetField("<backing_store>" + nameof(SteamServerAPI.Instance.GameServer.ValidateAuthTicketResponse), BindingFlags.NonPublic | BindingFlags.Instance);
-            if (eventField?.GetValue(SteamServerAPI.Instance.GameServer) is MulticastDelegate eventDel)
+            MethodInfo methodValidateAuthTicket = typeof(MyDedicatedServerBase).GetMethod("GameServer_ValidateAuthTicketResponse",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+            if (methodValidateAuthTicket == null)
             {
-                foreach (var handle in eventDel.GetInvocationList())
-                {
-                    if (handle.Method.Name == "GameServer_ValidateAuthTicketResponse")
-                    {
-                        SteamServerAPI.Instance.GameServer.ValidateAuthTicketResponse -=
-                            handle as ValidateAuthTicketResponse;
-                        Log.Debug("Removed GameServer_ValidateAuthTicketResponse");
-                    }
-                }
+                Log.Error("Unable to find the GameServer_ValidateAuthTicketResponse method to unhook");
+                return false;
             }
-            else
-                Log.Warn("Unable to unhook GameServer_ValidateAuthTicketResponse from the ValidateAuthTicketResponse event");
-
-            eventField = typeof(GameServer).GetField("<backing_store>" + nameof(SteamServerAPI.Instance.GameServer.UserGroupStatus), BindingFlags.NonPublic | BindingFlags.Instance);
-            eventDel = eventField?.GetValue(SteamServerAPI.Instance.GameServer) as MulticastDelegate;
-            if (eventDel != null)
+            var eventValidateAuthTicket = Reflection.GetEvents(MyGameService.GameServer, nameof(MyGameService.GameServer.ValidateAuthTicketResponse))
+                      .FirstOrDefault(x => x.Method == methodValidateAuthTicket) as Action<ulong, JoinResult, ulong>;
+            if (eventValidateAuthTicket == null)
             {
-                foreach (var handle in eventDel.GetInvocationList())
-                {
-                    if (handle.Method.Name == "GameServer_UserGroupStatus")
-                    {
-                        SteamServerAPI.Instance.GameServer.UserGroupStatus -= handle as UserGroupStatus;
-                        Log.Debug("Removed GameServer_UserGroupStatus");
-                    }
-                }
-            } else
-                Log.Warn("Unable to unhook GameServer_UserGroupStatus from the UserGroupStatusResponse event");
+                Log.Error(
+                    "Unable to unhook the GameServer_ValidateAuthTicketResponse method from GameServer.ValidateAuthTicketResponse");
+                Log.Debug("    Want to unhook {0}", methodValidateAuthTicket);
+                Log.Debug("    Registered handlers: ");
+                foreach (Delegate method in Reflection.GetEvents(MyGameService.GameServer,
+                    nameof(MyGameService.GameServer.ValidateAuthTicketResponse)))
+                    Log.Debug("       - " + method.Method);
+                return false;
+            }
+
+            MethodInfo methodUserGroupStatus = typeof(MyDedicatedServerBase).GetMethod("GameServer_UserGroupStatus",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+            if (methodUserGroupStatus == null)
+            {
+                Log.Error("Unable to find the GameServer_UserGroupStatus method to unhook");
+                return false;
+            }
+            var eventUserGroupStatus = Reflection.GetInstanceEvent(MyGameService.GameServer, nameof(MyGameService.GameServer.UserGroupStatusResponse))
+                      .FirstOrDefault(x => x.Method == methodUserGroupStatus)
+                as Action<ulong, ulong, bool, bool>;
+            if (eventUserGroupStatus == null)
+            {
+                Log.Error("Unable to unhook the GameServer_UserGroupStatus method from GameServer.UserGroupStatus");
+                Log.Debug("    Want to unhook {0}", methodUserGroupStatus);
+                Log.Debug("    Registered handlers: ");
+                foreach (Delegate method in Reflection.GetInstanceEvent(MyGameService.GameServer, nameof(MyGameService.GameServer.UserGroupStatusResponse)))
+                    Log.Debug("       - " + method.Method);
+                return false;
+            }
+
+            MyGameService.GameServer.ValidateAuthTicketResponse -=
+                eventValidateAuthTicket;
+            MyGameService.GameServer.UserGroupStatusResponse -=
+                eventUserGroupStatus;
+            return true;
         }
 
         //Largely copied from SE
-        private void ValidateAuthTicketResponse(ulong steamID, AuthSessionResponseEnum response, ulong ownerSteamID)
+        private void ValidateAuthTicketResponse(ulong steamID, JoinResult response, ulong steamOwner)
         {
-            Log.Info($"Server ValidateAuthTicketResponse ({response}), owner: {ownerSteamID}");
-
-            if (steamID != ownerSteamID)
+            Log.Debug($"ValidateAuthTicketResponse(user={steamID}, response={response}, owner={steamOwner}");
+            if (IsClientBanned(steamOwner) || MySandboxGame.ConfigDedicated.Banned.Contains(steamOwner))
             {
-                Log.Info($"User {steamID} is using a game owned by {ownerSteamID}. Tracking...");
-                _gameOwnerIds[steamID] = ownerSteamID;
-                
-                if (MySandboxGame.ConfigDedicated.Banned.Contains(ownerSteamID))
-                {
-                    Log.Info($"Game owner {ownerSteamID} is banned. Banning and rejecting client {steamID}...");
-                    UserRejected(steamID, JoinResult.BannedByAdmins);
-                    BanPlayer(steamID);
-                }
+                this.UserRejected(steamID, JoinResult.BannedByAdmins);
+                RaiseClientKicked(steamID);
             }
-
-            if (response == AuthSessionResponseEnum.OK)
+            else if (IsClientKicked(steamOwner))
             {
-                if (MySession.Static.MaxPlayers > 0 && _members.Count - 1 >= MySession.Static.MaxPlayers) 
-                {
-                    UserRejected(steamID, JoinResult.ServerFull);
-                }
-                else if (MySandboxGame.ConfigDedicated.Administrators.Contains(steamID.ToString()) /*|| MySandboxGame.ConfigDedicated.Administrators.Contains(MyDedicatedServerBase.ConvertSteamIDFrom64(steamID))*/)
-                {
-                    UserAccepted(steamID);
-                }
-                else if (MySandboxGame.ConfigDedicated.GroupID == 0)
-                {
-                    switch (MySession.Static.OnlineMode)
-                    {
-                        case MyOnlineModeEnum.PUBLIC:
-                            UserAccepted(steamID);
-                            break;
-                        case MyOnlineModeEnum.PRIVATE:
-                            UserRejected(steamID, JoinResult.NotInGroup);
-                            break;
-                        case MyOnlineModeEnum.FRIENDS:
-                            //TODO: actually verify friendship
-                            UserRejected(steamID, JoinResult.NotInGroup);
-                            break;
-                    }
-                }
-                else if (SteamServerAPI.Instance.GetAccountType(MySandboxGame.ConfigDedicated.GroupID) != AccountType.Clan)
-                {
-                    UserRejected(steamID, JoinResult.GroupIdInvalid);
-                }
-                else if (SteamServerAPI.Instance.GameServer.RequestGroupStatus(steamID, MySandboxGame.ConfigDedicated.GroupID))
-                {
-                    // Returns false when there's no connection to Steam
-                    _waitingForGroup.Add(steamID);
-                }
-                else
-                {
-                    UserRejected(steamID, JoinResult.SteamServersOffline);
-                }
+                UserRejected(steamID, JoinResult.KickedRecently);
+                RaiseClientKicked(steamID);
             }
-            else
+            if (response != JoinResult.OK)
             {
-                JoinResult joinResult = JoinResult.TicketInvalid;
-                switch (response)
-                {
-                    case AuthSessionResponseEnum.AuthTicketCanceled:
-                        joinResult = JoinResult.TicketCanceled;
-                        break;
-                    case AuthSessionResponseEnum.AuthTicketInvalidAlreadyUsed:
-                        joinResult = JoinResult.TicketAlreadyUsed;
-                        break;
-                    case AuthSessionResponseEnum.LoggedInElseWhere:
-                        joinResult = JoinResult.LoggedInElseWhere;
-                        break;
-                    case AuthSessionResponseEnum.NoLicenseOrExpired:
-                        joinResult = JoinResult.NoLicenseOrExpired;
-                        break;
-                    case AuthSessionResponseEnum.UserNotConnectedToSteam:
-                        joinResult = JoinResult.UserNotConnected;
-                        break;
-                    case AuthSessionResponseEnum.VACBanned:
-                        joinResult = JoinResult.VACBanned;
-                        break;
-                    case AuthSessionResponseEnum.VACCheckTimedOut:
-                        joinResult = JoinResult.VACCheckTimedOut;
-                        break;
-                }
-
-                UserRejected(steamID, joinResult);
+                UserRejected(steamID, response);
+                return;
             }
+            if (MyMultiplayer.Static.MemberLimit > 0 && this._members.Count - 1 >= MyMultiplayer.Static.MemberLimit)
+            {
+                UserRejected(steamID, JoinResult.ServerFull);
+                return;
+            }
+            if (MySandboxGame.ConfigDedicated.GroupID == 0uL ||
+                MySandboxGame.ConfigDedicated.Administrators.Contains(steamID.ToString()) ||
+                MySandboxGame.ConfigDedicated.Administrators.Contains((string)Reflection.InvokeStaticMethod(typeof(MyDedicatedServerBase), "ConvertSteamIDFrom64", steamID)))
+            {
+                this.UserAccepted(steamID);
+                return;
+            }
+            if ((MyGameServiceAccountType)Reflection.InvokeStaticMethod(typeof(MyGameService), "GetServerAccountType", MySandboxGame.ConfigDedicated.GroupID) != MyGameServiceAccountType.Clan)
+            {
+                this.UserRejected(steamID, JoinResult.GroupIdInvalid);
+                return;
+            }
+            if (MyGameService.GameServer.RequestGroupStatus(steamID, MySandboxGame.ConfigDedicated.GroupID))
+            {
+                this._waitingForGroup.Add(steamID);
+                return;
+            }
+            this.UserRejected(steamID, JoinResult.SteamServersOffline);
         }
 
-        private void UserGroupStatus(ulong userId, ulong groupId, bool member, bool officer)
+        private void UserGroupStatusResponse(ulong userId, ulong groupId, bool member, bool officer)
         {
             if (groupId == MySandboxGame.ConfigDedicated.GroupID && _waitingForGroup.Remove(userId))
             {
                 if (member || officer)
-                {
                     UserAccepted(userId);
-                }
                 else
-                {
                     UserRejected(userId, JoinResult.NotInGroup);
-                }
             }
         }
 
         private void UserAccepted(ulong steamId)
         {
-            typeof(MyDedicatedServerBase).GetMethod("UserAccepted", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(MyMultiplayer.Static, new object[] {steamId});
-            var vm = new PlayerViewModel(steamId) {State = ConnectionState.Connected};
+            Reflection.InvokePrivateMethod(MyMultiplayer.Static, "UserAccepted", steamId);
+
+            var vm = new PlayerViewModel(steamId) { State = ConnectionState.Connected };
             Log.Info($"Player {vm.Name} joined ({vm.SteamId})");
             Players.Add(steamId, vm);
             PlayerJoined?.Invoke(vm);
@@ -351,7 +332,22 @@ namespace Torch.Managers
 
         private void UserRejected(ulong steamId, JoinResult reason)
         {
-            typeof(MyDedicatedServerBase).GetMethod("UserRejected", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(MyMultiplayer.Static, new object[] {steamId, reason});
+            Reflection.InvokePrivateMethod(MyMultiplayer.Static, "UserRejected", steamId, reason);
+        }
+
+        private bool IsClientBanned(ulong steamId)
+        {
+            return (bool)Reflection.InvokePrivateMethod(MyMultiplayer.Static, "IsClientBanned", steamId);
+        }
+
+        private bool IsClientKicked(ulong steamId)
+        {
+            return (bool)Reflection.InvokePrivateMethod(MyMultiplayer.Static, "IsClientKicked", steamId);
+        }
+
+        private void RaiseClientKicked(ulong steamId)
+        {
+            Reflection.InvokePrivateMethod(MyMultiplayer.Static, "RaiseClientKicked", steamId);
         }
     }
 }
