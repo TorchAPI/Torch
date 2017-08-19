@@ -203,7 +203,7 @@ namespace Torch.Managers
         /// </summary>
         private static void RemoveHandlers()
         {
-            var eventField = typeof(GameServer).GetField("<backing_store>ValidateAuthTicketResponse", BindingFlags.NonPublic | BindingFlags.Instance);
+            var eventField = typeof(GameServer).GetField("<backing_store>" + nameof(SteamServerAPI.Instance.GameServer.ValidateAuthTicketResponse), BindingFlags.NonPublic | BindingFlags.Instance);
             if (eventField?.GetValue(SteamServerAPI.Instance.GameServer) is MulticastDelegate eventDel)
             {
                 foreach (var handle in eventDel.GetInvocationList())
@@ -217,9 +217,9 @@ namespace Torch.Managers
                 }
             }
             else
-                Log.Warn("Unable to unhook the ValidateAuthTicketResponse event");
+                Log.Warn("Unable to unhook GameServer_ValidateAuthTicketResponse from the ValidateAuthTicketResponse event");
 
-            eventField = typeof(GameServer).GetField("<backing_store>UserGroupStatusResponse", BindingFlags.NonPublic | BindingFlags.Instance);
+            eventField = typeof(GameServer).GetField("<backing_store>" + nameof(SteamServerAPI.Instance.GameServer.UserGroupStatus), BindingFlags.NonPublic | BindingFlags.Instance);
             eventDel = eventField?.GetValue(SteamServerAPI.Instance.GameServer) as MulticastDelegate;
             if (eventDel != null)
             {
@@ -232,7 +232,7 @@ namespace Torch.Managers
                     }
                 }
             } else
-                Log.Warn("Unable to unhook the UserGroupStatusResponse event");
+                Log.Warn("Unable to unhook GameServer_UserGroupStatus from the UserGroupStatusResponse event");
         }
 
         //Largely copied from SE
