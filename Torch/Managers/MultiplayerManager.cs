@@ -210,12 +210,16 @@ namespace Torch.Managers
                 {
                     if (handle.Method.Name == "GameServer_ValidateAuthTicketResponse")
                     {
-                        SteamServerAPI.Instance.GameServer.ValidateAuthTicketResponse -= handle as ValidateAuthTicketResponse;
+                        SteamServerAPI.Instance.GameServer.ValidateAuthTicketResponse -=
+                            handle as ValidateAuthTicketResponse;
                         Log.Debug("Removed GameServer_ValidateAuthTicketResponse");
                     }
                 }
             }
-            eventField = typeof(GameServer).GetField("<backing_store>UserGroupStatus", BindingFlags.NonPublic | BindingFlags.Instance);
+            else
+                Log.Warn("Unable to unhook the ValidateAuthTicketResponse event");
+
+            eventField = typeof(GameServer).GetField("<backing_store>UserGroupStatusResponse", BindingFlags.NonPublic | BindingFlags.Instance);
             eventDel = eventField?.GetValue(SteamServerAPI.Instance.GameServer) as MulticastDelegate;
             if (eventDel != null)
             {
@@ -227,7 +231,8 @@ namespace Torch.Managers
                         Log.Debug("Removed GameServer_UserGroupStatus");
                     }
                 }
-            }
+            } else
+                Log.Warn("Unable to unhook the UserGroupStatusResponse event");
         }
 
         //Largely copied from SE
@@ -337,7 +342,6 @@ namespace Torch.Managers
 
         private void UserAccepted(ulong steamId)
         {
-            _members.Remove(steamId);
             typeof(MyDedicatedServerBase).GetMethod("UserAccepted", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(MyMultiplayer.Static, new object[] {steamId});
             var vm = new PlayerViewModel(steamId) {State = ConnectionState.Connected};
             Log.Info($"Player {vm.Name} joined ({vm.SteamId})");
