@@ -337,6 +337,7 @@ namespace Torch.Managers
 
         private void UserAccepted(ulong steamId)
         {
+            _members.Remove(steamId);
             typeof(MyDedicatedServerBase).GetMethod("UserAccepted", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(MyMultiplayer.Static, new object[] {steamId});
             var vm = new PlayerViewModel(steamId) {State = ConnectionState.Connected};
             Log.Info($"Player {vm.Name} joined ({vm.SteamId})");
