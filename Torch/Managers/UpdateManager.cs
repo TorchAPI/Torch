@@ -54,7 +54,12 @@ namespace Torch.Managers
 
                 var zip = latest.Assets.FirstOrDefault(x => x.Name.Contains(".zip"));
                 var versionName = Regex.Match(latest.TagName, "(\\d+\\.)+\\d+").ToString();
-                return new Tuple<Version, string>(new Version(string.IsNullOrWhiteSpace(versionName) ? versionName : "0.0"), zip?.BrowserDownloadUrl);
+                if (string.IsNullOrWhiteSpace(versionName))
+                {
+                    _log.Warn("Unable to parse tag {0} for {1}/{2}", latest.TagName, owner, name);
+                    versionName = "0.0";
+                }
+                return new Tuple<Version, string>(new Version(versionName), zip?.BrowserDownloadUrl);
             }
             catch (Exception e)
             {
