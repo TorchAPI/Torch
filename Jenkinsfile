@@ -17,7 +17,7 @@ node {
 		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Release /p:Platform=x64"
 	}
 
-	state('Archive') {
+	stage('Archive') {
 		archive 'bin/x64/Release/Torch.*'
 	}
 }
