@@ -1,25 +1,23 @@
 node {
-	stages {
-		stage('Checkout') {
-			checkout scm
-		}
+	stage('Checkout') {
+		checkout scm
+	}
 
-		stage('Acquire SE') {
-			bat 'powershell -File jenkins-grab-se.ps1'
-			bat 'rmdir GameBinaries'
-			bat 'mklink /J GameBinaries "C:/Steam/Data/DedicatedServer64/"'		
-		}
-		
-		stage('Acquire NuGet Packages') {
-			bat 'nuget restore Torch.sln'
-		}
+	stage('Acquire SE') {
+		bat 'powershell -File jenkins-grab-se.ps1'
+		bat 'rmdir GameBinaries'
+		bat 'mklink /J GameBinaries "C:/Steam/Data/DedicatedServer64/"'		
+	}
 
-		stage('Build') {
-			bat "\"${tool 'MSBuild'}\" Torch.sln /p:Configuration=Release /p:Platform=x64"
-		}
+	stage('Acquire NuGet Packages') {
+		bat 'nuget restore Torch.sln'
+	}
 
-		state('Archive') {
-			archive 'bin/x64/Release/Torch.*'
-		}
+	stage('Build') {
+		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Release /p:Platform=x64"
+	}
+
+	state('Archive') {
+		archive 'bin/x64/Release/Torch.*'
 	}
 }
