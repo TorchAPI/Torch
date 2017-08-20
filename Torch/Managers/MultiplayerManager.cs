@@ -224,7 +224,7 @@ namespace Torch.Managers
                 Log.Error("Unable to find the GameServer_ValidateAuthTicketResponse method to unhook");
                 return false;
             }
-            var eventValidateAuthTicket = Reflection.GetEvents(MyGameService.GameServer, nameof(MyGameService.GameServer.ValidateAuthTicketResponse))
+            var eventValidateAuthTicket = Reflection.GetInstanceEvent(MyGameService.GameServer, nameof(MyGameService.GameServer.ValidateAuthTicketResponse))
                       .FirstOrDefault(x => x.Method == methodValidateAuthTicket) as Action<ulong, JoinResult, ulong>;
             if (eventValidateAuthTicket == null)
             {
@@ -232,7 +232,7 @@ namespace Torch.Managers
                     "Unable to unhook the GameServer_ValidateAuthTicketResponse method from GameServer.ValidateAuthTicketResponse");
                 Log.Debug("    Want to unhook {0}", methodValidateAuthTicket);
                 Log.Debug("    Registered handlers: ");
-                foreach (Delegate method in Reflection.GetEvents(MyGameService.GameServer,
+                foreach (Delegate method in Reflection.GetInstanceEvent(MyGameService.GameServer,
                     nameof(MyGameService.GameServer.ValidateAuthTicketResponse)))
                     Log.Debug("       - " + method.Method);
                 return false;
