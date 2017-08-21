@@ -18,8 +18,8 @@ node {
 	}
 
 	stage('Test') {
-		bat 'IF NOT EXIST GameBinaries MKDIR GameBinaries'
-		bat "\"packages/xunit.runner.console.2.2.0/tools/xunit.console.exe\" \"bin-test/x64/Release/Torch.Tests.dll\" \"bin-test/x64/Release/Torch.Server.Tests.dll\" -parallel none -xml \"reports/Torch.Tests.xml\""
+		bat 'IF NOT EXIST reports MKDIR reports'
+		bat "\"packages/xunit.runner.console.2.2.0/tools/xunit.console.exe\" \"bin-test/x64/Release/Torch.Tests.dll\" \"bin-test/x64/Release/Torch.Server.Tests.dll\" \"bin-test/x64/Release/Torch.Client.Tests.dll\" -parallel none -xml \"reports/Torch.Tests.xml\""
 	    step([
 	        $class: 'XUnitBuilder',
 	        thresholdMode: 1,
