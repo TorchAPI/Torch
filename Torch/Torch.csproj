@@ -151,6 +151,7 @@
     <Compile Include="Collections\ObservableList.cs" />
     <Compile Include="DispatcherExtensions.cs" />
     <Compile Include="Managers\DependencyManager.cs" />
+    <Compile Include="Managers\ReflectionManager.cs" />
     <Compile Include="SaveGameStatus.cs" />
     <Compile Include="Collections\KeyTree.cs" />
     <Compile Include="Collections\ObservableDictionary.cs" />
