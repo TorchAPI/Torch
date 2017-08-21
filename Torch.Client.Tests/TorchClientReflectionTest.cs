@@ -4,7 +4,7 @@ using Torch.Tests;
 using Torch.Utils;
 using Xunit;
 
-namespace Torch.Server.Tests
+namespace Torch.Client.Tests
 {
     public class TorchClientReflectionTest
     {
