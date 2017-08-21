@@ -19,7 +19,7 @@ namespace Torch.Client
 
         public TorchAssemblyResolver(params string[] paths)
         {
-            string location = Assembly.GetEntryAssembly().Location;
+            string location = Assembly.GetEntryAssembly()?.Location ?? GetType().Assembly.Location;
             location = location != null ? Path.GetDirectoryName(location) + Path.DirectorySeparatorChar : null;
             _removablePathPrefix = location ?? "";
             _paths = paths;

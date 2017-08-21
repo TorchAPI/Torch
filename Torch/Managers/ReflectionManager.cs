@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -10,10 +12,17 @@ using Torch.API;
 
 namespace Torch.Managers
 {
-    internal interface IReflectedFieldAttribute
+    public abstract class ReflectedMemberAttribute : Attribute
     {
-        string Name { get; set; }
-        Type Type { get; set; }
+        /// <summary>
+        /// Name of the member to access.  If null, the tagged field's name.
+        /// </summary>
+        public string Name { get; set; } = null;
+
+        /// <summary>
+        /// Declaring type of the member to access.  If null, inferred from the instance argument type.
+        /// </summary>
+        public Type Type { get; set; } = null;
     }
 
     /// <summary>
@@ -36,16 +45,8 @@ namespace Torch.Managers
     /// </code>
     /// </example>
     [AttributeUsage(AttributeTargets.Field)]
-    public class ReflectedGetterAttribute : Attribute, IReflectedFieldAttribute
+    public class ReflectedGetterAttribute : ReflectedMemberAttribute
     {
-        /// <summary>
-        /// Name of the field to get.  If null, the tagged field's name.
-        /// </summary>
-        public string Name { get; set; } = null;
-        /// <summary>
-        /// Declaring type of the field to get.  If null, inferred from the instance argument type.
-        /// </summary>
-        public Type Type { get; set; } = null;
     }
 
     /// <summary>
@@ -68,16 +69,8 @@ namespace Torch.Managers
     /// </code>
     /// </example>
     [AttributeUsage(AttributeTargets.Field)]
-    public class ReflectedSetterAttribute : Attribute, IReflectedFieldAttribute
+    public class ReflectedSetterAttribute : ReflectedMemberAttribute
     {
-        /// <summary>
-        /// Name of the field to get.  If null, the tagged field's name.
-        /// </summary>
-        public string Name { get; set; } = null;
-        /// <summary>
-        /// Declaring type of the field to get.  If null, inferred from the instance argument type.
-        /// </summary>
-        public Type Type { get; set; } = null;
     }
 
     /// <summary>
@@ -98,16 +91,8 @@ namespace Torch.Managers
     /// </code>
     /// </example>
     [AttributeUsage(AttributeTargets.Field)]
-    public class ReflectedMethodAttribute : Attribute
+    public class ReflectedMethodAttribute : ReflectedMemberAttribute
     {
-        /// <summary>
-        /// Name of the method to invoke.  If null, the tagged field's name.
-        /// </summary>
-        public string Name { get; set; } = null;
-        /// <summary>
-        /// Declaring type of the method to invoke.  If null, inferred from the instance argument type.
-        /// </summary>
-        public Type Type { get; set; } = null;
     }
 
     /// <summary>
@@ -176,7 +161,7 @@ namespace Torch.Managers
                 foreach (string ns in _namespaceBlacklist)
                     if (t.FullName.StartsWith(ns))
                         return;
-                foreach (FieldInfo field in t.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+                foreach (FieldInfo field in t.GetFields(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                     Process(field);
             }
         }
@@ -202,18 +187,27 @@ namespace Torch.Managers
             var attr = field.GetCustomAttribute<ReflectedMethodAttribute>();
             if (attr != null)
             {
+                if (!field.IsStatic)
+                    throw new ArgumentException("Field must be static to be reflected");
                 ProcessReflectedMethod(field, attr);
                 return true;
             }
             var attr2 = field.GetCustomAttribute<ReflectedGetterAttribute>();
             if (attr2 != null)
             {
+                if (!field.IsStatic)
+                    throw new ArgumentException("Field must be static to be reflected");
                 ProcessReflectedField(field, attr2);
                 return true;
             }
             var attr3 = field.GetCustomAttribute<ReflectedSetterAttribute>();
             if (attr3 != null)
             {
+                if (!field.IsStatic)
+                {
+                    throw new ArgumentException("Field must be static to be reflected");
+                }
+
                 ProcessReflectedField(field, attr3);
                 return true;
             }
@@ -241,6 +235,14 @@ namespace Torch.Managers
                 (attr is ReflectedStaticMethodAttribute ? BindingFlags.Static : BindingFlags.Instance) |
                 BindingFlags.Public |
                 BindingFlags.NonPublic, null, CallingConventions.Any, trueParameterTypes, null);
+            if (methodInstance == null)
+            {
+                string methodType = attr is ReflectedStaticMethodAttribute ? "static" : "instance";
+                string methodParams = string.Join(", ",
+                    trueParameterTypes.Select(x => x.Name));
+                throw new NoNullAllowedException(
+                    $"Unable to find {methodType} method {attr.Name ?? field.Name} in type {trueType.FullName} with parameters {methodParams}");
+            }
 
             if (attr is ReflectedStaticMethodAttribute)
                 field.SetValue(null, Delegate.CreateDelegate(field.FieldType, methodInstance));
@@ -267,7 +269,7 @@ namespace Torch.Managers
             return null;
         }
 
-        private static void ProcessReflectedField(FieldInfo field, IReflectedFieldAttribute attr)
+        private static void ProcessReflectedField(FieldInfo field, ReflectedMemberAttribute attr)
         {
             MethodInfo delegateMethod = field.FieldType.GetMethod("Invoke");
             ParameterInfo[] parameters = delegateMethod.GetParameters();
@@ -312,7 +314,7 @@ namespace Torch.Managers
                 GetFieldPropRecursive(trueType, trueName, bindingFlags, (a, b, c) => a.GetProperty(b, c));
             if (sourceField == null && sourceProperty == null)
                 throw new ArgumentException(
-                    $"Unable to find field or property for {trueName} in {trueType} or its base types", nameof(field));
+                    $"Unable to find field or property for {trueName} in {trueType.FullName} or its base types", nameof(field));
 
             ParameterExpression[] paramExp = parameters.Select(x => Expression.Parameter(x.ParameterType)).ToArray();
 

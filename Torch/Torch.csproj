@@ -179,6 +179,7 @@
     <Compile Include="PluginManifest.cs" />
     <Compile Include="Reflection.cs" />
     <Compile Include="Managers\ScriptingManager.cs" />
+    <Compile Include="TorchAssemblyResolver.cs" />
     <Compile Include="TorchBase.cs" />
     <Compile Include="SteamService.cs" />
     <Compile Include="TorchPluginBase.cs" />
