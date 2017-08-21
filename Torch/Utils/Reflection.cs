@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using NLog;
 using SteamSDK;
 
-namespace Torch
+namespace Torch.Utils
 {
     public static class Reflection
     {

@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using SteamSDK;
 using VRage.Steam;
 using Sandbox;
+using Torch.Utils;
+using VRage.GameServices;
 
 namespace Torch
 {
@@ -17,48 +19,67 @@ namespace Torch
     /// </summary>
     public class SteamService : MySteamService
     {
+        [ReflectedSetter(Name = nameof(SteamServerAPI))]
+        private static Action<MySteamService, SteamServerAPI> _steamServerAPISetter;
+        [ReflectedSetter(Name = "m_gameServer")]
+        private static Action<MySteamService, MySteamGameServer> _steamGameServerSetter;
+        [ReflectedSetter(Name = nameof(AppId))]
+        private static Action<MySteamService, uint> _steamAppIdSetter;
+        [ReflectedSetter(Name = nameof(API))]
+        private static Action<MySteamService, SteamAPI> _steamApiSetter;
+        [ReflectedSetter(Name = nameof(IsActive))]
+        private static Action<MySteamService, bool> _steamIsActiveSetter;
+        [ReflectedSetter(Name = nameof(UserId))]
+        private static Action<MySteamService, ulong> _steamUserIdSetter;
+        [ReflectedSetter(Name = nameof(UserName))]
+        private static Action<MySteamService, string> _steamUserNameSetter;
+        [ReflectedSetter(Name = nameof(OwnsGame))]
+        private static Action<MySteamService, bool> _steamOwnsGameSetter;
+        [ReflectedSetter(Name = nameof(UserUniverse))]
+        private static Action<MySteamService, MyGameServiceUniverse> _steamUserUniverseSetter;
+        [ReflectedSetter(Name = nameof(BranchName))]
+        private static Action<MySteamService, string> _steamBranchNameSetter;
+        [ReflectedSetter(Name = nameof(InventoryAPI))]
+        private static Action<MySteamService, MySteamInventory> _steamInventoryAPISetter;
+        [ReflectedMethod]
+        private static Action<MySteamService> RegisterCallbacks;
+        [ReflectedSetter(Name = nameof(Peer2Peer))]
+        private static Action<MySteamService, IMyPeer2Peer> _steamPeer2PeerSetter;
+
         public SteamService(bool isDedicated, uint appId)
             : base(true, appId)
         {
-            // TODO: Add protection for this mess... somewhere
-            SteamSDK.SteamServerAPI.Instance.Dispose();
-            var steam = typeof(MySteamService);
-
-            steam.GetProperty("SteamServerAPI").GetSetMethod(true).Invoke(this, new object[] { null });
-            steam.GetField("m_gameServer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(this, null);
-
-            steam.GetProperty("AppId").GetSetMethod(true).Invoke(this, new object[] { appId });
+            SteamServerAPI.Instance.Dispose();
+            _steamServerAPISetter.Invoke(this, null);
+            _steamGameServerSetter.Invoke(this, null);
+            _steamAppIdSetter.Invoke(this, appId);
+            
             if (isDedicated)
             {
-                steam.GetProperty("SteamServerAPI").GetSetMethod(true).Invoke(this, new object[] { null });
-                steam.GetField("m_gameServer").SetValue(this, new MySteamGameServer());
+                _steamServerAPISetter.Invoke(this, null);
+                _steamGameServerSetter.Invoke(this, new MySteamGameServer());
             }
             else
             {
-                var SteamAPI = SteamSDK.SteamAPI.Instance;
-                steam.GetProperty("API").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.Instance });
-                steam.GetProperty("IsActive").GetSetMethod(true).Invoke(this, new object[] { 
-                    SteamAPI.Instance.Init()
-                 });
+                SteamAPI steamApi = SteamAPI.Instance;
+                _steamApiSetter.Invoke(this, steamApi);
+                _steamIsActiveSetter.Invoke(this, steamApi.Init());
 
                 if (IsActive)
                 {
-                    steam.GetProperty("UserId").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.GetSteamUserId() });
-                    steam.GetProperty("UserName").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.GetSteamName() });
-                    steam.GetProperty("OwnsGame").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.HasGame() });
-                    steam.GetProperty("UserUniverse").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.GetSteamUserUniverse() });
-                    steam.GetProperty("BranchName").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.GetBranchName() });
-                    SteamAPI.LoadStats();
+                    _steamUserIdSetter.Invoke(this, steamApi.GetSteamUserId());
+                    _steamUserNameSetter.Invoke(this, steamApi.GetSteamName());
+                    _steamOwnsGameSetter.Invoke(this, steamApi.HasGame());
+                    _steamUserUniverseSetter.Invoke(this, (MyGameServiceUniverse)steamApi.GetSteamUserUniverse());
+                    _steamBranchNameSetter.Invoke(this, steamApi.GetBranchName());
+                    steamApi.LoadStats();
 
-                    steam.GetProperty("InventoryAPI").GetSetMethod(true).Invoke(this, new object[] { new MySteamInventory() });
-
-                    steam.GetMethod("RegisterCallbacks",
-                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                        .Invoke(this, null);
+                    _steamInventoryAPISetter.Invoke(this, new MySteamInventory());
+                    RegisterCallbacks(this);
                 }
             }
 
-            steam.GetProperty("Peer2Peer").GetSetMethod(true).Invoke(this, new object[] { new MySteamPeer2Peer() });
+            _steamPeer2PeerSetter.Invoke(this, new MySteamPeer2Peer());
         }
     }
 }

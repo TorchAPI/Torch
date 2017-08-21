@@ -122,7 +122,6 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Properties\AssemblyInfo1.cs" />
-    <Compile Include="TorchAssemblyResolver.cs" />
     <Compile Include="TorchClient.cs" />
     <Compile Include="TorchClientConfig.cs" />
     <Compile Include="TorchConsoleScreen.cs" />
