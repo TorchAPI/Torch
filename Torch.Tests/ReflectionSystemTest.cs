@@ -1,61 +1,54 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using Torch.API;
-using Torch.Client;
-using Torch.Managers;
+using Torch.Utils;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Torch.Tests
 {
-    public class ReflectionTests
+    public class ReflectionSystemTest
     {
-        private static string GetGameBinaries()
+        static ReflectionSystemTest()
         {
-            string dir = Environment.CurrentDirectory;
-            while (!string.IsNullOrWhiteSpace(dir))
-            {
-                string gameBin = Path.Combine(dir, "GameBinaries");
-                if (Directory.Exists(gameBin))
-                    return gameBin;
-
-                dir = Path.GetDirectoryName(dir);
-            }
-            throw new Exception("GetGameBinaries failed to find a folder named GameBinaries in the directory tree");
+            TestUtils.Init();
         }
+        
+        private static ReflectionTestManager _manager = new ReflectionTestManager().Init(typeof(ReflectionTestBinding));
+        public static IEnumerable<object[]> Getters => _manager.Getters;
 
-        private static readonly TorchAssemblyResolver _torchResolver =
-            new TorchAssemblyResolver(GetGameBinaries());
+        public static IEnumerable<object[]> Setters => _manager.Setters;
+
+        public static IEnumerable<object[]> Invokers => _manager.Invokers;
 
         #region Binding
         [Theory]
         [MemberData(nameof(Getters))]
-        public void TestBindingGetter(FieldRef field)
+        public void TestBindingGetter(ReflectionTestManager.FieldRef field)
         {
-            Assert.True(ReflectionManager.Process(field.Field));
+            if (field.Field == null)
+                return;
+            Assert.True(ReflectedManager.Process(field.Field));
             if (field.Field.IsStatic)
                 Assert.NotNull(field.Field.GetValue(null));
         }
 
         [Theory]
         [MemberData(nameof(Setters))]
-        public void TestBindingSetter(FieldRef field)
+        public void TestBindingSetter(ReflectionTestManager.FieldRef field)
         {
-            Assert.True(ReflectionManager.Process(field.Field));
+            if (field.Field == null)
+                return;
+            Assert.True(ReflectedManager.Process(field.Field));
             if (field.Field.IsStatic)
                 Assert.NotNull(field.Field.GetValue(null));
         }
 
         [Theory]
         [MemberData(nameof(Invokers))]
-        public void TestBindingInvoker(FieldRef field)
+        public void TestBindingInvoker(ReflectionTestManager.FieldRef field)
         {
-            Assert.True(ReflectionManager.Process(field.Field));
+            if (field.Field == null)
+                return;
+            Assert.True(ReflectedManager.Process(field.Field));
             if (field.Field.IsStatic)
                 Assert.NotNull(field.Field.GetValue(null));
         }
@@ -129,7 +122,7 @@ namespace Torch.Tests
         [Fact]
         public void TestInstanceFieldGet()
         {
-            ReflectionManager.Process(typeof(ReflectionTestBinding));
+            ReflectedManager.Process(typeof(ReflectionTestBinding));
             int testNumber = AcquireRandomNum();
             var target = new ReflectionTestTarget
             {
@@ -140,7 +133,7 @@ namespace Torch.Tests
         [Fact]
         public void TestInstanceFieldSet()
         {
-            ReflectionManager.Process(typeof(ReflectionTestBinding));
+            ReflectedManager.Process(typeof(ReflectionTestBinding));
             int testNumber = AcquireRandomNum();
             var target = new ReflectionTestTarget();
             ReflectionTestBinding.TestFieldSetter.Invoke(target, testNumber);
@@ -150,7 +143,7 @@ namespace Torch.Tests
         [Fact]
         public void TestInstancePropertyGet()
         {
-            ReflectionManager.Process(typeof(ReflectionTestBinding));
+            ReflectedManager.Process(typeof(ReflectionTestBinding));
             int testNumber = AcquireRandomNum();
             var target = new ReflectionTestTarget
             {
@@ -162,7 +155,7 @@ namespace Torch.Tests
         [Fact]
         public void TestInstancePropertySet()
         {
-            ReflectionManager.Process(typeof(ReflectionTestBinding));
+            ReflectedManager.Process(typeof(ReflectionTestBinding));
             int testNumber = AcquireRandomNum();
             var target = new ReflectionTestTarget();
             ReflectionTestBinding.TestPropertySetter.Invoke(target, testNumber);
@@ -172,7 +165,7 @@ namespace Torch.Tests
         [Fact]
         public void TestInstanceInvoke()
         {
-            ReflectionManager.Process(typeof(ReflectionTestBinding));
+            ReflectedManager.Process(typeof(ReflectionTestBinding));
             var target = new ReflectionTestTarget();
             Assert.True(ReflectionTestBinding.TestCall.Invoke(target, 1));
             Assert.False(ReflectionTestBinding.TestCall.Invoke(target, -1));
@@ -183,7 +176,7 @@ namespace Torch.Tests
         [Fact]
         public void TestStaticFieldGet()
         {
-            ReflectionManager.Process(typeof(ReflectionTestBinding));
+            ReflectedManager.Process(typeof(ReflectionTestBinding));
             int testNumber = AcquireRandomNum();
             ReflectionTestTarget.TestFieldStatic = testNumber;
             Assert.Equal(testNumber, ReflectionTestBinding.TestStaticFieldGetter.Invoke());
@@ -191,7 +184,7 @@ namespace Torch.Tests
         [Fact]
         public void TestStaticFieldSet()
         {
-            ReflectionManager.Process(typeof(ReflectionTestBinding));
+            ReflectedManager.Process(typeof(ReflectionTestBinding));
             int testNumber = AcquireRandomNum();
             ReflectionTestBinding.TestStaticFieldSetter.Invoke(testNumber);
             Assert.Equal(testNumber, ReflectionTestTarget.TestFieldStatic);
@@ -200,7 +193,7 @@ namespace Torch.Tests
         [Fact]
         public void TestStaticPropertyGet()
         {
-            ReflectionManager.Process(typeof(ReflectionTestBinding));
+            ReflectedManager.Process(typeof(ReflectionTestBinding));
             int testNumber = AcquireRandomNum();
             ReflectionTestTarget.TestPropertyStatic = testNumber;
             Assert.Equal(testNumber, ReflectionTestBinding.TestStaticPropertyGetter.Invoke());
@@ -209,7 +202,7 @@ namespace Torch.Tests
         [Fact]
         public void TestStaticPropertySet()
         {
-            ReflectionManager.Process(typeof(ReflectionTestBinding));
+            ReflectedManager.Process(typeof(ReflectionTestBinding));
             int testNumber = AcquireRandomNum();
             ReflectionTestBinding.TestStaticPropertySetter.Invoke(testNumber);
             Assert.Equal(testNumber, ReflectionTestTarget.TestPropertyStatic);
@@ -218,89 +211,11 @@ namespace Torch.Tests
         [Fact]
         public void TestStaticInvoke()
         {
-            ReflectionManager.Process(typeof(ReflectionTestBinding));
+            ReflectedManager.Process(typeof(ReflectionTestBinding));
             Assert.True(ReflectionTestBinding.TestCallStatic.Invoke(1));
             Assert.False(ReflectionTestBinding.TestCallStatic.Invoke(-1));
         }
         #endregion
         #endregion
-
-        #region FieldProvider
-        public struct FieldRef
-        {
-            public FieldInfo Field;
-
-            public FieldRef(FieldInfo f)
-            {
-                Field = f;
-            }
-
-            public override string ToString()
-            {
-                return Field.DeclaringType?.FullName + "." + Field.Name;
-            }
-        }
-
-        private static bool _init = false;
-        private static HashSet<object[]> _getters, _setters, _invokers;
-
-        private static void Init()
-        {
-            if (_init)
-                return;
-            _getters = new HashSet<object[]>();
-            _setters = new HashSet<object[]>();
-            _invokers = new HashSet<object[]>();
-
-            foreach (Type type in typeof(TorchBase).Assembly.GetTypes())
-                InternalInit(type);
-            InternalInit(typeof(ReflectionTestBinding));
-
-            _init = true;
-        }
-
-        private static void InternalInit(Type type)
-        {
-            foreach (FieldInfo field in type.GetFields(BindingFlags.Static |
-                                                           BindingFlags.Instance |
-                                                           BindingFlags.Public |
-                                                           BindingFlags.NonPublic))
-            {
-                if (field.GetCustomAttribute<ReflectedMethodAttribute>() != null)
-                    _invokers.Add(new object[] { new FieldRef(field) });
-                if (field.GetCustomAttribute<ReflectedGetterAttribute>() != null)
-                    _getters.Add(new object[] { new FieldRef(field) });
-                if (field.GetCustomAttribute<ReflectedSetterAttribute>() != null)
-                    _setters.Add(new object[] { new FieldRef(field) });
-            }
-        }
-
-        public static IEnumerable<object[]> Getters
-        {
-            get
-            {
-                Init();
-                return _getters;
-            }
-        }
-
-        public static IEnumerable<object[]> Setters
-        {
-            get
-            {
-                Init();
-                return _setters;
-            }
-        }
-
-        public static IEnumerable<object[]> Invokers
-        {
-            get
-            {
-                Init();
-                return _invokers;
-            }
-        }
-        #endregion
-    }
+ }
 }

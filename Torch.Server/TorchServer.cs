@@ -19,6 +19,7 @@ using SteamSDK;
 using Torch.API;
 using Torch.Managers;
 using Torch.Server.Managers;
+using Torch.Utils;
 using VRage.Dedicated;
 using VRage.FileSystem;
 using VRage.Game;
@@ -121,6 +122,9 @@ namespace Torch.Server
             MySandboxGame.Config.Load();
         }
 
+        [ReflectedStaticMethod(Type = typeof(DedicatedServer), Name = "RunInternal")]
+        private static Action _dsRunInternal;
+
         /// <inheritdoc />
         public override void Start()
         {
@@ -134,8 +138,6 @@ namespace Torch.Server
             State = ServerState.Starting;
             Log.Info("Starting server.");
 
-            var runInternal = typeof(DedicatedServer).GetMethod("RunInternal", BindingFlags.Static | BindingFlags.NonPublic);
-
             MySandboxGame.IsDedicated = true;
             Environment.SetEnvironmentVariable("SteamAppId", MyPerServerSettings.AppId.ToString());
 
@@ -144,7 +146,7 @@ namespace Torch.Server
             base.Start();
             //Stops RunInternal from calling MyFileSystem.InitUserSpecific(null), we call it in InstanceManager.
             MySandboxGame.IsReloading = true;
-            runInternal.Invoke(null, null);
+            _dsRunInternal.Invoke();
 
             MySandboxGame.Log.Close();
             State = ServerState.Stopped;

@@ -26,6 +26,7 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.Collections;
 using Torch.Commands;
+using Torch.Utils;
 using Torch.ViewModels;
 using VRage.Game;
 using VRage.Game.ModAPI;
@@ -167,15 +168,6 @@ namespace Torch.Managers
             }
             MyGameService.GameServer.ValidateAuthTicketResponse += ValidateAuthTicketResponse;
             MyGameService.GameServer.UserGroupStatusResponse += UserGroupStatusResponse;
-//            _members = MyMultiplayer.Static.GetPrivateField<List<ulong>>("m_members", true);
-//            if (_members == null)
-//                throw new InvalidOperationException("Unable to get m_members from MyMultiplayer.Static.  Is this a dedicated server?");
-//            _waitingForGroup = MyMultiplayer.Static.GetPrivateField<HashSet<ulong>>("m_waitingForGroup", true);
-//            if (_waitingForGroup == null)
-//                throw new InvalidOperationException("Unable to get m_waitingForGroup from MyMultiplayer.Static.  Is this a dedicated server?");
-//            _kickedClients = MyMultiplayer.Static.GetPrivateField<Dictionary<ulong, int>>("m_kickedClients", true);
-//            if (_kickedClients == null)
-//                throw new InvalidOperationException("Unable to get m_kickedClients from MyMultiplayer.Static.  Is this a dedicated server?");
             Log.Info("Steam auth initialized");
         }
 
@@ -279,19 +271,19 @@ namespace Torch.Managers
                 UserRejected.Invoke((MyDedicatedServerBase)MyMultiplayer.Static, steamID, response);
                 return;
             }
-            if (MyMultiplayer.Static.MemberLimit > 0 && _members.Invoke((MyDedicatedServerBase) MyMultiplayer.Static).Count - 1 >= MyMultiplayer.Static.MemberLimit)
+            if (MyMultiplayer.Static.MemberLimit > 0 && _members.Invoke((MyDedicatedServerBase)MyMultiplayer.Static).Count - 1 >= MyMultiplayer.Static.MemberLimit)
             {
                 UserRejected.Invoke((MyDedicatedServerBase)MyMultiplayer.Static, steamID, JoinResult.ServerFull);
                 return;
             }
             if (MySandboxGame.ConfigDedicated.GroupID == 0uL ||
                 MySandboxGame.ConfigDedicated.Administrators.Contains(steamID.ToString()) ||
-                MySandboxGame.ConfigDedicated.Administrators.Contains((string)Reflection.InvokeStaticMethod(typeof(MyDedicatedServerBase), "ConvertSteamIDFrom64", steamID)))
+                MySandboxGame.ConfigDedicated.Administrators.Contains(ConvertSteamIDFrom64(steamID)))
             {
                 this.UserAccepted(steamID);
                 return;
             }
-            if ((MyGameServiceAccountType)Reflection.InvokeStaticMethod(typeof(MyGameService), "GetServerAccountType", MySandboxGame.ConfigDedicated.GroupID) != MyGameServiceAccountType.Clan)
+            if (GetServerAccountType(MySandboxGame.ConfigDedicated.GroupID) != MyGameServiceAccountType.Clan)
             {
                 UserRejected.Invoke((MyDedicatedServerBase)MyMultiplayer.Static, steamID, JoinResult.GroupIdInvalid);
                 return;
@@ -317,13 +309,22 @@ namespace Torch.Managers
 
         private void UserAccepted(ulong steamId)
         {
-            Reflection.InvokePrivateMethod(MyMultiplayer.Static, "UserAccepted", steamId);
+            UserAcceptedImpl.Invoke((MyDedicatedServerBase)MyMultiplayer.Static, steamId);
 
             var vm = new PlayerViewModel(steamId) { State = ConnectionState.Connected };
             Log.Info($"Player {vm.Name} joined ({vm.SteamId})");
             Players.Add(steamId, vm);
             PlayerJoined?.Invoke(vm);
         }
+
+        [ReflectedStaticMethod(Type = typeof(MyDedicatedServerBase))]
+        private static Func<ulong, string> ConvertSteamIDFrom64;
+
+        [ReflectedStaticMethod(Type = typeof(MyGameService))]
+        private static Func<ulong, MyGameServiceAccountType> GetServerAccountType;
+
+        [ReflectedMethod(Name = "UserAccepted")]
+        private static Action<MyDedicatedServerBase, ulong> UserAcceptedImpl;
 
         [ReflectedMethod]
         private static Action<MyDedicatedServerBase, ulong, JoinResult> UserRejected;

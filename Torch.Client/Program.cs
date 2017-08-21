@@ -9,6 +9,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
 using NLog;
+using Torch.Utils;
 using MessageBox = System.Windows.MessageBox;
 
 namespace Torch.Client

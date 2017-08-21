@@ -2,11 +2,11 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <ProjectGuid>{C3C8B671-6AD1-44AA-A8DA-E0C0DC0FEDF5}</ProjectGuid>
+    <ProjectGuid>{9EFD1D91-2FA2-47ED-B537-D8BC3B0E543E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Torch.Tests</RootNamespace>
-    <AssemblyName>Torch.Tests</AssemblyName>
+    <RootNamespace>Torch.Server.Tests</RootNamespace>
+    <AssemblyName>Torch.Server.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -31,7 +31,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <DocumentationFile>$(SolutionDir)\bin-test\x64\Release\Torch.Tests.xml</DocumentationFile>
+    <DocumentationFile>$(SolutionDir)\bin-test\x64\Release\Torch.Server.Tests.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -56,16 +56,21 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ReflectionTestManager.cs" />
-    <Compile Include="ReflectionSystemTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestUtils.cs" />
-    <Compile Include="TorchReflectionTest.cs" />
+    <Compile Include="TorchServerReflectionTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Torch.API\Torch.API.csproj">
       <Project>{fba5d932-6254-4a1e-baf4-e229fa94e3c2}</Project>
       <Name>Torch.API</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Torch.Server\Torch.Server.csproj">
+      <Project>{ca50886b-7b22-4cd8-93a0-c06f38d4f77d}</Project>
+      <Name>Torch.Server</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Torch.Tests\Torch.Tests.csproj">
+      <Project>{c3c8b671-6ad1-44aa-a8da-e0c0dc0fedf5}</Project>
+      <Name>Torch.Tests</Name>
     </ProjectReference>
     <ProjectReference Include="..\Torch\Torch.csproj">
       <Project>{7e01635c-3b67-472e-bcd6-c5539564f214}</Project>

@@ -21,6 +21,7 @@ using Torch.API.Managers;
 using Torch.API.ModAPI;
 using Torch.Commands;
 using Torch.Managers;
+using Torch.Utils;
 using VRage.Collections;
 using VRage.FileSystem;
 using VRage.Game.ObjectBuilder;
@@ -36,6 +37,12 @@ namespace Torch
     /// </summary>
     public abstract class TorchBase : ViewModel, ITorchBase, IPlugin
     {
+        static TorchBase()
+        {
+            // We can safely never detach this since we don't reload assemblies.
+            new ReflectedManager().Attach();
+        }
+
         /// <summary>
         /// Hack because *keen*.
         /// Use only if necessary, prefer dependency injection.
@@ -224,7 +231,6 @@ namespace Torch
         public virtual void Init()
         {
             Debug.Assert(!_init, "Torch instance is already initialized.");
-
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
 

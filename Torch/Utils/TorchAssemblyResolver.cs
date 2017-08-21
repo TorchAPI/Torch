@@ -7,8 +7,11 @@ using System.Text;
 using System.Threading.Tasks;
 using NLog;
 
-namespace Torch.Client
+namespace Torch.Utils
 {
+    /// <summary>
+    /// Adds and removes an additional library path
+    /// </summary>
     public class TorchAssemblyResolver : IDisposable
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
@@ -17,6 +20,10 @@ namespace Torch.Client
         private readonly string[] _paths;
         private readonly string _removablePathPrefix;
 
+        /// <summary>
+        /// Initializes an assembly resolver that looks at the given paths for assemblies
+        /// </summary>
+        /// <param name="paths"></param>
         public TorchAssemblyResolver(params string[] paths)
         {
             string location = Assembly.GetEntryAssembly()?.Location ?? GetType().Assembly.Location;
@@ -79,6 +86,9 @@ namespace Torch.Client
             return null;
         }
 
+        /// <summary>
+        /// Unregisters the assembly resolver
+        /// </summary>
         public void Dispose()
         {
             AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomainOnAssemblyResolve;

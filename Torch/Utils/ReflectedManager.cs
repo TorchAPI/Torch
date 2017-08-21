@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Sandbox.Engine.Multiplayer;
 using Torch.API;
 
-namespace Torch.Managers
+namespace Torch.Utils
 {
     public abstract class ReflectedMemberAttribute : Attribute
     {
@@ -118,27 +118,28 @@ namespace Torch.Managers
     }
 
     /// <summary>
-    /// Automatically calls <see cref="ReflectionManager.Process(Assembly)"/> for every assembly already loaded, and every assembly that is loaded in the future.
+    /// Automatically calls <see cref="ReflectedManager.Process(Assembly)"/> for every assembly already loaded, and every assembly that is loaded in the future.
     /// </summary>
-    public class ReflectionManager : Manager
+    public class ReflectedManager
     {
         private static readonly string[] _namespaceBlacklist = new[] {
             "System", "VRage", "Sandbox", "SpaceEngineers"
         };
-
-        /// <inheritdoc />
-        public ReflectionManager(ITorchBase torchInstance) : base(torchInstance) { }
-
-        /// <inheritdoc />
-        public override void Attach()
+        
+        /// <summary>
+        /// Registers the assembly load event and loads every already existing assembly.
+        /// </summary>
+        public void Attach()
         {
             foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
                 Process(asm);
             AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
         }
 
-        /// <inheritdoc />
-        public override void Detach()
+        /// <summary>
+        /// Deregisters the assembly load event
+        /// </summary>
+        public void Detach()
         {
             AppDomain.CurrentDomain.AssemblyLoad -= CurrentDomain_AssemblyLoad;
         }

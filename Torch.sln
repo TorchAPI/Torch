@@ -18,6 +18,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Torch.Tests", "Torch.Tests\Torch.Tests.csproj", "{C3C8B671-6AD1-44AA-A8DA-E0C0DC0FEDF5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Torch.Server.Tests", "Torch.Server.Tests\Torch.Server.Tests.csproj", "{9EFD1D91-2FA2-47ED-B537-D8BC3B0E543E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +58,12 @@ Global
 		{C3C8B671-6AD1-44AA-A8DA-E0C0DC0FEDF5}.Release|Any CPU.ActiveCfg = Release|x64
 		{C3C8B671-6AD1-44AA-A8DA-E0C0DC0FEDF5}.Release|x64.ActiveCfg = Release|x64
 		{C3C8B671-6AD1-44AA-A8DA-E0C0DC0FEDF5}.Release|x64.Build.0 = Release|x64
+		{9EFD1D91-2FA2-47ED-B537-D8BC3B0E543E}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{9EFD1D91-2FA2-47ED-B537-D8BC3B0E543E}.Debug|x64.ActiveCfg = Debug|x64
+		{9EFD1D91-2FA2-47ED-B537-D8BC3B0E543E}.Debug|x64.Build.0 = Debug|x64
+		{9EFD1D91-2FA2-47ED-B537-D8BC3B0E543E}.Release|Any CPU.ActiveCfg = Release|x64
+		{9EFD1D91-2FA2-47ED-B537-D8BC3B0E543E}.Release|x64.ActiveCfg = Release|x64
+		{9EFD1D91-2FA2-47ED-B537-D8BC3B0E543E}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
