@@ -12,6 +12,7 @@ using VRage.Steam;
 using Torch.API;
 using VRage;
 using VRage.FileSystem;
+using VRage.GameServices;
 using VRageRender;
 using VRageRender.ExternalApp;
 
@@ -53,7 +54,7 @@ namespace Torch.Client
 
             _startup.DetectSharpDxLeaksBeforeRun();
             var steamService = new SteamService(Game.IsDedicated, APP_ID);
-            MyServiceManager.Instance.AddService(steamService);
+            MyServiceManager.Instance.AddService<IMyGameService>(steamService);
             _renderer = null;
             SpaceEngineersGame.SetupPerGameSettings();
             // I'm sorry, but it's what Keen does in SpaceEngineers.MyProgram

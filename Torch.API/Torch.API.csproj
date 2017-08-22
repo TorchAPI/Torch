@@ -175,6 +175,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerState.cs" />
     <Compile Include="ModAPI\TorchAPI.cs" />
+    <Compile Include="Session\ITorchSession.cs" />
+    <Compile Include="Session\ITorchSessionManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
