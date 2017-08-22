@@ -26,11 +26,11 @@ namespace Torch.Managers.ChatManager
 
         /// <inheritdoc />
         // TODO doesn't work in Offline worlds.  Method injection or network injection.
-        public event DelMessageRecieved MessageRecieved;
+        public event MessageRecievedDel MessageRecieved;
 
         /// <inheritdoc />
         // TODO doesn't work at all.  Method injection or network injection.
-        public event DelMessageSending MessageSending;
+        public event MessageSendingDel MessageSending;
 
         /// <inheritdoc />
         public void SendMessageAsSelf(string message)

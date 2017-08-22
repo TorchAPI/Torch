@@ -36,7 +36,7 @@ namespace Torch.Managers.ChatManager
         }
 
         /// <inheritdoc />
-        public event DelMessageProcessing MessageProcessing;
+        public event MessageProcessingDel MessageProcessing;
 
         /// <inheritdoc />
         public void SendMessageAsOther(ulong authorId, string message, ulong targetSteamId = 0)
@@ -59,9 +59,9 @@ namespace Torch.Managers.ChatManager
 
 
 #pragma warning disable 649
-        private delegate void DelMultiplayerBaseSendChatMessage(ref ChatMsg arg);
+        private delegate void MultiplayerBaseSendChatMessageDel(ref ChatMsg arg);
         [ReflectedStaticMethod(Name = "SendChatMessage", Type = typeof(MyMultiplayerBase))]
-        private static DelMultiplayerBaseSendChatMessage _dedicatedServerBaseSendChatMessage;
+        private static MultiplayerBaseSendChatMessageDel _dedicatedServerBaseSendChatMessage;
 
         // [ReflectedMethod] doesn't play well with instance methods and refs.
         [ReflectedMethodInfo(typeof(MyDedicatedServerBase), "OnChatMessage")]

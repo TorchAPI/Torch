@@ -35,26 +35,26 @@ namespace Torch.API.Managers
     /// </summary>
     /// <param name="msg"></param>
     /// <param name="consumed">If true, this event has been consumed and should be ignored</param>
-    public delegate void DelMessageRecieved(TorchChatMessage msg, ref bool consumed);
+    public delegate void MessageRecievedDel(TorchChatMessage msg, ref bool consumed);
 
     /// <summary>
     /// Callback used to indicate the user is attempting to send a message locally.
     /// </summary>
     /// <param name="msg">Message the user is attempting to send</param>
     /// <param name="consumed">If true, this event has been consumed and should be ignored</param>
-    public delegate void DelMessageSending(string msg, ref bool consumed);
+    public delegate void MessageSendingDel(string msg, ref bool consumed);
 
     public interface IChatManagerClient : IManager
     {
         /// <summary>
-        /// Event that is raised when a message addressed to us is recieved.  <see cref="DelMessageRecieved"/>
+        /// Event that is raised when a message addressed to us is recieved.  <see cref="MessageRecievedDel"/>
         /// </summary>
-        event DelMessageRecieved MessageRecieved;
+        event MessageRecievedDel MessageRecieved;
 
         /// <summary>
-        /// Event that is raised when we are attempting to send a message.  <see cref="DelMessageSending"/>
+        /// Event that is raised when we are attempting to send a message.  <see cref="MessageSendingDel"/>
         /// </summary>
-        event DelMessageSending MessageSending;
+        event MessageSendingDel MessageSending;
 
         /// <summary>
         /// Triggers the <see cref="MessageSending"/> event,
