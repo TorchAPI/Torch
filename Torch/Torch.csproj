@@ -151,7 +151,6 @@
     <Compile Include="Collections\ObservableList.cs" />
     <Compile Include="DispatcherExtensions.cs" />
     <Compile Include="Managers\DependencyManager.cs" />
-    <Compile Include="Managers\SessionManager.cs" />
     <Compile Include="SaveGameStatus.cs" />
     <Compile Include="Collections\KeyTree.cs" />
     <Compile Include="Collections\ObservableDictionary.cs" />
@@ -181,6 +180,7 @@
     <Compile Include="Managers\ScriptingManager.cs" />
     <Compile Include="Utils\TorchAssemblyResolver.cs" />
     <Compile Include="Utils\ReflectedManager.cs" />
+    <Compile Include="Session\TorchSessionManager.cs" />
     <Compile Include="TorchBase.cs" />
     <Compile Include="SteamService.cs" />
     <Compile Include="TorchPluginBase.cs" />

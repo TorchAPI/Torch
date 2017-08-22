@@ -12,14 +12,15 @@ using Torch.Session;
 
 namespace Torch.Session
 {
-
     /// <summary>
     /// Manages the creation and destruction of <see cref="TorchSession"/> instances for each <see cref="MySession"/> created by Space Engineers.
     /// </summary>
     public class TorchSessionManager : Manager, ITorchSessionManager
     {
+        private TorchSession _currentSession;
+
         /// <inheritdoc/>
-        public ITorchSession CurrentSession { get; private set; }
+        public ITorchSession CurrentSession => _currentSession;
 
         private readonly HashSet<SessionManagerFactory> _factories = new HashSet<SessionManagerFactory>();
 
@@ -45,8 +46,8 @@ namespace Torch.Session
 
         private void SessionLoaded()
         {
-            (CurrentSession as TorchSession)?.Detach();
-            CurrentSession = new TorchSession(Torch, MySession.Static);
+            _currentSession?.Detach();
+            _currentSession = new TorchSession(Torch, MySession.Static);
             foreach (SessionManagerFactory factory in _factories)
             {
                 IManager manager = factory(CurrentSession);
@@ -58,8 +59,8 @@ namespace Torch.Session
 
         private void SessionUnloaded()
         {
-            (CurrentSession as TorchSession)?.Detach();
-            CurrentSession = null;
+            _currentSession?.Detach();
+            _currentSession = null;
         }
 
         /// <inheritdoc/>
@@ -72,6 +73,8 @@ namespace Torch.Session
         /// <inheritdoc/>
         public override void Detach()
         {
+            _currentSession?.Detach();
+            _currentSession = null;
             MySession.AfterLoading -= SessionLoaded;
             MySession.OnUnloaded -= SessionUnloaded;
         }
