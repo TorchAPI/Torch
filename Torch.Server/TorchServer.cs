@@ -183,7 +183,7 @@ namespace Torch.Server
             if (!mre.WaitOne(TimeSpan.FromSeconds(Instance.Config.TickTimeout)))
             {
                 var mainThread = MySandboxGame.Static.UpdateThread;
-                if (mainThread.ThreadState == System.Threading.ThreadState.Running)
+                if (mainThread.IsAlive)
                     mainThread.Suspend();
                 var stackTrace = new StackTrace(mainThread, true);
                 throw new TimeoutException($"Server watchdog detected that the server was frozen for at least {((TorchServer)state).Config.TickTimeout} seconds.\n{stackTrace}");
