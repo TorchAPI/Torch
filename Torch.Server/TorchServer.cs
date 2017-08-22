@@ -30,6 +30,8 @@ using VRage.Library;
 using VRage.ObjectBuilders;
 using VRage.Plugins;
 using VRage.Utils;
+using ThreadState = System.Threading.ThreadState;
+
 #pragma warning disable 618
 
 namespace Torch.Server
@@ -182,7 +184,8 @@ namespace Torch.Server
             if (!mre.WaitOne(TimeSpan.FromSeconds(Instance.Config.TickTimeout)))
             {
                 var mainThread = MySandboxGame.Static.UpdateThread;
-                mainThread.Suspend();
+                if (mainThread.ThreadState == ThreadState.Running)
+                    mainThread.Suspend();
                 var stackTrace = new StackTrace(mainThread, true);
                 throw new TimeoutException($"Server watchdog detected that the server was frozen for at least {((TorchServer)state).Config.TickTimeout} seconds.\n{stackTrace}");
             }
