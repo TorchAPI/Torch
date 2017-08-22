@@ -191,6 +191,7 @@
       <Link>Properties\AssemblyVersion.cs</Link>
     </Compile>
     <Compile Include="ListBoxExtensions.cs" />
+    <Compile Include="Managers\MultiplayerManagerDedicated.cs" />
     <Compile Include="Managers\InstanceManager.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Initializer.cs" />

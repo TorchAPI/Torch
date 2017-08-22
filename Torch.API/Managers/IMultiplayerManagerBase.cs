@@ -16,7 +16,7 @@ namespace Torch.API.Managers
     /// <summary>
     /// API for multiplayer related functions.
     /// </summary>
-    public interface IMultiplayerManager : IManager
+    public interface IMultiplayerManagerBase : IManager
     {
         /// <summary>
         /// Fired when a player joins.
@@ -27,27 +27,7 @@ namespace Torch.API.Managers
         /// Fired when a player disconnects.
         /// </summary>
         event Action<IPlayer> PlayerLeft;
-
-        /// <summary>
-        /// Fired when a chat message is received.
-        /// </summary>
-        event MessageReceivedDel MessageReceived;
-
-        /// <summary>
-        /// Send a chat message to all or one specific player.
-        /// </summary>
-        void SendMessage(string message, string author = "Server", long playerId = 0, string font = MyFontEnum.Blue);
-
-        /// <summary>
-        /// Kicks the player from the game.
-        /// </summary>
-        void KickPlayer(ulong steamId);
-
-        /// <summary>
-        /// Bans or unbans a player from the game.
-        /// </summary>
-        void BanPlayer(ulong steamId, bool banned = true);
-
+        
         /// <summary>
         /// Gets a player by their Steam64 ID or returns null if the player isn't found.
         /// </summary>
@@ -57,5 +37,12 @@ namespace Torch.API.Managers
         /// Gets a player by their display name or returns null if the player isn't found.
         /// </summary>
         IMyPlayer GetPlayerByName(string name);
+
+        /// <summary>
+        /// Gets the steam username of a member's steam ID
+        /// </summary>
+        /// <param name="steamId">steam ID</param>
+        /// <returns>steam username</returns>
+        string GetSteamUsername(ulong steamId);
     }
 }

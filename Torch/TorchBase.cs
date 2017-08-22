@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using Sandbox;
+using Sandbox.Engine.Multiplayer;
 using Sandbox.Game;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
@@ -22,10 +23,12 @@ using Torch.API.ModAPI;
 using Torch.API.Session;
 using Torch.Commands;
 using Torch.Managers;
+using Torch.Managers.ChatManager;
 using Torch.Utils;
 using Torch.Session;
 using VRage.Collections;
 using VRage.FileSystem;
+using VRage.Game;
 using VRage.Game.ObjectBuilder;
 using VRage.ObjectBuilders;
 using VRage.Plugins;
@@ -67,18 +70,6 @@ namespace Torch
         /// <inheritdoc />
         [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public IPluginManager Plugins { get; protected set; }
-        /// <inheritdoc />
-        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
-        public IMultiplayerManager Multiplayer { get; protected set; }
-        /// <inheritdoc />
-        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
-        public EntityManager Entities { get; protected set; }
-        /// <inheritdoc />
-        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
-        public INetworkManager Network { get; protected set; }
-        /// <inheritdoc />
-        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
-        public CommandManager Commands { get; protected set; }
 
         /// <inheritdoc />
         public ITorchSession CurrentSession => Managers?.GetManager<ITorchSessionManager>()?.CurrentSession;
@@ -120,31 +111,28 @@ namespace Torch
             Managers = new DependencyManager();
 
             Plugins = new PluginManager(this);
-            Multiplayer = new MultiplayerManager(this);
-            Entities = new EntityManager(this);
-            Network = new NetworkManager(this);
-            Commands = new CommandManager(this);
 
-            Managers.AddManager(new TorchSessionManager(this));
+            var sessionManager = new TorchSessionManager(this);
+            sessionManager.AddFactory((x) => MyMultiplayer.Static?.SyncLayer != null ? new NetworkManager(this) : null);
+            sessionManager.AddFactory((x) => Sync.IsServer ? new ChatManagerServer(this) : new ChatManagerClient(this));
+            sessionManager.AddFactory((x) => Sync.IsServer ? new CommandManager(this) : null);
+            sessionManager.AddFactory((x) => new EntityManager(this));
+
+            Managers.AddManager(sessionManager);
             Managers.AddManager(new FilesystemManager(this));
             Managers.AddManager(new UpdateManager(this));
-            Managers.AddManager(Network);
-            Managers.AddManager(Commands);
             Managers.AddManager(Plugins);
-            Managers.AddManager(Multiplayer);
-            Managers.AddManager(Entities);
-            Managers.AddManager(new ChatManager(this));
 
             TorchAPI.Instance = this;
         }
 
-        /// <inheritdoc />
+        [Obsolete("Prefer using Managers.GetManager for global managers")]
         public T GetManager<T>() where T : class, IManager
         {
             return Managers.GetManager<T>();
         }
 
-        /// <inheritdoc />
+        [Obsolete("Prefer using Managers.AddManager for global managers")]
         public bool AddManager<T>(T manager) where T : class, IManager
         {
             return Managers.AddManager(manager);
@@ -254,10 +242,13 @@ namespace Torch
 
             Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
             GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
-            try { Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}"; }
+            try
+            {
+                Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}";
+            }
             catch
             {
-                ///Running as service 
+                // Running as service 
             }
 
 #if DEBUG

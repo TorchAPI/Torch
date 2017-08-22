@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Sandbox.Game.Gui;
 using Sandbox.Graphics;
 using Sandbox.Graphics.GUI;
 using Sandbox.Gui;
@@ -16,6 +17,15 @@ namespace Torch.Client
 {
     public class TorchMainMenuScreen : MyGuiScreenMainMenu
     {
+        public TorchMainMenuScreen()
+      : this(false)
+        {
+        }
+
+        public TorchMainMenuScreen(bool pauseGame)
+      : base(pauseGame)
+        {
+        }
         /// <inheritdoc />
         public override void RecreateControls(bool constructor)
         {

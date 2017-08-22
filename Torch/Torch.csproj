@@ -155,6 +155,8 @@
     <Compile Include="ChatMessage.cs" />
     <Compile Include="Collections\ObservableList.cs" />
     <Compile Include="DispatcherExtensions.cs" />
+    <Compile Include="Managers\ChatManager\ChatManagerClient.cs" />
+    <Compile Include="Managers\ChatManager\ChatManagerServer.cs" />
     <Compile Include="Managers\DependencyManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SaveGameStatus.cs" />
@@ -172,13 +174,12 @@
     <Compile Include="Commands\Permissions\PermissionAttribute.cs" />
     <Compile Include="Commands\Permissions\PermissonsSystem.cs" />
     <Compile Include="Commands\TorchCommands.cs" />
-    <Compile Include="Managers\ChatManager.cs" />
     <Compile Include="Managers\EntityManager.cs" />
     <Compile Include="Managers\FilesystemManager.cs" />
     <Compile Include="Managers\Manager.cs" />
     <Compile Include="Managers\NetworkManager\NetworkHandlerBase.cs" />
     <Compile Include="Managers\NetworkManager\NetworkManager.cs" />
-    <Compile Include="Managers\MultiplayerManager.cs" />
+    <Compile Include="Managers\MultiplayerManagerBase.cs" />
     <Compile Include="Managers\UpdateManager.cs" />
     <Compile Include="Persistent.cs" />
     <Compile Include="PluginManifest.cs" />

@@ -20,9 +20,9 @@ namespace Torch.Managers
     {
         private static Logger _log = LogManager.GetLogger(nameof(NetworkManager));
 
-        private const string MyTransportLayerField = "TransportLayer";
-        private const string TransportHandlersField = "m_handlers";
-        private HashSet<INetworkHandler> _networkHandlers = new HashSet<INetworkHandler>();
+        private const string _myTransportLayerField = "TransportLayer";
+        private const string _transportHandlersField = "m_handlers";
+        private readonly HashSet<INetworkHandler> _networkHandlers = new HashSet<INetworkHandler>();
         private bool _init;
 
         [ReflectedGetter(Name = "m_typeTable")]
@@ -40,14 +40,14 @@ namespace Torch.Managers
             try
             {
                 var syncLayerType = typeof(MySyncLayer);
-                var transportLayerField = syncLayerType.GetField(MyTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance);
+                var transportLayerField = syncLayerType.GetField(_myTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if (transportLayerField == null)
                     throw new TypeLoadException("Could not find internal type for TransportLayer");
 
                 var transportLayerType = transportLayerField.FieldType;
 
-                if (!Reflection.HasField(transportLayerType, TransportHandlersField))
+                if (!Reflection.HasField(transportLayerType, _transportHandlersField))
                     throw new TypeLoadException("Could not find Handlers field");
 
                 return true;
@@ -79,9 +79,9 @@ namespace Torch.Managers
                 throw new InvalidOperationException("Reflection unit test failed.");
 
             //don't bother with nullchecks here, it was all handled in ReflectionUnitTest
-            var transportType = typeof(MySyncLayer).GetField(MyTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance).FieldType;
-            var transportInstance = typeof(MySyncLayer).GetField(MyTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(MyMultiplayer.Static.SyncLayer);
-            var handlers = (IDictionary)transportType.GetField(TransportHandlersField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(transportInstance);
+            var transportType = typeof(MySyncLayer).GetField(_myTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance).FieldType;
+            var transportInstance = typeof(MySyncLayer).GetField(_myTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(MyMultiplayer.Static.SyncLayer);
+            var handlers = (IDictionary)transportType.GetField(_transportHandlersField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(transportInstance);
             var handlerTypeField = handlers.GetType().GenericTypeArguments[0].GetField("messageId"); //Should be MyTransportLayer.HandlerId
             object id = null;
             foreach (var key in handlers.Keys)
@@ -205,6 +205,8 @@ namespace Torch.Managers
             }
         }
 
+
+        /// <inheritdoc />
         public void RegisterNetworkHandler(INetworkHandler handler)
         {
             var handlerType = handler.GetType().FullName;
@@ -223,6 +225,12 @@ namespace Torch.Managers
                 _networkHandlers.Remove(oldHandler);
 
             _networkHandlers.Add(handler);
+        }
+
+        /// <inheritdoc />
+        public bool UnregisterNetworkHandler(INetworkHandler handler)
+        {
+            return _networkHandlers.Remove(handler);
         }
 
         public void RegisterNetworkHandlers(params INetworkHandler[] handlers)

@@ -28,6 +28,10 @@ namespace Torch.Server.Tests
 
         public static IEnumerable<object[]> Invokers => Manager().Invokers;
 
+        public static IEnumerable<object[]> MemberInfo => Manager().MemberInfo;
+
+        public static IEnumerable<object[]> Events => Manager().Events;
+
         #region Binding
         [Theory]
         [MemberData(nameof(Getters))]
@@ -54,6 +58,17 @@ namespace Torch.Server.Tests
         [Theory]
         [MemberData(nameof(Invokers))]
         public void TestBindingInvoker(ReflectionTestManager.FieldRef field)
+        {
+            if (field.Field == null)
+                return;
+            Assert.True(ReflectedManager.Process(field.Field));
+            if (field.Field.IsStatic)
+                Assert.NotNull(field.Field.GetValue(null));
+        }
+
+        [Theory]
+        [MemberData(nameof(Events))]
+        public void TestBindingEvents(ReflectionTestManager.FieldRef field)
         {
             if (field.Field == null)
                 return;

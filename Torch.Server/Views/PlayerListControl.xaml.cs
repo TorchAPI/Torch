@@ -20,7 +20,9 @@ using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using SteamSDK;
 using Torch.API;
+using Torch.API.Managers;
 using Torch.Managers;
+using Torch.Server.Managers;
 using Torch.ViewModels;
 using VRage.Game.ModAPI;
 
@@ -41,19 +43,23 @@ namespace Torch.Server
         public void BindServer(ITorchServer server)
         {
             _server = server;
-            DataContext = (MultiplayerManager)_server.Multiplayer;
+            server.SessionLoaded += () =>
+            {
+                var multiplayer = server.CurrentSession?.Managers.GetManager<MultiplayerManagerDedicated>();
+                DataContext = multiplayer;
+            };
         }
 
         private void KickButton_Click(object sender, RoutedEventArgs e)
         {
             var player = (KeyValuePair<ulong, PlayerViewModel>)PlayerList.SelectedItem;
-            _server.Multiplayer.KickPlayer(player.Key);
+            _server.CurrentSession?.Managers.GetManager<IMultiplayerManagerServer>()?.KickPlayer(player.Key);
         }
 
         private void BanButton_Click(object sender, RoutedEventArgs e)
         {
             var player = (KeyValuePair<ulong, PlayerViewModel>) PlayerList.SelectedItem;
-            _server.Multiplayer.BanPlayer(player.Key);
+            _server.CurrentSession?.Managers.GetManager<IMultiplayerManagerServer>()?.BanPlayer(player.Key);
         }
     }
 }

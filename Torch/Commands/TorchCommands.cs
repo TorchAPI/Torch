@@ -21,7 +21,7 @@ namespace Torch.Commands
         [Permission(MyPromoteLevel.None)]
         public void Help()
         {
-            var commandManager = ((TorchBase)Context.Torch).Commands;
+            var commandManager = ((TorchBase)Context.Torch).CurrentSession.Managers.GetManager<CommandManager>();
             commandManager.Commands.GetNode(Context.Args, out CommandTree.CommandNode node);
 
             if (node != null)
@@ -128,13 +128,15 @@ namespace Torch.Commands
             {
                 if (i >= 60 && i % 60 == 0)
                 {
-                    Context.Torch.Multiplayer.SendMessage($"Restarting server in {i / 60} minute{Pluralize(i / 60)}.");
-                    yield return null;
+                    // TODO
+//                    Context.Torch.Multiplayer.SendMessage($"Restarting server in {i / 60} minute{Pluralize(i / 60)}.");
+//                    yield return null;
                 }
                 else if (i > 0)
                 {
-                    if (i < 11)
-                        Context.Torch.Multiplayer.SendMessage($"Restarting server in {i} second{Pluralize(i)}.");
+                    // TODO
+//                    if (i < 11)
+//                        Context.Torch.Multiplayer.SendMessage($"Restarting server in {i} second{Pluralize(i)}.");
                     yield return null;
                 }
                 else

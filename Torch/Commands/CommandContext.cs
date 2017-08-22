@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using Torch.API;
+using Torch.API.Managers;
 using Torch.API.Plugins;
 using VRage.Game;
 using VRage.Game.ModAPI;
@@ -47,7 +48,7 @@ namespace Torch.Commands
             Response = message;
 
             if (Player != null)
-                Torch.Multiplayer.SendMessage(message, sender, Player.IdentityId, font);
+                Torch.CurrentSession.Managers.GetManager<IChatManagerServer>()?.SendMessageAsOther(sender, message, font, Player.SteamUserId);
         }
     }
 }

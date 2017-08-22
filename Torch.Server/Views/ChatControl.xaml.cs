@@ -20,7 +20,9 @@ using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.World;
 using SteamSDK;
 using Torch.API;
+using Torch.API.Managers;
 using Torch.Managers;
+using Torch.Server.Managers;
 
 namespace Torch.Server
 {
@@ -30,7 +32,6 @@ namespace Torch.Server
     public partial class ChatControl : UserControl
     {
         private TorchBase _server;
-        private MultiplayerManager _multiplayer;
 
         public ChatControl()
         {
@@ -40,11 +41,15 @@ namespace Torch.Server
         public void BindServer(ITorchServer server)
         {
             _server = (TorchBase)server;
-            _multiplayer = (MultiplayerManager)server.Multiplayer;
             ChatItems.Items.Clear();
-            DataContext = _multiplayer;
-            if (_multiplayer.ChatHistory is INotifyCollectionChanged ncc)
-                ncc.CollectionChanged += ChatHistory_CollectionChanged;
+            server.SessionLoaded += () =>
+            {
+                var multiplayer = server.CurrentSession.Managers.GetManager<MultiplayerManagerDedicated>();
+                DataContext = multiplayer;
+                // TODO
+                //            if (multiplayer.ChatHistory is INotifyCollectionChanged ncc)
+                //                ncc.CollectionChanged += ChatHistory_CollectionChanged;
+            };
         }
 
         private void ChatHistory_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -78,10 +83,10 @@ namespace Torch.Server
             if (string.IsNullOrEmpty(text))
                 return;
 
-            var commands = _server.Commands;
-            if (commands.IsCommand(text))
+            var commands = _server.CurrentSession?.Managers.GetManager<Torch.Commands.CommandManager>();
+            if (commands != null && commands.IsCommand(text))
             {
-                 _multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", text));
+                // TODO _multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", text));
                 _server.Invoke(() =>
                 {
                     var response = commands.HandleCommandFromServer(text);
@@ -90,15 +95,15 @@ namespace Torch.Server
             }
             else
             {
-                _server.Multiplayer.SendMessage(text);
+                _server.CurrentSession?.Managers.GetManager<IChatManagerClient>().SendMessageAsSelf(text);
             }
             Message.Text = "";
         }
 
         private void OnMessageEntered_Callback(string response)
         {
-            if (!string.IsNullOrEmpty(response))
-                _multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", response));
+            //if (!string.IsNullOrEmpty(response))
+                // TODO _multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", response));
         }
     }
 }
