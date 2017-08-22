@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
 using SteamSDK;
 using VRage.Steam;
 using Sandbox;
+using Sandbox.Engine.Networking;
 using Torch.Utils;
 using VRage.GameServices;
 
@@ -19,6 +21,9 @@ namespace Torch
     /// </summary>
     public class SteamService : MySteamService
     {
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+
+#pragma warning disable 649
         [ReflectedSetter(Name = nameof(SteamServerAPI))]
         private static Action<MySteamService, SteamServerAPI> _steamServerAPISetter;
         [ReflectedSetter(Name = "m_gameServer")]
@@ -45,6 +50,7 @@ namespace Torch
         private static Action<MySteamService> RegisterCallbacks;
         [ReflectedSetter(Name = nameof(Peer2Peer))]
         private static Action<MySteamService, IMyPeer2Peer> _steamPeer2PeerSetter;
+#pragma warning restore 649
 
         public SteamService(bool isDedicated, uint appId)
             : base(true, appId)
@@ -53,7 +59,7 @@ namespace Torch
             _steamServerAPISetter.Invoke(this, null);
             _steamGameServerSetter.Invoke(this, null);
             _steamAppIdSetter.Invoke(this, appId);
-            
+
             if (isDedicated)
             {
                 _steamServerAPISetter.Invoke(this, null);
@@ -63,7 +69,10 @@ namespace Torch
             {
                 SteamAPI steamApi = SteamAPI.Instance;
                 _steamApiSetter.Invoke(this, steamApi);
-                _steamIsActiveSetter.Invoke(this, steamApi.Init());
+                bool initResult = steamApi.Init();
+                if (!initResult)
+                    _log.Warn("Failed to initialize SteamService");
+                _steamIsActiveSetter.Invoke(this, initResult);
 
                 if (IsActive)
                 {
@@ -76,7 +85,8 @@ namespace Torch
 
                     _steamInventoryAPISetter.Invoke(this, new MySteamInventory());
                     RegisterCallbacks(this);
-                }
+                } else
+                    _log.Warn("SteamService isn't initialized; Torch Client won't start");
             }
 
             _steamPeer2PeerSetter.Invoke(this, new MySteamPeer2Peer());

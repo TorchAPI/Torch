@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
 using Sandbox.Game.World;
 using Torch.API;
 using Torch.API.Managers;
@@ -17,6 +18,7 @@ namespace Torch.Session
     /// </summary>
     public class TorchSessionManager : Manager, ITorchSessionManager
     {
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private TorchSession _currentSession;
 
         /// <inheritdoc/>
@@ -46,7 +48,13 @@ namespace Torch.Session
 
         private void SessionLoaded()
         {
-            _currentSession?.Detach();
+            if (_currentSession != null)
+            {
+                _log.Warn($"Override old torch session {_currentSession.KeenSession.Name}");
+                _currentSession.Detach();
+            }
+
+            _log.Info($"Starting new torch session for {MySession.Static.Name}");
             _currentSession = new TorchSession(Torch, MySession.Static);
             foreach (SessionManagerFactory factory in _factories)
             {
@@ -59,7 +67,10 @@ namespace Torch.Session
 
         private void SessionUnloaded()
         {
-            _currentSession?.Detach();
+            if (_currentSession == null)
+                return;
+            _log.Info($"Unloading torch session for {_currentSession.KeenSession.Name}");
+            _currentSession.Detach();
             _currentSession = null;
         }
 
