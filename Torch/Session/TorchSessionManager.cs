@@ -24,14 +24,14 @@ namespace Torch.Session
         /// <inheritdoc/>
         public ITorchSession CurrentSession => _currentSession;
 
-        private readonly HashSet<SessionManagerFactory> _factories = new HashSet<SessionManagerFactory>();
+        private readonly HashSet<SessionManagerFactoryDel> _factories = new HashSet<SessionManagerFactoryDel>();
 
         public TorchSessionManager(ITorchBase torchInstance) : base(torchInstance)
         {
         }
 
         /// <inheritdoc/>
-        public bool AddFactory(SessionManagerFactory factory)
+        public bool AddFactory(SessionManagerFactoryDel factory)
         {
             if (factory == null)
                 throw new ArgumentNullException(nameof(factory), "Factory must be non-null");
@@ -39,7 +39,7 @@ namespace Torch.Session
         }
 
         /// <inheritdoc/>
-        public bool RemoveFactory(SessionManagerFactory factory)
+        public bool RemoveFactory(SessionManagerFactoryDel factory)
         {
             if (factory == null)
                 throw new ArgumentNullException(nameof(factory), "Factory must be non-null");
@@ -56,7 +56,7 @@ namespace Torch.Session
 
             _log.Info($"Starting new torch session for {MySession.Static.Name}");
             _currentSession = new TorchSession(Torch, MySession.Static);
-            foreach (SessionManagerFactory factory in _factories)
+            foreach (SessionManagerFactoryDel factory in _factories)
             {
                 IManager manager = factory(CurrentSession);
                 if (manager != null)

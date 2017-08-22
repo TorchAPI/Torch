@@ -15,7 +15,7 @@ namespace Torch.API.Session
     /// </remarks>
     /// <param name="session">The session to construct a bound manager for</param>
     /// <returns>The manager that will live in the session, or null if none.</returns>
-    public delegate IManager SessionManagerFactory(ITorchSession session);
+    public delegate IManager SessionManagerFactoryDel(ITorchSession session);
 
     /// <summary>
     /// Manages the creation and destruction of <see cref="ITorchSession"/> instances for each <see cref="Sandbox.Game.World.MySession"/> created by Space Engineers.
@@ -33,7 +33,7 @@ namespace Torch.API.Session
         /// <param name="factory">Session based manager supplier</param>
         /// <returns>true if added, false if already present</returns>
         /// <exception cref="ArgumentNullException">If the factory is null</exception>
-        bool AddFactory(SessionManagerFactory factory);
+        bool AddFactory(SessionManagerFactoryDel factory);
 
         /// <summary>
         /// Remove the given factory from the suppliers for session based managers
@@ -41,6 +41,6 @@ namespace Torch.API.Session
         /// <param name="factory">Session based manager supplier</param>
         /// <returns>true if removed, false if not present</returns>
         /// <exception cref="ArgumentNullException">If the factory is null</exception>
-        bool RemoveFactory(SessionManagerFactory factory);
+        bool RemoveFactory(SessionManagerFactoryDel factory);
     }
 }
