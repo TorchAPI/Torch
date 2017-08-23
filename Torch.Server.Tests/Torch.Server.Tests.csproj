@@ -91,10 +91,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Properties\AssemblyInfoGen.tt">
+    <None Include="Properties\AssemblyInfoGen.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>AssemblyInfoGen.cs</LastGenOutput>
-    </Content>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\TransformOnBuild.targets" />

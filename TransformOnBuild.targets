@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <TextTransformPath>$(SolutionDir)\packages\Mono.TextTransform.1.0.0\tools</TextTransformPath>
-  </PropertyGroup>
-  <Import Project="$(SolutionDir)\packages\Clarius.TransformOnBuild.1.1.12\build\Clarius.TransformOnBuild.targets" Condition="Exists('$(SolutionDir)\packages\Clarius.TransformOnBuild.1.1.12\build\Clarius.TransformOnBuild.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(SolutionDir)\packages\Clarius.TransformOnBuild.1.1.12\build\Clarius.TransformOnBuild.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\packages\Clarius.TransformOnBuild.1.1.12\build\Clarius.TransformOnBuild.targets'))" />
-  </Target>
+  <Target Name="TransformOnBuild">
+        <ItemGroup>
+            <TemplatePaths Include="@(None)" Condition="'%(None.Generator)' == 'TextTemplatingFileGenerator'" />
+        </ItemGroup>
+        <Exec Command="&quot;$(SolutionDir)\packages\Mono.TextTransform.1.0.0\tools\TextTransform.exe&quot; &quot;%(TemplatePaths.FullPath)&quot;" Condition="'%(TemplatePaths.Identity)' != ''"/>
+    </Target>
 </Project>

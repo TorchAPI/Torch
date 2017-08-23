@@ -14,7 +14,7 @@ node {
 	}
 
 	stage('Build') {
-		bat 'powershell -File Jenkins/create-gen-files.ps1'
+		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Release /p:Platform=x64 /t:TransformOnBuild"
 		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Release /p:Platform=x64"
 	}
 
