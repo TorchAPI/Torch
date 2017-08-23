@@ -37,6 +37,9 @@ node {
 	}
 
 	stage('Archive') {
-		archive 'bin/x64/Release/Torch.*'
+		bat "IF EXIST bin\\torch-${BRANCH_NAME}.zip DEL bin\\torch-${BRANCH_NAME}.zip"
+		bat "powershell -Command \"Add-Type -Assembly System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory(\\\"\$PWD\\bin\\x64\\Release\\\", \\\"\$PWD\\bin\\torch-${BRANCH_NAME}.zip\\\")\""
+		archiveArtifacts artifacts: 'bin/torch-${BRANCH_NAME}.zip', caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
+		archiveArtifacts artifacts: 'bin/x64/Release/Torch*', caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
 	}
 }
