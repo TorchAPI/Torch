@@ -1,0 +1,1 @@
+Get-ChildItem -Recurse -Filter "*.csproj" | Select-String -Pattern '"[^"]+Gen.cs' -AllMatches | ForEach-Object {echo $null > ("{0}/../{1}" -f $_.Path, $_.Matches.Value.Substring(1))}

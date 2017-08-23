@@ -4,7 +4,7 @@ node {
 	}
 
 	stage('Acquire SE') {
-		bat 'powershell -File jenkins-grab-se.ps1'
+		bat 'powershell -File Jenkins/jenkins-grab-se.ps1'
 		bat 'IF EXIST GameBinaries RMDIR GameBinaries'
 		bat 'mklink /J GameBinaries "C:/Steam/Data/DedicatedServer64/"'		
 	}
@@ -14,6 +14,7 @@ node {
 	}
 
 	stage('Build') {
+		bat 'powershell -File Jenkins/create-gen-files.ps1'
 		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Release /p:Platform=x64"
 	}
 
