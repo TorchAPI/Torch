@@ -109,8 +109,16 @@ namespace Torch.Managers.ChatManager
                 MyMultiplayer.Static.ChatMessageReceived += MpStaticChatMessageReceived;
                 _log.Warn("Failed to initialize network intercept, we can't discard chat messages! Falling back to another method.");
             }
-            else
-                _log.Error("Failed to initialize network intercept, we can't discard chat messages!");
+        }
+
+        /// <inheritdoc />
+        protected override bool OfflineMessageProcessor(TorchChatMessage msg)
+        {
+            if (MyMultiplayer.Static != null)
+                return false;
+            var consumed = false;
+            MessageProcessing?.Invoke(msg, ref consumed);
+            return consumed;
         }
 
         private void MpStaticChatMessageReceived(ulong a, string b)

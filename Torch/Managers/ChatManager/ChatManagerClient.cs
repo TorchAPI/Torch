@@ -8,7 +8,9 @@ using Sandbox.Engine.Multiplayer;
 using Sandbox.Engine.Networking;
 using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Gui;
+using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
+using Sandbox.ModAPI;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Utils;
@@ -25,11 +27,9 @@ namespace Torch.Managers.ChatManager
         public ChatManagerClient(ITorchBase torchInstance) : base(torchInstance) { }
 
         /// <inheritdoc />
-        // TODO doesn't work in Offline worlds.  Method injection or network injection.
         public event MessageRecievedDel MessageRecieved;
 
         /// <inheritdoc />
-        // TODO doesn't work at all.  Method injection or network injection.
         public event MessageSendingDel MessageSending;
 
         /// <inheritdoc />
@@ -71,9 +71,8 @@ namespace Torch.Managers.ChatManager
         public override void Attach()
         {
             base.Attach();
-            if (MyMultiplayer.Static == null)
-                _log.Warn("Currently ChatManagerClient doesn't support handling on an offline client");
-            else
+            MyAPIUtilities.Static.MessageEntered += OnMessageEntered;
+            if (MyMultiplayer.Static != null)
             {
                 _chatMessageRecievedReplacer = _chatMessageReceivedFactory.Invoke();
                 _scriptedChatMessageRecievedReplacer = _scriptedChatMessageReceivedFactory.Invoke();
@@ -82,17 +81,60 @@ namespace Torch.Managers.ChatManager
                 _scriptedChatMessageRecievedReplacer.Replace(
                     new Action<string, string, string>(Multiplayer_ScriptedChatMessageReceived), MyMultiplayer.Static);
             }
+            else
+            {
+                MyAPIUtilities.Static.MessageEntered += OfflineMessageReciever;
+            }
         }
 
         /// <inheritdoc/>
         public override void Detach()
         {
+            MyAPIUtilities.Static.MessageEntered -= OnMessageEntered;
             if (_chatMessageRecievedReplacer != null && _chatMessageRecievedReplacer.Replaced)
                 _chatMessageRecievedReplacer.Restore(MyHud.Chat);
             if (_scriptedChatMessageRecievedReplacer != null && _scriptedChatMessageRecievedReplacer.Replaced)
                 _scriptedChatMessageRecievedReplacer.Restore(MyHud.Chat);
+            MyAPIUtilities.Static.MessageEntered -= OfflineMessageReciever;
             base.Detach();
         }
+
+        /// <summary>
+        /// Callback used to process offline messages.
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <returns>true if the message was consumed</returns>
+        protected virtual bool OfflineMessageProcessor(TorchChatMessage msg)
+        {
+            return false;
+        }
+
+        private void OfflineMessageReciever(string messageText, ref bool sendToOthers)
+        {
+            if (!sendToOthers)
+                return;
+            var torchMsg = new TorchChatMessage()
+            {
+                AuthorSteamId = Sync.MyId,
+                Author = MySession.Static.LocalHumanPlayer?.DisplayName ?? "Player",
+                Message = messageText
+            };
+            var consumed = false;
+            MessageRecieved?.Invoke(torchMsg, ref consumed);
+            if (!consumed)
+                consumed = OfflineMessageProcessor(torchMsg);
+            sendToOthers = !consumed;
+        }
+
+        private void OnMessageEntered(string messageText, ref bool sendToOthers)
+        {
+            if (!sendToOthers)
+                return;
+            var consumed = false;
+            MessageSending?.Invoke(messageText, ref consumed);
+            sendToOthers = !consumed;
+        }
+
 
         private void Multiplayer_ChatMessageReceived(ulong steamUserId, string message)
         {
