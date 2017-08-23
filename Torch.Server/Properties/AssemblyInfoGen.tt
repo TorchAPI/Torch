@@ -1,0 +1,16 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+using System.Reflection;
+
+<#  var dt = DateTime.Now;
+    int major = 1;
+	int minor = 1;
+	int build = dt.DayOfYear;
+	int rev = (int)dt.TimeOfDay.TotalMinutes / 2;
+#>
+[assembly: AssemblyVersion("<#= major #>.<#= minor #>.<#= build #>.<#= rev #>")]
+[assembly: AssemblyFileVersion("<#= major #>.<#= minor #>.<#= build #>.<#= rev #>")]
