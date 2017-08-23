@@ -159,7 +159,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="Utils\ReflectedManager.cs" />
     <Compile Include="SaveGameStatus.cs" />
     <Compile Include="Collections\KeyTree.cs" />
     <Compile Include="Collections\ObservableDictionary.cs" />
@@ -188,9 +187,12 @@
     <Compile Include="Utils\Reflection.cs" />
     <Compile Include="Managers\ScriptingManager.cs" />
     <Compile Include="Utils\TorchAssemblyResolver.cs" />
+    <Compile Include="Utils\ReflectedManager.cs" />
+    <Compile Include="Session\TorchSessionManager.cs" />
     <Compile Include="TorchBase.cs" />
     <Compile Include="SteamService.cs" />
     <Compile Include="TorchPluginBase.cs" />
+    <Compile Include="Session\TorchSession.cs" />
     <Compile Include="ViewModels\ModViewModel.cs" />
     <Compile Include="Collections\MTObservableCollection.cs" />
     <Compile Include="Extensions\MyPlayerCollectionExtensions.cs" />
