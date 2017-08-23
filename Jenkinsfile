@@ -4,7 +4,7 @@ node {
 	}
 
 	stage('Acquire SE') {
-		bat 'powershell -File jenkins-grab-se.ps1'
+		bat 'powershell -File Jenkins/jenkins-grab-se.ps1'
 		bat 'IF EXIST GameBinaries RMDIR GameBinaries'
 		bat 'mklink /J GameBinaries "C:/Steam/Data/DedicatedServer64/"'		
 	}
@@ -14,6 +14,7 @@ node {
 	}
 
 	stage('Build') {
+		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Release /p:Platform=x64 /t:TransformOnBuild"
 		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Release /p:Platform=x64"
 	}
 
@@ -36,6 +37,9 @@ node {
 	}
 
 	stage('Archive') {
-		archive 'bin/x64/Release/Torch.*'
+		bat "IF EXIST bin\\torch-${BRANCH_NAME}.zip DEL bin\\torch-${BRANCH_NAME}.zip"
+		bat "powershell -Command \"Add-Type -Assembly System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory(\\\"\$PWD\\bin\\x64\\Release\\\", \\\"\$PWD\\bin\\torch-${BRANCH_NAME}.zip\\\")\""
+		archiveArtifacts artifacts: 'bin/torch-${BRANCH_NAME}.zip', caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
+		archiveArtifacts artifacts: 'bin/x64/Release/Torch*', caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
 	}
 }

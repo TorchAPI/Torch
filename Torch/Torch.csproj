@@ -10,6 +10,8 @@
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -41,7 +43,7 @@
       <HintPath>..\GameBinaries\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.4.1\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Octokit, Version=0.24.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -151,6 +153,12 @@
     <Compile Include="Collections\ObservableList.cs" />
     <Compile Include="DispatcherExtensions.cs" />
     <Compile Include="Managers\DependencyManager.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\AssemblyInfoGen.cs">
+      <DependentUpon>AssemblyInfoGen.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
     <Compile Include="SaveGameStatus.cs" />
     <Compile Include="Collections\KeyTree.cs" />
     <Compile Include="Collections\ObservableDictionary.cs" />
@@ -193,7 +201,6 @@
     <Compile Include="ViewModels\PlayerViewModel.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />
     <Compile Include="Managers\PluginManager.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewModels\PluginViewModel.cs" />
     <Compile Include="Views\CollectionEditor.xaml.cs">
       <DependentUpon>CollectionEditor.xaml</DependentUpon>
@@ -215,12 +222,15 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Properties\AssemblyInfoGen.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AssemblyInfoGen.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <Import Project="$(SolutionDir)\TransformOnBuild.targets" />
 </Project>
