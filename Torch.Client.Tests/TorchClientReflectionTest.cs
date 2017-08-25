@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Torch.Client;
 using Torch.Tests;
 using Torch.Utils;
@@ -86,7 +87,7 @@ namespace Torch.Client.Tests
                 return;
             Assert.True(ReflectedManager.Process(field.Field));
             if (field.Field.IsStatic)
-                Assert.NotNull(field.Field.GetValue(null));
+                ((Func<ReflectedEventReplacer>)field.Field.GetValue(null)).Invoke();
         }
         #endregion
     }

@@ -60,15 +60,9 @@ namespace Torch.Managers
                 throw;
             }
         }
-        /// <summary>
-        /// Loads the network intercept system
-        /// </summary>
+        
+        /// <inheritdoc/>
         public override void Attach()
-        {
-            Torch.SessionLoaded += OnSessionLoaded;
-        }
-
-        private void OnSessionLoaded()
         {
             if (_init)
                 return;
@@ -103,6 +97,12 @@ namespace Torch.Managers
             //PrintDebug();
 
             _log.Debug("Initialized network intercept");
+        }
+
+        /// <inheritdoc/>
+        public override void Detach()
+        {
+            // TODO reverse what was done in Attach
         }
 
         #region Network Intercept

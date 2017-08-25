@@ -21,6 +21,12 @@ namespace Torch.Session
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private TorchSession _currentSession;
 
+        /// <inheritdoc />
+        public event TorchSessionLoadDel SessionLoaded;
+
+        /// <inheritdoc />
+        public event TorchSessionLoadDel SessionUnloading;
+
         /// <inheritdoc/>
         public ITorchSession CurrentSession => _currentSession;
 
@@ -46,7 +52,7 @@ namespace Torch.Session
             return _factories.Remove(factory);
         }
 
-        private void SessionLoaded()
+        private void LoadSession()
         {
             if (_currentSession != null)
             {
@@ -63,12 +69,14 @@ namespace Torch.Session
                     CurrentSession.Managers.AddManager(manager);
             }
             (CurrentSession as TorchSession)?.Attach();
+            SessionLoaded?.Invoke(_currentSession);
         }
 
-        private void SessionUnloaded()
+        private void UnloadSession()
         {
             if (_currentSession == null)
                 return;
+            SessionUnloading?.Invoke(_currentSession);
             _log.Info($"Unloading torch session for {_currentSession.KeenSession.Name}");
             _currentSession.Detach();
             _currentSession = null;
@@ -77,8 +85,8 @@ namespace Torch.Session
         /// <inheritdoc/>
         public override void Attach()
         {
-            MySession.AfterLoading += SessionLoaded;
-            MySession.OnUnloaded += SessionUnloaded;
+            MySession.AfterLoading += LoadSession;
+            MySession.OnUnloaded += UnloadSession;
         }
 
         /// <inheritdoc/>
@@ -86,8 +94,8 @@ namespace Torch.Session
         {
             _currentSession?.Detach();
             _currentSession = null;
-            MySession.AfterLoading -= SessionLoaded;
-            MySession.OnUnloaded -= SessionUnloaded;
+            MySession.AfterLoading -= LoadSession;
+            MySession.OnUnloaded -= UnloadSession;
         }
     }
 }

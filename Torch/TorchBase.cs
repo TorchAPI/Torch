@@ -273,25 +273,57 @@ namespace Torch
         private void OnSessionLoading()
         {
             Log.Debug("Session loading");
-            SessionLoading?.Invoke();
+            try
+            {
+                SessionLoading?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
         }
 
         private void OnSessionLoaded()
         {
             Log.Debug("Session loaded");
-            SessionLoaded?.Invoke();
+            try
+            {
+                SessionLoaded?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
         }
 
         private void OnSessionUnloading()
         {
             Log.Debug("Session unloading");
-            SessionUnloading?.Invoke();
+            try
+            {
+                SessionUnloading?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
         }
 
         private void OnSessionUnloaded()
         {
             Log.Debug("Session unloaded");
-            SessionUnloaded?.Invoke();
+            try
+            {
+                SessionUnloaded?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
         }
 
         /// <summary>

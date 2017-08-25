@@ -21,6 +21,7 @@ using Sandbox.ModAPI;
 using SteamSDK;
 using Torch.API;
 using Torch.API.Managers;
+using Torch.API.Session;
 using Torch.Managers;
 using Torch.Server.Managers;
 using Torch.ViewModels;
@@ -43,11 +44,20 @@ namespace Torch.Server
         public void BindServer(ITorchServer server)
         {
             _server = server;
-            server.SessionLoaded += () =>
-            {
-                var multiplayer = server.CurrentSession?.Managers.GetManager<MultiplayerManagerDedicated>();
-                DataContext = multiplayer;
-            };
+
+            var sessionManager = server.Managers.GetManager<ITorchSessionManager>();
+            sessionManager.SessionLoaded += BindSession;
+            sessionManager.SessionUnloading += UnbindSession;
+        }
+
+        private void BindSession(ITorchSession session)
+        {
+            Dispatcher.Invoke(() => DataContext = _server?.CurrentSession?.Managers.GetManager<MultiplayerManagerDedicated>());
+        }
+
+        private void UnbindSession(ITorchSession session)
+        {
+            Dispatcher.Invoke(() => DataContext = null);
         }
 
         private void KickButton_Click(object sender, RoutedEventArgs e)

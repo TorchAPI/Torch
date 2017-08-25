@@ -43,7 +43,7 @@ namespace Torch.Managers.ChatManager
         {
             if (MyMultiplayer.Static == null)
             {
-                if (targetSteamId == MyGameService.UserId || targetSteamId == 0)
+                if ((targetSteamId == MyGameService.UserId || targetSteamId == 0) && HasHud)
                     MyHud.Chat?.ShowMessage(authorId == MyGameService.UserId ?
                         (MySession.Static.LocalHumanPlayer?.DisplayName ?? "Player") : $"user_{authorId}", message);
                 return;
@@ -73,7 +73,7 @@ namespace Torch.Managers.ChatManager
         {
             if (MyMultiplayer.Static == null)
             {
-                if (targetSteamId == MyGameService.UserId || targetSteamId == 0)
+                if ((targetSteamId == MyGameService.UserId || targetSteamId == 0) && HasHud)
                     MyHud.Chat?.ShowMessage(author, message, font);
                 return;
             }
@@ -82,7 +82,7 @@ namespace Torch.Managers.ChatManager
                 Author = author,
                 Text = message,
                 Font = font,
-                Target = (long)targetSteamId
+                Target = Sync.Players.TryGetIdentityId(targetSteamId)
             };
             MyMultiplayerBase.SendScriptedChatMessage(ref scripted);
         }
@@ -107,7 +107,12 @@ namespace Torch.Managers.ChatManager
             if (MyMultiplayer.Static != null)
             {
                 MyMultiplayer.Static.ChatMessageReceived += MpStaticChatMessageReceived;
-                _log.Warn("Failed to initialize network intercept, we can't discard chat messages! Falling back to another method.");
+                _log.Warn(
+                    "Failed to initialize network intercept, we can't discard chat messages! Falling back to another method.");
+            }
+            else
+            {
+                _log.Debug("Using offline message processor");
             }
         }
 

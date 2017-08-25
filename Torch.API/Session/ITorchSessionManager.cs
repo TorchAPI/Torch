@@ -18,10 +18,26 @@ namespace Torch.API.Session
     public delegate IManager SessionManagerFactoryDel(ITorchSession session);
 
     /// <summary>
+    /// Fired when the given session has been completely loaded or is unloading.
+    /// </summary>
+    /// <param name="session">The session</param>
+    public delegate void TorchSessionLoadDel(ITorchSession session);
+
+    /// <summary>
     /// Manages the creation and destruction of <see cref="ITorchSession"/> instances for each <see cref="Sandbox.Game.World.MySession"/> created by Space Engineers.
     /// </summary>
     public interface ITorchSessionManager : IManager
     {
+        /// <summary>
+        /// Fired when a <see cref="ITorchSession"/> has finished loading.
+        /// </summary>
+        event TorchSessionLoadDel SessionLoaded;
+
+        /// <summary>
+        /// Fired when a <see cref="ITorchSession"/> has begun unloading.
+        /// </summary>
+        event TorchSessionLoadDel SessionUnloading;
+
         /// <summary>
         /// The currently running session
         /// </summary>

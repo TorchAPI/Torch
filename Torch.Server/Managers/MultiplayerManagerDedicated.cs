@@ -16,6 +16,7 @@ using Torch.Utils;
 using Torch.ViewModels;
 using VRage.GameServices;
 using VRage.Network;
+using VRage.Steam;
 
 namespace Torch.Server.Managers
 {
@@ -73,9 +74,9 @@ namespace Torch.Server.Managers
 
 
 #pragma warning disable 649
-        [ReflectedEventReplace(typeof(IMyGameServer), nameof(IMyGameServer.ValidateAuthTicketResponse), typeof(MyDedicatedServerBase), "GameServer_ValidateAuthTicketResponse")]
+        [ReflectedEventReplace(typeof(MySteamGameServer), nameof(MySteamGameServer.ValidateAuthTicketResponse), typeof(MyDedicatedServerBase), "GameServer_ValidateAuthTicketResponse")]
         private static Func<ReflectedEventReplacer> _gameServerValidateAuthTicketFactory;
-        [ReflectedEventReplace(typeof(IMyGameServer), nameof(IMyGameServer.UserGroupStatusResponse), typeof(MyDedicatedServerBase), "GameServer_UserGroupStatus")]
+        [ReflectedEventReplace(typeof(MySteamGameServer), nameof(MySteamGameServer.UserGroupStatusResponse), typeof(MyDedicatedServerBase), "GameServer_UserGroupStatus")]
         private static Func<ReflectedEventReplacer> _gameServerUserGroupStatusFactory;
         private ReflectedEventReplacer _gameServerValidateAuthTicketReplacer;
         private ReflectedEventReplacer _gameServerUserGroupStatusReplacer;

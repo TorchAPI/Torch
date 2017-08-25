@@ -108,7 +108,7 @@ namespace Torch.Commands
 
             consumed = true;
 
-            var player = Torch.GetManager<IMultiplayerManagerBase>().GetPlayerBySteamId(steamId);
+            var player = Torch.CurrentSession.Managers.GetManager<IMultiplayerManagerBase>().GetPlayerBySteamId(steamId);
             if (player == null)
             {
                 _log.Error($"Command {message} invoked by nonexistant player");

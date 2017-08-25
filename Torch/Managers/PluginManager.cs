@@ -10,6 +10,7 @@ using NLog;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
+using Torch.API.Session;
 using Torch.Commands;
 using VRage.Collections;
 
@@ -22,8 +23,8 @@ namespace Torch.Managers
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
         [Dependency]
         private UpdateManager _updateManager;
-        [Dependency]
-        private CommandManager _commandManager;
+        [Dependency(Optional = true)]
+        private ITorchSessionManager _sessionManager;
 
         /// <inheritdoc />
         public IList<ITorchPlugin> Plugins { get; } = new ObservableList<ITorchPlugin>();
@@ -41,6 +42,11 @@ namespace Torch.Managers
         /// </summary>
         public void UpdatePlugins()
         {
+            if (_sessionManager != null)
+            {
+                _sessionManager.SessionLoaded += AttachCommandsToSession;
+                _sessionManager.SessionUnloading += DetachCommandsFromSession;
+            }
             foreach (var plugin in Plugins)
                 plugin.Update();
         }
@@ -50,10 +56,30 @@ namespace Torch.Managers
         /// </summary>
         public override void Detach()
         {
+            if (_sessionManager != null)
+            {
+                _sessionManager.SessionLoaded -= AttachCommandsToSession;
+                _sessionManager.SessionUnloading -= DetachCommandsFromSession;
+            }
             foreach (var plugin in Plugins)
                 plugin.Dispose();
 
             Plugins.Clear();
+        }
+
+        private void AttachCommandsToSession(ITorchSession session)
+        {
+            var cmdMgr = session.Managers.GetManager<CommandManager>();
+            foreach (ITorchPlugin plugin in Plugins)
+                cmdMgr?.RegisterPluginCommands(plugin);
+        }
+
+        private void DetachCommandsFromSession(ITorchSession session)
+        {
+            var cmdMgr = session.Managers.GetManager<CommandManager>();
+            foreach (ITorchPlugin plugin in Plugins) { 
+                // cmdMgr?.UnregisterPluginCommands(plugin);
+            }
         }
 
         private void DownloadPlugins()
@@ -80,7 +106,7 @@ namespace Torch.Managers
 
             foreach (var repository in toDownload)
             {
-                var manifest = new PluginManifest {Repository = repository, Version = "0.0"};
+                var manifest = new PluginManifest { Repository = repository, Version = "0.0" };
                 taskList.Add(_updateManager.CheckAndUpdatePlugin(manifest));
             }
 
@@ -118,8 +144,6 @@ namespace Torch.Managers
                             _log.Info($"Loading plugin {plugin.Name} ({plugin.Version})");
                             plugin.StoragePath = Torch.Config.InstancePath;
                             Plugins.Add(plugin);
-
-                            _commandManager.RegisterPluginCommands(plugin);
                         }
                         catch (Exception e)
                         {
