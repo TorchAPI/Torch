@@ -19,9 +19,11 @@ using SpaceEngineers.Game;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.ModAPI;
+using Torch.API.Session;
 using Torch.Commands;
 using Torch.Managers;
 using Torch.Utils;
+using Torch.Session;
 using VRage.Collections;
 using VRage.FileSystem;
 using VRage.Game.ObjectBuilder;
@@ -71,6 +73,10 @@ namespace Torch
         /// <inheritdoc />
         [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public CommandManager Commands { get; protected set; }
+
+        /// <inheritdoc />
+        public ITorchSession CurrentSession => Managers?.GetManager<ITorchSessionManager>()?.CurrentSession;
+
         /// <inheritdoc />
         public event Action SessionLoading;
         /// <inheritdoc />
@@ -112,6 +118,7 @@ namespace Torch
             Network = new NetworkManager(this);
             Commands = new CommandManager(this);
 
+            Managers.AddManager(new TorchSessionManager(this));
             Managers.AddManager(new FilesystemManager(this));
             Managers.AddManager(new UpdateManager(this));
             Managers.AddManager(Network);
@@ -120,7 +127,6 @@ namespace Torch
             Managers.AddManager(Multiplayer);
             Managers.AddManager(Entities);
             Managers.AddManager(new ChatManager(this));
-
 
             TorchAPI.Instance = this;
         }
