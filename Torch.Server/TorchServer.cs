@@ -144,9 +144,17 @@ namespace Torch.Server
             VRage.Service.ExitListenerSTA.OnExit += delegate { MySandboxGame.Static?.Exit(); };
 
             base.Start();
-            //Stops RunInternal from calling MyFileSystem.InitUserSpecific(null), we call it in InstanceManager.
+            // Stops RunInternal from calling MyFileSystem.InitUserSpecific(null), we call it in InstanceManager.
             MySandboxGame.IsReloading = true;
-            _dsRunInternal.Invoke();
+            try
+            {
+                _dsRunInternal.Invoke();
+            }
+            catch (TargetInvocationException e)
+            {
+                // Makes log formatting a little nicer.
+                throw e.InnerException ?? e;
+            }
 
             MySandboxGame.Log.Close();
             State = ServerState.Stopped;

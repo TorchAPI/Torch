@@ -62,7 +62,7 @@ namespace Torch.Commands
             _parameters = commandMethod.GetParameters();
 
             var sb = new StringBuilder();
-            sb.Append($"/{string.Join(" ", Path)} ");
+            sb.Append($"!{string.Join(" ", Path)} ");
             for (var i = 0; i < _parameters.Length; i++)
             {
                 var param = _parameters[i];

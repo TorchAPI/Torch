@@ -193,6 +193,7 @@
       <DependentUpon>AssemblyInfo.tt</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo1.cs" />
+    <Compile Include="Initializer.cs" />
     <Compile Include="ServerStatistics.cs" />
     <Compile Include="TorchConfig.cs" />
     <Compile Include="TorchService.cs">
