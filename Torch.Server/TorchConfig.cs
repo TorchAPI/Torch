@@ -8,6 +8,7 @@ using NLog;
 
 namespace Torch.Server
 {
+    // TODO: redesign this gerbage
     public class TorchConfig : CommandLine, ITorchConfig
     {
         private static Logger _log = LogManager.GetLogger("Config");

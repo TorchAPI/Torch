@@ -59,19 +59,19 @@ namespace Torch
         /// <inheritdoc />
         public string[] RunArgs { get; set; }
         /// <inheritdoc />
-        [Obsolete]
+        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public IPluginManager Plugins { get; protected set; }
         /// <inheritdoc />
-        [Obsolete]
+        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public IMultiplayerManager Multiplayer { get; protected set; }
         /// <inheritdoc />
-        [Obsolete]
+        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public EntityManager Entities { get; protected set; }
         /// <inheritdoc />
-        [Obsolete]
+        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public INetworkManager Network { get; protected set; }
         /// <inheritdoc />
-        [Obsolete]
+        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public CommandManager Commands { get; protected set; }
 
         /// <inheritdoc />

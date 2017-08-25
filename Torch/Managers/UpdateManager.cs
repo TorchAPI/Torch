@@ -108,6 +108,9 @@ namespace Torch.Managers
 
         private async void CheckAndUpdateTorch()
         {
+            // Doesn't work properly or reliably, TODO update when Jenkins is fully configured
+            return;
+
             if (!Torch.Config.GetTorchUpdates)
                 return;
 

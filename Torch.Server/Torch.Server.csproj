@@ -195,6 +195,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>AssemblyInfoGen.tt</DependentUpon>
     </Compile>
+    <Compile Include="Initializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerStatistics.cs" />
     <Compile Include="TorchConfig.cs" />
