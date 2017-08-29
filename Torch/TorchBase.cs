@@ -107,7 +107,7 @@ namespace Torch
 
             Instance = this;
 
-            TorchVersion = Assembly.GetExecutingAssembly().GetName().Version; 
+            TorchVersion = Assembly.GetExecutingAssembly().GetName().Version;
             RunArgs = new string[0];
 
             Managers = new DependencyManager();
@@ -156,7 +156,7 @@ namespace Torch
             {
                 callback?.Invoke(SaveGameStatus.GameNotReady);
             }
-            else if(MyAsyncSaving.InProgress)
+            else if (MyAsyncSaving.InProgress)
             {
                 callback?.Invoke(SaveGameStatus.SaveInProgress);
             }
@@ -246,10 +246,12 @@ namespace Torch
             SpaceEngineersGame.SetupPerGameSettings();
 
             TorchVersion = Assembly.GetEntryAssembly().GetName().Version;
+            string verboseVersion = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? TorchVersion.ToString();
             GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
             var verInfo = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}";
             try { Console.Title = verInfo; }
-            catch { 
+            catch
+            {
                 ///Running as service 
             }
 
@@ -317,19 +319,19 @@ namespace Torch
         /// <inheritdoc/> 
         public virtual void Start()
         {
-            
+
         }
 
         /// <inheritdoc />
         public virtual void Stop()
         {
-            
+
         }
 
         /// <inheritdoc />
         public virtual void Restart()
         {
-            
+
         }
 
         /// <inheritdoc />

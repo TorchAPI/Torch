@@ -1,6 +1,7 @@
 node {
 	stage('Checkout') {
 		checkout scm
+		bat 'git pull --tags'
 	}
 
 	stage('Acquire SE') {
@@ -14,7 +15,7 @@ node {
 	}
 
 	stage('Build') {
-		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Release /p:Platform=x64 /t:TransformOnBuild"
+		currentBuild.description = bat(returnStdout: true, script: '@powershell -File Versioning/version.ps1').trim()
 		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Release /p:Platform=x64"
 	}
 
@@ -37,9 +38,20 @@ node {
 	}
 
 	stage('Archive') {
-		bat "IF EXIST bin\\torch-${BRANCH_NAME}.zip DEL bin\\torch-${BRANCH_NAME}.zip"
-		bat "powershell -Command \"Add-Type -Assembly System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory(\\\"\$PWD\\bin\\x64\\Release\\\", \\\"\$PWD\\bin\\torch-${BRANCH_NAME}.zip\\\")\""
-		archiveArtifacts artifacts: 'bin/torch-${BRANCH_NAME}.zip', caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
+		bat '''IF EXIST bin\\torch-server.zip DEL bin\\torch-server.zip
+		IF EXIST bin\\package-server RMDIR /S /Q bin\\package-server
+		xcopy bin\\x64\\Release bin\\package-server\\
+		del bin\\package-server\\Torch.Client*'''
+		bat "powershell -Command \"Add-Type -Assembly System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory(\\\"\$PWD\\bin\\package-server\\\", \\\"\$PWD\\bin\\torch-server.zip\\\")\""
+		archiveArtifacts artifacts: 'bin/torch-server.zip', caseSensitive: false, onlyIfSuccessful: true
+
+		bat '''IF EXIST bin\\torch-client.zip DEL bin\\torch-client.zip
+		IF EXIST bin\\package-client RMDIR /S /Q bin\\package-client
+		xcopy bin\\x64\\Release bin\\package-client\\
+		del bin\\package-client\\Torch.Server*'''
+		bat "powershell -Command \"Add-Type -Assembly System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory(\\\"\$PWD\\bin\\package-client\\\", \\\"\$PWD\\bin\\torch-client.zip\\\")\""
+		archiveArtifacts artifacts: 'bin/torch-client.zip', caseSensitive: false, onlyIfSuccessful: true
+
 		archiveArtifacts artifacts: 'bin/x64/Release/Torch*', caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
 	}
 }
