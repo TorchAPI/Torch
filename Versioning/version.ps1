@@ -3,10 +3,10 @@ $gitSimpleVersion = git describe --tags --abbrev=0
 if ($gitSimpleVersion.Equals($gitVersion)) {
 	$buildSalt = 0
 } else {
-	$gitLatestCommit = git rev-parse HEAD
-	$buildSalt = [System.Numerics.BigInteger]::Abs([System.Numerics.BigInteger]::Parse($gitLatestCommit, [System.Globalization.NumberStyles]::HexNumber) % 9988) + 1
+	$gitLatestCommit = git rev-parse --short HEAD
+	$buildSalt = [System.Numerics.BigInteger]::Abs([System.Numerics.BigInteger]::Parse($gitLatestCommit, [System.Globalization.NumberStyles]::HexNumber) % 16383) + 1
 }
-$dotNetVersion = echo $gitSimpleVersion | Select-String -Pattern "([0-9]+)\.([0-9]+)\.([0-9]+)" | % {$_.Matches} | %{$_.Groups[1].Value+"."+$_.Groups[2].Value+".$buildSalt."+$_.Groups[3].Value}
+$dotNetVersion = echo $gitSimpleVersion | Select-String -Pattern "([0-9]+)\.([0-9]+)\.([0-9]+)" | % {$_.Matches} | %{$_.Groups[1].Value+"."+$_.Groups[2].Value+"."+$_.Groups[3].Value+".$buildSalt"}
 
 $fileContent = @"
 using System.Reflection;
