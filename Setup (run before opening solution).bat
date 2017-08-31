@@ -3,7 +3,7 @@
 @echo off
 set /p path="Please enter the folder location of your SpaceEngineersDedicated.exe: "
 cd %~dp0
-mklink /D GameBinaries "%path%"
+mklink /J GameBinaries "%path%"
 if errorlevel 1 goto Error
 echo Done! You can now open the Torch solution without issue.
 goto End
