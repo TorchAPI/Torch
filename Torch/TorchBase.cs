@@ -53,7 +53,13 @@ namespace Torch
         /// <inheritdoc />
         public ITorchConfig Config { get; protected set; }
         /// <inheritdoc />
-        public Version TorchVersion { get; protected set; }
+        public Version TorchVersion { get; }
+
+        /// <summary>
+        /// The version of Torch used, with extra data.
+        /// </summary>
+        public string TorchVersionVerbose { get; }
+
         /// <inheritdoc />
         public Version GameVersion { get; private set; }
         /// <inheritdoc />
@@ -108,6 +114,7 @@ namespace Torch
             Instance = this;
 
             TorchVersion = Assembly.GetExecutingAssembly().GetName().Version;
+            TorchVersionVerbose = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? TorchVersion.ToString();
             RunArgs = new string[0];
 
             Managers = new DependencyManager();
@@ -245,11 +252,9 @@ namespace Torch
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
 
-            TorchVersion = Assembly.GetEntryAssembly().GetName().Version;
-            string verboseVersion = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? TorchVersion.ToString();
+            Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
             GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
-            var verInfo = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}";
-            try { Console.Title = verInfo; }
+            try { Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}"; }
             catch
             {
                 ///Running as service 
@@ -260,7 +265,8 @@ namespace Torch
 #else
             Log.Info("RELEASE");
 #endif
-            Log.Info(verInfo);
+            Log.Info($"Torch Version: {TorchVersionVerbose}");
+            Log.Info($"Game Version: {GameVersion}");
             Log.Info($"Executing assembly: {Assembly.GetEntryAssembly().FullName}");
             Log.Info($"Executing directory: {AppDomain.CurrentDomain.BaseDirectory}");
 
@@ -349,7 +355,7 @@ namespace Torch
         /// <inheritdoc />
         public virtual void Update()
         {
-            Plugins.UpdatePlugins();
+            GetManager<IPluginManager>().UpdatePlugins();
         }
     }
 }
