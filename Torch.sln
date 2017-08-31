@@ -22,6 +22,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Torch.Server.Tests", "Torch
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Torch.Client.Tests", "Torch.Client.Tests\Torch.Client.Tests.csproj", "{632E78C0-0DAC-4B71-B411-2F1B333CC310}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Versioning", "Versioning", "{762F6A0D-55EF-4173-8CDE-309D183F40C4}"
+	ProjectSection(SolutionItems) = preProject
+		Versioning\AssemblyVersion.cs = Versioning\AssemblyVersion.cs
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -59,6 +64,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{762F6A0D-55EF-4173-8CDE-309D183F40C4} = {7AD02A71-1D4C-48F9-A8C1-789A5512424F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BB51D91F-958D-4B63-A897-3C40642ACD3E}
