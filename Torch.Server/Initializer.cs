@@ -8,6 +8,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using NLog;
 using Torch.Utils;
 
@@ -84,15 +85,15 @@ quit";
             _server = new TorchServer(_config);
             _server.Init();
 
-            if (_config.NoGui || _config.Autostart)
-            {
-                new Thread(_server.Start).Start();
-            }
-
             if (!_config.NoGui)
             {
-                new TorchUI(_server).ShowDialog();
+                var ui = new TorchUI(_server);
+                if (_config.Autostart)
+                    new Thread(_server.Start).Start();
+                ui.ShowDialog();
             }
+            else
+                _server.Start();
 
             _resolver?.Dispose();
         }
