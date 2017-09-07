@@ -41,23 +41,32 @@ namespace Torch.Server
         {
             _server = (TorchBase)server;
             _multiplayer = (MultiplayerManager)server.Multiplayer;
-            ChatItems.Items.Clear();
             DataContext = _multiplayer;
+
+            ChatItems.Inlines.Clear();
+            _multiplayer.ChatHistory.ForEach(InsertMessage);
             if (_multiplayer.ChatHistory is INotifyCollectionChanged ncc)
                 ncc.CollectionChanged += ChatHistory_CollectionChanged;
+            ChatScroller.ScrollToBottom();
         }
 
         private void ChatHistory_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            ChatItems.ScrollToItem(ChatItems.Items.Count - 1);
-            /*
-            if (VisualTreeHelper.GetChildrenCount(ChatItems) > 0)
-            {
-                
-                Border border = (Border)VisualTreeHelper.GetChild(ChatItems, 0);
-                ScrollViewer scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
-                scrollViewer.ScrollToBottom();
-            }*/
+            foreach (IChatMessage msg in e.NewItems)
+                InsertMessage(msg);
+        }
+
+        private void InsertMessage(IChatMessage msg)
+        {
+            bool atBottom = ChatScroller.VerticalOffset + 8 > ChatScroller.ScrollableHeight;
+            var span = new Span();
+            span.Inlines.Add($"{msg.Timestamp} ");
+            span.Inlines.Add(new Run(msg.Name) { Foreground = msg.Name == "Server" ? Brushes.DarkBlue : Brushes.Blue });
+            span.Inlines.Add($": {msg.Message}");
+            span.Inlines.Add(new LineBreak());
+            ChatItems.Inlines.Add(span);
+            if (atBottom)
+                ChatScroller.ScrollToBottom();
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
@@ -81,7 +90,7 @@ namespace Torch.Server
             var commands = _server.Commands;
             if (commands.IsCommand(text))
             {
-                 _multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", text));
+                _multiplayer.ChatHistory.Add(new ChatMessage(DateTime.Now, 0, "Server", text));
                 _server.Invoke(() =>
                 {
                     var response = commands.HandleCommandFromServer(text);
