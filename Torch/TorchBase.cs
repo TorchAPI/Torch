@@ -19,9 +19,11 @@ using SpaceEngineers.Game;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.ModAPI;
+using Torch.API.Session;
 using Torch.Commands;
 using Torch.Managers;
 using Torch.Utils;
+using Torch.Session;
 using VRage.Collections;
 using VRage.FileSystem;
 using VRage.Game.ObjectBuilder;
@@ -51,21 +53,36 @@ namespace Torch
         /// <inheritdoc />
         public ITorchConfig Config { get; protected set; }
         /// <inheritdoc />
-        public Version TorchVersion { get; protected set; }
+        public Version TorchVersion { get; }
+
+        /// <summary>
+        /// The version of Torch used, with extra data.
+        /// </summary>
+        public string TorchVersionVerbose { get; }
+
         /// <inheritdoc />
         public Version GameVersion { get; private set; }
         /// <inheritdoc />
         public string[] RunArgs { get; set; }
         /// <inheritdoc />
+        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public IPluginManager Plugins { get; protected set; }
         /// <inheritdoc />
+        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public IMultiplayerManager Multiplayer { get; protected set; }
         /// <inheritdoc />
+        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public EntityManager Entities { get; protected set; }
         /// <inheritdoc />
+        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public INetworkManager Network { get; protected set; }
         /// <inheritdoc />
+        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public CommandManager Commands { get; protected set; }
+
+        /// <inheritdoc />
+        public ITorchSession CurrentSession => Managers?.GetManager<ITorchSessionManager>()?.CurrentSession;
+
         /// <inheritdoc />
         public event Action SessionLoading;
         /// <inheritdoc />
@@ -96,7 +113,8 @@ namespace Torch
 
             Instance = this;
 
-            TorchVersion = Assembly.GetExecutingAssembly().GetName().Version; 
+            TorchVersion = Assembly.GetExecutingAssembly().GetName().Version;
+            TorchVersionVerbose = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? TorchVersion.ToString();
             RunArgs = new string[0];
 
             Managers = new DependencyManager();
@@ -107,6 +125,7 @@ namespace Torch
             Network = new NetworkManager(this);
             Commands = new CommandManager(this);
 
+            Managers.AddManager(new TorchSessionManager(this));
             Managers.AddManager(new FilesystemManager(this));
             Managers.AddManager(new UpdateManager(this));
             Managers.AddManager(Network);
@@ -115,7 +134,6 @@ namespace Torch
             Managers.AddManager(Multiplayer);
             Managers.AddManager(Entities);
             Managers.AddManager(new ChatManager(this));
-
 
             TorchAPI.Instance = this;
         }
@@ -145,7 +163,7 @@ namespace Torch
             {
                 callback?.Invoke(SaveGameStatus.GameNotReady);
             }
-            else if(MyAsyncSaving.InProgress)
+            else if (MyAsyncSaving.InProgress)
             {
                 callback?.Invoke(SaveGameStatus.SaveInProgress);
             }
@@ -234,11 +252,11 @@ namespace Torch
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
 
-            TorchVersion = Assembly.GetEntryAssembly().GetName().Version;
+            Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
             GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
-            var verInfo = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}";
-            try { Console.Title = verInfo; }
-            catch { 
+            try { Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}"; }
+            catch
+            {
                 ///Running as service 
             }
 
@@ -247,7 +265,8 @@ namespace Torch
 #else
             Log.Info("RELEASE");
 #endif
-            Log.Info(verInfo);
+            Log.Info($"Torch Version: {TorchVersionVerbose}");
+            Log.Info($"Game Version: {GameVersion}");
             Log.Info($"Executing assembly: {Assembly.GetEntryAssembly().FullName}");
             Log.Info($"Executing directory: {AppDomain.CurrentDomain.BaseDirectory}");
 
@@ -306,19 +325,19 @@ namespace Torch
         /// <inheritdoc/> 
         public virtual void Start()
         {
-            
+
         }
 
         /// <inheritdoc />
         public virtual void Stop()
         {
-            
+
         }
 
         /// <inheritdoc />
         public virtual void Restart()
         {
-            
+
         }
 
         /// <inheritdoc />
@@ -336,7 +355,7 @@ namespace Torch
         /// <inheritdoc />
         public virtual void Update()
         {
-            Plugins.UpdatePlugins();
+            GetManager<IPluginManager>().UpdatePlugins();
         }
     }
 }

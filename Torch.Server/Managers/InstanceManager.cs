@@ -131,7 +131,7 @@ namespace Torch.Server.Managers
 
         public void SaveConfig()
         {
-            DedicatedConfig.Save();
+            DedicatedConfig.Save(Path.Combine(Torch.Config.InstancePath, CONFIG_NAME));
             Log.Info("Saved dedicated config.");
 
             try

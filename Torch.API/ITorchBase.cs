@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Torch.API.Managers;
+using Torch.API.Session;
 using VRage.Game.ModAPI;
 
 namespace Torch.API
@@ -34,14 +35,21 @@ namespace Torch.API
         event Action SessionUnloaded;
 
         /// <summary>
+        /// Gets the currently running session instance, or null if none exists.
+        /// </summary>
+        ITorchSession CurrentSession { get; }
+
+        /// <summary>
         /// Configuration for the current instance.
         /// </summary>
         ITorchConfig Config { get; }
 
         /// <inheritdoc cref="IMultiplayerManager"/>
+        [Obsolete]
         IMultiplayerManager Multiplayer { get; }
 
         /// <inheritdoc cref="IPluginManager"/>
+        [Obsolete]
         IPluginManager Plugins { get; }
 
         /// <inheritdoc cref="IDependencyManager"/>
