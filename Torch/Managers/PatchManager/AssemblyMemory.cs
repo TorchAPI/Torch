@@ -3,11 +3,17 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Torch.Utils;
 
 namespace Torch.Managers.PatchManager
 {
     internal class AssemblyMemory
     {
+#pragma warning disable 649
+        [ReflectedMethod(Name = "GetMethodDescriptor")]
+        private static Func<DynamicMethod, RuntimeMethodHandle> _getMethodHandle;
+#pragma warning restore 649
+
         /// <summary>
         /// Gets the address, in RAM, where the body of a method starts.
         /// </summary>
@@ -16,9 +22,8 @@ namespace Torch.Managers.PatchManager
         public static long GetMethodBodyStart(MethodBase method)
         {
             RuntimeMethodHandle handle;
-            if (method is DynamicMethod)
-                handle = (RuntimeMethodHandle)typeof(DynamicMethod).GetMethod("GetMethodDescriptor", BindingFlags.NonPublic | BindingFlags.Instance)
-                    .Invoke(method, new object[0]);
+            if (method is DynamicMethod dyn)
+                handle = _getMethodHandle.Invoke(dyn);
             else
                 handle = method.MethodHandle;
             RuntimeHelpers.PrepareMethod(handle);

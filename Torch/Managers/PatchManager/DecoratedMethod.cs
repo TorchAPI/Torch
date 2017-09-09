@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using NLog;
 using Torch.Managers.PatchManager.Transpile;
+using Torch.Utils;
 
 namespace Torch.Managers.PatchManager
 {
@@ -76,21 +77,25 @@ namespace Torch.Managers.PatchManager
         private const string INSTANCE_PARAMETER = "__instance";
         private const string RESULT_PARAMETER = "__result";
 
+#pragma warning disable 649
+        [ReflectedStaticMethod(Type = typeof(RuntimeHelpers), Name = "_CompileMethod", OverrideTypeNames = new[] { "System.IRuntimeMethodInfo" })]
+        private static Action<object> _compileDynamicMethod;
+        [ReflectedMethod(Name = "GetMethodInfo")]
+        private static Func<RuntimeMethodHandle, object> _getMethodInfo;
+        [ReflectedMethod(Name = "GetMethodDescriptor")]
+        private static Func<DynamicMethod, RuntimeMethodHandle> _getMethodHandle;
+#pragma warning restore 649
+
         public DynamicMethod ComposePatchedMethod()
         {
-            var method = AllocatePatchMethod();
+            DynamicMethod method = AllocatePatchMethod();
             var generator = new LoggingIlGenerator(method.GetILGenerator());
             EmitPatched(generator);
 
             // Force it to compile
-            const BindingFlags nonPublicInstance = BindingFlags.NonPublic | BindingFlags.Instance;
-            const BindingFlags nonPublicStatic = BindingFlags.NonPublic | BindingFlags.Static;
-            var compileMethod = typeof(RuntimeHelpers).GetMethod("_CompileMethod", nonPublicStatic);
-            var getMethodDescriptor = typeof(DynamicMethod).GetMethod("GetMethodDescriptor", nonPublicInstance);
-            var handle = (RuntimeMethodHandle)getMethodDescriptor.Invoke(method, new object[0]);
-            var getMethodInfo = typeof(RuntimeMethodHandle).GetMethod("GetMethodInfo", nonPublicInstance);
-            var runtimeMethodInfo = getMethodInfo.Invoke(handle, new object[0]);
-            compileMethod.Invoke(null, new[] { runtimeMethodInfo });
+            RuntimeMethodHandle handle = _getMethodHandle.Invoke(method);
+            object runtimeMethodInfo = _getMethodInfo.Invoke(handle);
+            _compileDynamicMethod.Invoke(runtimeMethodInfo);
             return method;
         }
         #endregion
