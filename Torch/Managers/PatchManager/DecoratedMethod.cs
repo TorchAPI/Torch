@@ -49,6 +49,7 @@ namespace Torch.Managers.PatchManager
                 AssemblyMemory.WriteMemory(_revertAddress, _revertData);
                 _revertData = null;
                 _pinnedPatch.Value.Free();
+                _pinnedPatch = null;
             }
         }
 
