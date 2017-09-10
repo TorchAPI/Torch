@@ -257,7 +257,7 @@ namespace Torch
             try { Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}"; }
             catch
             {
-                ///Running as service 
+                //Running as service 
             }
 
 #if DEBUG

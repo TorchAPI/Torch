@@ -10,8 +10,11 @@ namespace Torch
 {
     public class PluginManifest
     {
-        public string Repository { get; set; } = "Jimmacle/notarealrepo";
-        public string Version { get; set; } = "1.0";
+        public string Name { get; set; }
+        public Guid Guid { get; set; }
+        public string Repository { get; set; }
+        public string Version { get; set; }
+        public List<Guid> Dependencies { get; } = new List<Guid>();
 
         public void Save(string path)
         {
@@ -26,9 +29,20 @@ namespace Torch
         {
             using (var f = File.OpenRead(path))
             {
-                var ser = new XmlSerializer(typeof(PluginManifest));
-                return (PluginManifest)ser.Deserialize(f);
+                return Load(f);
             }
+        }
+
+        public static PluginManifest Load(Stream stream)
+        {
+            var ser = new XmlSerializer(typeof(PluginManifest));
+            return (PluginManifest)ser.Deserialize(stream);
+        }
+
+        public static PluginManifest Load(TextReader reader)
+        {
+            var ser = new XmlSerializer(typeof(PluginManifest));
+            return (PluginManifest)ser.Deserialize(reader);
         }
     }
 }

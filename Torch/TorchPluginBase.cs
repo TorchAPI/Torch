@@ -16,30 +16,11 @@ namespace Torch
     public abstract class TorchPluginBase : ITorchPlugin
     {
         public string StoragePath { get; internal set; }
-        public Guid Id { get; }
-        public Version Version { get; }
-        public string Name { get; }
-        public ITorchBase Torch { get; private set; }
-        private static readonly Logger _log = LogManager.GetLogger(nameof(TorchPluginBase));
-
-        protected TorchPluginBase()
-        {
-            var type = GetType();
-            var pluginInfo = type.GetCustomAttribute<PluginAttribute>();
-            if (pluginInfo == null)
-            {
-                _log.Warn($"Plugin {type.FullName} has no PluginAttribute");
-                Name = type.FullName;
-                Version = new Version(0, 0, 0, 0);
-                Id = default(Guid);
-            }
-            else
-            {
-                Name = pluginInfo.Name;
-                Version = pluginInfo.Version;
-                Id = pluginInfo.Guid;
-            }
-        }
+        public PluginManifest Manifest { get; internal set; }
+        public Guid Id => Manifest.Guid;
+        public string Version => Manifest.Version;
+        public string Name => Manifest.Name;
+        public ITorchBase Torch { get; internal set; }
 
         public virtual void Init(ITorchBase torch)
         {
