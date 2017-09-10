@@ -112,8 +112,13 @@ namespace Torch.Managers.PatchManager
 
             var specialVariables = new Dictionary<string, LocalBuilder>();
 
+            Label? labelAfterOriginalContent = Suffixes.Count > 0 ? target.DefineLabel() : (Label?)null;
+            Label? labelAfterOriginalReturn = Prefixes.Any(x => x.ReturnType == typeof(bool)) ? target.DefineLabel() : (Label?)null;
+
+
             var returnType = _method is MethodInfo meth ? meth.ReturnType : typeof(void);
-            var resultVariable = returnType != typeof(void) && Prefixes.Concat(Suffixes).SelectMany(x => x.GetParameters()).Any(x => x.Name == RESULT_PARAMETER)
+            var resultVariable = returnType != typeof(void) && (labelAfterOriginalReturn.HasValue || // If we jump past main content we need local to store return val
+                Prefixes.Concat(Suffixes).SelectMany(x => x.GetParameters()).Any(x => x.Name == RESULT_PARAMETER))
                 ? target.DeclareLocal(returnType)
                 : null;
             resultVariable?.SetToDefault(target);
@@ -121,39 +126,54 @@ namespace Torch.Managers.PatchManager
             if (resultVariable != null)
                 specialVariables.Add(RESULT_PARAMETER, resultVariable);
 
-            var labelAfterOriginalContent = target.DefineLabel();
-            var labelAfterOriginalReturn = target.DefineLabel();
-
+            target.EmitComment("Prefixes Begin");
             foreach (var prefix in Prefixes)
             {
                 EmitMonkeyCall(target, prefix, specialVariables);
                 if (prefix.ReturnType == typeof(bool))
-                    target.Emit(OpCodes.Brfalse, labelAfterOriginalReturn);
+                {
+                    Debug.Assert(labelAfterOriginalReturn.HasValue);
+                    target.Emit(OpCodes.Brfalse, labelAfterOriginalReturn.Value);
+                }
                 else if (prefix.ReturnType != typeof(void))
-                    throw new Exception($"Prefixes must return void or bool.  {prefix.DeclaringType?.FullName}.{prefix.Name} returns {prefix.ReturnType}");
+                    throw new Exception(
+                        $"Prefixes must return void or bool.  {prefix.DeclaringType?.FullName}.{prefix.Name} returns {prefix.ReturnType}");
             }
+            target.EmitComment("Prefixes End");
 
+            target.EmitComment("Original Begin");
             MethodTranspiler.Transpile(_method, Transpilers, target, labelAfterOriginalContent);
-            target.MarkLabel(labelAfterOriginalContent);
-            if (resultVariable != null)
-                target.Emit(OpCodes.Stloc, resultVariable);
-            target.MarkLabel(labelAfterOriginalReturn);
+            target.EmitComment("Original End");
+            if (labelAfterOriginalContent.HasValue)
+            {
+                target.MarkLabel(labelAfterOriginalContent.Value);
+                if (resultVariable != null)
+                    target.Emit(OpCodes.Stloc, resultVariable);
+            }
+            if (labelAfterOriginalReturn.HasValue)
+                target.MarkLabel(labelAfterOriginalReturn.Value);
 
+            target.EmitComment("Suffixes Begin");
             foreach (var suffix in Suffixes)
             {
                 EmitMonkeyCall(target, suffix, specialVariables);
                 if (suffix.ReturnType != typeof(void))
                     throw new Exception($"Suffixes must return void.  {suffix.DeclaringType?.FullName}.{suffix.Name} returns {suffix.ReturnType}");
             }
+            target.EmitComment("Suffixes End");
 
-            if (resultVariable != null)
-                target.Emit(OpCodes.Ldloc, resultVariable);
-            target.Emit(OpCodes.Ret);
+            if (labelAfterOriginalContent.HasValue || labelAfterOriginalReturn.HasValue)
+            {
+                if (resultVariable != null)
+                    target.Emit(OpCodes.Ldloc, resultVariable);
+                target.Emit(OpCodes.Ret);
+            }
         }
 
         private void EmitMonkeyCall(LoggingIlGenerator target, MethodInfo patch,
             IReadOnlyDictionary<string, LocalBuilder> specialVariables)
         {
+            target.EmitComment($"Call {patch.DeclaringType?.FullName}#{patch.Name}");
             foreach (var param in patch.GetParameters())
             {
                 switch (param.Name)

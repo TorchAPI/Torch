@@ -2,16 +2,22 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using NLog;
 using Torch.Managers.PatchManager.MSIL;
 
 namespace Torch.Managers.PatchManager.Transpile
 {
     internal class MethodTranspiler
     {
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+
         internal static void Transpile(MethodBase baseMethod, IEnumerable<MethodInfo> transpilers, LoggingIlGenerator output, Label? retLabel)
         {
             var context = new MethodContext(baseMethod);
             context.Read();
+            _log.Trace("Input Method:");
+            _log.Trace(context.ToHumanMsil);
+
             var methodContent = (IEnumerable<MsilInstruction>) context.Instructions;
             foreach (var transpiler in transpilers)
                 methodContent = (IEnumerable<MsilInstruction>)transpiler.Invoke(null, new object[] { methodContent });
@@ -48,7 +54,7 @@ namespace Torch.Managers.PatchManager.Transpile
             {
                 var opcode = (OpCode)field.GetValue(null);
                 if (opcode.OperandType == OperandType.ShortInlineBrTarget &&
-                    opcode.Name.EndsWith("_S", StringComparison.OrdinalIgnoreCase))
+                    opcode.Name.EndsWith(".s", StringComparison.OrdinalIgnoreCase))
                 {
                     var other = (OpCode?) typeof(OpCodes).GetField(field.Name.Substring(0, field.Name.Length - 2),
                         BindingFlags.Static | BindingFlags.Public)?.GetValue(null);

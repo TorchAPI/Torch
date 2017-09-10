@@ -1,19 +1,22 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using NLog;
+using Torch.Utils;
 
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
 #pragma warning disable 162 // unreachable code
 namespace Torch.Managers.PatchManager.Transpile
 {
     /// <summary>
-    /// An ILGenerator that can log emit calls when <see cref="LoggingIlGenerator._logging"/> is enabled.
+    /// An ILGenerator that can log emit calls when the TRACE level is enabled.
     /// </summary>
     public class LoggingIlGenerator
     {
-        private const bool _logging = false;
+        private const int _opcodePadding = -10;
+
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         /// <summary>
@@ -34,8 +37,7 @@ namespace Torch.Managers.PatchManager.Transpile
         public LocalBuilder DeclareLocal(Type localType, bool isPinned = false)
         {
             LocalBuilder res = Backing.DeclareLocal(localType, isPinned);
-            if (_logging)
-                _log.Trace($"DeclareLocal {res.LocalType} {res.IsPinned} => {res.LocalIndex}");
+            _log.Trace($"DclLoc\t{res.LocalIndex}\t=> {res.LocalType} {res.IsPinned}");
             return res;
         }
 
@@ -43,123 +45,111 @@ namespace Torch.Managers.PatchManager.Transpile
         /// <inheritdoc cref="ILGenerator.Emit(OpCode)"/>
         public void Emit(OpCode op)
         {
-            if (_logging)
-                _log.Trace($"Emit {op}");
+            _log.Trace($"Emit\t{op,_opcodePadding}");
             Backing.Emit(op);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, LocalBuilder)"/>
         public void Emit(OpCode op, LocalBuilder arg)
         {
-            if (_logging)
-                _log.Trace($"Emit {op} L:{arg.LocalIndex} {arg.LocalType}");
+            _log.Trace($"Emit\t{op,_opcodePadding} L:{arg.LocalIndex} {arg.LocalType}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, int)"/>
         public void Emit(OpCode op, int arg)
         {
-            if (_logging)
-                _log.Trace($"Emit {op} {arg}");
+            _log.Trace($"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, long)"/>
         public void Emit(OpCode op, long arg)
         {
-            if (_logging)
-                _log.Trace($"Emit {op} {arg}");
+            _log.Trace($"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, float)"/>
         public void Emit(OpCode op, float arg)
         {
-            if (_logging)
-                _log.Trace($"Emit {op} {arg}");
+            _log.Trace($"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, double)"/>
         public void Emit(OpCode op, double arg)
         {
-            if (_logging)
-                _log.Trace($"Emit {op} {arg}");
+            _log.Trace($"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, string)"/>
         public void Emit(OpCode op, string arg)
         {
-            if (_logging)
-                _log.Trace($"Emit {op} {arg}");
+            _log.Trace($"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, Type)"/>
         public void Emit(OpCode op, Type arg)
         {
-            if (_logging)
-                _log.Trace($"Emit {op} {arg}");
+            _log.Trace($"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, FieldInfo)"/>
         public void Emit(OpCode op, FieldInfo arg)
         {
-            if (_logging)
-                _log.Trace($"Emit {op} {arg}");
+            _log.Trace($"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, MethodInfo)"/>
         public void Emit(OpCode op, MethodInfo arg)
         {
-            if (_logging)
-                _log.Trace($"Emit {op} {arg}");
+            _log.Trace($"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
-        private static FieldInfo _labelID =
-            typeof(Label).GetField("m_label", BindingFlags.Instance | BindingFlags.NonPublic);
+
+#pragma warning disable 649
+        [ReflectedGetter(Name="m_label")]
+        private static Func<Label, int> _labelID;
+#pragma warning restore 649
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, Label)"/>
         public void Emit(OpCode op, Label arg)
         {
-            if (_logging)
-                _log.Trace($"Emit {op} L:{_labelID.GetValue(arg)}");
+            _log.Trace($"Emit\t{op,_opcodePadding}\tL:{_labelID.Invoke(arg)}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, Label[])"/>
         public void Emit(OpCode op, Label[] arg)
         {
-            if (_logging)
-                _log.Trace($"Emit {op} {string.Join(", ", arg.Select(x => "L:" + _labelID.GetValue(x)))}");
+            _log.Trace($"Emit\t{op,_opcodePadding}\t{string.Join(", ", arg.Select(x => "L:" + _labelID.Invoke(x)))}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, SignatureHelper)"/>
         public void Emit(OpCode op, SignatureHelper arg)
         {
-            if (_logging)
-                _log.Trace($"Emit {op} {arg}");
+            _log.Trace($"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, ConstructorInfo)"/>
         public void Emit(OpCode op, ConstructorInfo arg)
         {
-            if (_logging)
-                _log.Trace($"Emit {op} {arg}");
+            _log.Trace($"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.MarkLabel(Label)"/>
         public void MarkLabel(Label label)
         {
-            if (_logging)
-                _log.Trace($"MarkLabel L:{_labelID.GetValue(label)}");
+            _log.Trace($"MkLbl\tL:{_labelID.Invoke(label)}");
             Backing.MarkLabel(label);
         }
 
@@ -167,6 +157,16 @@ namespace Torch.Managers.PatchManager.Transpile
         public Label DefineLabel()
         {
             return Backing.DefineLabel();
+        }
+
+        /// <summary>
+        /// Emits a comment to the log.
+        /// </summary>
+        /// <param name="comment">Comment</param>
+        [Conditional("DEBUG")]
+        public void EmitComment(string comment)
+        {
+            _log.Trace($"// {comment}");
         }
     }
 #pragma warning restore 162

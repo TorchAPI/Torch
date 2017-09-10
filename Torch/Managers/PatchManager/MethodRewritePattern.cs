@@ -90,7 +90,7 @@ namespace Torch.Managers.PatchManager
             public void RemoveAll()
             {
                 foreach (var k in _backingList)
-                    _backingSet.Remove(k);
+                    _backingSet?.Remove(k);
                 _backingList.Clear();
                 _sortDirty = true;
                 Interlocked.Exchange(ref _hasChanges, 1);

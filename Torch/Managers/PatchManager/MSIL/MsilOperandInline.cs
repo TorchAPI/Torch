@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -257,23 +258,28 @@ namespace Torch.Managers.PatchManager.MSIL
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
+                object value = null;
                 switch (Instruction.OpCode.OperandType)
                 {
                     case OperandType.InlineTok:
-                        Value = context.TokenResolver.ResolveMember(reader.ReadInt32()) as TY;
+                        value = context.TokenResolver.ResolveMember(reader.ReadInt32());
                         break;
                     case OperandType.InlineType:
-                        Value = context.TokenResolver.ResolveType(reader.ReadInt32()) as TY;
+                        value = context.TokenResolver.ResolveType(reader.ReadInt32());
                         break;
                     case OperandType.InlineMethod:
-                        Value = context.TokenResolver.ResolveMethod(reader.ReadInt32()) as TY;
+                        value = context.TokenResolver.ResolveMethod(reader.ReadInt32());
                         break;
                     case OperandType.InlineField:
-                        Value = context.TokenResolver.ResolveField(reader.ReadInt32()) as TY;
+                        value = context.TokenResolver.ResolveField(reader.ReadInt32());
                         break;
                     default:
                         throw new ArgumentException("Reflected operand only applies to inline reflected types");
                 }
+                if (value is TY vty)
+                    Value = vty;
+                else
+                    throw new Exception($"Expected type {typeof(TY).Name} from operand {Instruction.OpCode.OperandType}, got {value.GetType()?.Name ?? "null"}");
             }
 
             internal override void Emit(LoggingIlGenerator generator)

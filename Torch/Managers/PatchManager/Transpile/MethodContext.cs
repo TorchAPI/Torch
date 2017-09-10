@@ -52,11 +52,17 @@ namespace Torch.Managers.PatchManager.Transpile
             using (var reader = new BinaryReader(memory))
                 while (memory.Length > memory.Position)
                 {
+                    var count = 1;
                     var instructionValue = (short)memory.ReadByte();
                     if (Prefixes.Contains(instructionValue))
-                        instructionValue = (short)((instructionValue << 8) | memory.ReadByte());
+                    {
+                        instructionValue = (short) ((instructionValue << 8) | memory.ReadByte());
+                        count++;
+                    }
                     if (!OpCodeLookup.TryGetValue(instructionValue, out OpCode opcode))
                         throw new Exception($"Unknown opcode {instructionValue:X}");
+                    if (opcode.Size != count)
+                        throw new Exception($"Opcode said it was {opcode.Size} but we read {count}");
                     var instruction = new MsilInstruction(opcode)
                     {
                         Offset = (int) memory.Position
@@ -85,7 +91,7 @@ namespace Torch.Managers.PatchManager.Transpile
 
         public string ToHumanMsil()
         {
-            return string.Join("\n", _instructions.Select(x => x.Offset + "\t" + x));
+            return string.Join("\n", _instructions.Select(x => $"IL_{x.Offset:X4}: {x}"));
         }
 
         private static readonly Dictionary<short, OpCode> OpCodeLookup;

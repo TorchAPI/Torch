@@ -40,7 +40,7 @@ namespace Torch.Managers.PatchManager.MSIL
                     Operand = new MsilOperandInline.MsilOperandInt64(this);
                     break;
                 case OperandType.InlineMethod:
-                    Operand = new MsilOperandInline.MsilOperandReflected<MethodInfo>(this);
+                    Operand = new MsilOperandInline.MsilOperandReflected<MethodBase>(this);
                     break;
                 case OperandType.InlineR:
                     Operand = new MsilOperandInline.MsilOperandDouble(this);
