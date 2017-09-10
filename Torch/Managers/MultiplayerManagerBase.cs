@@ -47,7 +47,7 @@ namespace Torch.Managers
         public event Action<IPlayer> PlayerJoined;
         /// <inheritdoc />
         public event Action<IPlayer> PlayerLeft;
-        
+
         public ObservableDictionary<ulong, PlayerViewModel> Players { get; } = new ObservableDictionary<ulong, PlayerViewModel>();
 
 #pragma warning disable 649
@@ -69,7 +69,8 @@ namespace Torch.Managers
         /// <inheritdoc />
         public override void Detach()
         {
-            MyMultiplayer.Static.ClientLeft -= OnClientLeft;
+            if (MyMultiplayer.Static != null)
+                MyMultiplayer.Static.ClientLeft -= OnClientLeft;
         }
 
         /// <inheritdoc />
@@ -114,7 +115,7 @@ namespace Torch.Managers
 
         protected void RaiseClientJoined(ulong steamId)
         {
-            var vm = new PlayerViewModel(steamId){State=ConnectionState.Connected};
+            var vm = new PlayerViewModel(steamId) { State = ConnectionState.Connected };
             _log.Info($"Player {vm.Name} joined ({vm.SteamId}");
             Players.Add(steamId, vm);
             PlayerJoined?.Invoke(vm);
