@@ -160,7 +160,6 @@
       <Link>Properties\AssemblyVersion.cs</Link>
     </Compile>
     <Compile Include="ConnectionState.cs" />
-    <Compile Include="IChatMessage.cs" />
     <Compile Include="ITorchConfig.cs" />
     <Compile Include="Managers\DependencyManagerExtensions.cs" />
     <Compile Include="Managers\DependencyProviderExtensions.cs" />
@@ -186,6 +185,7 @@
     <Compile Include="ModAPI\TorchAPI.cs" />
     <Compile Include="Session\ITorchSession.cs" />
     <Compile Include="Session\ITorchSessionManager.cs" />
+    <Compile Include="Session\TorchSessionState.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

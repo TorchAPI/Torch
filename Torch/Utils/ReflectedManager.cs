@@ -23,6 +23,15 @@ namespace Torch.Utils
         /// Declaring type of the member to access.  If null, inferred from the instance argument type.
         /// </summary>
         public Type Type { get; set; } = null;
+
+        /// <summary>
+        /// Assembly qualified name of <see cref="Type"/>
+        /// </summary>
+        public string TypeName
+        {
+            get => Type?.AssemblyQualifiedName;
+            set => Type = value == null ? null : Type.GetType(value, true);
+        }
     }
 
     #region MemberInfoAttributes
@@ -160,6 +169,19 @@ namespace Torch.Utils
     [AttributeUsage(AttributeTargets.Field)]
     public class ReflectedMethodAttribute : ReflectedMemberAttribute
     {
+        /// <summary>
+        /// When set the parameters types for the method are assumed to be this.
+        /// </summary>
+        public Type[] OverrideTypes { get; set; }
+
+        /// <summary>
+        /// Assembly qualified names of <see cref="OverrideTypes"/>
+        /// </summary>
+        public string[] OverrideTypeNames
+        {
+            get => OverrideTypes.Select(x => x.AssemblyQualifiedName).ToArray();
+            set => OverrideTypes = value?.Select(x => x == null ? null : Type.GetType(x)).ToArray();
+        }
     }
 
     /// <summary>
@@ -534,10 +556,14 @@ namespace Torch.Utils
                 trueParameterTypes = parameters.Skip(1).Select(x => x.ParameterType).ToArray();
             }
 
+            var invokeTypes = new Type[trueParameterTypes.Length];
+            for (var i = 0; i < invokeTypes.Length; i++)
+                invokeTypes[i] = attr.OverrideTypes?[i] ?? trueParameterTypes[i];
+
             MethodInfo methodInstance = trueType.GetMethod(attr.Name ?? field.Name,
                 (attr is ReflectedStaticMethodAttribute ? BindingFlags.Static : BindingFlags.Instance) |
                 BindingFlags.Public |
-                BindingFlags.NonPublic, null, CallingConventions.Any, trueParameterTypes, null);
+                BindingFlags.NonPublic, null, CallingConventions.Any, invokeTypes, null);
             if (methodInstance == null)
             {
                 string methodType = attr is ReflectedStaticMethodAttribute ? "static" : "instance";
@@ -547,13 +573,38 @@ namespace Torch.Utils
                     $"Unable to find {methodType} method {attr.Name ?? field.Name} in type {trueType.FullName} with parameters {methodParams}");
             }
 
+
             if (attr is ReflectedStaticMethodAttribute)
-                field.SetValue(null, Delegate.CreateDelegate(field.FieldType, methodInstance));
+            {
+                if (attr.OverrideTypes != null)
+                {
+                    ParameterExpression[] paramExp =
+                        parameters.Select(x => Expression.Parameter(x.ParameterType)).ToArray();
+                    var argExp = new Expression[invokeTypes.Length];
+                    for (var i = 0; i < argExp.Length; i++)
+                        if (invokeTypes[i] != paramExp[i].Type)
+                            argExp[i] = Expression.Convert(paramExp[i], invokeTypes[i]);
+                        else
+                            argExp[i] = paramExp[i];
+                    field.SetValue(null,
+                        Expression.Lambda(Expression.Call(methodInstance, argExp), paramExp)
+                                  .Compile());
+                }
+                else
+                    field.SetValue(null, Delegate.CreateDelegate(field.FieldType, methodInstance));
+            }
             else
             {
-                ParameterExpression[] paramExp = parameters.Select(x => Expression.Parameter(x.ParameterType, x.Name)).ToArray();
+                ParameterExpression[] paramExp =
+                    parameters.Select(x => Expression.Parameter(x.ParameterType)).ToArray();
+                var argExp = new Expression[invokeTypes.Length];
+                for (var i = 0; i < argExp.Length; i++)
+                    if (invokeTypes[i] != paramExp[i + 1].Type)
+                        argExp[i] = Expression.Convert(paramExp[i + 1], invokeTypes[i]);
+                    else
+                        argExp[i] = paramExp[i + 1];
                 field.SetValue(null,
-                    Expression.Lambda(Expression.Call(paramExp[0], methodInstance, paramExp.Skip(1)), paramExp)
+                    Expression.Lambda(Expression.Call(paramExp[0], methodInstance, argExp), paramExp)
                               .Compile());
             }
         }
@@ -589,7 +640,7 @@ namespace Torch.Utils
                 if (trueType == null && isStatic)
                     throw new ArgumentException("Static field setters need their type defined", nameof(field));
 
-                if (!isStatic)
+                if (!isStatic && trueType == null)
                     trueType = parameters[0].ParameterType;
             }
             else if (attr is ReflectedGetterAttribute)
@@ -602,7 +653,7 @@ namespace Torch.Utils
                 if (trueType == null && isStatic)
                     throw new ArgumentException("Static field getters need their type defined", nameof(field));
 
-                if (!isStatic)
+                if (!isStatic && trueType == null)
                     trueType = parameters[0].ParameterType;
             }
             else
@@ -620,10 +671,15 @@ namespace Torch.Utils
                     $"Unable to find field or property for {trueName} in {trueType.FullName} or its base types", nameof(field));
 
             ParameterExpression[] paramExp = parameters.Select(x => Expression.Parameter(x.ParameterType)).ToArray();
+            Expression instanceExpr = null;
+            if (!isStatic)
+            {
+                instanceExpr = trueType == paramExp[0].Type ? (Expression) paramExp[0] : Expression.Convert(paramExp[0], trueType);
+            }
 
             MemberExpression fieldExp = sourceField != null
-                                            ? Expression.Field(isStatic ? null : paramExp[0], sourceField)
-                                            : Expression.Property(isStatic ? null : paramExp[0], sourceProperty);
+                                            ? Expression.Field(instanceExpr, sourceField)
+                                            : Expression.Property(instanceExpr, sourceProperty);
             Expression impl;
             if (attr is ReflectedSetterAttribute)
             {

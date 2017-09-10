@@ -7,14 +7,7 @@ using VRage.Game.ModAPI;
 namespace Torch.API.Managers
 {
     /// <summary>
-    /// Delegate for received messages.
-    /// </summary>
-    /// <param name="message">Message data.</param>
-    /// <param name="sendToOthers">Flag to broadcast message to other players.</param>
-    public delegate void MessageReceivedDel(IChatMessage message, ref bool sendToOthers);
-
-    /// <summary>
-    /// API for multiplayer related functions.
+    /// API for multiplayer related functions common to servers and clients.
     /// </summary>
     public interface IMultiplayerManagerBase : IManager
     {

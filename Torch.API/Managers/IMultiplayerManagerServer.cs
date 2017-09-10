@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Torch.API.Managers
 {
+    /// <summary>
+    /// API for multiplayer functions that exist on servers and lobbies
+    /// </summary>
     public interface IMultiplayerManagerServer : IMultiplayerManagerBase
     {
         /// <summary>

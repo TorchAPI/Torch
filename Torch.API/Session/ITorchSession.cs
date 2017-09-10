@@ -25,5 +25,15 @@ namespace Torch.API.Session
 
         /// <inheritdoc cref="IDependencyManager"/>
         IDependencyManager Managers { get; }
+
+        /// <summary>
+        /// The current state of the session
+        /// </summary>
+        TorchSessionState State { get; }
+
+        /// <summary>
+        /// Event raised when the <see cref="State"/> changes.
+        /// </summary>
+        event TorchSessionStateChangedDel StateChanged;
     }
 }

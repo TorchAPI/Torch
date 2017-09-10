@@ -46,18 +46,20 @@ namespace Torch.Server
             _server = server;
 
             var sessionManager = server.Managers.GetManager<ITorchSessionManager>();
-            sessionManager.SessionLoaded += BindSession;
-            sessionManager.SessionUnloading += UnbindSession;
+            sessionManager.SessionStateChanged += SessionStateChanged;
         }
 
-        private void BindSession(ITorchSession session)
+        private void SessionStateChanged(ITorchSession session, TorchSessionState newState)
         {
-            Dispatcher.Invoke(() => DataContext = _server?.CurrentSession?.Managers.GetManager<MultiplayerManagerDedicated>());
-        }
-
-        private void UnbindSession(ITorchSession session)
-        {
-            Dispatcher.Invoke(() => DataContext = null);
+            switch (newState)
+            {
+                case TorchSessionState.Loaded:
+                    Dispatcher.Invoke(() => DataContext = _server?.CurrentSession?.Managers.GetManager<MultiplayerManagerDedicated>());
+                    break;
+                case TorchSessionState.Unloading:
+                    Dispatcher.Invoke(() => DataContext = null);
+                    break;
+            }
         }
 
         private void KickButton_Click(object sender, RoutedEventArgs e)
@@ -68,7 +70,7 @@ namespace Torch.Server
 
         private void BanButton_Click(object sender, RoutedEventArgs e)
         {
-            var player = (KeyValuePair<ulong, PlayerViewModel>) PlayerList.SelectedItem;
+            var player = (KeyValuePair<ulong, PlayerViewModel>)PlayerList.SelectedItem;
             _server.CurrentSession?.Managers.GetManager<IMultiplayerManagerServer>()?.BanPlayer(player.Key);
         }
     }

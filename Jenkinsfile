@@ -54,4 +54,14 @@ node {
 
 		archiveArtifacts artifacts: 'bin/x64/Release/Torch*', caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
 	}
+
+	gitVersion = bat(returnStdout: true, script: "@git describe --tags").trim()
+	gitSimpleVersion = bat(returnStdout: true, script: "@git describe --tags --abbrev=0").trim()
+	if (gitVersion == gitSimpleVersion) {
+		stage('Release') {
+			withCredentials([usernamePassword(credentialsId: 'torch-github', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+				powershell "& ./Jenkins/release.ps1 \"https://api.github.com/repos/TorchAPI/Torch/\" \"$gitSimpleVersion\" \"$USERNAME:$PASSWORD\" @(\"bin/torch-server.zip\", \"bin/torch-client.zip\")"
+			}
+		}
+	}
 }

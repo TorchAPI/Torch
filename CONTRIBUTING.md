@@ -1,9 +1,9 @@
 # Making a Pull Request
-* Fork this repository and make sure your local **master** branch is up to date with the main repository.
-* Create a new branch for your addition with an appropriate name, e.g. **add-restart-command**
+* Fork this repository and make sure your local **staging** branch is up to date with the main repository.
+* Create a new branch from the **staging** branch for your addition with an appropriate name, e.g. **add-restart-command**
   * PRs work by submitting the *entire* branch, so this allows you to continue work without locking up your whole repository.
 * Commit your changes to that branch, making sure that you **follow the code guidelines below**.
-* Submit your branch as a PR to be reviewed.
+* Submit your branch as a PR to be reviewed, with Torch's **staging** branch as the base.
 
 ## Naming Conventions
 * Types: **PascalCase**

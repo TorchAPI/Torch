@@ -29,6 +29,7 @@ namespace Torch.Managers
         /// <inheritdoc />
         public IList<ITorchPlugin> Plugins { get; } = new ObservableList<ITorchPlugin>();
 
+        public event Action<ITorchPlugin> PluginLoaded;
         public event Action<IList<ITorchPlugin>> PluginsLoaded;
 
         public PluginManager(ITorchBase torchInstance) : base(torchInstance)
@@ -42,13 +43,53 @@ namespace Torch.Managers
         /// </summary>
         public void UpdatePlugins()
         {
-            if (_sessionManager != null)
-            {
-                _sessionManager.SessionLoaded += AttachCommandsToSession;
-                _sessionManager.SessionUnloading += DetachCommandsFromSession;
-            }
             foreach (var plugin in Plugins)
                 plugin.Update();
+        }
+
+        private Action<ITorchPlugin> _attachCommandsHandler = null;
+
+        private void SessionStateChanged(ITorchSession session, TorchSessionState newState)
+        {
+            var cmdManager = session.Managers.GetManager<CommandManager>();
+            if (cmdManager == null)
+                return;
+            switch (newState)
+            {
+                case TorchSessionState.Loaded:
+                    if (_attachCommandsHandler != null)
+                        PluginLoaded -= _attachCommandsHandler;
+                    _attachCommandsHandler = (x) => cmdManager.RegisterPluginCommands(x);
+                    PluginLoaded += _attachCommandsHandler;
+                    foreach (ITorchPlugin plugin in Plugins)
+                        cmdManager.RegisterPluginCommands(plugin);
+                    break;
+                case TorchSessionState.Unloading:
+                    if (_attachCommandsHandler != null)
+                    {
+                        PluginLoaded -= _attachCommandsHandler;
+                        _attachCommandsHandler = null;
+                    }
+                    foreach (ITorchPlugin plugin in Plugins)
+                    {
+                        // cmdMgr?.UnregisterPluginCommands(plugin);
+                    }
+                    break;
+                case TorchSessionState.Loading:
+                case TorchSessionState.Unloaded:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(newState), newState, null);
+            }
+        }
+
+        /// <summary>
+        /// Prepares the plugin manager for loading.
+        /// </summary>
+        public override void Attach()
+        {
+            if (_sessionManager != null)
+                _sessionManager.SessionStateChanged += SessionStateChanged;
         }
 
         /// <summary>
@@ -57,29 +98,11 @@ namespace Torch.Managers
         public override void Detach()
         {
             if (_sessionManager != null)
-            {
-                _sessionManager.SessionLoaded -= AttachCommandsToSession;
-                _sessionManager.SessionUnloading -= DetachCommandsFromSession;
-            }
+                _sessionManager.SessionStateChanged -= SessionStateChanged;
             foreach (var plugin in Plugins)
                 plugin.Dispose();
 
             Plugins.Clear();
-        }
-
-        private void AttachCommandsToSession(ITorchSession session)
-        {
-            var cmdMgr = session.Managers.GetManager<CommandManager>();
-            foreach (ITorchPlugin plugin in Plugins)
-                cmdMgr?.RegisterPluginCommands(plugin);
-        }
-
-        private void DetachCommandsFromSession(ITorchSession session)
-        {
-            var cmdMgr = session.Managers.GetManager<CommandManager>();
-            foreach (ITorchPlugin plugin in Plugins) { 
-                // cmdMgr?.UnregisterPluginCommands(plugin);
-            }
         }
 
         private void DownloadPlugins()
@@ -144,6 +167,7 @@ namespace Torch.Managers
                             _log.Info($"Loading plugin {plugin.Name} ({plugin.Version})");
                             plugin.StoragePath = Torch.Config.InstancePath;
                             Plugins.Add(plugin);
+                            PluginLoaded?.Invoke(plugin);
                         }
                         catch (Exception e)
                         {

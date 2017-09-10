@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Sandbox.Engine.Multiplayer;
+using Sandbox.Game.Multiplayer;
 using VRage.Network;
 
 namespace Torch.API.Managers
@@ -12,6 +14,38 @@ namespace Torch.API.Managers
     /// </summary>
     public struct TorchChatMessage
     {
+        /// <summary>
+        /// Creates a new torch chat message with the given author and message.
+        /// </summary>
+        /// <param name="author">Author's name</param>
+        /// <param name="message">Message</param>
+        public TorchChatMessage(string author, string message)
+        {
+            Timestamp = DateTime.Now;
+            AuthorSteamId = null;
+            Author = author;
+            Message = message;
+            Font = "Blue";
+        }
+
+        /// <summary>
+        /// Creates a new torch chat message with the given author and message.
+        /// </summary>
+        /// <param name="authorSteamId">Author's steam ID</param>
+        /// <param name="message">Message</param>
+        public TorchChatMessage(ulong authorSteamId, string message)
+        {
+            Timestamp = DateTime.Now;
+            AuthorSteamId = authorSteamId;
+            Author = MyMultiplayer.Static?.GetMemberName(authorSteamId) ?? "Player";
+            Message = message;
+            Font = "Blue";
+        }
+
+        /// <summary>
+        /// This message's timestamp.
+        /// </summary>
+        public DateTime Timestamp;
         /// <summary>
         /// The author's steam ID, if available.  Else, null.
         /// </summary>

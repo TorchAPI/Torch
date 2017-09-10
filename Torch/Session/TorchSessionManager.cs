@@ -22,10 +22,7 @@ namespace Torch.Session
         private TorchSession _currentSession;
 
         /// <inheritdoc />
-        public event TorchSessionLoadDel SessionLoaded;
-
-        /// <inheritdoc />
-        public event TorchSessionLoadDel SessionUnloading;
+        public event TorchSessionStateChangedDel SessionStateChanged;
 
         /// <inheritdoc/>
         public ITorchSession CurrentSession => _currentSession;
@@ -52,50 +49,130 @@ namespace Torch.Session
             return _factories.Remove(factory);
         }
 
-        private void LoadSession()
-        {
-            if (_currentSession != null)
-            {
-                _log.Warn($"Override old torch session {_currentSession.KeenSession.Name}");
-                _currentSession.Detach();
-            }
+        #region Session events
 
-            _log.Info($"Starting new torch session for {MySession.Static.Name}");
-            _currentSession = new TorchSession(Torch, MySession.Static);
-            foreach (SessionManagerFactoryDel factory in _factories)
-            {
-                IManager manager = factory(CurrentSession);
-                if (manager != null)
-                    CurrentSession.Managers.AddManager(manager);
-            }
-            (CurrentSession as TorchSession)?.Attach();
-            SessionLoaded?.Invoke(_currentSession);
-        }
-
-        private void UnloadSession()
+        private void SetState(TorchSessionState state)
         {
             if (_currentSession == null)
                 return;
-            SessionUnloading?.Invoke(_currentSession);
-            _log.Info($"Unloading torch session for {_currentSession.KeenSession.Name}");
-            _currentSession.Detach();
-            _currentSession = null;
+            _currentSession.State = state;
+            SessionStateChanged?.Invoke(_currentSession, _currentSession.State);
         }
+
+        private void SessionLoading()
+        {
+            try
+            {
+                if (_currentSession != null)
+                {
+                    _log.Warn($"Override old torch session {_currentSession.KeenSession.Name}");
+                    _currentSession.Detach();
+                }
+
+                _log.Info($"Starting new torch session for {MySession.Static.Name}");
+
+                _currentSession = new TorchSession(Torch, MySession.Static);
+                SetState(TorchSessionState.Loading);
+            }
+            catch (Exception e)
+            {
+                _log.Error(e);
+                throw;
+            }
+        }
+
+        private void SessionLoaded()
+        {
+            try
+            {
+                if (_currentSession == null)
+                {
+                    _log.Warn("Session loaded event occurred when we don't have a session.");
+                    return;
+                }
+                foreach (SessionManagerFactoryDel factory in _factories)
+                {
+                    IManager manager = factory(CurrentSession);
+                    if (manager != null)
+                        CurrentSession.Managers.AddManager(manager);
+                }
+                (CurrentSession as TorchSession)?.Attach();
+                SetState(TorchSessionState.Loaded);
+            }
+            catch (Exception e)
+            {
+                _log.Error(e);
+                throw;
+            }
+        }
+
+        private void SessionUnloading()
+        {
+            try
+            {
+                if (_currentSession == null)
+                {
+                    _log.Warn("Session unloading event occurred when we don't have a session.");
+                    return;
+                }
+                SetState(TorchSessionState.Unloading);
+            }
+            catch (Exception e)
+            {
+                _log.Error(e);
+                throw;
+            }
+        }
+
+        private void SessionUnloaded()
+        {
+            try
+            {
+                if (_currentSession == null)
+                {
+                    _log.Warn("Session unloading event occurred when we don't have a session.");
+                    return;
+                }
+                _log.Info($"Unloading torch session for {_currentSession.KeenSession.Name}");
+                SetState(TorchSessionState.Unloaded);
+                _currentSession.Detach();
+                _currentSession = null;
+            }
+            catch (Exception e)
+            {
+                _log.Error(e);
+                throw;
+            }
+        }
+        #endregion
 
         /// <inheritdoc/>
         public override void Attach()
         {
-            MySession.AfterLoading += LoadSession;
-            MySession.OnUnloaded += UnloadSession;
+            MySession.OnLoading += SessionLoading;
+            MySession.AfterLoading += SessionLoaded;
+            MySession.OnUnloading += SessionUnloading;
+            MySession.OnUnloaded += SessionUnloaded;
         }
+
 
         /// <inheritdoc/>
         public override void Detach()
         {
-            _currentSession?.Detach();
-            _currentSession = null;
-            MySession.AfterLoading -= LoadSession;
-            MySession.OnUnloaded -= UnloadSession;
+            MySession.OnLoading -= SessionLoading;
+            MySession.AfterLoading -= SessionLoaded;
+            MySession.OnUnloading -= SessionUnloading;
+            MySession.OnUnloaded -= SessionUnloaded;
+
+            if (_currentSession != null)
+            {
+                if (_currentSession.State == TorchSessionState.Loaded)
+                    SetState(TorchSessionState.Unloading);
+                if (_currentSession.State == TorchSessionState.Unloading)
+                    SetState(TorchSessionState.Unloaded);
+                _currentSession.Detach();
+                _currentSession = null;
+            }
         }
     }
 }
