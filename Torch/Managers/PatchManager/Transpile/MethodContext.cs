@@ -34,8 +34,8 @@ namespace Torch.Managers.PatchManager.Transpile
         public MethodContext(MethodBase method)
         {
             Method = method;
-                _msilBytes = Method.GetMethodBody().GetILAsByteArray();
-                TokenResolver = new NormalTokenResolver(method);
+            _msilBytes = Method.GetMethodBody().GetILAsByteArray();
+            TokenResolver = new NormalTokenResolver(method);
         }
 
         public void Read()
@@ -56,7 +56,7 @@ namespace Torch.Managers.PatchManager.Transpile
                     var instructionValue = (short)memory.ReadByte();
                     if (Prefixes.Contains(instructionValue))
                     {
-                        instructionValue = (short) ((instructionValue << 8) | memory.ReadByte());
+                        instructionValue = (short)((instructionValue << 8) | memory.ReadByte());
                         count++;
                     }
                     if (!OpCodeLookup.TryGetValue(instructionValue, out OpCode opcode))
@@ -65,7 +65,7 @@ namespace Torch.Managers.PatchManager.Transpile
                         throw new Exception($"Opcode said it was {opcode.Size} but we read {count}");
                     var instruction = new MsilInstruction(opcode)
                     {
-                        Offset = (int) memory.Position
+                        Offset = (int)memory.Position
                     };
                     _instructions.Add(instruction);
                     instruction.Operand?.Read(this, reader);
@@ -106,9 +106,9 @@ namespace Torch.Managers.PatchManager.Transpile
                 var opcode = (OpCode)field.GetValue(null);
                 if (opcode.OpCodeType != OpCodeType.Nternal)
                     OpCodeLookup.Add(opcode.Value, opcode);
-                if ((ushort) opcode.Value > 0xFF)
+                if ((ushort)opcode.Value > 0xFF)
                 {
-                    Prefixes.Add((short) ((ushort) opcode.Value >> 8));
+                    Prefixes.Add((short)((ushort)opcode.Value >> 8));
                 }
             }
         }

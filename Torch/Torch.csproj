@@ -159,6 +159,7 @@
     <Compile Include="Managers\ChatManager\ChatManagerClient.cs" />
     <Compile Include="Managers\ChatManager\ChatManagerServer.cs" />
     <Compile Include="Managers\DependencyManager.cs" />
+    <Compile Include="Managers\KeenLogManager.cs" />
     <Compile Include="Managers\PatchManager\AssemblyMemory.cs" />
     <Compile Include="Managers\PatchManager\DecoratedMethod.cs" />
     <Compile Include="Managers\PatchManager\EmitExtensions.cs" />

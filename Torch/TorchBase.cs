@@ -24,6 +24,7 @@ using Torch.API.Session;
 using Torch.Commands;
 using Torch.Managers;
 using Torch.Managers.ChatManager;
+using Torch.Managers.PatchManager;
 using Torch.Utils;
 using Torch.Session;
 using VRage.Collections;
@@ -119,6 +120,8 @@ namespace Torch
             sessionManager.AddFactory((x) => new EntityManager(this));
 
             Managers.AddManager(sessionManager);
+            Managers.AddManager(new PatchManager(this));
+            Managers.AddManager(new KeenLogManager(this));
             Managers.AddManager(new FilesystemManager(this));
             Managers.AddManager(new UpdateManager(this));
             Managers.AddManager(Plugins);

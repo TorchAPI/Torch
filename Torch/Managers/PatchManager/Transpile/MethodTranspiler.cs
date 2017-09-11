@@ -28,18 +28,19 @@ namespace Torch.Managers.PatchManager.Transpile
 
         private static IEnumerable<MsilInstruction> FixBranchAndReturn(IEnumerable<MsilInstruction> insn, Label? retTarget)
         {
-            foreach (var i in insn)
+            foreach (MsilInstruction i in insn)
             {
                 if (retTarget.HasValue && i.OpCode == OpCodes.Ret)
                 {
-                    var j = new MsilInstruction(OpCodes.Br);
-                    ((MsilOperandBrTarget)j.Operand).Target = new MsilLabel(retTarget.Value);
+                    MsilInstruction j = new MsilInstruction(OpCodes.Br).InlineTarget(new MsilLabel(retTarget.Value));
+                    foreach (MsilLabel l in i.Labels)
+                        j.Labels.Add(l);
                     yield return j;
                     continue;
                 }
                 if (_opcodeReplaceRule.TryGetValue(i.OpCode, out OpCode replaceOpcode))
                 {
-                    yield return new MsilInstruction(replaceOpcode) { Operand = i.Operand };
+                    yield return i.CopyWith(replaceOpcode);
                     continue;
                 }
                 yield return i;
@@ -62,6 +63,7 @@ namespace Torch.Managers.PatchManager.Transpile
                         _opcodeReplaceRule.Add(opcode, other.Value);
                 }
             }
+            _opcodeReplaceRule[OpCodes.Leave_S] = OpCodes.Leave;
         }
     }
 }

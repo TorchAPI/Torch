@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using Torch.Managers.PatchManager.Transpile;
+using Label = System.Windows.Controls.Label;
 
 namespace Torch.Managers.PatchManager.MSIL
 {
@@ -69,7 +70,7 @@ namespace Torch.Managers.PatchManager.MSIL
                     break;
                 case OperandType.ShortInlineI:
                     Operand = OpCode == OpCodes.Ldc_I4_S
-                        ? (MsilOperand) new MsilOperandInline.MsilOperandInt8(this)
+                        ? (MsilOperand)new MsilOperandInline.MsilOperandInt8(this)
                         : new MsilOperandInline.MsilOperandUInt8(this);
                     break;
                 case OperandType.ShortInlineR:
@@ -120,8 +121,21 @@ namespace Torch.Managers.PatchManager.MSIL
         /// <returns>This instruction</returns>
         public MsilInstruction InlineValue<T>(T o)
         {
-            ((MsilOperandInline<T>) Operand).Value = o;
+            ((MsilOperandInline<T>)Operand).Value = o;
             return this;
+        }
+
+        /// <summary>
+        /// Makes a copy of the instruction with a new opcode.
+        /// </summary>
+        /// <param name="code">The new opcode</param>
+        /// <returns>The copy</returns>
+        public MsilInstruction CopyWith(OpCode code)
+        {
+            var result = new MsilInstruction(code) { Operand = this.Operand };
+            foreach (MsilLabel x in Labels)
+                result.Labels.Add(x);
+            return result;
         }
 
         /// <summary>
@@ -131,7 +145,7 @@ namespace Torch.Managers.PatchManager.MSIL
         /// <returns>This instruction</returns>
         public MsilInstruction InlineTarget(MsilLabel label)
         {
-            ((MsilOperandBrTarget) Operand).Target = label;
+            ((MsilOperandBrTarget)Operand).Target = label;
             return this;
         }
 
