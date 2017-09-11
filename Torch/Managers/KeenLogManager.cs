@@ -61,7 +61,7 @@ namespace Torch.Managers
 
             _context.GetPattern(_logWriteLine).Prefixes.Add(Method(nameof(PrefixWriteLine)));
             _context.GetPattern(_logAppendToClosedLog).Prefixes.Add(Method(nameof(PrefixAppendToClosedLog)));
-            _context.GetPattern(_logWriteLineAndConsole).Prefixes.Add(Method(nameof(PrefixWriteLine)));
+            _context.GetPattern(_logWriteLineAndConsole).Prefixes.Add(Method(nameof(PrefixWriteLineConsole)));
 
             _context.GetPattern(_logWriteLineException).Prefixes.Add(Method(nameof(PrefixWriteLineException)));
             _context.GetPattern(_logAppendToClosedLogException).Prefixes.Add(Method(nameof(PrefixAppendToClosedLogException)));
@@ -96,9 +96,16 @@ namespace Torch.Managers
 
         private static bool PrefixWriteLine(MyLog __instance, string msg)
         {
+            _log.Trace(PrepareLog(__instance).Append(msg));
+            return false;
+        }
+
+        private static bool PrefixWriteLineConsole(MyLog __instance, string msg)
+        {
             _log.Info(PrepareLog(__instance).Append(msg));
             return false;
         }
+
         private static bool PrefixAppendToClosedLog(MyLog __instance, string text)
         {
             _log.Info(PrepareLog(__instance).Append(text));
