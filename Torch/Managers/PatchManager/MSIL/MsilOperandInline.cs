@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using Torch.Managers.PatchManager.Transpile;
@@ -21,6 +22,15 @@ namespace Torch.Managers.PatchManager.MSIL
         ///     Inline value
         /// </summary>
         public T Value { get; set; }
+
+        internal override void CopyTo(MsilOperand operand)
+        {
+            var lt = operand as MsilOperandInline<T>;
+            if (lt == null)
+                throw new ArgumentException($"Target {operand?.GetType().Name} must be of same type {GetType().Name}", nameof(operand));
+            lt.Value = Value;
+            ;
+        }
 
         /// <inheritdoc />
         public override string ToString()
@@ -66,7 +76,7 @@ namespace Torch.Managers.PatchManager.MSIL
             internal override void Read(MethodContext context, BinaryReader reader)
             {
                 Value =
-                    (sbyte) reader.ReadByte();
+                    (sbyte)reader.ReadByte();
             }
 
             internal override void Emit(LoggingIlGenerator generator)
@@ -209,16 +219,19 @@ namespace Torch.Managers.PatchManager.MSIL
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
-                Value =
-                    context.Method.GetParameters()[
-                        Instruction.OpCode.OperandType == OperandType.ShortInlineVar
-                            ? reader.ReadByte()
-                            : reader.ReadUInt16()];
+                int paramID =
+                    Instruction.OpCode.OperandType == OperandType.ShortInlineVar
+                        ? reader.ReadByte()
+                        : reader.ReadUInt16();
+                if (paramID == 0 && !context.Method.IsStatic)
+                    throw new ArgumentException("Haven't figured out how to ldarg with the \"this\" argument");
+                Value = context.Method.GetParameters()[paramID - (context.Method.IsStatic ? 0 : 1)];
             }
 
             internal override void Emit(LoggingIlGenerator generator)
             {
-                generator.Emit(Instruction.OpCode, Value.Position);
+                var methodInfo = Value.Member as MethodBase;
+                generator.Emit(Instruction.OpCode, Value.Position + (methodInfo != null && methodInfo.IsStatic ? 0 : 1));
             }
         }
 

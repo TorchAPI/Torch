@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using Torch.Managers.PatchManager.Transpile;
+using Torch.Utils;
 using Label = System.Windows.Controls.Label;
 
 namespace Torch.Managers.PatchManager.MSIL
@@ -13,8 +14,6 @@ namespace Torch.Managers.PatchManager.MSIL
     /// </summary>
     public class MsilInstruction
     {
-        private MsilOperand _operandBacking;
-
         /// <summary>
         ///     Creates a new instruction with the given opcode.
         /// </summary>
@@ -97,16 +96,7 @@ namespace Torch.Managers.PatchManager.MSIL
         /// <summary>
         ///     The operand for this instruction, or null.
         /// </summary>
-        public MsilOperand Operand
-        {
-            get => _operandBacking;
-            set
-            {
-                if (_operandBacking != null && value.GetType() != _operandBacking.GetType())
-                    throw new ArgumentException($"Operand for {OpCode.Name} must be {_operandBacking.GetType().Name}");
-                _operandBacking = value;
-            }
-        }
+        public MsilOperand Operand { get; }
 
         /// <summary>
         ///     Labels pointing to this instruction.
@@ -128,11 +118,12 @@ namespace Torch.Managers.PatchManager.MSIL
         /// <summary>
         /// Makes a copy of the instruction with a new opcode.
         /// </summary>
-        /// <param name="code">The new opcode</param>
+        /// <param name="newOpcode">The new opcode</param>
         /// <returns>The copy</returns>
-        public MsilInstruction CopyWith(OpCode code)
+        public MsilInstruction CopyWith(OpCode newOpcode)
         {
-            var result = new MsilInstruction(code) { Operand = this.Operand };
+            var result = new MsilInstruction(newOpcode);
+            Operand?.CopyTo(result.Operand);
             foreach (MsilLabel x in Labels)
                 result.Labels.Add(x);
             return result;
@@ -171,6 +162,29 @@ namespace Torch.Managers.PatchManager.MSIL
                 sb.Append(label).Append(": ");
             sb.Append(OpCode.Name).Append("\t").Append(Operand);
             return sb.ToString();
+        }
+
+
+
+#pragma warning disable 169
+        [ReflectedMethod(Name = "StackChange")]
+        private static Func<OpCode, int> _stackChange;
+#pragma warning restore 169
+
+        public int StackChange()
+        {
+            int num = _stackChange.Invoke(OpCode);
+            if ((OpCode == OpCodes.Call || OpCode == OpCodes.Callvirt || OpCode == OpCodes.Newobj) &&
+                Operand is MsilOperandInline<MethodBase> inline)
+            {
+                MethodBase op = inline.Value;
+                if (op is MethodInfo mi && mi.ReturnType != typeof(void))
+                    num++;
+                num -= op.GetParameters().Length;
+                if (!op.IsStatic && OpCode != OpCodes.Newobj)
+                    num--;
+            }
+            return num;
         }
     }
 }

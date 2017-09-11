@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection.Emit;
 using Torch.Managers.PatchManager.Transpile;
 
@@ -22,13 +23,21 @@ namespace Torch.Managers.PatchManager.MSIL
         {
             int val = Instruction.OpCode.OperandType == OperandType.InlineBrTarget
                 ? reader.ReadInt32()
-                : reader.ReadByte();
-            Target = context.LabelAt((int) reader.BaseStream.Position + val);
+                : reader.ReadSByte();
+            Target = context.LabelAt((int)reader.BaseStream.Position + val);
         }
 
         internal override void Emit(LoggingIlGenerator generator)
         {
             generator.Emit(Instruction.OpCode, Target.LabelFor(generator));
+        }
+
+        internal override void CopyTo(MsilOperand operand)
+        {
+            var lt = operand as MsilOperandBrTarget;
+            if (lt == null)
+                throw new ArgumentException($"Target {operand?.GetType().Name} must be of same type {GetType().Name}", nameof(operand));
+            lt.Target = Target;
         }
 
         /// <inheritdoc />

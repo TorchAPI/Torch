@@ -9,16 +9,17 @@ namespace Torch.Managers.PatchManager.Transpile
 {
     internal class MethodTranspiler
     {
-        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+        public static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         internal static void Transpile(MethodBase baseMethod, IEnumerable<MethodInfo> transpilers, LoggingIlGenerator output, Label? retLabel)
         {
             var context = new MethodContext(baseMethod);
             context.Read();
+            context.CheckIntegrity();
             _log.Trace("Input Method:");
             _log.Trace(context.ToHumanMsil);
 
-            var methodContent = (IEnumerable<MsilInstruction>) context.Instructions;
+            var methodContent = (IEnumerable<MsilInstruction>)context.Instructions;
             foreach (var transpiler in transpilers)
                 methodContent = (IEnumerable<MsilInstruction>)transpiler.Invoke(null, new object[] { methodContent });
             methodContent = FixBranchAndReturn(methodContent, retLabel);
@@ -35,15 +36,17 @@ namespace Torch.Managers.PatchManager.Transpile
                     MsilInstruction j = new MsilInstruction(OpCodes.Br).InlineTarget(new MsilLabel(retTarget.Value));
                     foreach (MsilLabel l in i.Labels)
                         j.Labels.Add(l);
+                    _log.Trace($"Replacing {i} with {j}");
                     yield return j;
-                    continue;
                 }
-                if (_opcodeReplaceRule.TryGetValue(i.OpCode, out OpCode replaceOpcode))
+                else if (_opcodeReplaceRule.TryGetValue(i.OpCode, out OpCode replaceOpcode))
                 {
-                    yield return i.CopyWith(replaceOpcode);
-                    continue;
+                    var result = i.CopyWith(replaceOpcode);
+                    _log.Trace($"Replacing {i} with {result}");
+                    yield return result;
                 }
-                yield return i;
+                else
+                    yield return i;
             }
         }
 
@@ -57,7 +60,7 @@ namespace Torch.Managers.PatchManager.Transpile
                 if (opcode.OperandType == OperandType.ShortInlineBrTarget &&
                     opcode.Name.EndsWith(".s", StringComparison.OrdinalIgnoreCase))
                 {
-                    var other = (OpCode?) typeof(OpCodes).GetField(field.Name.Substring(0, field.Name.Length - 2),
+                    var other = (OpCode?)typeof(OpCodes).GetField(field.Name.Substring(0, field.Name.Length - 2),
                         BindingFlags.Static | BindingFlags.Public)?.GetValue(null);
                     if (other.HasValue && other.Value.OperandType == OperandType.InlineBrTarget)
                         _opcodeReplaceRule.Add(opcode, other.Value);

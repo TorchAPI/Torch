@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
 using Torch.Managers.PatchManager.Transpile;
@@ -19,6 +20,20 @@ namespace Torch.Managers.PatchManager.MSIL
         /// </summary>
         public MsilLabel[] Labels { get; set; }
 
+
+        internal override void CopyTo(MsilOperand operand)
+        {
+            var lt = operand as MsilOperandSwitch;
+            if (lt == null)
+                throw new ArgumentException($"Target {operand?.GetType().Name} must be of same type {GetType().Name}", nameof(operand));
+            if (Labels == null)
+                lt.Labels = null;
+            else
+            {
+                lt.Labels = new MsilLabel[Labels.Length];
+                Array.Copy(Labels, lt.Labels, Labels.Length);
+            }
+        }
         internal override void Read(MethodContext context, BinaryReader reader)
         {
             int length = reader.ReadInt32();
