@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
 using Sandbox.Engine.Multiplayer;
 using Torch.API;
 
@@ -389,8 +390,9 @@ namespace Torch.Utils
     /// </summary>
     public class ReflectedManager
     {
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private static readonly string[] _namespaceBlacklist = new[] {
-            "System", "VRage", "Sandbox", "SpaceEngineers"
+            "System", "VRage", "Sandbox", "SpaceEngineers", "Microsoft"
         };
 
         /// <summary>
@@ -426,11 +428,28 @@ namespace Torch.Utils
         {
             if (_processedTypes.Add(t))
             {
+                if (string.IsNullOrWhiteSpace(t.Namespace))
+                    return;
                 foreach (string ns in _namespaceBlacklist)
                     if (t.FullName.StartsWith(ns))
                         return;
-                foreach (FieldInfo field in t.GetFields(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-                    Process(field);
+                foreach (FieldInfo field in t.GetFields(BindingFlags.Static | BindingFlags.Instance |
+                                                        BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    try
+                    {
+#if DEBUG
+                        if (Process(field))
+                            _log?.Trace($"Field {field.DeclaringType?.FullName}#{field.Name} = {field.GetValue(null) ?? "null"}");
+#else
+                        Process(field);
+#endif
+                    }
+                    catch (Exception e)
+                    {
+                        _log?.Error(e.InnerException ?? e, $"Unable to fill {field.DeclaringType?.FullName}#{field.Name}. {(e.InnerException ?? e).Message}");
+                    }
+                }
             }
         }
 
@@ -484,7 +503,8 @@ namespace Torch.Utils
             {
                 if (!field.IsStatic)
                     throw new ArgumentException("Field must be static to be reflected");
-                field.SetValue(null, new Func<ReflectedEventReplacer>(() => new ReflectedEventReplacer(reflectedEventReplacer)));
+                field.SetValue(null,
+                    new Func<ReflectedEventReplacer>(() => new ReflectedEventReplacer(reflectedEventReplacer)));
                 return true;
             }
             return false;
@@ -502,14 +522,14 @@ namespace Torch.Utils
                 case ReflectedFieldInfoAttribute rfia:
                     info = GetFieldPropRecursive(rfia.Type, rfia.Name,
                         BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public,
-                        (a, b, c) => a.GetField(b));
+                        (type, name, bindingFlags) => type.GetField(name, bindingFlags));
                     if (info == null)
                         throw new ArgumentException($"Unable to find field {rfia.Type.FullName}#{rfia.Name}");
                     break;
                 case ReflectedPropertyInfoAttribute rpia:
                     info = GetFieldPropRecursive(rpia.Type, rpia.Name,
                             BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public,
-                            (a, b, c) => a.GetProperty(b));
+                            (type, name, bindingFlags) => type.GetProperty(name, bindingFlags));
                     if (info == null)
                         throw new ArgumentException($"Unable to find property {rpia.Type.FullName}#{rpia.Name}");
                     break;
@@ -674,7 +694,7 @@ namespace Torch.Utils
             Expression instanceExpr = null;
             if (!isStatic)
             {
-                instanceExpr = trueType == paramExp[0].Type ? (Expression) paramExp[0] : Expression.Convert(paramExp[0], trueType);
+                instanceExpr = trueType == paramExp[0].Type ? (Expression)paramExp[0] : Expression.Convert(paramExp[0], trueType);
             }
 
             MemberExpression fieldExp = sourceField != null
