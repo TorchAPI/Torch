@@ -120,12 +120,13 @@ namespace Torch
             sessionManager.AddFactory((x) => new EntityManager(this));
 
             Managers.AddManager(sessionManager);
-            Managers.AddManager(new PatchManager(this));
-            Managers.AddManager(new KeenLogManager(this));
+            var patcher = new PatchManager(this);
+            GameStateInjector.Inject(patcher.AcquireContext());
+            Managers.AddManager(patcher);
+            //            Managers.AddManager(new KeenLogManager(this));
             Managers.AddManager(new FilesystemManager(this));
             Managers.AddManager(new UpdateManager(this));
             Managers.AddManager(Plugins);
-
             TorchAPI.Instance = this;
         }
 
@@ -269,6 +270,7 @@ namespace Torch
             MySession.OnUnloading += OnSessionUnloading;
             MySession.OnUnloaded += OnSessionUnloaded;
             RegisterVRagePlugin();
+            Managers.GetManager<PluginManager>().LoadPlugins();
             Managers.Attach();
             _init = true;
         }
@@ -383,5 +385,90 @@ namespace Torch
         {
             GetManager<IPluginManager>().UpdatePlugins();
         }
+
+
+        private TorchGameState _gameState = TorchGameState.Unloaded;
+
+        /// <inheritdoc/>
+        public TorchGameState GameState
+        {
+            get => _gameState;
+            private set
+            {
+                _gameState = value;
+                GameStateChanged?.Invoke(MySandboxGame.Static, _gameState);
+                Log.Info($"Game state changed {_gameState}");
+            }
+        }
+
+        /// <inheritdoc/>
+        public event TorchGameStateChangedDel GameStateChanged;
+
+        #region GameStateInjecting
+        private static class GameStateInjector
+        {
+#pragma warning disable 649
+            [ReflectedMethodInfo(typeof(MySandboxGame), nameof(MySandboxGame.Dispose))]
+            private static MethodInfo _sandboxGameDispose;
+            [ReflectedMethodInfo(typeof(MySandboxGame), "Initialize")]
+            private static MethodInfo _sandboxGameInit;
+#pragma warning restore 649
+
+            internal static void Inject(PatchContext target)
+            {
+                ConstructorInfo ctor = typeof(MySandboxGame).GetConstructor(new[] {typeof(string[])});
+                if (ctor == null)
+                    throw new ArgumentException("Can't find constructor MySandboxGame(string[])");
+                target.GetPattern(ctor).Prefixes.Add(MethodRef(nameof(PrefixConstructor)));
+                target.GetPattern(ctor).Suffixes.Add(MethodRef(nameof(SuffixConstructor)));
+                target.GetPattern(_sandboxGameInit).Prefixes.Add(MethodRef(nameof(PrefixInit)));
+                target.GetPattern(_sandboxGameInit).Suffixes.Add(MethodRef(nameof(SuffixInit)));
+                target.GetPattern(_sandboxGameDispose).Prefixes.Add(MethodRef(nameof(PrefixDispose)));
+                target.GetPattern(_sandboxGameDispose).Suffixes.Add(MethodRef(nameof(SuffixDispose)));
+            }
+
+            private static MethodInfo MethodRef(string name)
+            {
+                return typeof(GameStateInjector).GetMethod(name,
+                    BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            }
+
+            private static void PrefixConstructor()
+            {
+                if (Instance is TorchBase tb)
+                    tb.GameState = TorchGameState.Creating;
+            }
+
+            private static void SuffixConstructor()
+            {
+                if (Instance is TorchBase tb)
+                    tb.GameState = TorchGameState.Created;
+            }
+
+            private static void PrefixInit()
+            {
+                if (Instance is TorchBase tb)
+                    tb.GameState = TorchGameState.Loading;
+            }
+
+            private static void SuffixInit()
+            {
+                if (Instance is TorchBase tb)
+                    tb.GameState = TorchGameState.Loaded;
+            }
+
+            private static void PrefixDispose()
+            {
+                if (Instance is TorchBase tb)
+                    tb.GameState = TorchGameState.Unloading;
+            }
+
+            private static void SuffixDispose()
+            {
+                if (Instance is TorchBase tb)
+                    tb.GameState = TorchGameState.Unloaded;
+            }
+        }
+        #endregion
     }
 }

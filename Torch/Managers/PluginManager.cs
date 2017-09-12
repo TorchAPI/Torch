@@ -148,7 +148,7 @@ namespace Torch.Managers
             var dlls = Directory.GetFiles(PluginDir, "*.dll", SearchOption.AllDirectories);
             foreach (var dllPath in dlls)
             {
-                _log.Debug($"Loading plugin {dllPath}");
+                _log.Info($"Loading plugin {dllPath}");
                 var asm = Assembly.UnsafeLoadFrom(dllPath);
 
                 foreach (var type in asm.GetExportedTypes())

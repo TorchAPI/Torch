@@ -95,7 +95,6 @@ namespace Torch.Server
             MyGlobalTypeMetadata.Static.Init();
 
             GetManager<InstanceManager>().LoadInstance(Config.InstancePath);
-            Plugins.LoadPlugins();
         }
 
         private void InvokeBeforeRun()

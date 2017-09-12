@@ -103,6 +103,16 @@ namespace Torch.API
         /// Initialize the Torch instance.
         /// </summary>
         void Init();
+
+        /// <summary>
+        /// The current state of the game this instance of torch is controlling.
+        /// </summary>
+        TorchGameState GameState { get; }
+
+        /// <summary>
+        /// Event raised when <see cref="GameState"/> changes.
+        /// </summary>
+        event TorchGameStateChangedDel GameStateChanged;
     }
 
     /// <summary>
@@ -121,6 +131,6 @@ namespace Torch.API
     /// </summary>
     public interface ITorchClient : ITorchBase
     {
-        
+
     }
 }
