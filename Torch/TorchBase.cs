@@ -127,6 +127,13 @@ namespace Torch
             Managers.AddManager(new FilesystemManager(this));
             Managers.AddManager(new UpdateManager(this));
             Managers.AddManager(Plugins);
+            GameStateChanged += (game, state) =>
+            {
+                if (state != TorchGameState.Created)
+                    return;
+                // At this point flush the patches; it's safe.
+                patcher.Commit();
+            };
             TorchAPI.Instance = this;
         }
 
@@ -397,7 +404,6 @@ namespace Torch
             {
                 _gameState = value;
                 GameStateChanged?.Invoke(MySandboxGame.Static, _gameState);
-                Log.Info($"Game state changed {_gameState}");
             }
         }
 
