@@ -45,5 +45,11 @@ namespace Torch.Managers.PatchManager.MSIL
             Type = null;
             Name = null;
         }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"arg{Position:X4}({Type?.Name ?? "unknown"})";
+        }
     }
 }
