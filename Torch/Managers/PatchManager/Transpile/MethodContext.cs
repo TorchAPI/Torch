@@ -143,7 +143,7 @@ namespace Torch.Managers.PatchManager.Transpile
 
         public string ToHumanMsil()
         {
-            return string.Join("\n", _instructions.Select(x => $"IL_{x.Offset:X4}: {x.StackChange()} {x}"));
+            return string.Join("\n", _instructions.Select(x => $"IL_{x.Offset:X4}: {x.StackChange():+0;-#} {x}"));
         }
 
         private static readonly Dictionary<short, OpCode> OpCodeLookup;

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
@@ -103,6 +105,9 @@ namespace Torch.Managers.PatchManager.MSIL
         /// </summary>
         public HashSet<MsilLabel> Labels { get; } = new HashSet<MsilLabel>();
 
+
+        private static readonly ConcurrentDictionary<Type, PropertyInfo> _setterInfoForInlines = new ConcurrentDictionary<Type, PropertyInfo>();
+
         /// <summary>
         ///     Sets the inline value for this instruction.
         /// </summary>
@@ -111,6 +116,23 @@ namespace Torch.Managers.PatchManager.MSIL
         /// <returns>This instruction</returns>
         public MsilInstruction InlineValue<T>(T o)
         {
+            Type type = typeof(T);
+            while (type != null)
+            {
+                if (!_setterInfoForInlines.TryGetValue(type, out PropertyInfo target))
+                {
+                    Type genType = typeof(MsilOperandInline<>).MakeGenericType(type);
+                    target = genType.GetProperty(nameof(MsilOperandInline<int>.Value));
+                    _setterInfoForInlines[type] = target;
+                }
+                Debug.Assert(target?.DeclaringType != null);
+                if (target.DeclaringType.IsInstanceOfType(Operand))
+                {
+                    target.SetValue(Operand, o);
+                    return this;
+                }
+                type = type.BaseType;
+            }
             ((MsilOperandInline<T>)Operand).Value = o;
             return this;
         }

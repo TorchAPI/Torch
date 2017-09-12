@@ -16,8 +16,8 @@ namespace Torch.Managers.PatchManager.Transpile
             var context = new MethodContext(baseMethod);
             context.Read();
             context.CheckIntegrity();
-            _log.Trace("Input Method:");
-            _log.Trace(context.ToHumanMsil);
+//            _log.Trace("Input Method:");
+//            _log.Trace(context.ToHumanMsil);
 
             var methodContent = (IEnumerable<MsilInstruction>)context.Instructions;
             foreach (var transpiler in transpilers)
