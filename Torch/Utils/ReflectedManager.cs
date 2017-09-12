@@ -74,6 +74,16 @@ namespace Torch.Utils
         /// Expected parameters of this method, or null if any parameters are accepted.
         /// </summary>
         public Type[] Parameters { get; set; } = null;
+
+        /// <summary>
+        /// Assembly qualified names of <see cref="Parameters"/>
+        /// </summary>
+        public string[] ParameterNames
+        {
+            get => Parameters.Select(x => x.AssemblyQualifiedName).ToArray();
+            set => Parameters = value?.Select(x => x == null ? null : Type.GetType(x)).ToArray();
+        }
+
         /// <summary>
         /// Expected return type of this method, or null if any return type is accepted.
         /// </summary>

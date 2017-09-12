@@ -11,17 +11,32 @@ namespace Torch.Managers.PatchManager.Transpile
     {
         public static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
-        internal static void Transpile(MethodBase baseMethod, IEnumerable<MethodInfo> transpilers, LoggingIlGenerator output, Label? retLabel)
+        internal static void Transpile(MethodBase baseMethod, Func<Type, MsilLocal> localCreator, IEnumerable<MethodInfo> transpilers, LoggingIlGenerator output, Label? retLabel)
         {
             var context = new MethodContext(baseMethod);
             context.Read();
             context.CheckIntegrity();
-//            _log.Trace("Input Method:");
-//            _log.Trace(context.ToHumanMsil);
+            //            _log.Trace("Input Method:");
+            //            _log.Trace(context.ToHumanMsil);
 
             var methodContent = (IEnumerable<MsilInstruction>)context.Instructions;
-            foreach (var transpiler in transpilers)
-                methodContent = (IEnumerable<MsilInstruction>)transpiler.Invoke(null, new object[] { methodContent });
+            foreach (MethodInfo transpiler in transpilers)
+            {
+                var paramList = new List<object>();
+                foreach (var parameter in transpiler.GetParameters())
+                {
+                    if (parameter.Name.Equals("__methodBody"))
+                        paramList.Add(baseMethod.GetMethodBody());
+                    else if (parameter.Name.Equals("__localCreator"))
+                        paramList.Add(localCreator);
+                    else if (parameter.ParameterType == typeof(IEnumerable<MsilInstruction>))
+                        paramList.Add(methodContent);
+                    else
+                        throw new ArgumentException(
+                            $"Bad transpiler parameter type {parameter.ParameterType.FullName} {parameter.Name}");
+                }
+                methodContent = (IEnumerable<MsilInstruction>)transpiler.Invoke(null, paramList.ToArray());
+            }
             methodContent = FixBranchAndReturn(methodContent, retLabel);
             foreach (var k in methodContent)
                 k.Emit(output);

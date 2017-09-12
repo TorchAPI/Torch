@@ -7,6 +7,7 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using NLog;
+using Torch.Managers.PatchManager.MSIL;
 using Torch.Managers.PatchManager.Transpile;
 using Torch.Utils;
 
@@ -147,7 +148,7 @@ namespace Torch.Managers.PatchManager
             target.EmitComment("Prefixes End");
 
             target.EmitComment("Original Begin");
-            MethodTranspiler.Transpile(_method, Transpilers, target, labelAfterOriginalContent);
+            MethodTranspiler.Transpile(_method, (type) => new MsilLocal(target.DeclareLocal(type)), Transpilers, target, labelAfterOriginalContent);
             target.EmitComment("Original End");
 
             target.MarkLabel(labelAfterOriginalContent);

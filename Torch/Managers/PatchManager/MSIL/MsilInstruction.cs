@@ -67,7 +67,7 @@ namespace Torch.Managers.PatchManager.MSIL
                     if (OpCode.Name.IndexOf("loc", StringComparison.OrdinalIgnoreCase) != -1)
                         Operand = new MsilOperandInline.MsilOperandLocal(this);
                     else
-                        Operand = new MsilOperandInline.MsilOperandParameter(this);
+                        Operand = new MsilOperandInline.MsilOperandArgument(this);
                     break;
                 case OperandType.ShortInlineI:
                     Operand = OpCode == OpCodes.Ldc_I4_S
@@ -192,66 +192,6 @@ namespace Torch.Managers.PatchManager.MSIL
         [ReflectedMethod(Name = "StackChange")]
         private static Func<OpCode, int> _stackChange;
 #pragma warning restore 169
-
-
-        /// <summary>
-        /// Gets an instruction that represents the inverse of this load or store instruction.
-        /// </summary>
-        /// <remarks>
-        /// <example>
-        /// new MsilInstruction(OpCodes.Ldloc_0).StoreLoadInverse().OpCode == OpCodes.Stloc_0
-        /// </example>
-        /// </remarks>
-        /// <returns>Inverse</returns>
-        public MsilInstruction StoreLoadInverse()
-        {
-            if (OpCode == OpCodes.Ldloc)
-                return new MsilInstruction(OpCodes.Stloc).InlineValue(
-                    ((MsilOperandInline<LocalVariableInfo>)Operand).Value);
-            if (OpCode == OpCodes.Ldloc_S)
-                return new MsilInstruction(OpCodes.Stloc_S).InlineValue(
-                    ((MsilOperandInline<LocalVariableInfo>)Operand).Value);
-            if (OpCode == OpCodes.Ldloc_0)
-                return new MsilInstruction(OpCodes.Stloc_0);
-            if (OpCode == OpCodes.Ldloc_1)
-                return new MsilInstruction(OpCodes.Stloc_1);
-            if (OpCode == OpCodes.Ldloc_2)
-                return new MsilInstruction(OpCodes.Stloc_2);
-            if (OpCode == OpCodes.Ldloc_3)
-                return new MsilInstruction(OpCodes.Stloc_3);
-
-            if (OpCode == OpCodes.Stloc)
-                return new MsilInstruction(OpCodes.Ldloc).InlineValue(
-                    ((MsilOperandInline<LocalVariableInfo>)Operand).Value);
-            if (OpCode == OpCodes.Stloc_S)
-                return new MsilInstruction(OpCodes.Ldloc_S).InlineValue(
-                    ((MsilOperandInline<LocalVariableInfo>)Operand).Value);
-            if (OpCode == OpCodes.Stloc_0)
-                return new MsilInstruction(OpCodes.Ldloc_0);
-            if (OpCode == OpCodes.Stloc_1)
-                return new MsilInstruction(OpCodes.Ldloc_1);
-            if (OpCode == OpCodes.Stloc_2)
-                return new MsilInstruction(OpCodes.Ldloc_2);
-            if (OpCode == OpCodes.Stloc_3)
-                return new MsilInstruction(OpCodes.Ldloc_3);
-
-            if (OpCode == OpCodes.Ldarg)
-                return new MsilInstruction(OpCodes.Starg).InlineValue(
-                    ((MsilOperandInline<ParameterInfo>)Operand).Value);
-            if (OpCode == OpCodes.Ldarg_S)
-                return new MsilInstruction(OpCodes.Starg_S).InlineValue(
-                    ((MsilOperandInline<ParameterInfo>)Operand).Value);
-            // TODO Ldarg_0 etc
-
-            if (OpCode == OpCodes.Starg)
-                return new MsilInstruction(OpCodes.Ldarg).InlineValue(
-                    ((MsilOperandInline<ParameterInfo>)Operand).Value);
-            if (OpCode == OpCodes.Starg_S)
-                return new MsilInstruction(OpCodes.Ldarg_S).InlineValue(
-                    ((MsilOperandInline<ParameterInfo>)Operand).Value);
-
-            throw new ArgumentException($"Can't invert the instruction {this}");
-        }
 
         /// <summary>
         /// Estimates the stack delta for this instruction.

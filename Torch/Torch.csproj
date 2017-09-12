@@ -165,7 +165,10 @@
     <Compile Include="Managers\PatchManager\EmitExtensions.cs" />
     <Compile Include="Managers\PatchManager\MSIL\ITokenResolver.cs" />
     <Compile Include="Managers\PatchManager\MSIL\MsilInstruction.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilInstructionExtensions.cs" />
     <Compile Include="Managers\PatchManager\MSIL\MsilLabel.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilArgument.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilLocal.cs" />
     <Compile Include="Managers\PatchManager\MSIL\MsilOperand.cs" />
     <Compile Include="Managers\PatchManager\MSIL\MsilOperandBrTarget.cs" />
     <Compile Include="Managers\PatchManager\MSIL\MsilOperandInline.cs" />
