@@ -181,7 +181,7 @@
     <Compile Include="Managers\MultiplayerManager.cs" />
     <Compile Include="Managers\UpdateManager.cs" />
     <Compile Include="Persistent.cs" />
-    <Compile Include="PluginManifest.cs" />
+    <Compile Include="Plugins\PluginManifest.cs" />
     <Compile Include="Utils\Reflection.cs" />
     <Compile Include="Managers\ScriptingManager.cs" />
     <Compile Include="Utils\TorchAssemblyResolver.cs" />
@@ -198,7 +198,7 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="ViewModels\PlayerViewModel.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />
-    <Compile Include="Managers\PluginManager.cs" />
+    <Compile Include="Plugins\PluginManager.cs" />
     <Compile Include="ViewModels\PluginViewModel.cs" />
     <Compile Include="Views\CollectionEditor.xaml.cs">
       <DependentUpon>CollectionEditor.xaml</DependentUpon>

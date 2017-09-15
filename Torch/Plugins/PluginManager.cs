@@ -99,30 +99,42 @@ namespace Torch.Managers
             var pluginItems = Directory.EnumerateFiles(PluginDir, "*.zip").Union(Directory.EnumerateDirectories(PluginDir));
             Parallel.ForEach(pluginItems, async item =>
             {
-                var path = Path.Combine(PluginDir, item);
-                var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
-                var manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
-                if (manifest == null)
+                PluginManifest manifest = null;
+                try
                 {
-                    _log.Warn($"Item '{item}' is missing a manifest, skipping update check.");
-                    return;
+                    var path = Path.Combine(PluginDir, item);
+                    var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
+                    manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
+                    if (manifest == null)
+                    {
+                        _log.Warn($"Item '{item}' is missing a manifest, skipping update check.");
+                        return;
+                    }
+
+                    manifest.Version.TryExtractVersion(out Version currentVersion);
+                    var latest = await GetLatestArchiveAsync(manifest.Repository).ConfigureAwait(false);
+
+                    if (currentVersion == null || latest.Item1 == null)
+                    {
+                        _log.Error($"Error parsing version from manifest or GitHub for plugin '{manifest.Name}.'");
+                        return;
+                    }
+
+                    if (latest.Item1 <= currentVersion)
+                    {
+                        _log.Debug($"{manifest.Name} {manifest.Version} is up to date.");
+                        return;
+                    }
+
+                    _log.Info($"Updating plugin '{manifest.Name}' from {currentVersion} to {latest.Item1}.");
+                    await UpdatePluginAsync(path, latest.Item2).ConfigureAwait(false);
+                    count++;
                 }
-
-                manifest.Version.TryExtractVersion(out Version currentVersion);
-                var latest = await GetLatestArchiveAsync(manifest.Repository).ConfigureAwait(false);
-
-                if (currentVersion == null || latest.Item1 == null)
+                catch (Exception e)
                 {
-                    _log.Error($"Error parsing version from manifest or GitHub for plugin '{manifest.Name}.'");
-                    return;
+                    _log.Error($"An error occurred updating the plugin {manifest.Name}.");
+                    _log.Error(e);
                 }
-
-                if (latest.Item1 <= currentVersion)
-                    return;
-
-                _log.Info($"Updating plugin '{manifest.Name}' from {currentVersion} to {latest.Item1}.");
-                await UpdatePlugin(path, latest.Item2).ConfigureAwait(false);
-                count++;
             });
 
             _log.Info($"Updated {count} plugins.");
@@ -155,7 +167,7 @@ namespace Torch.Managers
             }
         }
 
-        private Task UpdatePlugin(string localPath, string downloadUrl)
+        private Task UpdatePluginAsync(string localPath, string downloadUrl)
         {
             if (File.Exists(localPath))
                 File.Delete(localPath);
@@ -238,9 +250,7 @@ namespace Torch.Managers
 
                     using (var stream = new StreamReader(entry.Open()))
                     {
-                        var ser = new XmlSerializer(typeof(PluginManifest));
-                        var manifest = (PluginManifest)ser.Deserialize(stream);
-                        return manifest;
+                        return PluginManifest.Load(stream);
                     }
                 }
             }
@@ -266,7 +276,7 @@ namespace Torch.Managers
 
                     if (pluginType != null)
                     {
-                        _log.Error($"The plugin '{manifest.Name}' has multiple implementations of {nameof(ITorchPlugin)}.");
+                        _log.Error($"The plugin '{manifest.Name}' has multiple implementations of {nameof(ITorchPlugin)}, not loading.");
                         return;
                     }
 
@@ -276,7 +286,7 @@ namespace Torch.Managers
 
             if (pluginType == null)
             {
-                _log.Error($"The plugin '{manifest.Name}' does not have an implementation of {nameof(ITorchPlugin)}.");
+                _log.Error($"The plugin '{manifest.Name}' does not have an implementation of {nameof(ITorchPlugin)}, not loading.");
                 return;
             }
 
@@ -301,6 +311,7 @@ namespace Torch.Managers
             _commandManager.RegisterPluginCommands(plugin);
         }
 
+        /// <inheritdoc cref="IEnumerable.GetEnumerator"/>
         public IEnumerator<ITorchPlugin> GetEnumerator()
         {
             return Plugins.Values.GetEnumerator();
