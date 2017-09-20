@@ -34,6 +34,11 @@ namespace Torch.API.Managers
         event MessageReceivedDel MessageReceived;
 
         /// <summary>
+        /// List of the banned SteamID's
+        /// </summary>
+        IReadOnlyList<ulong> BannedPlayers { get; }
+
+        /// <summary>
         /// Send a chat message to all or one specific player.
         /// </summary>
         void SendMessage(string message, string author = "Server", long playerId = 0, string font = MyFontEnum.Blue);
@@ -47,6 +52,13 @@ namespace Torch.API.Managers
         /// Bans or unbans a player from the game.
         /// </summary>
         void BanPlayer(ulong steamId, bool banned = true);
+
+        /// <summary>
+        /// Checks if the player with the given SteamID is banned.
+        /// </summary>
+        /// <param name="steamId">The SteamID of the player.</param>
+        /// <returns>True if the player is banned; otherwise false.</returns>
+        bool IsBanned(ulong steamId);
 
         /// <summary>
         /// Gets a player by their Steam64 ID or returns null if the player isn't found.

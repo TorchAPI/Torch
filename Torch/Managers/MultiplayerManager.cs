@@ -50,6 +50,10 @@ namespace Torch.Managers
 
         public IList<IChatMessage> ChatHistory { get; } = new ObservableList<IChatMessage>();
         public ObservableDictionary<ulong, PlayerViewModel> Players { get; } = new ObservableDictionary<ulong, PlayerViewModel>();
+
+        /// <inheritdoc />
+        public IReadOnlyList<ulong> BannedPlayers => MySandboxGame.ConfigDedicated.Banned;
+
         public IMyPlayer LocalPlayer => MySession.Static.LocalHumanPlayer;
         private static readonly Logger Log = LogManager.GetLogger(nameof(MultiplayerManager));
         private static readonly Logger ChatLog = LogManager.GetLogger("Chat");
@@ -97,6 +101,9 @@ namespace Torch.Managers
                     MyMultiplayer.Static.BanClient(_gameOwnerIds[steamId], banned);
             });
         }
+
+        /// <inheritdoc />
+        public bool IsBanned(ulong steamId) => IsClientBanned.Invoke(MyMultiplayer.Static, steamId) || MySandboxGame.ConfigDedicated.Banned.Contains(steamId);
 
         /// <inheritdoc />
         public IMyPlayer GetPlayerByName(string name)
@@ -256,7 +263,7 @@ namespace Torch.Managers
         private void ValidateAuthTicketResponse(ulong steamID, JoinResult response, ulong steamOwner)
         {
             Log.Debug($"ValidateAuthTicketResponse(user={steamID}, response={response}, owner={steamOwner}");
-            if (IsClientBanned.Invoke(MyMultiplayer.Static, steamOwner) || MySandboxGame.ConfigDedicated.Banned.Contains(steamOwner))
+            if (IsBanned(steamOwner))
             {
                 UserRejected.Invoke((MyDedicatedServerBase)MyMultiplayer.Static, steamID, JoinResult.BannedByAdmins);
                 RaiseClientKicked.Invoke((MyDedicatedServerBase)MyMultiplayer.Static, steamID);
