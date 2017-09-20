@@ -10,7 +10,7 @@ using Torch.Managers;
 
 namespace Torch.Client.Manager
 {
-    public class MultiplayerManagerLobby : MultiplayerManagerBase, IMultiplayerManagerServer
+    public class MultiplayerManagerLobby : MultiplayerManagerBase
     {
         /// <inheritdoc />
         public MultiplayerManagerLobby(ITorchBase torch) : base(torch) { }
