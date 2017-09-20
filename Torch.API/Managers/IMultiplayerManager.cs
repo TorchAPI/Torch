@@ -34,7 +34,7 @@ namespace Torch.API.Managers
         event MessageReceivedDel MessageReceived;
 
         /// <summary>
-        /// List of banned SteamID's
+        /// List of the banned SteamID's
         /// </summary>
         List<ulong> BannedPlayers { get; }
 

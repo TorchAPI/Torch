@@ -50,7 +50,12 @@ namespace Torch.Managers
 
         public IList<IChatMessage> ChatHistory { get; } = new ObservableList<IChatMessage>();
         public ObservableDictionary<ulong, PlayerViewModel> Players { get; } = new ObservableDictionary<ulong, PlayerViewModel>();
+        
+        /// <summary>
+        /// List of the banned SteamID's
+        /// </summary>        
         public List<ulong> BannedPlayers => MySandboxGame.ConfigDedicated.Banned;
+
         public IMyPlayer LocalPlayer => MySession.Static.LocalHumanPlayer;
         private static readonly Logger Log = LogManager.GetLogger(nameof(MultiplayerManager));
         private static readonly Logger ChatLog = LogManager.GetLogger("Chat");
