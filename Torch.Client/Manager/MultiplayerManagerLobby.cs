@@ -13,6 +13,9 @@ namespace Torch.Client.Manager
     public class MultiplayerManagerLobby : MultiplayerManagerBase, IMultiplayerManagerServer
     {
         /// <inheritdoc />
+        public IReadOnlyList<ulong> BannedPlayers => new List<ulong>();
+
+        /// <inheritdoc />
         public MultiplayerManagerLobby(ITorchBase torch) : base(torch) { }
 
         /// <inheritdoc />
@@ -20,6 +23,9 @@ namespace Torch.Client.Manager
 
         /// <inheritdoc />
         public void BanPlayer(ulong steamId, bool banned = true) => Torch.Invoke(() => MyMultiplayer.Static.BanClient(steamId, banned));
+
+        /// <inheritdoc />
+        public bool IsBanned(ulong steamId) => false;
 
         /// <inheritdoc/>
         public override void Attach()

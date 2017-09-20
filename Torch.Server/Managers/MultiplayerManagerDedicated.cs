@@ -31,6 +31,9 @@ namespace Torch.Server.Managers
         private static Func<MyDedicatedServerBase, HashSet<ulong>> _waitingForGroup;
 #pragma warning restore 649
 
+        /// <inheritdoc />
+        public IReadOnlyList<ulong> BannedPlayers => MySandboxGame.ConfigDedicated.Banned;
+
         private Dictionary<ulong, ulong> _gameOwnerIds = new Dictionary<ulong, ulong>();
 
         /// <inheritdoc />
@@ -49,6 +52,9 @@ namespace Torch.Server.Managers
                     MyMultiplayer.Static.BanClient(_gameOwnerIds[steamId], banned);
             });
         }
+
+        /// <inheritdoc />
+        public bool IsBanned(ulong steamId) => _isClientBanned.Invoke(MyMultiplayer.Static, steamId) || MySandboxGame.ConfigDedicated.Banned.Contains(steamId);
 
         /// <inheritdoc/>
         public override void Attach()
@@ -107,7 +113,7 @@ namespace Torch.Server.Managers
         private void ValidateAuthTicketResponse(ulong steamID, JoinResult response, ulong steamOwner)
         {
             _log.Debug($"ValidateAuthTicketResponse(user={steamID}, response={response}, owner={steamOwner}");
-            if (_isClientBanned.Invoke(MyMultiplayer.Static, steamOwner) || MySandboxGame.ConfigDedicated.Banned.Contains(steamOwner))
+            if (IsBanned(steamOwner))
             {
                 _userRejected.Invoke((MyDedicatedServerBase)MyMultiplayer.Static, steamID, JoinResult.BannedByAdmins);
                 _raiseClientKicked.Invoke((MyDedicatedServerBase)MyMultiplayer.Static, steamID);
