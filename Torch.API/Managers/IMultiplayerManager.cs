@@ -34,6 +34,11 @@ namespace Torch.API.Managers
         event MessageReceivedDel MessageReceived;
 
         /// <summary>
+        /// List of banned SteamID's
+        /// </summary>
+        List<ulong> BannedPlayers { get; }
+
+        /// <summary>
         /// Send a chat message to all or one specific player.
         /// </summary>
         void SendMessage(string message, string author = "Server", long playerId = 0, string font = MyFontEnum.Blue);
