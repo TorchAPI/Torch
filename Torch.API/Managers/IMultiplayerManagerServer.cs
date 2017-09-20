@@ -20,5 +20,17 @@ namespace Torch.API.Managers
         /// Bans or unbans a player from the game.
         /// </summary>
         void BanPlayer(ulong steamId, bool banned = true);
+
+        /// <summary>
+        /// List of the banned SteamID's
+        /// </summary>        
+        List<ulong> BannedPlayers { get; }
+
+        /// <summary>
+        /// Checks if the player with the given SteamID is banned.
+        /// </summary>
+        /// <param name="steamId">The SteamID of the player.</param>
+        /// <returns>True if the player is banned; otherwise false.</returns>
+        bool IsBanned(ulong steamId);
     }
 }
