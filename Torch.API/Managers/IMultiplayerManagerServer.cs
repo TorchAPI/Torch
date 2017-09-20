@@ -24,7 +24,7 @@ namespace Torch.API.Managers
         /// <summary>
         /// List of the banned SteamID's
         /// </summary>        
-        List<ulong> BannedPlayers { get; }
+        IReadOnlyList<ulong> BannedPlayers { get; }
 
         /// <summary>
         /// Checks if the player with the given SteamID is banned.

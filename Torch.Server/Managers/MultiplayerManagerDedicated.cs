@@ -32,7 +32,7 @@ namespace Torch.Server.Managers
 #pragma warning restore 649
 
         /// <inheritdoc />
-        public List<ulong> BannedPlayers => MySandboxGame.ConfigDedicated.Banned;
+        public IReadOnlyList<ulong> BannedPlayers => MySandboxGame.ConfigDedicated.Banned;
 
         private Dictionary<ulong, ulong> _gameOwnerIds = new Dictionary<ulong, ulong>();
 
