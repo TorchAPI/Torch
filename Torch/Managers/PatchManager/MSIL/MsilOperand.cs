@@ -18,6 +18,8 @@ namespace Torch.Managers.PatchManager.MSIL
         /// </summary>
         public MsilInstruction Instruction { get; }
 
+        internal abstract void CopyTo(MsilOperand operand);
+
         internal abstract void Read(MethodContext context, BinaryReader reader);
 
         internal abstract void Emit(LoggingIlGenerator generator);

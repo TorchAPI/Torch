@@ -182,6 +182,9 @@
       <HintPath>..\GameBinaries\VRage.Scripting.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="VRage.Steam">
+      <HintPath>..\GameBinaries\VRage.Steam.dll</HintPath>
+    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -191,6 +194,7 @@
       <Link>Properties\AssemblyVersion.cs</Link>
     </Compile>
     <Compile Include="ListBoxExtensions.cs" />
+    <Compile Include="Managers\MultiplayerManagerDedicated.cs" />
     <Compile Include="Managers\InstanceManager.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Initializer.cs" />

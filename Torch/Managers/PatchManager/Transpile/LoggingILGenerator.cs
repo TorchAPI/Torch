@@ -52,7 +52,7 @@ namespace Torch.Managers.PatchManager.Transpile
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, LocalBuilder)"/>
         public void Emit(OpCode op, LocalBuilder arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding} L:{arg.LocalIndex} {arg.LocalType}");
+            _log?.Trace($"Emit\t{op,_opcodePadding} Local:{arg.LocalIndex}/{arg.LocalType}");
             Backing.Emit(op, arg);
         }
 

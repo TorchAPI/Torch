@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
 using Sandbox.Engine.Multiplayer;
 using Torch.API;
 
@@ -34,6 +35,81 @@ namespace Torch.Utils
         }
     }
 
+    #region MemberInfoAttributes
+    /// <summary>
+    /// Indicates that this field should contain the <see cref="System.Reflection.FieldInfo"/> instance for the given field.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field)]
+    public class ReflectedFieldInfoAttribute : ReflectedMemberAttribute
+    {
+        /// <summary>
+        /// Creates a reflected field info attribute using the given type and name.
+        /// </summary>
+        /// <param name="type">Type that contains the member</param>
+        /// <param name="name">Name of the member</param>
+        public ReflectedFieldInfoAttribute(Type type, string name)
+        {
+            Type = type;
+            Name = name;
+        }
+    }
+
+    /// <summary>
+    /// Indicates that this field should contain the <see cref="System.Reflection.MethodInfo"/> instance for the given method.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field)]
+    public class ReflectedMethodInfoAttribute : ReflectedMemberAttribute
+    {
+        /// <summary>
+        /// Creates a reflected method info attribute using the given type and name.
+        /// </summary>
+        /// <param name="type">Type that contains the member</param>
+        /// <param name="name">Name of the member</param>
+        public ReflectedMethodInfoAttribute(Type type, string name)
+        {
+            Type = type;
+            Name = name;
+        }
+        /// <summary>
+        /// Expected parameters of this method, or null if any parameters are accepted.
+        /// </summary>
+        public Type[] Parameters { get; set; } = null;
+
+        /// <summary>
+        /// Assembly qualified names of <see cref="Parameters"/>
+        /// </summary>
+        public string[] ParameterNames
+        {
+            get => Parameters.Select(x => x.AssemblyQualifiedName).ToArray();
+            set => Parameters = value?.Select(x => x == null ? null : Type.GetType(x)).ToArray();
+        }
+
+        /// <summary>
+        /// Expected return type of this method, or null if any return type is accepted.
+        /// </summary>
+        public Type ReturnType { get; set; } = null;
+    }
+
+    /// <summary>
+    /// Indicates that this field should contain the <see cref="System.Reflection.PropertyInfo"/> instance for the given property.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field)]
+    public class ReflectedPropertyInfoAttribute : ReflectedMemberAttribute
+    {
+        /// <summary>
+        /// Creates a reflected property info attribute using the given type and name.
+        /// </summary>
+        /// <param name="type">Type that contains the member</param>
+        /// <param name="name">Name of the member</param>
+        public ReflectedPropertyInfoAttribute(Type type, string name)
+        {
+            Type = type;
+            Name = name;
+        }
+    }
+    #endregion
+
+    #region FieldPropGetSet
     /// <summary>
     /// Indicates that this field should contain a delegate capable of retrieving the value of a field.
     /// </summary>
@@ -81,7 +157,9 @@ namespace Torch.Utils
     public class ReflectedSetterAttribute : ReflectedMemberAttribute
     {
     }
+    #endregion
 
+    #region Invoker
     /// <summary>
     /// Indicates that this field should contain a delegate capable of invoking an instance method.
     /// </summary>
@@ -138,14 +216,193 @@ namespace Torch.Utils
     public class ReflectedStaticMethodAttribute : ReflectedMethodAttribute
     {
     }
+    #endregion
+
+    #region EventReplacer
+    /// <summary>
+    /// Instance of statefully replacing and restoring the callbacks of an event.
+    /// </summary>
+    public class ReflectedEventReplacer
+    {
+        private const BindingFlags BindFlagAll = BindingFlags.Static |
+                                                 BindingFlags.Instance |
+                                                 BindingFlags.Public |
+                                                 BindingFlags.NonPublic;
+
+        private object _instance;
+        private Func<IEnumerable<Delegate>> _backingStoreReader;
+        private Action<Delegate> _callbackAdder;
+        private Action<Delegate> _callbackRemover;
+        private readonly ReflectedEventReplaceAttribute _attributes;
+        private readonly HashSet<Delegate> _registeredCallbacks = new HashSet<Delegate>();
+        private readonly MethodInfo _targetMethodInfo;
+
+        internal ReflectedEventReplacer(ReflectedEventReplaceAttribute attr)
+        {
+            _attributes = attr;
+            FieldInfo backingStore = GetEventBackingField(attr.EventName, attr.EventDeclaringType);
+            if (backingStore == null)
+                throw new ArgumentException($"Unable to find backing field for event {attr.EventDeclaringType.FullName}#{attr.EventName}");
+            EventInfo evtInfo = ReflectedManager.GetFieldPropRecursive(attr.EventDeclaringType, attr.EventName, BindFlagAll, (a, b, c) => a.GetEvent(b, c));
+            if (evtInfo == null)
+                throw new ArgumentException($"Unable to find event info for event {attr.EventDeclaringType.FullName}#{attr.EventName}");
+            _backingStoreReader = () => GetEventsInternal(_instance, backingStore);
+            _callbackAdder = (x) => evtInfo.AddEventHandler(_instance, x);
+            _callbackRemover = (x) => evtInfo.RemoveEventHandler(_instance, x);
+            if (attr.TargetParameters == null)
+            {
+                _targetMethodInfo = attr.TargetDeclaringType.GetMethod(attr.TargetName, BindFlagAll);
+                if (_targetMethodInfo == null)
+                    throw new ArgumentException($"Unable to find method {attr.TargetDeclaringType.FullName}#{attr.TargetName} to replace");
+            }
+            else
+            {
+                _targetMethodInfo =
+                    attr.TargetDeclaringType.GetMethod(attr.TargetName, BindFlagAll, null, attr.TargetParameters, null);
+                if (_targetMethodInfo == null)
+                    throw new ArgumentException($"Unable to find method {attr.TargetDeclaringType.FullName}#{attr.TargetName}){string.Join(", ", attr.TargetParameters.Select(x => x.FullName))}) to replace");
+            }
+        }
+
+        /// <summary>
+        /// Test that this replacement can be performed.
+        /// </summary>
+        /// <param name="instance">The instance to operate on, or null if static</param>
+        /// <returns>true if possible, false if unsuccessful</returns>
+        public bool Test(object instance)
+        {
+            _instance = instance;
+            _registeredCallbacks.Clear();
+            foreach (Delegate callback in _backingStoreReader.Invoke())
+                if (callback.Method == _targetMethodInfo)
+                    _registeredCallbacks.Add(callback);
+
+            return _registeredCallbacks.Count > 0;
+        }
+
+        private Delegate _newCallback;
+
+        /// <summary>
+        /// Removes the target callback defined in the attribute and replaces it with the provided callback.
+        /// </summary>
+        /// <param name="newCallback">The new event callback</param>
+        /// <param name="instance">The instance to operate on, or null if static</param>
+        public void Replace(Delegate newCallback, object instance)
+        {
+            _instance = instance;
+            if (_newCallback != null)
+                throw new Exception("Reflected event replacer is in invalid state:  Replace when already replaced");
+            _newCallback = newCallback;
+            Test(instance);
+            if (_registeredCallbacks.Count == 0)
+                throw new Exception("Reflected event replacer is in invalid state:  Nothing to replace");
+            foreach (Delegate callback in _registeredCallbacks)
+                _callbackRemover.Invoke(callback);
+            _callbackAdder.Invoke(_newCallback);
+        }
+
+        /// <summary>
+        /// Checks if the callback is currently replaced
+        /// </summary>
+        public bool Replaced => _newCallback != null;
+
+        /// <summary>
+        /// Removes the callback added by <see cref="Replace"/> and puts the original callback back.
+        /// </summary>
+        /// <param name="instance">The instance to operate on, or null if static</param>
+        public void Restore(object instance)
+        {
+            _instance = instance;
+            if (_newCallback == null)
+                throw new Exception("Reflected event replacer is in invalid state:  Restore when not replaced");
+            _callbackRemover.Invoke(_newCallback);
+            foreach (Delegate callback in _registeredCallbacks)
+                _callbackAdder.Invoke(callback);
+            _newCallback = null;
+        }
+
+
+        private static readonly string[] _backingFieldForEvent = { "{0}", "<backing_store>{0}" };
+
+        private static FieldInfo GetEventBackingField(string eventName, Type baseType)
+        {
+            FieldInfo eventField = null;
+            Type type = baseType;
+            while (type != null && eventField == null)
+            {
+                for (var i = 0; i < _backingFieldForEvent.Length && eventField == null; i++)
+                    eventField = type.GetField(string.Format(_backingFieldForEvent[i], eventName), BindFlagAll);
+                type = type.BaseType;
+            }
+            return eventField;
+        }
+
+        private static IEnumerable<Delegate> GetEventsInternal(object instance, FieldInfo eventField)
+        {
+            if (eventField.GetValue(instance) is MulticastDelegate eventDel)
+            {
+                foreach (Delegate handle in eventDel.GetInvocationList())
+                    yield return handle;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Attribute used to indicate that the the given field, of type <![CDATA[Func<ReflectedEventReplacer>]]>, should be filled with
+    /// a function used to create a new event replacer.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field)]
+    public class ReflectedEventReplaceAttribute : Attribute
+    {
+        /// <summary>
+        /// Type that the event is declared in
+        /// </summary>
+        public Type EventDeclaringType { get; set; }
+        /// <summary>
+        /// Name of the event
+        /// </summary>
+        public string EventName { get; set; }
+
+        /// <summary>
+        /// Type that the method to replace is declared in
+        /// </summary>
+        public Type TargetDeclaringType { get; set; }
+        /// <summary>
+        /// Name of the method to replace
+        /// </summary>
+        public string TargetName { get; set; }
+        /// <summary>
+        /// Optional parameters of the method to replace.  Null to ignore.
+        /// </summary>
+        public Type[] TargetParameters { get; set; } = null;
+
+        /// <summary>
+        /// Creates a reflected event replacer attribute to, for the event defined as eventName in eventDeclaringType,
+        /// replace the method defined as targetName in targetDeclaringType with a custom callback.
+        /// </summary>
+        /// <param name="eventDeclaringType">Type the event is declared in</param>
+        /// <param name="eventName">Name of the event</param>
+        /// <param name="targetDeclaringType">Type the method to remove is declared in</param>
+        /// <param name="targetName">Name of the method to remove</param>
+        public ReflectedEventReplaceAttribute(Type eventDeclaringType, string eventName, Type targetDeclaringType,
+            string targetName)
+        {
+            EventDeclaringType = eventDeclaringType;
+            EventName = eventName;
+            TargetDeclaringType = targetDeclaringType;
+            TargetName = targetName;
+        }
+    }
+    #endregion
 
     /// <summary>
     /// Automatically calls <see cref="ReflectedManager.Process(Assembly)"/> for every assembly already loaded, and every assembly that is loaded in the future.
     /// </summary>
     public class ReflectedManager
     {
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private static readonly string[] _namespaceBlacklist = new[] {
-            "System", "VRage", "Sandbox", "SpaceEngineers"
+            "System", "VRage", "Sandbox", "SpaceEngineers", "Microsoft"
         };
 
         /// <summary>
@@ -181,11 +438,28 @@ namespace Torch.Utils
         {
             if (_processedTypes.Add(t))
             {
+                if (string.IsNullOrWhiteSpace(t.Namespace))
+                    return;
                 foreach (string ns in _namespaceBlacklist)
                     if (t.FullName.StartsWith(ns))
                         return;
-                foreach (FieldInfo field in t.GetFields(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-                    Process(field);
+                foreach (FieldInfo field in t.GetFields(BindingFlags.Static | BindingFlags.Instance |
+                                                        BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    try
+                    {
+#if DEBUG
+                        if (Process(field))
+                            _log?.Trace($"Field {field.DeclaringType?.FullName}#{field.Name} = {field.GetValue(null) ?? "null"}");
+#else
+                        Process(field);
+#endif
+                    }
+                    catch (Exception e)
+                    {
+                        _log?.Error(e.InnerException ?? e, $"Unable to fill {field.DeclaringType?.FullName}#{field.Name}. {(e.InnerException ?? e).Message}");
+                    }
+                }
             }
         }
 
@@ -207,35 +481,93 @@ namespace Torch.Utils
         /// <exception cref="ArgumentException">If the field failed to process</exception>
         public static bool Process(FieldInfo field)
         {
-            var attr = field.GetCustomAttribute<ReflectedMethodAttribute>();
-            if (attr != null)
+            foreach (ReflectedMemberAttribute attr in field.GetCustomAttributes<ReflectedMemberAttribute>())
             {
                 if (!field.IsStatic)
                     throw new ArgumentException("Field must be static to be reflected");
-                ProcessReflectedMethod(field, attr);
-                return true;
-            }
-            var attr2 = field.GetCustomAttribute<ReflectedGetterAttribute>();
-            if (attr2 != null)
-            {
-                if (!field.IsStatic)
-                    throw new ArgumentException("Field must be static to be reflected");
-                ProcessReflectedField(field, attr2);
-                return true;
-            }
-            var attr3 = field.GetCustomAttribute<ReflectedSetterAttribute>();
-            if (attr3 != null)
-            {
-                if (!field.IsStatic)
+                switch (attr)
                 {
-                    throw new ArgumentException("Field must be static to be reflected");
+                    case ReflectedMethodAttribute rma:
+                        ProcessReflectedMethod(field, rma);
+                        return true;
+                    case ReflectedGetterAttribute rga:
+                        ProcessReflectedField(field, rga);
+                        return true;
+                    case ReflectedSetterAttribute rsa:
+                        ProcessReflectedField(field, rsa);
+                        return true;
+                    case ReflectedFieldInfoAttribute rfia:
+                        ProcessReflectedMemberInfo(field, rfia);
+                        return true;
+                    case ReflectedPropertyInfoAttribute rpia:
+                        ProcessReflectedMemberInfo(field, rpia);
+                        return true;
+                    case ReflectedMethodInfoAttribute rmia:
+                        ProcessReflectedMemberInfo(field, rmia);
+                        return true;
                 }
-
-                ProcessReflectedField(field, attr3);
-                return true;
             }
 
+            var reflectedEventReplacer = field.GetCustomAttribute<ReflectedEventReplaceAttribute>();
+            if (reflectedEventReplacer != null)
+            {
+                if (!field.IsStatic)
+                    throw new ArgumentException("Field must be static to be reflected");
+                field.SetValue(null,
+                    new Func<ReflectedEventReplacer>(() => new ReflectedEventReplacer(reflectedEventReplacer)));
+                return true;
+            }
             return false;
+        }
+
+        private static void ProcessReflectedMemberInfo(FieldInfo field, ReflectedMemberAttribute attr)
+        {
+            MemberInfo info = null;
+            if (attr.Type == null)
+                throw new ArgumentException("Reflected member info attributes require Type to be defined");
+            if (attr.Name == null)
+                throw new ArgumentException("Reflected member info attributes require Name to be defined");
+            switch (attr)
+            {
+                case ReflectedFieldInfoAttribute rfia:
+                    info = GetFieldPropRecursive(rfia.Type, rfia.Name,
+                        BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public,
+                        (type, name, bindingFlags) => type.GetField(name, bindingFlags));
+                    if (info == null)
+                        throw new ArgumentException($"Unable to find field {rfia.Type.FullName}#{rfia.Name}");
+                    break;
+                case ReflectedPropertyInfoAttribute rpia:
+                    info = GetFieldPropRecursive(rpia.Type, rpia.Name,
+                            BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public,
+                            (type, name, bindingFlags) => type.GetProperty(name, bindingFlags));
+                    if (info == null)
+                        throw new ArgumentException($"Unable to find property {rpia.Type.FullName}#{rpia.Name}");
+                    break;
+                case ReflectedMethodInfoAttribute rmia:
+                    if (rmia.Parameters != null)
+                    {
+                        info = rmia.Type.GetMethod(rmia.Name,
+                             BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                             null, CallingConventions.Any, rmia.Parameters, null);
+                        if (info == null)
+                            throw new ArgumentException(
+                                $"Unable to find method {rmia.Type.FullName}#{rmia.Name}({string.Join(", ", rmia.Parameters.Select(x => x.FullName))})");
+                    }
+                    else
+                    {
+                        info = rmia.Type.GetMethod(rmia.Name,
+                             BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        if (info == null)
+                            throw new ArgumentException(
+                                $"Unable to find method {rmia.Type.FullName}#{rmia.Name}");
+                    }
+                    if (rmia.ReturnType != null && !rmia.ReturnType.IsAssignableFrom(((MethodInfo)info).ReturnType))
+                        throw new ArgumentException($"Method {rmia.Type.FullName}#{rmia.Name} has return type {((MethodInfo)info).ReturnType.FullName}, expected {rmia.ReturnType.FullName}");
+                    break;
+            }
+            if (info == null)
+                throw new ArgumentException($"Unable to find member info for {attr.GetType().Name}[{attr.Type.FullName}#{attr.Name}");
+            field.SetValue(null, info);
         }
 
         private static void ProcessReflectedMethod(FieldInfo field, ReflectedMethodAttribute attr)
@@ -307,7 +639,7 @@ namespace Torch.Utils
             }
         }
 
-        private static T GetFieldPropRecursive<T>(Type baseType, string name, BindingFlags flags, Func<Type, string, BindingFlags, T> getter) where T : class
+        internal static T GetFieldPropRecursive<T>(Type baseType, string name, BindingFlags flags, Func<Type, string, BindingFlags, T> getter) where T : class
         {
             while (baseType != null)
             {
@@ -372,7 +704,7 @@ namespace Torch.Utils
             Expression instanceExpr = null;
             if (!isStatic)
             {
-                instanceExpr = trueType == paramExp[0].Type ? (Expression) paramExp[0] : Expression.Convert(paramExp[0], trueType);
+                instanceExpr = trueType == paramExp[0].Type ? (Expression)paramExp[0] : Expression.Convert(paramExp[0], trueType);
             }
 
             MemberExpression fieldExp = sourceField != null

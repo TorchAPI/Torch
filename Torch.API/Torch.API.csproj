@@ -160,15 +160,18 @@
       <Link>Properties\AssemblyVersion.cs</Link>
     </Compile>
     <Compile Include="ConnectionState.cs" />
-    <Compile Include="IChatMessage.cs" />
     <Compile Include="ITorchConfig.cs" />
     <Compile Include="Managers\DependencyManagerExtensions.cs" />
     <Compile Include="Managers\DependencyProviderExtensions.cs" />
+    <Compile Include="Managers\IChatManagerClient.cs" />
+    <Compile Include="Managers\IChatManagerServer.cs" />
     <Compile Include="Managers\IDependencyManager.cs" />
     <Compile Include="Managers\IDependencyProvider.cs" />
     <Compile Include="Managers\IManager.cs" />
-    <Compile Include="Managers\IMultiplayerManager.cs" />
+    <Compile Include="Managers\IMultiplayerManagerClient.cs" />
+    <Compile Include="Managers\IMultiplayerManagerBase.cs" />
     <Compile Include="IPlayer.cs" />
+    <Compile Include="Managers\IMultiplayerManagerServer.cs" />
     <Compile Include="Managers\INetworkManager.cs" />
     <Compile Include="Managers\IPluginManager.cs" />
     <Compile Include="Plugins\ITorchPlugin.cs" />
@@ -182,6 +185,8 @@
     <Compile Include="ModAPI\TorchAPI.cs" />
     <Compile Include="Session\ITorchSession.cs" />
     <Compile Include="Session\ITorchSessionManager.cs" />
+    <Compile Include="Session\TorchSessionState.cs" />
+    <Compile Include="TorchGameState.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

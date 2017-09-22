@@ -24,7 +24,7 @@ namespace Torch.Managers.PatchManager.MSIL
         {
             _module = method.Module;
             _genericTypeArgs = method.DeclaringType?.GenericTypeArguments ?? new Type[0];
-            _genericMethArgs = method.GetGenericArguments();
+            _genericMethArgs = (method is MethodInfo ? method.GetGenericArguments() : new Type[0]);
         }
 
         public MemberInfo ResolveMember(int token)

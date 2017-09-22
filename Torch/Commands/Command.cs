@@ -117,7 +117,7 @@ namespace Torch.Commands
             catch (Exception e)
             {
                 context.Respond(e.Message, "Error", MyFontEnum.Red);
-                Log.Error($"Command '{SyntaxHelp}' from '{Plugin.Name ?? "Torch"}' threw an exception. Args: {string.Join(", ", context.Args)}");
+                Log.Error($"Command '{SyntaxHelp}' from '{Plugin?.Name ?? "Torch"}' threw an exception. Args: {string.Join(", ", context.Args)}");
                 Log.Error(e);
                 return true;
             }

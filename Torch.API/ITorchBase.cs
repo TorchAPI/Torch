@@ -44,16 +44,18 @@ namespace Torch.API
         /// </summary>
         ITorchConfig Config { get; }
 
-        /// <inheritdoc cref="IMultiplayerManager"/>
-        [Obsolete]
-        IMultiplayerManager Multiplayer { get; }
-
         /// <inheritdoc cref="IPluginManager"/>
         [Obsolete]
         IPluginManager Plugins { get; }
 
         /// <inheritdoc cref="IDependencyManager"/>
         IDependencyManager Managers { get; }
+
+        [Obsolete("Prefer using Managers.GetManager for global managers")]
+        T GetManager<T>() where T : class, IManager;
+
+        [Obsolete("Prefer using Managers.AddManager for global managers")]
+        bool AddManager<T>(T manager) where T : class, IManager;
 
         /// <summary>
         /// The binary version of the current instance.
@@ -101,6 +103,16 @@ namespace Torch.API
         /// Initialize the Torch instance.
         /// </summary>
         void Init();
+
+        /// <summary>
+        /// The current state of the game this instance of torch is controlling.
+        /// </summary>
+        TorchGameState GameState { get; }
+
+        /// <summary>
+        /// Event raised when <see cref="GameState"/> changes.
+        /// </summary>
+        event TorchGameStateChangedDel GameStateChanged;
     }
 
     /// <summary>
@@ -119,6 +131,6 @@ namespace Torch.API
     /// </summary>
     public interface ITorchClient : ITorchBase
     {
-        
+
     }
 }

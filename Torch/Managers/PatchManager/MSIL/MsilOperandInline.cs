@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using Torch.Managers.PatchManager.Transpile;
@@ -21,6 +22,15 @@ namespace Torch.Managers.PatchManager.MSIL
         ///     Inline value
         /// </summary>
         public T Value { get; set; }
+
+        internal override void CopyTo(MsilOperand operand)
+        {
+            var lt = operand as MsilOperandInline<T>;
+            if (lt == null)
+                throw new ArgumentException($"Target {operand?.GetType().Name} must be of same type {GetType().Name}", nameof(operand));
+            lt.Value = Value;
+            ;
+        }
 
         /// <inheritdoc />
         public override string ToString()
@@ -66,7 +76,7 @@ namespace Torch.Managers.PatchManager.MSIL
             internal override void Read(MethodContext context, BinaryReader reader)
             {
                 Value =
-                    (sbyte) reader.ReadByte();
+                    (sbyte)reader.ReadByte();
             }
 
             internal override void Emit(LoggingIlGenerator generator)
@@ -199,21 +209,23 @@ namespace Torch.Managers.PatchManager.MSIL
         }
 
         /// <summary>
-        ///     Inline parameter reference
+        ///     Inline argument reference
         /// </summary>
-        public class MsilOperandParameter : MsilOperandInline<ParameterInfo>
+        public class MsilOperandArgument : MsilOperandInline<MsilArgument>
         {
-            internal MsilOperandParameter(MsilInstruction instruction) : base(instruction)
+            internal MsilOperandArgument(MsilInstruction instruction) : base(instruction)
             {
             }
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
-                Value =
-                    context.Method.GetParameters()[
-                        Instruction.OpCode.OperandType == OperandType.ShortInlineVar
-                            ? reader.ReadByte()
-                            : reader.ReadUInt16()];
+                int paramID =
+                    Instruction.OpCode.OperandType == OperandType.ShortInlineVar
+                        ? reader.ReadByte()
+                        : reader.ReadUInt16();
+                if (paramID == 0 && !context.Method.IsStatic)
+                    throw new ArgumentException("Haven't figured out how to ldarg with the \"this\" argument");
+                Value = new MsilArgument(context.Method.GetParameters()[paramID - (context.Method.IsStatic ? 0 : 1)]);
             }
 
             internal override void Emit(LoggingIlGenerator generator)
@@ -225,7 +237,7 @@ namespace Torch.Managers.PatchManager.MSIL
         /// <summary>
         ///     Inline local variable reference
         /// </summary>
-        public class MsilOperandLocal : MsilOperandInline<LocalVariableInfo>
+        public class MsilOperandLocal : MsilOperandInline<MsilLocal>
         {
             internal MsilOperandLocal(MsilInstruction instruction) : base(instruction)
             {
@@ -234,15 +246,15 @@ namespace Torch.Managers.PatchManager.MSIL
             internal override void Read(MethodContext context, BinaryReader reader)
             {
                 Value =
-                    context.Method.GetMethodBody().LocalVariables[
+                    new MsilLocal(context.Method.GetMethodBody().LocalVariables[
                         Instruction.OpCode.OperandType == OperandType.ShortInlineVar
                             ? reader.ReadByte()
-                            : reader.ReadUInt16()];
+                            : reader.ReadUInt16()]);
             }
 
             internal override void Emit(LoggingIlGenerator generator)
             {
-                generator.Emit(Instruction.OpCode, Value.LocalIndex);
+                generator.Emit(Instruction.OpCode, Value.Index);
             }
         }
 

@@ -7,6 +7,7 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using NLog;
+using Torch.Managers.PatchManager.MSIL;
 using Torch.Managers.PatchManager.Transpile;
 using Torch.Utils;
 
@@ -34,18 +35,21 @@ namespace Torch.Managers.PatchManager
 
             if (Prefixes.Count == 0 && Suffixes.Count == 0 && Transpilers.Count == 0)
                 return;
+            _log.Debug($"Begin patching {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
             var patch = ComposePatchedMethod();
 
             _revertAddress = AssemblyMemory.GetMethodBodyStart(_method);
             var newAddress = AssemblyMemory.GetMethodBodyStart(patch);
             _revertData = AssemblyMemory.WriteJump(_revertAddress, newAddress);
             _pinnedPatch = GCHandle.Alloc(patch);
+            _log.Debug($"Done patching {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
         }
 
         internal void Revert()
         {
             if (_pinnedPatch.HasValue)
             {
+                _log.Debug($"Revert {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
                 AssemblyMemory.WriteMemory(_revertAddress, _revertData);
                 _revertData = null;
                 _pinnedPatch.Value.Free();
@@ -113,29 +117,30 @@ namespace Torch.Managers.PatchManager
 
             var specialVariables = new Dictionary<string, LocalBuilder>();
 
-            Label? labelAfterOriginalContent = Suffixes.Count > 0 ? target.DefineLabel() : (Label?)null;
-            Label? labelAfterOriginalReturn = Prefixes.Any(x => x.ReturnType == typeof(bool)) ? target.DefineLabel() : (Label?)null;
+            Label labelAfterOriginalContent = target.DefineLabel();
+            Label labelAfterOriginalReturn = target.DefineLabel();
 
 
-            var returnType = _method is MethodInfo meth ? meth.ReturnType : typeof(void);
-            var resultVariable = returnType != typeof(void) && (labelAfterOriginalReturn.HasValue || // If we jump past main content we need local to store return val
-                Prefixes.Concat(Suffixes).SelectMany(x => x.GetParameters()).Any(x => x.Name == RESULT_PARAMETER))
-                ? target.DeclareLocal(returnType)
-                : null;
+            Type returnType = _method is MethodInfo meth ? meth.ReturnType : typeof(void);
+            LocalBuilder resultVariable = null;
+            if (returnType != typeof(void))
+            {
+                if (Prefixes.Concat(Suffixes).SelectMany(x => x.GetParameters()).Any(x => x.Name == RESULT_PARAMETER))
+                    resultVariable = target.DeclareLocal(returnType);
+                else if (Prefixes.Any(x => x.ReturnType == typeof(bool)))
+                    resultVariable = target.DeclareLocal(returnType);
+            }
             resultVariable?.SetToDefault(target);
 
             if (resultVariable != null)
                 specialVariables.Add(RESULT_PARAMETER, resultVariable);
 
             target.EmitComment("Prefixes Begin");
-            foreach (var prefix in Prefixes)
+            foreach (MethodInfo prefix in Prefixes)
             {
                 EmitMonkeyCall(target, prefix, specialVariables);
                 if (prefix.ReturnType == typeof(bool))
-                {
-                    Debug.Assert(labelAfterOriginalReturn.HasValue);
-                    target.Emit(OpCodes.Brfalse, labelAfterOriginalReturn.Value);
-                }
+                    target.Emit(OpCodes.Brfalse, labelAfterOriginalReturn);
                 else if (prefix.ReturnType != typeof(void))
                     throw new Exception(
                         $"Prefixes must return void or bool.  {prefix.DeclaringType?.FullName}.{prefix.Name} returns {prefix.ReturnType}");
@@ -143,32 +148,25 @@ namespace Torch.Managers.PatchManager
             target.EmitComment("Prefixes End");
 
             target.EmitComment("Original Begin");
-            MethodTranspiler.Transpile(_method, Transpilers, target, labelAfterOriginalContent);
+            MethodTranspiler.Transpile(_method, (type) => new MsilLocal(target.DeclareLocal(type)), Transpilers, target, labelAfterOriginalContent);
             target.EmitComment("Original End");
-            if (labelAfterOriginalContent.HasValue)
-            {
-                target.MarkLabel(labelAfterOriginalContent.Value);
-                if (resultVariable != null)
-                    target.Emit(OpCodes.Stloc, resultVariable);
-            }
-            if (labelAfterOriginalReturn.HasValue)
-                target.MarkLabel(labelAfterOriginalReturn.Value);
+
+            target.MarkLabel(labelAfterOriginalContent);
+            if (resultVariable != null)
+                target.Emit(OpCodes.Stloc, resultVariable);
+            target.MarkLabel(labelAfterOriginalReturn);
 
             target.EmitComment("Suffixes Begin");
-            foreach (var suffix in Suffixes)
+            foreach (MethodInfo suffix in Suffixes)
             {
                 EmitMonkeyCall(target, suffix, specialVariables);
                 if (suffix.ReturnType != typeof(void))
                     throw new Exception($"Suffixes must return void.  {suffix.DeclaringType?.FullName}.{suffix.Name} returns {suffix.ReturnType}");
             }
             target.EmitComment("Suffixes End");
-
-            if (labelAfterOriginalContent.HasValue || labelAfterOriginalReturn.HasValue)
-            {
-                if (resultVariable != null)
-                    target.Emit(OpCodes.Ldloc, resultVariable);
-                target.Emit(OpCodes.Ret);
-            }
+            if (resultVariable != null)
+                target.Emit(OpCodes.Ldloc, resultVariable);
+            target.Emit(OpCodes.Ret);
         }
 
         private void EmitMonkeyCall(LoggingIlGenerator target, MethodInfo patch,

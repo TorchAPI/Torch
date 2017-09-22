@@ -17,6 +17,8 @@ using Sandbox.Game.Multiplayer;
 using Sandbox.ModAPI;
 using SteamSDK;
 using Torch.API;
+using Torch.API.Managers;
+using Torch.API.Session;
 using Torch.Managers;
 using Torch.Server.Managers;
 using Torch.Utils;
@@ -63,6 +65,9 @@ namespace Torch.Server
             AddManager(DedicatedInstance);
             Config = config ?? new TorchConfig();
             MyFakes.ENABLE_INFINARIO = false;
+
+            var sessionManager = Managers.GetManager<ITorchSessionManager>();
+            sessionManager.AddFactory((x) => new MultiplayerManagerDedicated(this));
         }
 
         /// <inheritdoc />
@@ -90,7 +95,6 @@ namespace Torch.Server
             MyGlobalTypeMetadata.Static.Init();
 
             GetManager<InstanceManager>().LoadInstance(Config.InstancePath);
-            Plugins.LoadPlugins();
         }
 
         private void InvokeBeforeRun()
@@ -253,19 +257,20 @@ namespace Torch.Server
             {
                 case SaveGameStatus.Success:
                     Log.Info("Save completed.");
-                    Multiplayer.SendMessage("Saved game.", playerId: callerId);
+                    // TODO
+//                    Multiplayer.SendMessage("Saved game.", playerId: callerId);
                     break;
                 case SaveGameStatus.SaveInProgress:
                     Log.Error("Save failed, a save is already in progress.");
-                    Multiplayer.SendMessage("Save failed, a save is already in progress.", playerId: callerId, font: MyFontEnum.Red);
+//                    Multiplayer.SendMessage("Save failed, a save is already in progress.", playerId: callerId, font: MyFontEnum.Red);
                     break;
                 case SaveGameStatus.GameNotReady:
                     Log.Error("Save failed, game was not ready.");
-                    Multiplayer.SendMessage("Save failed, game was not ready.", playerId: callerId, font: MyFontEnum.Red);
+//                    Multiplayer.SendMessage("Save failed, game was not ready.", playerId: callerId, font: MyFontEnum.Red);
                     break;
                 case SaveGameStatus.TimedOut:
                     Log.Error("Save failed, save timed out.");
-                    Multiplayer.SendMessage("Save failed, save timed out.", playerId: callerId, font: MyFontEnum.Red);
+//                    Multiplayer.SendMessage("Save failed, save timed out.", playerId: callerId, font: MyFontEnum.Red);
                     break;
                 default:
                     break;

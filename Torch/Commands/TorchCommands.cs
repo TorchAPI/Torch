@@ -21,7 +21,12 @@ namespace Torch.Commands
         [Permission(MyPromoteLevel.None)]
         public void Help()
         {
-            var commandManager = ((TorchBase)Context.Torch).Commands;
+            var commandManager = Context.Torch.CurrentSession?.Managers.GetManager<CommandManager>();
+            if (commandManager == null)
+            {
+                Context.Respond("Must have an attached session to list commands");
+                return;
+            }
             commandManager.Commands.GetNode(Context.Args, out CommandTree.CommandNode node);
 
             if (node != null)
@@ -51,7 +56,12 @@ namespace Torch.Commands
         [Command("longhelp", "Get verbose help. Will send a long message, check the Comms tab.")]
         public void LongHelp()
         {
-            var commandManager = Context.Torch.Managers.GetManager<CommandManager>();
+            var commandManager = Context.Torch.CurrentSession?.Managers.GetManager<CommandManager>();
+            if (commandManager == null)
+            {
+                Context.Respond("Must have an attached session to list commands");
+                return;
+            }
             commandManager.Commands.GetNode(Context.Args, out CommandTree.CommandNode node);
 
             if (node != null)
@@ -96,7 +106,7 @@ namespace Torch.Commands
         [Permission(MyPromoteLevel.None)]
         public void Plugins()
         {
-            var plugins = Context.Torch.Plugins.Select(p => p.Name);
+            var plugins = Context.Torch.Managers.GetManager<PluginManager>()?.Plugins.Select(p => p.Value.Name) ?? Enumerable.Empty<string>();
             Context.Respond($"Loaded plugins: {string.Join(", ", plugins)}");
         }
 
@@ -128,13 +138,13 @@ namespace Torch.Commands
             {
                 if (i >= 60 && i % 60 == 0)
                 {
-                    Context.Torch.Multiplayer.SendMessage($"Restarting server in {i / 60} minute{Pluralize(i / 60)}.");
+                    Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>().SendMessageAsSelf($"Restarting server in {i / 60} minute{Pluralize(i / 60)}.");
                     yield return null;
                 }
                 else if (i > 0)
                 {
                     if (i < 11)
-                        Context.Torch.Multiplayer.SendMessage($"Restarting server in {i} second{Pluralize(i)}.");
+                        Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>().SendMessageAsSelf($"Restarting server in {i} second{Pluralize(i)}.");
                     yield return null;
                 }
                 else
@@ -153,7 +163,7 @@ namespace Torch.Commands
         {
             return num == 1 ? "" : "s";
         }
-        
+
         /// <summary>
         /// Initializes a save of the game.
         /// Caller id defaults to 0 in the case of triggering the chat command from server.

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Torch.Utils;
 using Xunit;
 
@@ -26,6 +27,10 @@ namespace Torch.Tests
         public static IEnumerable<object[]> Setters => Manager().Setters;
 
         public static IEnumerable<object[]> Invokers => Manager().Invokers;
+
+        public static IEnumerable<object[]> MemberInfo => Manager().MemberInfo;
+
+        public static IEnumerable<object[]> Events => Manager().Events;
 
         #region Binding
         [Theory]
@@ -59,6 +64,28 @@ namespace Torch.Tests
             Assert.True(ReflectedManager.Process(field.Field));
             if (field.Field.IsStatic)
                 Assert.NotNull(field.Field.GetValue(null));
+        }
+
+        [Theory]
+        [MemberData(nameof(MemberInfo))]
+        public void TestBindingMemberInfo(ReflectionTestManager.FieldRef field)
+        {
+            if (field.Field == null)
+                return;
+            Assert.True(ReflectedManager.Process(field.Field));
+            if (field.Field.IsStatic)
+                Assert.NotNull(field.Field.GetValue(null));
+        }
+
+        [Theory]
+        [MemberData(nameof(Events))]
+        public void TestBindingEvents(ReflectionTestManager.FieldRef field)
+        {
+            if (field.Field == null)
+                return;
+            Assert.True(ReflectedManager.Process(field.Field));
+            if (field.Field.IsStatic)
+                ((Func<ReflectedEventReplacer>)field.Field.GetValue(null)).Invoke();
         }
         #endregion
     }

@@ -67,7 +67,7 @@ namespace Torch.Utils
                         string assemblyPath = Path.Combine(path, assemblyName + ".dll");
                         if (!File.Exists(assemblyPath))
                             continue;
-                        _log.Debug("Loading {0} from {1}", assemblyName, SimplifyPath(assemblyPath));
+                        _log.Trace("Loading {0} from {1}", assemblyName, SimplifyPath(assemblyPath));
                         LogManager.Flush();
                         Assembly asm = Assembly.LoadFrom(assemblyPath);
                         _assemblies.Add(assemblyName, asm);

@@ -28,6 +28,11 @@ namespace Torch.API.Session
         ITorchSession CurrentSession { get; }
 
         /// <summary>
+        /// Raised when any <see cref="ITorchSession"/> <see cref="ITorchSession.State"/> changes.
+        /// </summary>
+        event TorchSessionStateChangedDel SessionStateChanged;
+
+        /// <summary>
         /// Adds the given factory as a supplier for session based managers
         /// </summary>
         /// <param name="factory">Session based manager supplier</param>

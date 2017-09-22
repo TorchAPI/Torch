@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using Sandbox;
+using Sandbox.Engine.Multiplayer;
 using Sandbox.Game;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
@@ -22,10 +23,13 @@ using Torch.API.ModAPI;
 using Torch.API.Session;
 using Torch.Commands;
 using Torch.Managers;
+using Torch.Managers.ChatManager;
+using Torch.Managers.PatchManager;
 using Torch.Utils;
 using Torch.Session;
 using VRage.Collections;
 using VRage.FileSystem;
+using VRage.Game;
 using VRage.Game.ObjectBuilder;
 using VRage.ObjectBuilders;
 using VRage.Plugins;
@@ -67,18 +71,6 @@ namespace Torch
         /// <inheritdoc />
         [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public IPluginManager Plugins { get; protected set; }
-        /// <inheritdoc />
-        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
-        public IMultiplayerManager Multiplayer { get; protected set; }
-        /// <inheritdoc />
-        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
-        public EntityManager Entities { get; protected set; }
-        /// <inheritdoc />
-        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
-        public INetworkManager Network { get; protected set; }
-        /// <inheritdoc />
-        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
-        public CommandManager Commands { get; protected set; }
 
         /// <inheritdoc />
         public ITorchSession CurrentSession => Managers?.GetManager<ITorchSessionManager>()?.CurrentSession;
@@ -120,31 +112,38 @@ namespace Torch
             Managers = new DependencyManager();
 
             Plugins = new PluginManager(this);
-            Multiplayer = new MultiplayerManager(this);
-            Entities = new EntityManager(this);
-            Network = new NetworkManager(this);
-            Commands = new CommandManager(this);
 
-            Managers.AddManager(new TorchSessionManager(this));
+            var sessionManager = new TorchSessionManager(this);
+            sessionManager.AddFactory((x) => MyMultiplayer.Static?.SyncLayer != null ? new NetworkManager(this) : null);
+            sessionManager.AddFactory((x) => Sync.IsServer ? new ChatManagerServer(this) : new ChatManagerClient(this));
+            sessionManager.AddFactory((x) => Sync.IsServer ? new CommandManager(this) : null);
+            sessionManager.AddFactory((x) => new EntityManager(this));
+
+            Managers.AddManager(sessionManager);
+            var patcher = new PatchManager(this);
+            GameStateInjector.Inject(patcher.AcquireContext());
+            Managers.AddManager(patcher);
+            //            Managers.AddManager(new KeenLogManager(this));
             Managers.AddManager(new FilesystemManager(this));
             Managers.AddManager(new UpdateManager(this));
-            Managers.AddManager(Network);
-            Managers.AddManager(Commands);
             Managers.AddManager(Plugins);
-            Managers.AddManager(Multiplayer);
-            Managers.AddManager(Entities);
-            Managers.AddManager(new ChatManager(this));
-
+            GameStateChanged += (game, state) =>
+            {
+                if (state != TorchGameState.Created)
+                    return;
+                // At this point flush the patches; it's safe.
+                patcher.Commit();
+            };
             TorchAPI.Instance = this;
         }
 
-        /// <inheritdoc />
+        [Obsolete("Prefer using Managers.GetManager for global managers")]
         public T GetManager<T>() where T : class, IManager
         {
             return Managers.GetManager<T>();
         }
 
-        /// <inheritdoc />
+        [Obsolete("Prefer using Managers.AddManager for global managers")]
         public bool AddManager<T>(T manager) where T : class, IManager
         {
             return Managers.AddManager(manager);
@@ -254,10 +253,13 @@ namespace Torch
 
             Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
             GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
-            try { Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}"; }
+            try
+            {
+                Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}";
+            }
             catch
             {
-                //Running as service 
+                // Running as service
             }
 
 #if DEBUG
@@ -275,6 +277,7 @@ namespace Torch
             MySession.OnUnloading += OnSessionUnloading;
             MySession.OnUnloaded += OnSessionUnloaded;
             RegisterVRagePlugin();
+            Managers.GetManager<PluginManager>().LoadPlugins();
             Managers.Attach();
             _init = true;
         }
@@ -282,25 +285,57 @@ namespace Torch
         private void OnSessionLoading()
         {
             Log.Debug("Session loading");
-            SessionLoading?.Invoke();
+            try
+            {
+                SessionLoading?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
         }
 
         private void OnSessionLoaded()
         {
             Log.Debug("Session loaded");
-            SessionLoaded?.Invoke();
+            try
+            {
+                SessionLoaded?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
         }
 
         private void OnSessionUnloading()
         {
             Log.Debug("Session unloading");
-            SessionUnloading?.Invoke();
+            try
+            {
+                SessionUnloading?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
         }
 
         private void OnSessionUnloaded()
         {
             Log.Debug("Session unloaded");
-            SessionUnloaded?.Invoke();
+            try
+            {
+                SessionUnloaded?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
         }
 
         /// <summary>
@@ -357,5 +392,89 @@ namespace Torch
         {
             GetManager<IPluginManager>().UpdatePlugins();
         }
+
+
+        private TorchGameState _gameState = TorchGameState.Unloaded;
+
+        /// <inheritdoc/>
+        public TorchGameState GameState
+        {
+            get => _gameState;
+            private set
+            {
+                _gameState = value;
+                GameStateChanged?.Invoke(MySandboxGame.Static, _gameState);
+            }
+        }
+
+        /// <inheritdoc/>
+        public event TorchGameStateChangedDel GameStateChanged;
+
+        #region GameStateInjecting
+        private static class GameStateInjector
+        {
+#pragma warning disable 649
+            [ReflectedMethodInfo(typeof(MySandboxGame), nameof(MySandboxGame.Dispose))]
+            private static MethodInfo _sandboxGameDispose;
+            [ReflectedMethodInfo(typeof(MySandboxGame), "Initialize")]
+            private static MethodInfo _sandboxGameInit;
+#pragma warning restore 649
+
+            internal static void Inject(PatchContext target)
+            {
+                ConstructorInfo ctor = typeof(MySandboxGame).GetConstructor(new[] {typeof(string[])});
+                if (ctor == null)
+                    throw new ArgumentException("Can't find constructor MySandboxGame(string[])");
+                target.GetPattern(ctor).Prefixes.Add(MethodRef(nameof(PrefixConstructor)));
+                target.GetPattern(ctor).Suffixes.Add(MethodRef(nameof(SuffixConstructor)));
+                target.GetPattern(_sandboxGameInit).Prefixes.Add(MethodRef(nameof(PrefixInit)));
+                target.GetPattern(_sandboxGameInit).Suffixes.Add(MethodRef(nameof(SuffixInit)));
+                target.GetPattern(_sandboxGameDispose).Prefixes.Add(MethodRef(nameof(PrefixDispose)));
+                target.GetPattern(_sandboxGameDispose).Suffixes.Add(MethodRef(nameof(SuffixDispose)));
+            }
+
+            private static MethodInfo MethodRef(string name)
+            {
+                return typeof(GameStateInjector).GetMethod(name,
+                    BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            }
+
+            private static void PrefixConstructor()
+            {
+                if (Instance is TorchBase tb)
+                    tb.GameState = TorchGameState.Creating;
+            }
+
+            private static void SuffixConstructor()
+            {
+                if (Instance is TorchBase tb)
+                    tb.GameState = TorchGameState.Created;
+            }
+
+            private static void PrefixInit()
+            {
+                if (Instance is TorchBase tb)
+                    tb.GameState = TorchGameState.Loading;
+            }
+
+            private static void SuffixInit()
+            {
+                if (Instance is TorchBase tb)
+                    tb.GameState = TorchGameState.Loaded;
+            }
+
+            private static void PrefixDispose()
+            {
+                if (Instance is TorchBase tb)
+                    tb.GameState = TorchGameState.Unloading;
+            }
+
+            private static void SuffixDispose()
+            {
+                if (Instance is TorchBase tb)
+                    tb.GameState = TorchGameState.Unloaded;
+            }
+        }
+        #endregion
     }
 }
