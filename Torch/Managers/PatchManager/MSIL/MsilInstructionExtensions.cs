@@ -198,5 +198,73 @@ namespace Torch.Managers.PatchManager.MSIL
             return new MsilInstruction(argument.Position < 0xFF ? OpCodes.Ldarga_S : OpCodes.Ldarga).InlineValue(argument);
         }
         #endregion
+
+        #region Constant Utils
+        /// <summary>
+        /// Determines if this instruction is a constant int load instruction.
+        /// </summary>
+        /// <param name="m">Instruction</param>
+        /// <returns>True if this instruction pushes a constant int onto the stack</returns>
+        public static bool IsConstIntLoad(this MsilInstruction m)
+        {
+            if (m.OpCode == OpCodes.Ldc_I4_0)
+                return true;
+            if (m.OpCode == OpCodes.Ldc_I4_1)
+                return true;
+            if (m.OpCode == OpCodes.Ldc_I4_2)
+                return true;
+            if (m.OpCode == OpCodes.Ldc_I4_3)
+                return true;
+            if (m.OpCode == OpCodes.Ldc_I4_4)
+                return true;
+            if (m.OpCode == OpCodes.Ldc_I4_5)
+                return true;
+            if (m.OpCode == OpCodes.Ldc_I4_6)
+                return true;
+            if (m.OpCode == OpCodes.Ldc_I4_7)
+                return true;
+            if (m.OpCode == OpCodes.Ldc_I4_8)
+                return true;
+            if (m.OpCode == OpCodes.Ldc_I4_M1)
+                return true;
+            if (m.OpCode == OpCodes.Ldc_I4)
+                return true;
+            return m.OpCode == OpCodes.Ldc_I4_S;
+        }
+
+        /// <summary>
+        /// Gets the constant int this instruction pushes onto the stack.
+        /// </summary>
+        /// <param name="m">Instruction</param>
+        /// <returns>The constant int</returns>
+        public static int GetConstInt(this MsilInstruction m)
+        {
+            if (m.OpCode == OpCodes.Ldc_I4_0)
+                return 0;
+            if (m.OpCode == OpCodes.Ldc_I4_1)
+                return 1;
+            if (m.OpCode == OpCodes.Ldc_I4_2)
+                return 2;
+            if (m.OpCode == OpCodes.Ldc_I4_3)
+                return 3;
+            if (m.OpCode == OpCodes.Ldc_I4_4)
+                return 4;
+            if (m.OpCode == OpCodes.Ldc_I4_5)
+                return 5;
+            if (m.OpCode == OpCodes.Ldc_I4_6)
+                return 6;
+            if (m.OpCode == OpCodes.Ldc_I4_7)
+                return 7;
+            if (m.OpCode == OpCodes.Ldc_I4_8)
+                return 8;
+            if (m.OpCode == OpCodes.Ldc_I4_M1)
+                return -1;
+            if (m.OpCode == OpCodes.Ldc_I4)
+                return ((MsilOperandInline<int>) m.Operand).Value;
+            if (m.OpCode == OpCodes.Ldc_I4_S)
+                return ((MsilOperandInline<byte>)m.Operand).Value;
+            throw new ArgumentException($"Can't get constant int from instruction {m}");
+        }
+        #endregion
     }
 }
