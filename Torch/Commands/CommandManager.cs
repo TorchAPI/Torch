@@ -66,6 +66,11 @@ namespace Torch.Commands
             }
         }
 
+        public void UnregisterPluginCommands(ITorchPlugin plugin)
+        {
+            // TODO
+        }
+
         public void RegisterPluginCommands(ITorchPlugin plugin)
         {
             var assembly = plugin.GetType().Assembly;

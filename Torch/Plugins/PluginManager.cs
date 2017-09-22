@@ -14,6 +14,7 @@ using Octokit;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
+using Torch.API.Session;
 using Torch.Collections;
 using Torch.Commands;
 
@@ -27,8 +28,10 @@ namespace Torch.Managers
         private const string MANIFEST_NAME = "manifest.xml";
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
         private readonly ObservableDictionary<Guid, ITorchPlugin> _plugins = new ObservableDictionary<Guid, ITorchPlugin>();
+#pragma warning disable 649
         [Dependency]
-        private CommandManager _commandManager;
+        private ITorchSessionManager _sessionManager;
+#pragma warning restore 649
 
         /// <inheritdoc />
         public IReadOnlyDictionary<Guid, ITorchPlugin> Plugins => _plugins.AsReadOnly();
@@ -50,11 +53,41 @@ namespace Torch.Managers
                 plugin.Update();
         }
 
+        /// <inheritdoc/>
+        public override void Attach()
+        {
+            base.Attach();
+            _sessionManager.SessionStateChanged += SessionManagerOnSessionStateChanged;
+        }
+
+        private void SessionManagerOnSessionStateChanged(ITorchSession session, TorchSessionState newState)
+        {
+            var mgr = session.Managers.GetManager<CommandManager>();
+            if (mgr == null)
+                return;
+            switch (newState)
+            {
+                case TorchSessionState.Loaded:
+                    foreach (ITorchPlugin plugin in _plugins.Values)
+                        mgr.RegisterPluginCommands(plugin);
+                    return;
+                case TorchSessionState.Unloading:
+                    foreach (ITorchPlugin plugin in _plugins.Values)
+                        mgr.UnregisterPluginCommands(plugin);
+                    return;
+                case TorchSessionState.Loading:
+                case TorchSessionState.Unloaded:
+                default:
+                    return;
+            }
+        }
+
         /// <summary>
         /// Unloads all plugins.
         /// </summary>
         public override void Detach()
         {
+            _sessionManager.SessionStateChanged -= SessionManagerOnSessionStateChanged;
             foreach (var plugin in _plugins.Values)
                 plugin.Dispose();
 
@@ -310,7 +343,6 @@ namespace Torch.Managers
             plugin.StoragePath = Torch.Config.InstancePath;
             plugin.Torch = Torch;
             _plugins.Add(manifest.Guid, plugin);
-            _commandManager.RegisterPluginCommands(plugin);
         }
 
         /// <inheritdoc cref="IEnumerable.GetEnumerator"/>
