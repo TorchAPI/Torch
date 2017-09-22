@@ -106,7 +106,7 @@ namespace Torch.Commands
         [Permission(MyPromoteLevel.None)]
         public void Plugins()
         {
-            var plugins = Context.Torch.Managers.GetManager<PluginManager>()?.Plugins.Select(p => p.Name) ?? Enumerable.Empty<string>();
+            var plugins = Context.Torch.Managers.GetManager<PluginManager>()?.Plugins.Select(p => p.Value.Name) ?? Enumerable.Empty<string>();
             Context.Respond($"Loaded plugins: {string.Join(", ", plugins)}");
         }
 

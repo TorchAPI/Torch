@@ -155,9 +155,10 @@
       <Link>Properties\AssemblyVersion.cs</Link>
     </Compile>
     <Compile Include="Collections\ObservableList.cs" />
-    <Compile Include="DispatcherExtensions.cs" />
     <Compile Include="Managers\ChatManager\ChatManagerClient.cs" />
     <Compile Include="Managers\ChatManager\ChatManagerServer.cs" />
+    <Compile Include="Extensions\DispatcherExtensions.cs" />
+    <Compile Include="Extensions\ICollectionExtensions.cs" />
     <Compile Include="Managers\DependencyManager.cs" />
     <Compile Include="Managers\KeenLogManager.cs" />
     <Compile Include="Managers\PatchManager\AssemblyMemory.cs" />
@@ -204,7 +205,7 @@
     <Compile Include="Managers\MultiplayerManagerBase.cs" />
     <Compile Include="Managers\UpdateManager.cs" />
     <Compile Include="Persistent.cs" />
-    <Compile Include="PluginManifest.cs" />
+    <Compile Include="Plugins\PluginManifest.cs" />
     <Compile Include="Utils\Reflection.cs" />
     <Compile Include="Managers\ScriptingManager.cs" />
     <Compile Include="Utils\TorchAssemblyResolver.cs" />
@@ -221,7 +222,7 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="ViewModels\PlayerViewModel.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />
-    <Compile Include="Managers\PluginManager.cs" />
+    <Compile Include="Plugins\PluginManager.cs" />
     <Compile Include="ViewModels\PluginViewModel.cs" />
     <Compile Include="Views\CollectionEditor.xaml.cs">
       <DependentUpon>CollectionEditor.xaml</DependentUpon>

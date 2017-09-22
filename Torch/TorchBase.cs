@@ -259,7 +259,7 @@ namespace Torch
             }
             catch
             {
-                // Running as service 
+                // Running as service
             }
 
 #if DEBUG

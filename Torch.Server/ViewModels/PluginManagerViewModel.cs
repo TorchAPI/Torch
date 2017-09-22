@@ -29,7 +29,7 @@ namespace Torch.Server.ViewModels
             pluginManager.PluginsLoaded += PluginManager_PluginsLoaded;
         }
 
-        private void PluginManager_PluginsLoaded(IList<ITorchPlugin> obj)
+        private void PluginManager_PluginsLoaded(IReadOnlyCollection<ITorchPlugin> obj)
         {
             Plugins.Clear();
             foreach (var plugin in obj)
