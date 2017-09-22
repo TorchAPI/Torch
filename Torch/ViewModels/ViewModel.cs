@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,6 +19,16 @@ namespace Torch
         protected virtual void OnPropertyChanged([CallerMemberName] string propName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
+        }
+
+        protected virtual void SetValue<T>(ref T backingField, T value, [CallerMemberName] string propName = "")
+        {
+            if (backingField.Equals(value))
+                return;
+
+            backingField = value;
+            // ReSharper disable once ExplicitCallerInfoArgument
+            OnPropertyChanged(propName);
         }
 
         /// <summary>
