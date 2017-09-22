@@ -17,7 +17,7 @@ namespace Torch.API.Plugins
         /// <summary>
         /// The version of the plugin.
         /// </summary>
-        Version Version { get; }
+        string Version { get; }
 
         /// <summary>
         /// The name of the plugin.
