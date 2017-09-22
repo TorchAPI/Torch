@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -25,13 +26,14 @@ namespace Torch.Managers
         private static Logger _log = LogManager.GetLogger(nameof(PluginManager));
         private const string MANIFEST_NAME = "manifest.xml";
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+        private readonly ObservableDictionary<Guid, ITorchPlugin> _plugins = new ObservableDictionary<Guid, ITorchPlugin>();
         [Dependency]
         private CommandManager _commandManager;
 
         /// <inheritdoc />
-        public IDictionary<Guid, ITorchPlugin> Plugins { get; } = new ObservableDictionary<Guid, ITorchPlugin>();
+        public IReadOnlyDictionary<Guid, ITorchPlugin> Plugins => _plugins.AsReadOnly();
 
-        public event Action<ICollection<ITorchPlugin>> PluginsLoaded;
+        public event Action<IReadOnlyCollection<ITorchPlugin>> PluginsLoaded;
 
         public PluginManager(ITorchBase torchInstance) : base(torchInstance)
         {
@@ -44,7 +46,7 @@ namespace Torch.Managers
         /// </summary>
         public void UpdatePlugins()
         {
-            foreach (var plugin in Plugins.Values)
+            foreach (var plugin in _plugins.Values)
                 plugin.Update();
         }
 
@@ -53,10 +55,10 @@ namespace Torch.Managers
         /// </summary>
         public override void Detach()
         {
-            foreach (var plugin in Plugins.Values)
+            foreach (var plugin in _plugins.Values)
                 plugin.Dispose();
 
-            Plugins.Clear();
+            _plugins.Clear();
         }
 
         public void LoadPlugins()
@@ -75,9 +77,9 @@ namespace Torch.Managers
                     continue;
                 }
 
-                if (Plugins.ContainsKey(manifest.Guid))
+                if (_plugins.ContainsKey(manifest.Guid))
                 {
-                    _log.Error($"The GUID provided by {manifest.Name} ({item}) is already in use by {Plugins[manifest.Guid].Name}");
+                    _log.Error($"The GUID provided by {manifest.Name} ({item}) is already in use by {_plugins[manifest.Guid].Name}");
                     continue;
                 }
 
@@ -87,9 +89,9 @@ namespace Torch.Managers
                     LoadPluginFromFolder(path);
             }
 
-            Plugins.ForEach(x => x.Value.Init(Torch));
-            _log.Info($"Loaded {Plugins.Count} plugins.");
-            PluginsLoaded?.Invoke(Plugins.Values);
+            _plugins.ForEach(x => x.Value.Init(Torch));
+            _log.Info($"Loaded {_plugins.Count} plugins.");
+            PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
         }
 
         private void DownloadPluginUpdates()
@@ -307,14 +309,14 @@ namespace Torch.Managers
             plugin.Manifest = manifest;
             plugin.StoragePath = Torch.Config.InstancePath;
             plugin.Torch = Torch;
-            Plugins.Add(manifest.Guid, plugin);
+            _plugins.Add(manifest.Guid, plugin);
             _commandManager.RegisterPluginCommands(plugin);
         }
 
         /// <inheritdoc cref="IEnumerable.GetEnumerator"/>
         public IEnumerator<ITorchPlugin> GetEnumerator()
         {
-            return Plugins.Values.GetEnumerator();
+            return _plugins.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

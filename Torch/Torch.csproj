@@ -157,6 +157,7 @@
     <Compile Include="ChatMessage.cs" />
     <Compile Include="Collections\ObservableList.cs" />
     <Compile Include="Extensions\DispatcherExtensions.cs" />
+    <Compile Include="Extensions\ICollectionExtensions.cs" />
     <Compile Include="Managers\DependencyManager.cs" />
     <Compile Include="Managers\PatchManager\AssemblyMemory.cs" />
     <Compile Include="Managers\PatchManager\DecoratedMethod.cs" />

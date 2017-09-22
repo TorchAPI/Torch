@@ -14,12 +14,12 @@ namespace Torch.API.Managers
         /// <summary>
         /// Fired when plugins are loaded.
         /// </summary>
-        event Action<ICollection<ITorchPlugin>> PluginsLoaded;
+        event Action<IReadOnlyCollection<ITorchPlugin>> PluginsLoaded;
 
         /// <summary>
         /// Collection of loaded plugins.
         /// </summary>
-        IDictionary<Guid, ITorchPlugin> Plugins { get; }
+        IReadOnlyDictionary<Guid, ITorchPlugin> Plugins { get; }
 
         /// <summary>
         /// Updates all loaded plugins.
