@@ -16,11 +16,13 @@ node {
 
 	stage('Build') {
 		currentBuild.description = bat(returnStdout: true, script: '@powershell -File Versioning/version.ps1').trim()
-		if (env.BRANCH_NAME == "master") {
-			bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Release /p:Platform=x64"
-		} else {
-			bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Debug /p:Platform=x64"		
-		}
+			if (env.BRANCH_NAME == "master") {
+				bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Release /p:Platform=x64 /t:Clean"
+				bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Release /p:Platform=x64"
+			} else {
+				bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Debug /p:Platform=x64 /t:Clean"
+				bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=Debug /p:Platform=x64"		
+			}
 	}
 
 	stage('Test') {
