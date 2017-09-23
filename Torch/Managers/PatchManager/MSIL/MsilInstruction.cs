@@ -152,6 +152,17 @@ namespace Torch.Managers.PatchManager.MSIL
         }
 
         /// <summary>
+        /// Adds the given label to this instruction
+        /// </summary>
+        /// <param name="label">Label to add</param>
+        /// <returns>this instruction</returns>
+        public MsilInstruction LabelWith(MsilLabel label)
+        {
+            Labels.Add(label);
+            return this;
+        }
+
+        /// <summary>
         ///     Sets the inline branch target for this instruction.
         /// </summary>
         /// <param name="label">Target to jump to</param>
