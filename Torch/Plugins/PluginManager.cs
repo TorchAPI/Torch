@@ -96,7 +96,9 @@ namespace Torch.Managers
 
         public void LoadPlugins()
         {
-            DownloadPluginUpdates();
+            if (Torch.Config.ShouldUpdatePlugins)
+                DownloadPluginUpdates();
+
             _log.Info("Loading plugins...");
             var pluginItems = Directory.EnumerateFiles(PluginDir, "*.zip").Union(Directory.EnumerateDirectories(PluginDir));
             foreach (var item in pluginItems)
