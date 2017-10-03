@@ -31,6 +31,20 @@ namespace Torch
         }
 
         /// <summary>
+        /// Returns a read-only wrapped <see cref="IList{T}"/> and proxies its <see cref="INotifyPropertyChanged"/> and <see cref="INotifyCollectionChanged"/> events.
+        /// </summary>
+        public static IReadOnlyList<T> AsReadOnlyObservable<T>(this IList<T> source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (source is INotifyPropertyChanged && source is INotifyCollectionChanged)
+                return new ObservableReadOnlyList<T>(source);
+
+            throw new InvalidOperationException("The given list is not observable.");
+        }
+
+        /// <summary>
         /// Returns a read-only wrapped <see cref="IDictionary{TKey, TValue}"/>
         /// </summary>
         public static IReadOnlyDictionary<TKey, TValue> AsReadOnly<TKey, TValue>(this IDictionary<TKey, TValue> source)
@@ -40,14 +54,68 @@ namespace Torch
             return source as IReadOnlyDictionary<TKey, TValue> ?? new ReadOnlyDictionary<TKey, TValue>(source);
         }
 
+        /// <summary>
+        /// Returns a read-only wrapped <see cref="IDictionary{TKey,TValue}"/> and proxies its <see cref="INotifyPropertyChanged"/> and <see cref="INotifyCollectionChanged"/> events.
+        /// </summary>
         public static IReadOnlyDictionary<TKey, TValue> AsReadOnlyObservable<TKey, TValue>(this IDictionary<TKey, TValue> source)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
-            return new ObservableReadOnlyDictionary<TKey, TValue>(source);
+
+            if (source is INotifyPropertyChanged && source is INotifyCollectionChanged)
+                return new ObservableReadOnlyDictionary<TKey, TValue>(source);
+
+            throw new InvalidOperationException("The given dictionary is not observable.");
         }
 
-        sealed class ObservableReadOnlyDictionary<TKey, TValue> : ViewModel, IReadOnlyDictionary<TKey, TValue>
+        sealed class ObservableReadOnlyList<T> : ViewModel, IReadOnlyList<T>, IDisposable
+        {
+            private IList<T> _list;
+
+            public ObservableReadOnlyList(IList<T> list)
+            {
+                _list = list;
+
+                if (_list is INotifyPropertyChanged p)
+                    p.PropertyChanged += OnPropertyChanged;
+
+                if (_list is INotifyCollectionChanged c)
+                    c.CollectionChanged += OnCollectionChanged;
+            }
+
+            public void Dispose()
+            {
+                if (_list is INotifyPropertyChanged p)
+                    p.PropertyChanged -= OnPropertyChanged;
+
+                if (_list is INotifyCollectionChanged c)
+                    c.CollectionChanged -= OnCollectionChanged;
+            }
+
+            private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+            {
+                OnCollectionChanged(e);
+            }
+
+            private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+            {
+                OnPropertyChanged(e.PropertyName);
+            }
+
+            /// <inheritdoc />
+            public IEnumerator<T> GetEnumerator() => _list.GetEnumerator();
+
+            /// <inheritdoc />
+            IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_list).GetEnumerator();
+
+            /// <inheritdoc />
+            public int Count => _list.Count;
+
+            /// <inheritdoc />
+            public T this[int index] => _list[index];
+        }
+
+        sealed class ObservableReadOnlyDictionary<TKey, TValue> : ViewModel, IReadOnlyDictionary<TKey, TValue>, IDisposable
         {
             private readonly IDictionary<TKey, TValue> _dictionary;
 
@@ -60,6 +128,15 @@ namespace Torch
 
                 if (_dictionary is INotifyCollectionChanged c)
                     c.CollectionChanged += OnCollectionChanged;
+            }
+
+            public void Dispose()
+            {
+                if (_dictionary is INotifyPropertyChanged p)
+                    p.PropertyChanged -= OnPropertyChanged;
+
+                if (_dictionary is INotifyCollectionChanged c)
+                    c.CollectionChanged -= OnCollectionChanged;
             }
 
             private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)

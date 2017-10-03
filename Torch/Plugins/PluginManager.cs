@@ -34,7 +34,7 @@ namespace Torch.Managers
 #pragma warning restore 649
 
         /// <inheritdoc />
-        public IReadOnlyDictionary<Guid, ITorchPlugin> Plugins => _plugins.AsReadOnly();
+        public IReadOnlyDictionary<Guid, ITorchPlugin> Plugins => _plugins.AsReadOnlyObservable();
 
         public event Action<IReadOnlyCollection<ITorchPlugin>> PluginsLoaded;
 
