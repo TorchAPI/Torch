@@ -12,7 +12,7 @@ using System.Windows.Threading;
 namespace Torch.Collections
 {
     [Serializable]
-    public class ObservableDictionary<TKey, TValue> : ViewModel, IDictionary<TKey, TValue>, INotifyCollectionChanged
+    public class ObservableDictionary<TKey, TValue> : ViewModel, IDictionary<TKey, TValue>
     {
         private IDictionary<TKey, TValue> _internalDict;
 
@@ -36,12 +36,6 @@ namespace Torch.Collections
                 _internalDict = dictionary
             };
         }
-
-        /// <inheritdoc />
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-
-        /// <inheritdoc />
-        public event PropertyChangedEventHandler PropertyChanged;
 
         /// <inheritdoc />
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
@@ -153,26 +147,5 @@ namespace Torch.Collections
 
         /// <inheritdoc />
         public ICollection<TValue> Values => _internalDict.Values;
-
-        private void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-        {
-            NotifyCollectionChangedEventHandler collectionChanged = CollectionChanged;
-            if (collectionChanged != null)
-                foreach (NotifyCollectionChangedEventHandler nh in collectionChanged.GetInvocationList())
-                {
-                    var dispObj = nh.Target as DispatcherObject;
-
-                    var dispatcher = dispObj?.Dispatcher;
-                    if (dispatcher != null && !dispatcher.CheckAccess())
-                    {
-                        dispatcher.BeginInvoke(
-                            (Action)(() => nh.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset))),
-                            DispatcherPriority.DataBind);
-                        continue;
-                    }
-
-                    nh.Invoke(this, e);
-                }
-        }
     }
 }

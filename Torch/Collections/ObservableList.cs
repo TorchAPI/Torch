@@ -12,15 +12,9 @@ namespace Torch
     /// <summary>
     /// An observable version of <see cref="List{T}"/>.
     /// </summary>
-    public class ObservableList<T> : IList<T>, INotifyCollectionChanged, INotifyPropertyChanged
+    public class ObservableList<T> : ViewModel, IList<T>
     {
         private List<T> _internalList = new List<T>();
-
-        /// <inheritdoc />
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-
-        /// <inheritdoc />
-        public event PropertyChangedEventHandler PropertyChanged;
 
         /// <inheritdoc />
         public void Clear()
@@ -144,31 +138,6 @@ namespace Torch
                 if (condition?.Invoke(this[i]) ?? false)
                     RemoveAt(i);
             }
-        }
-
-        protected void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-        {
-            var collectionChanged = CollectionChanged;
-            if (collectionChanged != null)
-                foreach (var del in collectionChanged.GetInvocationList())
-                {
-                    var nh = (NotifyCollectionChangedEventHandler)del;
-                    var dispObj = nh.Target as DispatcherObject;
-
-                    var dispatcher = dispObj?.Dispatcher;
-                    if (dispatcher != null && !dispatcher.CheckAccess())
-                    {
-                        dispatcher.BeginInvoke(() => nh.Invoke(this, e), DispatcherPriority.DataBind);
-                        continue;
-                    }
-
-                    nh.Invoke(this, e);
-                }
-        }
-
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         /// <inheritdoc />
