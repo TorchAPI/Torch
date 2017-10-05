@@ -29,19 +29,7 @@ namespace Torch.Utils
             var allPaths = new HashSet<string> { exePath };
             foreach (string other in binaryPaths)
                 allPaths.Add(other.ToLower().Replace('/', '\\'));
-
-            var path = new StringBuilder(allPaths.First());
-            foreach (string other in binaryPaths)
-            {
-                if (path.Length > other.Length)
-                    path.Remove(other.Length, path.Length - other.Length);
-                for (var i = 0; i < path.Length; i++)
-                    if (path[i] != other[i])
-                    {
-                        path.Remove(i, path.Length - i);
-                        break;
-                    }
-            }
+            var pathPrefix = StringUtils.CommonPrefix(allPaths);
             AppDomain.CurrentDomain.AppendPrivatePath(String.Join(Path.PathSeparator.ToString(), allPaths));
             AppDomain.CurrentDomain.SetData(TorchKey, true);
             AppDomain.CurrentDomain.ExecuteAssemblyByName(entryPoint, args);
@@ -50,7 +38,7 @@ namespace Torch.Utils
             // exclude application base from probing
             var setup = new AppDomainSetup
             {
-                ApplicationBase = path.ToString(),
+                ApplicationBase = pathPrefix.ToString(),
                 PrivateBinPathProbe = "",
                 PrivateBinPath = string.Join(";", allPaths)
             };
