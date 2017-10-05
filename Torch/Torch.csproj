@@ -215,6 +215,7 @@
     <Compile Include="SteamService.cs" />
     <Compile Include="TorchPluginBase.cs" />
     <Compile Include="Session\TorchSession.cs" />
+    <Compile Include="Utils\TorchLauncher.cs" />
     <Compile Include="ViewModels\ModViewModel.cs" />
     <Compile Include="Collections\MTObservableCollection.cs" />
     <Compile Include="Extensions\MyPlayerCollectionExtensions.cs" />
