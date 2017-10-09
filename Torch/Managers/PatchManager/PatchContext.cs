@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Torch.Managers.PatchManager
@@ -30,7 +31,17 @@ namespace Torch.Managers.PatchManager
             _rewritePatterns.Add(method, res);
             return res;
         }
+
+        /// <summary>
+        /// Gets all methods that this context has patched
+        /// </summary>
+        internal IEnumerable<MethodBase> PatchedMethods => _rewritePatterns
+            .Where(x => x.Value.Prefixes.Count > 0 || x.Value.Suffixes.Count > 0 || x.Value.Transpilers.Count > 0)
+            .Select(x => x.Key);
         
+        /// <summary>
+        /// Removes all patches in this context
+        /// </summary>
         internal void RemoveAll()
         {
             foreach (MethodRewritePattern pattern in _rewritePatterns.Values)

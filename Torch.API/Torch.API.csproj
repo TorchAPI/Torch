@@ -163,10 +163,14 @@
     <Compile Include="ITorchConfig.cs" />
     <Compile Include="Managers\DependencyManagerExtensions.cs" />
     <Compile Include="Managers\DependencyProviderExtensions.cs" />
+    <Compile Include="Managers\Event\EventHandlerAttribute.cs" />
+    <Compile Include="Managers\Event\IEvent.cs" />
+    <Compile Include="Managers\Event\IEventHandler.cs" />
     <Compile Include="Managers\IChatManagerClient.cs" />
     <Compile Include="Managers\IChatManagerServer.cs" />
     <Compile Include="Managers\IDependencyManager.cs" />
     <Compile Include="Managers\IDependencyProvider.cs" />
+    <Compile Include="Managers\Event\IEventManager.cs" />
     <Compile Include="Managers\IManager.cs" />
     <Compile Include="Managers\IMultiplayerManagerClient.cs" />
     <Compile Include="Managers\IMultiplayerManagerBase.cs" />

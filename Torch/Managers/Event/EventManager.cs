@@ -39,7 +39,12 @@ namespace Torch.Managers.Event
                 }
         }
 
-        /// <inheritdoc/>
+        
+        /// <summary>
+        /// Gets all event handler methods declared by the given type and its base types.
+        /// </summary>
+        /// <param name="exploreType">Type to explore</param>
+        /// <returns>All event handler methods</returns>
         private static IEnumerable<MethodInfo> EventHandlers(Type exploreType)
         {
             IEnumerable<MethodInfo> enumerable = exploreType.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
@@ -149,9 +154,9 @@ namespace Torch.Managers.Event
         /// Unregisters all handlers owned by the given assembly.
         /// </summary>
         /// <param name="asm">Assembly to unregister</param>
-        /// <param name="callback">Optional callback invoked for every registered handler in the assembly.  Ignored if null</param>
+        /// <param name="callback">Optional callback invoked before a handler is unregistered.  Ignored if null</param>
         /// <returns>the number of handlers that were unregistered</returns>
-        internal int UnregisterAllHandlers(Assembly asm, Func<IEventHandler> callback = null)
+        internal int UnregisterAllHandlers(Assembly asm, Action<IEventHandler> callback = null)
         {
             lock (_registeredHandlers)
             {
@@ -159,7 +164,7 @@ namespace Torch.Managers.Event
                     return 0;
                 foreach (IEventHandler k in handlers)
                 {
-                    callback?.Invoke();
+                    callback?.Invoke(k);
                     UnregisterHandlerInternal(k);
                 }
                 int count = handlers.Count;

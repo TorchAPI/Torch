@@ -160,12 +160,10 @@
     <Compile Include="Extensions\DispatcherExtensions.cs" />
     <Compile Include="Extensions\ICollectionExtensions.cs" />
     <Compile Include="Managers\DependencyManager.cs" />
-    <Compile Include="Managers\EventManager\EventHandlerAttribute.cs" />
-    <Compile Include="Managers\EventManager\EventList.cs" />
-    <Compile Include="Managers\EventManager\EventManager.cs" />
-    <Compile Include="Managers\EventManager\EventShimProgrammableBlock.cs" />
-    <Compile Include="Managers\EventManager\IEvent.cs" />
-    <Compile Include="Managers\EventManager\IEventList.cs" />
+    <Compile Include="Managers\Event\EventList.cs" />
+    <Compile Include="Managers\Event\EventManager.cs" />
+    <Compile Include="Managers\Event\EventShimProgrammableBlock.cs" />
+    <Compile Include="Managers\Event\IEventList.cs" />
     <Compile Include="Managers\KeenLogManager.cs" />
     <Compile Include="Managers\PatchManager\AssemblyMemory.cs" />
     <Compile Include="Managers\PatchManager\DecoratedMethod.cs" />
