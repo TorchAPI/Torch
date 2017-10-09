@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using Torch.API.Managers.Event;
+using Torch.Managers.EventManager;
 
-namespace Torch.Managers.EventManager
+namespace Torch.Managers.Event
 {
     /// <summary>
     /// Represents an ordered list of callbacks.
@@ -49,7 +48,7 @@ namespace Torch.Managers.EventManager
         private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 
         /// <inheritdoc/>
-        public void AddHandler(MethodInfo method, object instance)
+        public void AddHandler(MethodInfo method, IEventHandler instance)
         {
             try
             {
@@ -64,7 +63,7 @@ namespace Torch.Managers.EventManager
         }
 
         /// <inheritdoc/>
-        public int RemoveHandlers(object instance)
+        public int RemoveHandlers(IEventHandler instance)
         {
             try
             {

@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Blocks;
+using Torch.API.Managers.Event;
+using Torch.Managers.Event;
 using Torch.Managers.PatchManager;
 using Torch.Utils;
 

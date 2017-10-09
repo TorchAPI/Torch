@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Torch.Managers.EventManager
+﻿namespace Torch.API.Managers.Event
 {
     public interface IEvent
     {

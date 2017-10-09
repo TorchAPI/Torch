@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Torch.Managers.EventManager
+namespace Torch.API.Managers.Event
 {
     /// <summary>
     /// Attribute indicating that a method should be invoked when the event occurs.

@@ -3,23 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using NLog;
 using Torch.API;
-using Torch.API.Managers;
-using VRage.Game.ModAPI;
+using Torch.API.Managers.Event;
+using Torch.Managers.EventManager;
 
-namespace Torch.Managers.EventManager
+namespace Torch.Managers.Event
 {
     /// <summary>
     /// Manager class responsible for managing registration and dispatching of events.
     /// </summary>
-    public class EventManager : Manager
+    public class EventManager : Manager, IEventManager
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
-        private static Dictionary<Type, IEventList> _eventLists = new Dictionary<Type, IEventList>();
+        private static readonly Dictionary<Type, IEventList> _eventLists = new Dictionary<Type, IEventList>();
 
         static EventManager()
         {
@@ -41,11 +39,7 @@ namespace Torch.Managers.EventManager
                 }
         }
 
-        /// <summary>
-        /// Finds all event handlers in the given type, and its base types
-        /// </summary>
-        /// <param name="exploreType">Type to explore</param>
-        /// <returns>All event handlers</returns>
+        /// <inheritdoc/>
         private static IEnumerable<MethodInfo> EventHandlers(Type exploreType)
         {
             IEnumerable<MethodInfo> enumerable = exploreType.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
@@ -62,11 +56,8 @@ namespace Torch.Managers.EventManager
             return exploreType.BaseType != null ? enumerable.Concat(EventHandlers(exploreType.BaseType)) : enumerable;
         }
 
-        /// <summary>
-        /// Registers all handlers the given instance owns.
-        /// </summary>
-        /// <param name="instance">Instance to register handlers from</param>
-        private static void RegisterHandler(object instance)
+        /// <inheritdoc/>
+        private static void RegisterHandlerInternal(IEventHandler instance)
         {
             foreach (MethodInfo handler in EventHandlers(instance.GetType()))
             {
@@ -96,15 +87,86 @@ namespace Torch.Managers.EventManager
         /// Unregisters all handlers owned by the given instance
         /// </summary>
         /// <param name="instance">Instance</param>
-        private static void UnregisterHandlers(object instance)
+        private static void UnregisterHandlerInternal(IEventHandler instance)
         {
             foreach (IEventList list in _eventLists.Values)
                 list.RemoveHandlers(instance);
         }
 
+        private Dictionary<Assembly, HashSet<IEventHandler>> _registeredHandlers = new Dictionary<Assembly, HashSet<IEventHandler>>();
+
         /// <inheritdoc/>
         public EventManager(ITorchBase torchInstance) : base(torchInstance)
         {
+        }
+
+        /// <summary>
+        /// Registers all event handler methods contained in the given instance 
+        /// </summary>
+        /// <param name="handler">Instance to register</param>
+        /// <returns><b>true</b> if added, <b>false</b> otherwise</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public bool RegisterHandler(IEventHandler handler)
+        {
+            Assembly caller = Assembly.GetCallingAssembly();
+            lock (_registeredHandlers)
+            {
+                if (!_registeredHandlers.TryGetValue(caller, out HashSet<IEventHandler> handlers))
+                    _registeredHandlers.Add(caller, handlers = new HashSet<IEventHandler>());
+                if (handlers.Add(handler))
+                {
+                    RegisterHandlerInternal(handler);
+                    return true;
+                }
+                return false;
+            }
+        }
+
+
+        /// <summary>
+        /// Unregisters all event handler methods contained in the given instance 
+        /// </summary>
+        /// <param name="handler">Instance to unregister</param>
+        /// <returns><b>true</b> if removed, <b>false</b> otherwise</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public bool UnregisterHandler(IEventHandler handler)
+        {
+            Assembly caller = Assembly.GetCallingAssembly();
+            lock (_registeredHandlers)
+            {
+                if (!_registeredHandlers.TryGetValue(caller, out HashSet<IEventHandler> handlers))
+                    return false;
+                if (handlers.Remove(handler))
+                {
+                    UnregisterHandlerInternal(handler);
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Unregisters all handlers owned by the given assembly.
+        /// </summary>
+        /// <param name="asm">Assembly to unregister</param>
+        /// <param name="callback">Optional callback invoked for every registered handler in the assembly.  Ignored if null</param>
+        /// <returns>the number of handlers that were unregistered</returns>
+        internal int UnregisterAllHandlers(Assembly asm, Func<IEventHandler> callback = null)
+        {
+            lock (_registeredHandlers)
+            {
+                if (!_registeredHandlers.TryGetValue(asm, out HashSet<IEventHandler> handlers))
+                    return 0;
+                foreach (IEventHandler k in handlers)
+                {
+                    callback?.Invoke();
+                    UnregisterHandlerInternal(k);
+                }
+                int count = handlers.Count;
+                handlers.Clear();
+                _registeredHandlers.Remove(asm);
+                return count;
+            }
         }
     }
 }
