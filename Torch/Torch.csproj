@@ -163,7 +163,6 @@
     <Compile Include="Managers\DependencyManager.cs" />
     <Compile Include="Event\EventList.cs" />
     <Compile Include="Event\EventManager.cs" />
-    <Compile Include="Event\EventShimProgrammableBlock.cs" />
     <Compile Include="Event\IEventList.cs" />
     <Compile Include="Managers\KeenLogManager.cs" />
     <Compile Include="Managers\PatchManager\AssemblyMemory.cs" />

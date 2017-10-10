@@ -121,6 +121,11 @@ namespace Torch.API
     public interface ITorchServer : ITorchBase
     {
         /// <summary>
+        /// The current <see cref="ServerState"/>
+        /// </summary>
+        ServerState State { get; }
+
+        /// <summary>
         /// Path of the dedicated instance folder.
         /// </summary>
         string InstancePath { get; }
