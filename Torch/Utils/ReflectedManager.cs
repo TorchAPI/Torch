@@ -401,25 +401,16 @@ namespace Torch.Utils
     public static class ReflectedManager
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
-        private static readonly string[] _namespaceBlacklist = new[] {
-            "System", "VRage", "Sandbox", "SpaceEngineers", "Microsoft"
-        };
-
         private static readonly HashSet<Type> _processedTypes = new HashSet<Type>();
 
         /// <summary>
         /// Ensures all reflected fields and methods contained in the given type are initialized
         /// </summary>
         /// <param name="t">Type to process</param>
-        internal static void Process(Type t)
+        public static void Process(Type t)
         {
             if (_processedTypes.Add(t))
             {
-                if (string.IsNullOrWhiteSpace(t.Namespace))
-                    return;
-                foreach (string ns in _namespaceBlacklist)
-                    if (t.FullName.StartsWith(ns))
-                        return;
                 foreach (FieldInfo field in t.GetFields(BindingFlags.Static | BindingFlags.Instance |
                                                         BindingFlags.Public | BindingFlags.NonPublic))
                 {
@@ -444,7 +435,7 @@ namespace Torch.Utils
         /// Ensures all types in the given assembly are initialized using <see cref="Process(Type)"/>
         /// </summary>
         /// <param name="asm">Assembly to process</param>
-        internal static void Process(Assembly asm)
+        public static void Process(Assembly asm)
         {
             foreach (Type type in asm.GetTypes())
                 Process(type);
@@ -613,6 +604,7 @@ namespace Torch.Utils
                 field.SetValue(null,
                     Expression.Lambda(Expression.Call(paramExp[0], methodInstance, argExp), paramExp)
                               .Compile());
+                _log.Trace($"Reflecting field {field.DeclaringType?.FullName}#{field.Name} with {methodInstance.DeclaringType?.FullName}#{methodInstance.Name}");
             }
         }
 
@@ -698,6 +690,7 @@ namespace Torch.Utils
             }
 
             field.SetValue(null, Expression.Lambda(impl, paramExp).Compile());
+            _log.Trace($"Reflecting field {field.DeclaringType?.FullName}#{field.Name} with {field.DeclaringType?.FullName}#{field.Name}");
         }
     }
 }

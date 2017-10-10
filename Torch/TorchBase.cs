@@ -47,7 +47,8 @@ namespace Torch
     {
         static TorchBase()
         {
-            RuntimeHelpers.RunClassConstructor(typeof(ReflectedManager).TypeHandle);
+            ReflectedManager.Process(typeof(TorchBase).Assembly);
+            ReflectedManager.Process(typeof(ITorchBase).Assembly);
             PatchManager.AddPatchShim(typeof(GameStatePatchShim));
             PatchManager.CommitInternal();
             RegisterCoreAssembly(typeof(ITorchBase).Assembly);
@@ -419,9 +420,9 @@ namespace Torch
             lock (_registeredCoreAssemblies)
                 if (_registeredCoreAssemblies.Add(asm))
                 {
+                    ReflectedManager.Process(asm);
                     EventManager.AddDispatchShims(asm);
                     PatchManager.AddPatchShims(asm);
-                    ReflectedManager.Process(asm);
                 }
         }
 
