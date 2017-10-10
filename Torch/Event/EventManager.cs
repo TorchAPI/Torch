@@ -26,8 +26,12 @@ namespace Torch.Event
                     AddDispatchShim(type);
         }
 
+        private static readonly HashSet<Type> _dispatchShims = new HashSet<Type>();
         private static void AddDispatchShim(Type type)
         {
+            lock (_dispatchShims)
+                if (!_dispatchShims.Add(type))
+                    return;
             if (!type.IsSealed || !type.IsAbstract)
                 _log.Warn($"Registering type {type.FullName} as an event dispatch type, even though it isn't declared singleton");
             var listsFound = 0;
@@ -40,7 +44,7 @@ namespace Torch.Event
                         _log.Error($"Ignore event dispatch list {type.FullName}#{field.Name}; we already have one.");
                     else
                     {
-                        _eventLists.Add(eventType, (IEventList) field.GetValue(null));
+                        _eventLists.Add(eventType, (IEventList)field.GetValue(null));
                         listsFound++;
                     }
 
@@ -49,7 +53,7 @@ namespace Torch.Event
                 _log.Warn($"Registering type {type.FullName} as an event dispatch type, even though it has no event lists.");
         }
 
-        
+
         /// <summary>
         /// Gets all event handler methods declared by the given type and its base types.
         /// </summary>

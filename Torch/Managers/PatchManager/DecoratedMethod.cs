@@ -79,8 +79,9 @@ namespace Torch.Managers.PatchManager
         }
 
 
-        private const string INSTANCE_PARAMETER = "__instance";
-        private const string RESULT_PARAMETER = "__result";
+        public const string INSTANCE_PARAMETER = "__instance";
+        public const string RESULT_PARAMETER = "__result";
+        public const string PREFIX_SKIPPED_PARAMETER = "__prefixSkipped";
 
 #pragma warning disable 649
         [ReflectedStaticMethod(Type = typeof(RuntimeHelpers), Name = "_CompileMethod", OverrideTypeNames = new[] { "System.IRuntimeMethodInfo" })]
@@ -118,7 +119,7 @@ namespace Torch.Managers.PatchManager
             var specialVariables = new Dictionary<string, LocalBuilder>();
 
             Label labelAfterOriginalContent = target.DefineLabel();
-            Label labelAfterOriginalReturn = target.DefineLabel();
+            Label labelSkipMethodContent = target.DefineLabel();
 
 
             Type returnType = _method is MethodInfo meth ? meth.ReturnType : typeof(void);
@@ -131,6 +132,13 @@ namespace Torch.Managers.PatchManager
                     resultVariable = target.DeclareLocal(returnType);
             }
             resultVariable?.SetToDefault(target);
+            LocalBuilder prefixSkippedVariable = null;
+            if (Prefixes.Count > 0 && Suffixes.Any(x => x.GetParameters()
+                    .Any(y => y.Name.Equals(PREFIX_SKIPPED_PARAMETER))))
+            {
+                prefixSkippedVariable = target.DeclareLocal(typeof(bool));
+                specialVariables.Add(PREFIX_SKIPPED_PARAMETER, prefixSkippedVariable);
+            }
 
             if (resultVariable != null)
                 specialVariables.Add(RESULT_PARAMETER, resultVariable);
@@ -140,7 +148,7 @@ namespace Torch.Managers.PatchManager
             {
                 EmitMonkeyCall(target, prefix, specialVariables);
                 if (prefix.ReturnType == typeof(bool))
-                    target.Emit(OpCodes.Brfalse, labelAfterOriginalReturn);
+                    target.Emit(OpCodes.Brfalse, labelSkipMethodContent);
                 else if (prefix.ReturnType != typeof(void))
                     throw new Exception(
                         $"Prefixes must return void or bool.  {prefix.DeclaringType?.FullName}.{prefix.Name} returns {prefix.ReturnType}");
@@ -154,7 +162,15 @@ namespace Torch.Managers.PatchManager
             target.MarkLabel(labelAfterOriginalContent);
             if (resultVariable != null)
                 target.Emit(OpCodes.Stloc, resultVariable);
-            target.MarkLabel(labelAfterOriginalReturn);
+            Label notSkip = target.DefineLabel();
+            target.Emit(OpCodes.Br, notSkip);
+            target.MarkLabel(labelSkipMethodContent);
+            if (prefixSkippedVariable != null)
+            {
+                target.Emit(OpCodes.Ldc_I4_1);
+                target.Emit(OpCodes.Stloc, prefixSkippedVariable);
+            }
+            target.MarkLabel(notSkip);
 
             target.EmitComment("Suffixes Begin");
             foreach (MethodInfo suffix in Suffixes)
@@ -182,8 +198,18 @@ namespace Torch.Managers.PatchManager
                             throw new Exception("Can't use an instance parameter for a static method");
                         target.Emit(OpCodes.Ldarg_0);
                         break;
+                    case PREFIX_SKIPPED_PARAMETER:
+                        if (param.ParameterType != typeof(bool))
+                            throw new Exception($"Prefix skipped parameter {param.ParameterType} must be of type bool");
+                        if (param.ParameterType.IsByRef || param.IsOut)
+                            throw new Exception($"Prefix skipped parameter {param.ParameterType} can't be a reference type");
+                        if (specialVariables.TryGetValue(PREFIX_SKIPPED_PARAMETER, out LocalBuilder prefixSkip))
+                            target.Emit(OpCodes.Ldloc, prefixSkip);
+                        else
+                            target.Emit(OpCodes.Ldc_I4_0);
+                        break;
                     case RESULT_PARAMETER:
-                        var retType = param.ParameterType.IsByRef
+                        Type retType = param.ParameterType.IsByRef
                             ? param.ParameterType.GetElementType()
                             : param.ParameterType;
                         if (retType == null || !retType.IsAssignableFrom(specialVariables[RESULT_PARAMETER].LocalType))
@@ -191,13 +217,13 @@ namespace Torch.Managers.PatchManager
                         target.Emit(param.ParameterType.IsByRef ? OpCodes.Ldloca : OpCodes.Ldloc, specialVariables[RESULT_PARAMETER]);
                         break;
                     default:
-                        var declParam = _method.GetParameters().FirstOrDefault(x => x.Name == param.Name);
+                        ParameterInfo declParam = _method.GetParameters().FirstOrDefault(x => x.Name == param.Name);
                         if (declParam == null)
                             throw new Exception($"Parameter name {param.Name} not found");
-                        var paramIdx = (_method.IsStatic ? 0 : 1) + declParam.Position;
+                        int paramIdx = (_method.IsStatic ? 0 : 1) + declParam.Position;
 
-                        var patchByRef = param.IsOut || param.ParameterType.IsByRef;
-                        var declByRef = declParam.IsOut || declParam.ParameterType.IsByRef;
+                        bool patchByRef = param.IsOut || param.ParameterType.IsByRef;
+                        bool declByRef = declParam.IsOut || declParam.ParameterType.IsByRef;
                         if (patchByRef == declByRef)
                             target.Emit(OpCodes.Ldarg, paramIdx);
                         else if (patchByRef)

@@ -22,8 +22,14 @@ namespace Torch.Managers.PatchManager
                     AddPatchShim(t);
         }
 
-        private static void AddPatchShim(Type type)
+        private static readonly HashSet<Type> _patchShims = new HashSet<Type>();
+        // Internal, not static, so the static cctor of TorchBase can hookup the GameStatePatchShim which tells us when
+        // its safe to patch the rest of the game.
+        internal static void AddPatchShim(Type type)
         {
+            lock (_patchShims)
+                if (!_patchShims.Add(type))
+                    return;
             if (!type.IsSealed || !type.IsAbstract)
                 _log.Warn($"Registering type {type.FullName} as a patch shim type, even though it isn't declared singleton");
             MethodInfo method = type.GetMethod("Patch", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
@@ -34,7 +40,7 @@ namespace Torch.Managers.PatchManager
             }
             ParameterInfo[] ps = method.GetParameters();
             if (ps.Length != 1 || ps[0].IsOut || ps[0].IsOptional || ps[0].ParameterType.IsByRef ||
-                ps[0].ParameterType == typeof(PatchContext) || method.ReturnType == typeof(void))
+                ps[0].ParameterType != typeof(PatchContext) || method.ReturnType != typeof(void))
             {
                 _log.Error($"Patch shim type {type.FullName} doesn't have a method with signature `void Patch(PatchContext)`");
                 return;
@@ -55,13 +61,10 @@ namespace Torch.Managers.PatchManager
 
         private static readonly Dictionary<MethodBase, DecoratedMethod> _rewritePatterns = new Dictionary<MethodBase, DecoratedMethod>();
         private static readonly Dictionary<Assembly, List<PatchContext>> _contexts = new Dictionary<Assembly, List<PatchContext>>();
-        private static List<PatchContext> _coreContexts = new List<PatchContext>();
+        // ReSharper disable once CollectionNeverQueried.Local because we may want this in the future.
+        private static readonly List<PatchContext> _coreContexts = new List<PatchContext>();
 
-        /// <summary>
-        /// Gets the rewrite pattern for the given method, creating one if it doesn't exist.
-        /// </summary>
-        /// <param name="method">Method to get the pattern for</param>
-        /// <returns></returns>
+        /// <inheritdoc cref="GetPattern"/>
         internal static MethodRewritePattern GetPatternInternal(MethodBase method)
         {
             lock (_rewritePatterns)
@@ -145,14 +148,20 @@ namespace Torch.Managers.PatchManager
             return count;
         }
 
+        /// <inheritdoc cref="Commit"/>
+        internal static void CommitInternal()
+        {
+            lock (_rewritePatterns)
+                foreach (DecoratedMethod m in _rewritePatterns.Values)
+                    m.Commit();
+        }
+
         /// <summary>
         /// Commits all method decorations into IL.
         /// </summary>
         public void Commit()
         {
-            lock (_rewritePatterns)
-                foreach (DecoratedMethod m in _rewritePatterns.Values)
-                    m.Commit();
+            CommitInternal();
         }
 
         /// <summary>

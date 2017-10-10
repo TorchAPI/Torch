@@ -398,35 +398,12 @@ namespace Torch.Utils
     /// <summary>
     /// Automatically calls <see cref="ReflectedManager.Process(Assembly)"/> for every assembly already loaded, and every assembly that is loaded in the future.
     /// </summary>
-    public class ReflectedManager
+    public static class ReflectedManager
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private static readonly string[] _namespaceBlacklist = new[] {
             "System", "VRage", "Sandbox", "SpaceEngineers", "Microsoft"
         };
-
-        /// <summary>
-        /// Registers the assembly load event and loads every already existing assembly.
-        /// </summary>
-        public void Attach()
-        {
-            foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
-                Process(asm);
-            AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
-        }
-
-        /// <summary>
-        /// Deregisters the assembly load event
-        /// </summary>
-        public void Detach()
-        {
-            AppDomain.CurrentDomain.AssemblyLoad -= CurrentDomain_AssemblyLoad;
-        }
-
-        private void CurrentDomain_AssemblyLoad(object sender, AssemblyLoadEventArgs args)
-        {
-            Process(args.LoadedAssembly);
-        }
 
         private static readonly HashSet<Type> _processedTypes = new HashSet<Type>();
 
@@ -434,7 +411,7 @@ namespace Torch.Utils
         /// Ensures all reflected fields and methods contained in the given type are initialized
         /// </summary>
         /// <param name="t">Type to process</param>
-        public static void Process(Type t)
+        internal static void Process(Type t)
         {
             if (_processedTypes.Add(t))
             {
@@ -467,7 +444,7 @@ namespace Torch.Utils
         /// Ensures all types in the given assembly are initialized using <see cref="Process(Type)"/>
         /// </summary>
         /// <param name="asm">Assembly to process</param>
-        public static void Process(Assembly asm)
+        internal static void Process(Assembly asm)
         {
             foreach (Type type in asm.GetTypes())
                 Process(type);
