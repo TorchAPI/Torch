@@ -1,4 +1,4 @@
-﻿namespace Torch.API.Managers.Event
+﻿namespace Torch.API.Event
 {
     /// <summary>
     /// Interface used to tag an event handler.  This does <b>not</b> register it with the event manager.

@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Blocks;
-using Torch.API.Managers.Event;
-using Torch.Managers.Event;
+using Torch.API.Event;
 using Torch.Managers.PatchManager;
 using Torch.Utils;
 
-namespace Torch.Managers.EventManager
+namespace Torch.Event
 {
     internal static class EventShimProgrammableBlock
     {

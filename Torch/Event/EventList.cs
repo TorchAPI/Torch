@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Torch.API.Managers.Event;
-using Torch.Managers.EventManager;
+using Torch.API.Event;
 
-namespace Torch.Managers.Event
+namespace Torch.Event
 {
     /// <summary>
     /// Represents an ordered list of callbacks.

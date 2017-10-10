@@ -5,10 +5,10 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using NLog;
 using Torch.API;
-using Torch.API.Managers.Event;
-using Torch.Managers.EventManager;
+using Torch.API.Event;
+using Torch.Managers;
 
-namespace Torch.Managers.Event
+namespace Torch.Event
 {
     /// <summary>
     /// Manager class responsible for managing registration and dispatching of events.
@@ -19,13 +19,18 @@ namespace Torch.Managers.Event
 
         private static readonly Dictionary<Type, IEventList> _eventLists = new Dictionary<Type, IEventList>();
 
-        static EventManager()
+        internal static void AddDispatchShims(Assembly asm)
         {
-            AddDispatchShim(typeof(EventShimProgrammableBlock));
+            foreach (Type type in asm.GetTypes())
+                if (type.HasAttribute<EventShimAttribute>())
+                    AddDispatchShim(type);
         }
 
         private static void AddDispatchShim(Type type)
         {
+            if (!type.IsSealed || !type.IsAbstract)
+                _log.Warn($"Registering type {type.FullName} as an event dispatch type, even though it isn't declared singleton");
+            var listsFound = 0;
             RuntimeHelpers.RunClassConstructor(type.TypeHandle);
             foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                 if (field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(EventList<>))
@@ -34,9 +39,14 @@ namespace Torch.Managers.Event
                     if (_eventLists.ContainsKey(eventType))
                         _log.Error($"Ignore event dispatch list {type.FullName}#{field.Name}; we already have one.");
                     else
-                        _eventLists.Add(eventType, (IEventList)field.GetValue(null));
+                    {
+                        _eventLists.Add(eventType, (IEventList) field.GetValue(null));
+                        listsFound++;
+                    }
 
                 }
+            if (listsFound == 0)
+                _log.Warn($"Registering type {type.FullName} as an event dispatch type, even though it has no event lists.");
         }
 
         

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Torch.API.Managers.Event
+namespace Torch.API.Event
 {
     /// <summary>
     /// Attribute indicating that a method should be invoked when the event occurs.

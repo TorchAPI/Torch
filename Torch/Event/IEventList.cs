@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
-using Torch.API.Managers.Event;
+using Torch.API.Event;
 
-namespace Torch.Managers.Event
+namespace Torch.Event
 {
     /// <summary>
     /// Represents the interface for adding and removing from an ordered list of callbacks.

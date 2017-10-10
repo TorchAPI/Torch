@@ -22,6 +22,7 @@ using Torch.API.Managers;
 using Torch.API.ModAPI;
 using Torch.API.Session;
 using Torch.Commands;
+using Torch.Event;
 using Torch.Managers;
 using Torch.Managers.ChatManager;
 using Torch.Managers.PatchManager;
@@ -45,6 +46,8 @@ namespace Torch
     {
         static TorchBase()
         {
+            RegisterCoreAssembly(typeof(ITorchBase).Assembly);
+            RegisterCoreAssembly(typeof(TorchBase).Assembly);
             // We can safely never detach this since we don't reload assemblies.
             new ReflectedManager().Attach();
         }
@@ -100,6 +103,7 @@ namespace Torch
         /// <exception cref="InvalidOperationException">Thrown if a TorchBase instance already exists.</exception>
         protected TorchBase()
         {
+            RegisterCoreAssembly(GetType().Assembly);
             if (Instance != null)
                 throw new InvalidOperationException("A TorchBase instance already exists.");
 
@@ -126,6 +130,7 @@ namespace Torch
             //            Managers.AddManager(new KeenLogManager(this));
             Managers.AddManager(new FilesystemManager(this));
             Managers.AddManager(new UpdateManager(this));
+            Managers.AddManager(new EventManager(this));
             Managers.AddManager(Plugins);
             GameStateChanged += (game, state) =>
             {
@@ -422,7 +427,7 @@ namespace Torch
 
             internal static void Inject(PatchContext target)
             {
-                ConstructorInfo ctor = typeof(MySandboxGame).GetConstructor(new[] {typeof(string[])});
+                ConstructorInfo ctor = typeof(MySandboxGame).GetConstructor(new[] { typeof(string[]) });
                 if (ctor == null)
                     throw new ArgumentException("Can't find constructor MySandboxGame(string[])");
                 target.GetPattern(ctor).Prefixes.Add(MethodRef(nameof(PrefixConstructor)));
@@ -476,5 +481,16 @@ namespace Torch
             }
         }
         #endregion
+
+        private static readonly HashSet<Assembly> _registeredAssemblies = new HashSet<Assembly>();
+        private static void RegisterCoreAssembly(Assembly asm)
+        {
+            lock (_registeredAssemblies)
+                if (_registeredAssemblies.Add(asm))
+                {
+                    EventManager.AddDispatchShims(asm);
+                    PatchManager.AddPatchShims(asm);
+                }
+        }
     }
 }

@@ -7,14 +7,12 @@ namespace Torch.Managers.PatchManager
     /// <summary>
     /// Represents a set of common patches that can all be reversed in a single step.
     /// </summary>
-    public class PatchContext
+    public sealed class PatchContext
     {
-        private readonly PatchManager _replacer;
         private readonly Dictionary<MethodBase, MethodRewritePattern> _rewritePatterns = new Dictionary<MethodBase, MethodRewritePattern>();
 
-        internal PatchContext(PatchManager replacer)
+        internal PatchContext()
         {
-            _replacer = replacer;
         }
 
         /// <summary>
@@ -26,7 +24,7 @@ namespace Torch.Managers.PatchManager
         {
             if (_rewritePatterns.TryGetValue(method, out MethodRewritePattern pattern))
                 return pattern;
-            MethodRewritePattern parent = _replacer.GetPattern(method);
+            MethodRewritePattern parent = PatchManager.GetPatternInternal(method);
             var res = new MethodRewritePattern(parent);
             _rewritePatterns.Add(method, res);
             return res;
