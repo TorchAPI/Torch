@@ -7,19 +7,45 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace Torch
 {
     /// <summary>
     /// Provides a method to notify an observer of changes to an object's properties.
     /// </summary>
-    public abstract class ViewModel : INotifyPropertyChanged
+    public abstract class ViewModel : INotifyPropertyChanged, INotifyCollectionChanged
     {
+        /// <inheritdoc />
         public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <inheritdoc />
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
+        }
+
+        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        {
+            NotifyCollectionChangedEventHandler collectionChanged = CollectionChanged;
+            if (collectionChanged != null)
+                foreach (NotifyCollectionChangedEventHandler nh in collectionChanged.GetInvocationList())
+                {
+                    var dispObj = nh.Target as DispatcherObject;
+
+                    var dispatcher = dispObj?.Dispatcher;
+                    if (dispatcher != null && !dispatcher.CheckAccess())
+                    {
+                        dispatcher.BeginInvoke(
+                            (Action)(() => nh.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset))),
+                            DispatcherPriority.DataBind);
+                        continue;
+                    }
+
+                    nh.Invoke(this, e);
+                }
         }
 
         protected virtual void SetValue<T>(ref T backingField, T value, [CallerMemberName] string propName = "")
