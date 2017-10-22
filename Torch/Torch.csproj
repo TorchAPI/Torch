@@ -155,11 +155,15 @@
       <Link>Properties\AssemblyVersion.cs</Link>
     </Compile>
     <Compile Include="Collections\ObservableList.cs" />
+    <Compile Include="Event\EventShimAttribute.cs" />
     <Compile Include="Managers\ChatManager\ChatManagerClient.cs" />
     <Compile Include="Managers\ChatManager\ChatManagerServer.cs" />
     <Compile Include="Extensions\DispatcherExtensions.cs" />
     <Compile Include="Extensions\ICollectionExtensions.cs" />
     <Compile Include="Managers\DependencyManager.cs" />
+    <Compile Include="Event\EventList.cs" />
+    <Compile Include="Event\EventManager.cs" />
+    <Compile Include="Event\IEventList.cs" />
     <Compile Include="Managers\KeenLogManager.cs" />
     <Compile Include="Managers\PatchManager\AssemblyMemory.cs" />
     <Compile Include="Managers\PatchManager\DecoratedMethod.cs" />
@@ -175,12 +179,14 @@
     <Compile Include="Managers\PatchManager\MSIL\MsilOperandInline.cs" />
     <Compile Include="Managers\PatchManager\MSIL\MsilOperandSwitch.cs" />
     <Compile Include="Managers\PatchManager\MethodRewritePattern.cs" />
+    <Compile Include="Managers\PatchManager\PatchShimAttribute.cs" />
     <Compile Include="Managers\PatchManager\PatchContext.cs" />
     <Compile Include="Managers\PatchManager\PatchManager.cs" />
     <Compile Include="Managers\PatchManager\PatchPriorityAttribute.cs" />
     <Compile Include="Managers\PatchManager\Transpile\LoggingILGenerator.cs" />
     <Compile Include="Managers\PatchManager\Transpile\MethodContext.cs" />
     <Compile Include="Managers\PatchManager\Transpile\MethodTranspiler.cs" />
+    <Compile Include="Patches\GameStatePatchShim.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SaveGameStatus.cs" />
     <Compile Include="Collections\KeyTree.cs" />
@@ -208,6 +214,7 @@
     <Compile Include="Plugins\PluginManifest.cs" />
     <Compile Include="Utils\Reflection.cs" />
     <Compile Include="Managers\ScriptingManager.cs" />
+    <Compile Include="Utils\StringUtils.cs" />
     <Compile Include="Utils\TorchAssemblyResolver.cs" />
     <Compile Include="Utils\ReflectedManager.cs" />
     <Compile Include="Session\TorchSessionManager.cs" />
@@ -215,6 +222,7 @@
     <Compile Include="SteamService.cs" />
     <Compile Include="TorchPluginBase.cs" />
     <Compile Include="Session\TorchSession.cs" />
+    <Compile Include="Utils\TorchLauncher.cs" />
     <Compile Include="ViewModels\ModViewModel.cs" />
     <Compile Include="Collections\MTObservableCollection.cs" />
     <Compile Include="Extensions\MyPlayerCollectionExtensions.cs" />

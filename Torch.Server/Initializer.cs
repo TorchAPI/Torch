@@ -26,8 +26,7 @@ namespace Torch.Server
 login anonymous
 app_update 298740
 quit";
-
-        private TorchAssemblyResolver _resolver;
+        
         private TorchConfig _config;
         private TorchServer _server;
         private string _basePath;
@@ -50,7 +49,6 @@ quit";
             if (!args.Contains("-noupdate"))
                 RunSteamCmd();
 
-            _resolver = new TorchAssemblyResolver(Path.Combine(_basePath, "DedicatedServer64"));
             _config = InitConfig();
             if (!_config.Parse(args))
                 return false;
@@ -94,8 +92,6 @@ quit";
             }
             else
                 _server.Start();
-
-            _resolver?.Dispose();
         }
 
         private TorchConfig InitConfig()

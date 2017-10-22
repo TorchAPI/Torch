@@ -1,6 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using NLog;
 using Torch.API;
+using Torch.Managers.PatchManager.Transpile;
 
 namespace Torch.Managers.PatchManager
 {
@@ -9,16 +13,69 @@ namespace Torch.Managers.PatchManager
     /// </summary>
     public class PatchManager : Manager
     {
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+
+        internal static void AddPatchShims(Assembly asm)
+        {
+            foreach (Type t in asm.GetTypes())
+                if (t.HasAttribute<PatchShimAttribute>())
+                    AddPatchShim(t);
+        }
+
+        private static readonly HashSet<Type> _patchShims = new HashSet<Type>();
+        // Internal, not static, so the static cctor of TorchBase can hookup the GameStatePatchShim which tells us when
+        // its safe to patch the rest of the game.
+        internal static void AddPatchShim(Type type)
+        {
+            lock (_patchShims)
+                if (!_patchShims.Add(type))
+                    return;
+            if (!type.IsSealed || !type.IsAbstract)
+                _log.Warn($"Registering type {type.FullName} as a patch shim type, even though it isn't declared singleton");
+            MethodInfo method = type.GetMethod("Patch", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
+            if (method == null)
+            {
+                _log.Error($"Patch shim type {type.FullName} doesn't have a static Patch method.");
+                return;
+            }
+            ParameterInfo[] ps = method.GetParameters();
+            if (ps.Length != 1 || ps[0].IsOut || ps[0].IsOptional || ps[0].ParameterType.IsByRef ||
+                ps[0].ParameterType != typeof(PatchContext) || method.ReturnType != typeof(void))
+            {
+                _log.Error($"Patch shim type {type.FullName} doesn't have a method with signature `void Patch(PatchContext)`");
+                return;
+            }
+            var context = new PatchContext();
+            lock (_coreContexts)
+                _coreContexts.Add(context);
+            method.Invoke(null, new object[] { context });
+        }
+
         /// <summary>
-        /// Creates a new patch manager.  Only have one active at a time.
+        /// Creates a new patch manager.
         /// </summary>
         /// <param name="torchInstance"></param>
         public PatchManager(ITorchBase torchInstance) : base(torchInstance)
         {
         }
 
-        private readonly Dictionary<MethodBase, DecoratedMethod> _rewritePatterns = new Dictionary<MethodBase, DecoratedMethod>();
-        private readonly HashSet<PatchContext> _contexts = new HashSet<PatchContext>();
+        private static readonly Dictionary<MethodBase, DecoratedMethod> _rewritePatterns = new Dictionary<MethodBase, DecoratedMethod>();
+        private static readonly Dictionary<Assembly, List<PatchContext>> _contexts = new Dictionary<Assembly, List<PatchContext>>();
+        // ReSharper disable once CollectionNeverQueried.Local because we may want this in the future.
+        private static readonly List<PatchContext> _coreContexts = new List<PatchContext>();
+
+        /// <inheritdoc cref="GetPattern"/>
+        internal static MethodRewritePattern GetPatternInternal(MethodBase method)
+        {
+            lock (_rewritePatterns)
+            {
+                if (_rewritePatterns.TryGetValue(method, out DecoratedMethod pattern))
+                    return pattern;
+                var res = new DecoratedMethod(method);
+                _rewritePatterns.Add(method, res);
+                return res;
+            }
+        }
 
         /// <summary>
         /// Gets the rewrite pattern for the given method, creating one if it doesn't exist.
@@ -27,21 +84,24 @@ namespace Torch.Managers.PatchManager
         /// <returns></returns>
         public MethodRewritePattern GetPattern(MethodBase method)
         {
-            if (_rewritePatterns.TryGetValue(method, out DecoratedMethod pattern))
-                return pattern;
-            var res = new DecoratedMethod(method);
-            _rewritePatterns.Add(method, res);
-            return res;
+            return GetPatternInternal(method);
         }
 
 
         /// <summary>
         /// Creates a new <see cref="PatchContext"/> used for tracking changes.  A call to <see cref="Commit"/> will apply the patches.
         /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public PatchContext AcquireContext()
         {
-            var context = new PatchContext(this);
-            _contexts.Add(context);
+            Assembly assembly = Assembly.GetCallingAssembly();
+            var context = new PatchContext();
+            lock (_contexts)
+            {
+                if (!_contexts.TryGetValue(assembly, out List<PatchContext> localContexts))
+                    _contexts.Add(assembly, localContexts = new List<PatchContext>());
+                localContexts.Add(context);
+            }
             return context;
         }
 
@@ -49,10 +109,51 @@ namespace Torch.Managers.PatchManager
         /// Frees the given context, and unregister all patches from it.  A call to <see cref="Commit"/> will apply the unpatching operation.
         /// </summary>
         /// <param name="context">Context to remove</param>
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public void FreeContext(PatchContext context)
         {
+            Assembly assembly = Assembly.GetCallingAssembly();
             context.RemoveAll();
-            _contexts.Remove(context);
+            lock (_contexts)
+            {
+                if (_contexts.TryGetValue(assembly, out List<PatchContext> localContexts))
+                    localContexts.Remove(context);
+            }
+        }
+
+        /// <summary>
+        /// Frees all contexts owned by the given assembly.  A call to <see cref="Commit"/> will apply the unpatching operation.
+        /// </summary>
+        /// <param name="assembly">Assembly to retrieve owned contexts for</param>
+        /// <param name="callback">Callback to run for before each context is freed, ignored if null.</param>
+        /// <returns>number of contexts freed</returns>
+        internal int FreeAllContexts(Assembly assembly, Action<PatchContext> callback = null)
+        {
+            List<PatchContext> localContexts;
+            lock (_contexts)
+            {
+                if (!_contexts.TryGetValue(assembly, out localContexts))
+                    return 0;
+                _contexts.Remove(assembly);
+            }
+            if (localContexts == null)
+                return 0;
+            int count = localContexts.Count;
+            foreach (PatchContext k in localContexts)
+            {
+                callback?.Invoke(k);
+                k.RemoveAll();
+            }
+            localContexts.Clear();
+            return count;
+        }
+
+        /// <inheritdoc cref="Commit"/>
+        internal static void CommitInternal()
+        {
+            lock (_rewritePatterns)
+                foreach (DecoratedMethod m in _rewritePatterns.Values)
+                    m.Commit();
         }
 
         /// <summary>
@@ -60,8 +161,7 @@ namespace Torch.Managers.PatchManager
         /// </summary>
         public void Commit()
         {
-            foreach (DecoratedMethod m in _rewritePatterns.Values)
-                m.Commit();
+            CommitInternal();
         }
 
         /// <summary>
@@ -77,10 +177,15 @@ namespace Torch.Managers.PatchManager
         /// </summary>
         public override void Detach()
         {
-            foreach (DecoratedMethod m in _rewritePatterns.Values)
-                m.Revert();
-            _rewritePatterns.Clear();
-            _contexts.Clear();
+            lock (_contexts)
+            {
+                foreach (List<PatchContext> set in _contexts.Values)
+                    foreach (PatchContext ctx in set)
+                        ctx.RemoveAll();
+                _contexts.Clear();
+                foreach (DecoratedMethod m in _rewritePatterns.Values)
+                    m.Revert();
+            }
         }
     }
 }

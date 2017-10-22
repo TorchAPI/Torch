@@ -42,23 +42,16 @@ namespace Torch.Utils
         {
             string assemblyName = new AssemblyName(args.Name).Name;
             lock (_assemblies)
-            {
                 if (_assemblies.TryGetValue(assemblyName, out Assembly asm))
                     return asm;
-            }
-            lock (AppDomain.CurrentDomain)
-            {
-                foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
-                    if (asm.GetName().Name.Equals(assemblyName))
-                    {
-                        lock (this)
-                        {
-                            _assemblies.Add(assemblyName, asm);
-                            return asm;
-                        }
-                    }
-            }
-            lock (this)
+            foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+                if (asm.GetName().Name.Equals(assemblyName))
+                {
+                    lock (_assemblies)
+                        _assemblies.Add(assemblyName, asm);
+                    return asm;
+                }
+            lock (_assemblies)
             {
                 foreach (string path in _paths)
                 {

@@ -398,36 +398,9 @@ namespace Torch.Utils
     /// <summary>
     /// Automatically calls <see cref="ReflectedManager.Process(Assembly)"/> for every assembly already loaded, and every assembly that is loaded in the future.
     /// </summary>
-    public class ReflectedManager
+    public static class ReflectedManager
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
-        private static readonly string[] _namespaceBlacklist = new[] {
-            "System", "VRage", "Sandbox", "SpaceEngineers", "Microsoft"
-        };
-
-        /// <summary>
-        /// Registers the assembly load event and loads every already existing assembly.
-        /// </summary>
-        public void Attach()
-        {
-            foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
-                Process(asm);
-            AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
-        }
-
-        /// <summary>
-        /// Deregisters the assembly load event
-        /// </summary>
-        public void Detach()
-        {
-            AppDomain.CurrentDomain.AssemblyLoad -= CurrentDomain_AssemblyLoad;
-        }
-
-        private void CurrentDomain_AssemblyLoad(object sender, AssemblyLoadEventArgs args)
-        {
-            Process(args.LoadedAssembly);
-        }
-
         private static readonly HashSet<Type> _processedTypes = new HashSet<Type>();
 
         /// <summary>
@@ -438,11 +411,6 @@ namespace Torch.Utils
         {
             if (_processedTypes.Add(t))
             {
-                if (string.IsNullOrWhiteSpace(t.Namespace))
-                    return;
-                foreach (string ns in _namespaceBlacklist)
-                    if (t.FullName.StartsWith(ns))
-                        return;
                 foreach (FieldInfo field in t.GetFields(BindingFlags.Static | BindingFlags.Instance |
                                                         BindingFlags.Public | BindingFlags.NonPublic))
                 {
@@ -636,6 +604,7 @@ namespace Torch.Utils
                 field.SetValue(null,
                     Expression.Lambda(Expression.Call(paramExp[0], methodInstance, argExp), paramExp)
                               .Compile());
+                _log.Trace($"Reflecting field {field.DeclaringType?.FullName}#{field.Name} with {methodInstance.DeclaringType?.FullName}#{methodInstance.Name}");
             }
         }
 
@@ -721,6 +690,7 @@ namespace Torch.Utils
             }
 
             field.SetValue(null, Expression.Lambda(impl, paramExp).Compile());
+            _log.Trace($"Reflecting field {field.DeclaringType?.FullName}#{field.Name} with {field.DeclaringType?.FullName}#{field.Name}");
         }
     }
 }

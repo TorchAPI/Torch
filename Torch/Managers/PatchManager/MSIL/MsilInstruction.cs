@@ -7,7 +7,6 @@ using System.Reflection.Emit;
 using System.Text;
 using Torch.Managers.PatchManager.Transpile;
 using Torch.Utils;
-using Label = System.Windows.Controls.Label;
 
 namespace Torch.Managers.PatchManager.MSIL
 {

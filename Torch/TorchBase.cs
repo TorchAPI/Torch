@@ -22,9 +22,11 @@ using Torch.API.Managers;
 using Torch.API.ModAPI;
 using Torch.API.Session;
 using Torch.Commands;
+using Torch.Event;
 using Torch.Managers;
 using Torch.Managers.ChatManager;
 using Torch.Managers.PatchManager;
+using Torch.Patches;
 using Torch.Utils;
 using Torch.Session;
 using VRage.Collections;
@@ -45,8 +47,13 @@ namespace Torch
     {
         static TorchBase()
         {
-            // We can safely never detach this since we don't reload assemblies.
-            new ReflectedManager().Attach();
+            ReflectedManager.Process(typeof(TorchBase).Assembly);
+            ReflectedManager.Process(typeof(ITorchBase).Assembly);
+            PatchManager.AddPatchShim(typeof(GameStatePatchShim));
+            PatchManager.CommitInternal();
+            RegisterCoreAssembly(typeof(ITorchBase).Assembly);
+            RegisterCoreAssembly(typeof(TorchBase).Assembly);
+            RegisterCoreAssembly(Assembly.GetEntryAssembly());
         }
 
         /// <summary>
@@ -100,6 +107,7 @@ namespace Torch
         /// <exception cref="InvalidOperationException">Thrown if a TorchBase instance already exists.</exception>
         protected TorchBase()
         {
+            RegisterCoreAssembly(GetType().Assembly);
             if (Instance != null)
                 throw new InvalidOperationException("A TorchBase instance already exists.");
 
@@ -120,20 +128,11 @@ namespace Torch
             sessionManager.AddFactory((x) => new EntityManager(this));
 
             Managers.AddManager(sessionManager);
-            var patcher = new PatchManager(this);
-            GameStateInjector.Inject(patcher.AcquireContext());
-            Managers.AddManager(patcher);
-            //            Managers.AddManager(new KeenLogManager(this));
+            Managers.AddManager(new PatchManager(this));
             Managers.AddManager(new FilesystemManager(this));
             Managers.AddManager(new UpdateManager(this));
+            Managers.AddManager(new EventManager(this));
             Managers.AddManager(Plugins);
-            GameStateChanged += (game, state) =>
-            {
-                if (state != TorchGameState.Created)
-                    return;
-                // At this point flush the patches; it's safe.
-                patcher.Commit();
-            };
             TorchAPI.Instance = this;
         }
 
@@ -390,7 +389,7 @@ namespace Torch
         /// <inheritdoc />
         public virtual void Update()
         {
-            GetManager<IPluginManager>().UpdatePlugins();
+            Managers.GetManager<IPluginManager>().UpdatePlugins();
         }
 
 
@@ -400,7 +399,7 @@ namespace Torch
         public TorchGameState GameState
         {
             get => _gameState;
-            private set
+            internal set
             {
                 _gameState = value;
                 GameStateChanged?.Invoke(MySandboxGame.Static, _gameState);
@@ -410,71 +409,37 @@ namespace Torch
         /// <inheritdoc/>
         public event TorchGameStateChangedDel GameStateChanged;
 
-        #region GameStateInjecting
-        private static class GameStateInjector
+        private static readonly HashSet<Assembly> _registeredCoreAssemblies = new HashSet<Assembly>();
+        /// <summary>
+        /// Registers a core (Torch) assembly with the system, including its
+        /// <see cref="EventManager"/> shims, <see cref="PatchManager"/> shims, and <see cref="ReflectedManager"/> components.
+        /// </summary>
+        /// <param name="asm">Assembly to register</param>
+        internal static void RegisterCoreAssembly(Assembly asm)
         {
-#pragma warning disable 649
-            [ReflectedMethodInfo(typeof(MySandboxGame), nameof(MySandboxGame.Dispose))]
-            private static MethodInfo _sandboxGameDispose;
-            [ReflectedMethodInfo(typeof(MySandboxGame), "Initialize")]
-            private static MethodInfo _sandboxGameInit;
-#pragma warning restore 649
-
-            internal static void Inject(PatchContext target)
-            {
-                ConstructorInfo ctor = typeof(MySandboxGame).GetConstructor(new[] {typeof(string[])});
-                if (ctor == null)
-                    throw new ArgumentException("Can't find constructor MySandboxGame(string[])");
-                target.GetPattern(ctor).Prefixes.Add(MethodRef(nameof(PrefixConstructor)));
-                target.GetPattern(ctor).Suffixes.Add(MethodRef(nameof(SuffixConstructor)));
-                target.GetPattern(_sandboxGameInit).Prefixes.Add(MethodRef(nameof(PrefixInit)));
-                target.GetPattern(_sandboxGameInit).Suffixes.Add(MethodRef(nameof(SuffixInit)));
-                target.GetPattern(_sandboxGameDispose).Prefixes.Add(MethodRef(nameof(PrefixDispose)));
-                target.GetPattern(_sandboxGameDispose).Suffixes.Add(MethodRef(nameof(SuffixDispose)));
-            }
-
-            private static MethodInfo MethodRef(string name)
-            {
-                return typeof(GameStateInjector).GetMethod(name,
-                    BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-            }
-
-            private static void PrefixConstructor()
-            {
-                if (Instance is TorchBase tb)
-                    tb.GameState = TorchGameState.Creating;
-            }
-
-            private static void SuffixConstructor()
-            {
-                if (Instance is TorchBase tb)
-                    tb.GameState = TorchGameState.Created;
-            }
-
-            private static void PrefixInit()
-            {
-                if (Instance is TorchBase tb)
-                    tb.GameState = TorchGameState.Loading;
-            }
-
-            private static void SuffixInit()
-            {
-                if (Instance is TorchBase tb)
-                    tb.GameState = TorchGameState.Loaded;
-            }
-
-            private static void PrefixDispose()
-            {
-                if (Instance is TorchBase tb)
-                    tb.GameState = TorchGameState.Unloading;
-            }
-
-            private static void SuffixDispose()
-            {
-                if (Instance is TorchBase tb)
-                    tb.GameState = TorchGameState.Unloaded;
-            }
+            lock (_registeredCoreAssemblies)
+                if (_registeredCoreAssemblies.Add(asm))
+                {
+                    ReflectedManager.Process(asm);
+                    EventManager.AddDispatchShims(asm);
+                    PatchManager.AddPatchShims(asm);
+                }
         }
-        #endregion
+
+        private static readonly HashSet<Assembly> _registeredAuxAssemblies = new HashSet<Assembly>();
+
+        /// <summary>
+        /// Registers an auxillary (plugin) assembly with the system, including its
+        /// <see cref="ReflectedManager"/> related components.
+        /// </summary>
+        /// <param name="asm">Assembly to register</param>
+        internal static void RegisterAuxAssembly(Assembly asm)
+        {
+            lock (_registeredAuxAssemblies)
+                if (_registeredAuxAssemblies.Add(asm))
+                {
+                    ReflectedManager.Process(asm);
+                }
+        }
     }
 }
