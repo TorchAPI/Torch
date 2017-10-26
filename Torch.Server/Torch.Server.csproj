@@ -184,6 +184,7 @@
     </Reference>
     <Reference Include="VRage.Steam">
       <HintPath>..\GameBinaries\VRage.Steam.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
