@@ -66,7 +66,6 @@ namespace Torch.Server
             DedicatedInstance = new InstanceManager(this);
             AddManager(DedicatedInstance);
             Config = config ?? new TorchConfig();
-            MyFakes.ENABLE_INFINARIO = false;
 
             var sessionManager = Managers.GetManager<ITorchSessionManager>();
             sessionManager.AddFactory((x) => new MultiplayerManagerDedicated(this));
