@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +27,7 @@ namespace Torch.Server
 login anonymous
 app_update 298740
 quit";
-        
+
         private TorchConfig _config;
         private TorchServer _server;
         private string _basePath;
@@ -166,6 +167,9 @@ quit";
         {
             var ex = (Exception)e.ExceptionObject;
             Log.Fatal(ex);
+            if (ex is ReflectionTypeLoadException exti)
+                foreach (Exception exl in exti.LoaderExceptions)
+                    Log.Fatal($"Sub exception: {exl}");
             Console.WriteLine("Exiting in 5 seconds.");
             Thread.Sleep(5000);
             if (_config.RestartOnCrash)
