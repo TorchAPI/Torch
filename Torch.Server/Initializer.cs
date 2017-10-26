@@ -162,14 +162,23 @@ quit";
             }
         }
 
+        private void LogException(Exception ex)
+        {
+            if (ex.InnerException != null)
+            {
+                LogException(ex.InnerException);
+            }
+            Log.Fatal(ex);
+            if (ex is ReflectionTypeLoadException exti)
+                foreach (Exception exl in exti.LoaderExceptions)
+                    LogException(exl);
+            
+        }
 
         private void HandleException(object sender, UnhandledExceptionEventArgs e)
         {
             var ex = (Exception)e.ExceptionObject;
-            Log.Fatal(ex);
-            if (ex is ReflectionTypeLoadException exti)
-                foreach (Exception exl in exti.LoaderExceptions)
-                    Log.Fatal($"Sub exception: {exl}");
+            LogException(ex);
             Console.WriteLine("Exiting in 5 seconds.");
             Thread.Sleep(5000);
             if (_config.RestartOnCrash)
