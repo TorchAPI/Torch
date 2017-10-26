@@ -42,11 +42,17 @@ namespace Torch.Server
     public class TorchServer : TorchBase, ITorchServer
     {
         //public MyConfigDedicated<MyObjectBuilder_SessionSettings> DedicatedConfig { get; set; }
+        /// <inheritdoc />
         public float SimulationRatio { get => _simRatio; set { _simRatio = value; OnPropertyChanged(); } }
+        /// <inheritdoc />
         public TimeSpan ElapsedPlayTime { get => _elapsedPlayTime; set { _elapsedPlayTime = value; OnPropertyChanged(); } }
+        /// <inheritdoc />
         public Thread GameThread { get; private set; }
+        /// <inheritdoc />
         public ServerState State { get => _state; private set { _state = value; OnPropertyChanged(); } }
+        /// <inheritdoc />
         public bool IsRunning { get => _isRunning; set { _isRunning = value; OnPropertyChanged(); } }
+        /// <inheritdoc />
         public InstanceManager DedicatedInstance { get; }
         /// <inheritdoc />
         public string InstanceName => Config?.InstanceName;
@@ -61,6 +67,7 @@ namespace Torch.Server
         private Timer _watchdog;
         private Stopwatch _uptime;
 
+        /// <inheritdoc />
         public TorchServer(TorchConfig config = null)
         {
             DedicatedInstance = new InstanceManager(this);

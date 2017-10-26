@@ -30,22 +30,24 @@ namespace Torch.Utils
             foreach (string other in binaryPaths)
                 allPaths.Add(other.ToLower().Replace('/', '\\'));
             var pathPrefix = StringUtils.CommonPrefix(allPaths);
+#pragma warning disable 618
             AppDomain.CurrentDomain.AppendPrivatePath(String.Join(Path.PathSeparator.ToString(), allPaths));
+#pragma warning restore 618
             AppDomain.CurrentDomain.SetData(TorchKey, true);
             AppDomain.CurrentDomain.ExecuteAssemblyByName(entryPoint, args);
             return;
             // this would be way better but HAVOK IS UNMANAGED :clang:
             // exclude application base from probing
-            var setup = new AppDomainSetup
-            {
-                ApplicationBase = pathPrefix.ToString(),
-                PrivateBinPathProbe = "",
-                PrivateBinPath = string.Join(";", allPaths)
-            };
-            AppDomain domain = AppDomain.CreateDomain($"TorchDomain-{Assembly.GetEntryAssembly().GetName().Name}-{new Random().Next():X}", null, setup);
-            domain.SetData(TorchKey, true);
-            domain.ExecuteAssemblyByName(entryPoint, args);
-            AppDomain.Unload(domain);
+//            var setup = new AppDomainSetup
+//            {
+//                ApplicationBase = pathPrefix.ToString(),
+//                PrivateBinPathProbe = "",
+//                PrivateBinPath = string.Join(";", allPaths)
+//            };
+//            AppDomain domain = AppDomain.CreateDomain($"TorchDomain-{Assembly.GetEntryAssembly().GetName().Name}-{new Random().Next():X}", null, setup);
+//            domain.SetData(TorchKey, true);
+//            domain.ExecuteAssemblyByName(entryPoint, args);
+//            AppDomain.Unload(domain);
         }
     }
 }
