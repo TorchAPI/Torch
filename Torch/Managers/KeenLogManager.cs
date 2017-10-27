@@ -13,14 +13,12 @@ using VRage.Utils;
 
 namespace Torch.Managers
 {
-    public class KeenLogManager : Manager
+    [PatchShim]
+    internal class KeenLogManager
     {
         private static readonly Logger _log = LogManager.GetLogger("Keen");
 
 #pragma warning disable 649
-        [Dependency]
-        private PatchManager.PatchManager _patchManager;
-
         [ReflectedMethodInfo(typeof(MyLog), nameof(MyLog.Log), Parameters = new[] { typeof(MyLogSeverity), typeof(StringBuilder) })]
         private static MethodInfo _logStringBuilder;
 
@@ -45,35 +43,22 @@ namespace Torch.Managers
         [ReflectedMethodInfo(typeof(MyLog), nameof(MyLog.WriteLineAndConsole), Parameters = new[] { typeof(string) })]
         private static MethodInfo _logWriteLineAndConsole;
 #pragma warning restore 649
+        
 
-        private PatchContext _context;
-
-        public KeenLogManager(ITorchBase torchInstance) : base(torchInstance)
+        public static void Patch(PatchContext context)
         {
-        }
+            context.GetPattern(_logStringBuilder).Prefixes.Add(Method(nameof(PrefixLogStringBuilder)));
+            context.GetPattern(_logFormatted).Prefixes.Add(Method(nameof(PrefixLogFormatted)));
 
-        public override void Attach()
-        {
-            _context = _patchManager.AcquireContext();
+            context.GetPattern(_logWriteLine).Prefixes.Add(Method(nameof(PrefixWriteLine)));
+            context.GetPattern(_logAppendToClosedLog).Prefixes.Add(Method(nameof(PrefixAppendToClosedLog)));
+            context.GetPattern(_logWriteLineAndConsole).Prefixes.Add(Method(nameof(PrefixWriteLineConsole)));
 
-            _context.GetPattern(_logStringBuilder).Prefixes.Add(Method(nameof(PrefixLogStringBuilder)));
-            _context.GetPattern(_logFormatted).Prefixes.Add(Method(nameof(PrefixLogFormatted)));
+            context.GetPattern(_logWriteLineException).Prefixes.Add(Method(nameof(PrefixWriteLineException)));
+            context.GetPattern(_logAppendToClosedLogException).Prefixes.Add(Method(nameof(PrefixAppendToClosedLogException)));
 
-            _context.GetPattern(_logWriteLine).Prefixes.Add(Method(nameof(PrefixWriteLine)));
-            _context.GetPattern(_logAppendToClosedLog).Prefixes.Add(Method(nameof(PrefixAppendToClosedLog)));
-            _context.GetPattern(_logWriteLineAndConsole).Prefixes.Add(Method(nameof(PrefixWriteLineConsole)));
-
-            _context.GetPattern(_logWriteLineException).Prefixes.Add(Method(nameof(PrefixWriteLineException)));
-            _context.GetPattern(_logAppendToClosedLogException).Prefixes.Add(Method(nameof(PrefixAppendToClosedLogException)));
-
-            _context.GetPattern(_logWriteLineOptions).Prefixes.Add(Method(nameof(PrefixWriteLineOptions)));
-
-            _patchManager.Commit();
-        }
-
-        public override void Detach()
-        {
-            _patchManager.FreeContext(_context);
+            context.GetPattern(_logWriteLineOptions).Prefixes.Add(Method(nameof(PrefixWriteLineOptions)));
+            
         }
 
         private static MethodInfo Method(string name)
@@ -96,7 +81,7 @@ namespace Torch.Managers
 
         private static bool PrefixWriteLine(MyLog __instance, string msg)
         {
-            _log.Trace(PrepareLog(__instance).Append(msg));
+            _log.Debug(PrepareLog(__instance).Append(msg));
             return false;
         }
 
@@ -120,13 +105,13 @@ namespace Torch.Managers
 
         private static bool PrefixAppendToClosedLogException(Exception e)
         {
-            _log.Info(e);
+            _log.Error(e);
             return false;
         }
 
         private static bool PrefixWriteLineException(Exception ex)
         {
-            _log.Info(ex);
+            _log.Error(ex);
             return false;
         }
 
