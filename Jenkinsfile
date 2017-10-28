@@ -45,9 +45,18 @@ node {
 		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=${buildMode} /p:Platform=x64"
 	}
 
+	stage('Archive') {
+		archiveArtifacts artifacts: "bin/x64/${buildMode}/Torch*", caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
+
+		packageAndArchive(buildMode, "torch-server", "Torch.Client*")
+
+		packageAndArchive(buildMode, "torch-client", "Torch.Server*")
+	}
+
 	stage('Test') {
 		bat 'IF NOT EXIST reports MKDIR reports'
 		bat "\"packages/xunit.runner.console.2.2.0/tools/xunit.console.exe\" \"bin-test/x64/${buildMode}/Torch.Tests.dll\" \"bin-test/x64/${buildMode}/Torch.Server.Tests.dll\" \"bin-test/x64/${buildMode}/Torch.Client.Tests.dll\" -parallel none -xml \"reports/Torch.Tests.xml\""
+
 	    step([
 	        $class: 'XUnitBuilder',
 	        thresholdMode: 1,
@@ -61,14 +70,6 @@ node {
 	            stopProcessingIfError: true
 	        ]]
 	    ])
-	}
-
-	stage('Archive') {
-		archiveArtifacts artifacts: "bin/x64/${buildMode}/Torch*", caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
-
-		packageAndArchive(buildMode, "torch-server", "Torch.Client*")
-
-		packageAndArchive(buildMode, "torch-client", "Torch.Server*")
 	}
 
 	if (env.BRANCH_NAME == "master") {
