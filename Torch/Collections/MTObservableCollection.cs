@@ -102,8 +102,8 @@ namespace Torch.Collections
                     MarkSnapshotsDirty();
 
                     OnPropertyChanged(nameof(Count));
-                    OnCollectionChanged(oldIndex != null
-                        ? new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, oldIndex)
+                    OnCollectionChanged(oldIndex.HasValue
+                        ? new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, oldIndex.Value)
                         : new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item));
                     return true;
                 }
