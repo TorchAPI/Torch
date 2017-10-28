@@ -13,7 +13,7 @@ using VRage.Utils;
 
 namespace Torch.Managers
 {
-    [PatchShim]
+//    [PatchShim]
     internal static class KeenLogPatch
     {
         private static readonly Logger _log = LogManager.GetLogger("Keen");
