@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NLog;
 using Sandbox.Engine.Utils;
+using Torch.Collections;
 using VRage.Game;
 using VRage.Game.ModAPI;
 
@@ -58,7 +59,7 @@ namespace Torch.Server.ViewModels
         private SessionSettingsViewModel _sessionSettings;
         public SessionSettingsViewModel SessionSettings { get => _sessionSettings; set { _sessionSettings = value; OnPropertyChanged(); } }
 
-        public ObservableList<string> WorldPaths { get; } = new ObservableList<string>();
+        public MtObservableList<string> WorldPaths { get; } = new MtObservableList<string>();
         private string _administrators;
         public string Administrators { get => _administrators; set { _administrators = value; OnPropertyChanged(); } }
         private string _banned;

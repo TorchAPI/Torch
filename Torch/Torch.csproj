@@ -154,7 +154,11 @@
     <Compile Include="..\Versioning\AssemblyVersion.cs">
       <Link>Properties\AssemblyVersion.cs</Link>
     </Compile>
-    <Compile Include="Collections\ObservableList.cs" />
+    <Compile Include="Collections\MtObservableCollection.cs" />
+    <Compile Include="Collections\MtObservableDictionary.cs" />
+    <Compile Include="Collections\MtObservableList.cs" />
+    <Compile Include="Collections\TransformComparer.cs" />
+    <Compile Include="Collections\TransformEnumerator.cs" />
     <Compile Include="Event\EventShimAttribute.cs" />
     <Compile Include="Managers\ChatManager\ChatManagerClient.cs" />
     <Compile Include="Managers\ChatManager\ChatManagerServer.cs" />
@@ -164,7 +168,7 @@
     <Compile Include="Event\EventList.cs" />
     <Compile Include="Event\EventManager.cs" />
     <Compile Include="Event\IEventList.cs" />
-    <Compile Include="Managers\KeenLogManager.cs" />
+    <Compile Include="Managers\KeenLogPatch.cs" />
     <Compile Include="Managers\PatchManager\AssemblyMemory.cs" />
     <Compile Include="Managers\PatchManager\DecoratedMethod.cs" />
     <Compile Include="Managers\PatchManager\EmitExtensions.cs" />
@@ -190,7 +194,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SaveGameStatus.cs" />
     <Compile Include="Collections\KeyTree.cs" />
-    <Compile Include="Collections\ObservableDictionary.cs" />
     <Compile Include="Collections\RollingAverage.cs" />
     <Compile Include="CommandLine.cs" />
     <Compile Include="Commands\CategoryAttribute.cs" />
@@ -215,6 +218,7 @@
     <Compile Include="Utils\Reflection.cs" />
     <Compile Include="Managers\ScriptingManager.cs" />
     <Compile Include="Utils\StringUtils.cs" />
+    <Compile Include="Utils\SynchronizationExtensions.cs" />
     <Compile Include="Utils\TorchAssemblyResolver.cs" />
     <Compile Include="Utils\ReflectedManager.cs" />
     <Compile Include="Session\TorchSessionManager.cs" />
@@ -224,7 +228,6 @@
     <Compile Include="Session\TorchSession.cs" />
     <Compile Include="Utils\TorchLauncher.cs" />
     <Compile Include="ViewModels\ModViewModel.cs" />
-    <Compile Include="Collections\MTObservableCollection.cs" />
     <Compile Include="Extensions\MyPlayerCollectionExtensions.cs" />
     <Compile Include="SteamHelper.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />

@@ -14,7 +14,7 @@ using VRage.Utils;
 namespace Torch.Managers
 {
     [PatchShim]
-    internal class KeenLogManager
+    internal static class KeenLogPatch
     {
         private static readonly Logger _log = LogManager.GetLogger("Keen");
 
@@ -63,7 +63,7 @@ namespace Torch.Managers
 
         private static MethodInfo Method(string name)
         {
-            return typeof(KeenLogManager).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            return typeof(KeenLogPatch).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
         }
 
         [ReflectedMethod(Name = "GetThreadId")]

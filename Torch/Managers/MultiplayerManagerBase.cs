@@ -48,7 +48,7 @@ namespace Torch.Managers
         /// <inheritdoc />
         public event Action<IPlayer> PlayerLeft;
 
-        public ObservableDictionary<ulong, PlayerViewModel> Players { get; } = new ObservableDictionary<ulong, PlayerViewModel>();
+        public MtObservableDictionary<ulong, PlayerViewModel> Players { get; } = new MtObservableDictionary<ulong, PlayerViewModel>();
 
 #pragma warning disable 649
         [ReflectedGetter(Name = "m_players")]

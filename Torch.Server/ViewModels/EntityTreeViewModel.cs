@@ -11,16 +11,17 @@ using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using System.Windows.Threading;
 using NLog;
+using Torch.Collections;
 
 namespace Torch.Server.ViewModels
 {
     public class EntityTreeViewModel : ViewModel
     {
         //TODO: these should be sorted sets for speed
-        public ObservableList<GridViewModel> Grids { get; set; } = new ObservableList<GridViewModel>();
-        public ObservableList<CharacterViewModel> Characters { get; set; } = new ObservableList<CharacterViewModel>();
-        public ObservableList<EntityViewModel> FloatingObjects { get; set; } = new ObservableList<EntityViewModel>();
-        public ObservableList<VoxelMapViewModel> VoxelMaps { get; set; } = new ObservableList<VoxelMapViewModel>();
+        public MtObservableList<GridViewModel> Grids { get; set; } = new MtObservableList<GridViewModel>();
+        public MtObservableList<CharacterViewModel> Characters { get; set; } = new MtObservableList<CharacterViewModel>();
+        public MtObservableList<EntityViewModel> FloatingObjects { get; set; } = new MtObservableList<EntityViewModel>();
+        public MtObservableList<VoxelMapViewModel> VoxelMaps { get; set; } = new MtObservableList<VoxelMapViewModel>();
         public Dispatcher ControlDispatcher => _control.Dispatcher;
 
         private EntityViewModel _currentEntity;
@@ -29,7 +30,7 @@ namespace Torch.Server.ViewModels
         public EntityViewModel CurrentEntity
         {
             get => _currentEntity;
-            set { _currentEntity = value; OnPropertyChanged(); }
+            set { _currentEntity = value; OnPropertyChanged(nameof(CurrentEntity)); }
         }
 
         public EntityTreeViewModel(UserControl control)
@@ -67,16 +68,16 @@ namespace Torch.Server.ViewModels
             switch (obj)
             {
                 case MyCubeGrid grid:
-                    Grids.Insert(new GridViewModel(grid, this), g => g.Name);
+                    Grids.Add(new GridViewModel(grid, this));
                     break;
                 case MyCharacter character:
-                    Characters.Insert(new CharacterViewModel(character, this), c => c.Name);
+                    Characters.Add(new CharacterViewModel(character, this));
                     break;
                 case MyFloatingObject floating:
-                    FloatingObjects.Insert(new FloatingObjectViewModel(floating, this), f => f.Name);
+                    FloatingObjects.Add(new FloatingObjectViewModel(floating, this));
                     break;
                 case MyVoxelBase voxel:
-                    VoxelMaps.Insert(new VoxelMapViewModel(voxel, this), v => v.Name);
+                    VoxelMaps.Add(new VoxelMapViewModel(voxel, this));
                     break;
             }
         }

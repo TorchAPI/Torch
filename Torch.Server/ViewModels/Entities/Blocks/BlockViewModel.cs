@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Sandbox.Game.Entities.Cube;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces;
+using Torch.Collections;
 using Torch.Server.ViewModels.Entities;
 
 namespace Torch.Server.ViewModels.Blocks
@@ -15,7 +16,7 @@ namespace Torch.Server.ViewModels.Blocks
     public class BlockViewModel : EntityViewModel
     {
         public IMyTerminalBlock Block { get; }
-        public ObservableList<PropertyViewModel> Properties { get; } = new ObservableList<PropertyViewModel>();
+        public MtObservableList<PropertyViewModel> Properties { get; } = new MtObservableList<PropertyViewModel>();
 
         public string FullName => $"{Block.CubeGrid.CustomName} - {Block.CustomName}";
 

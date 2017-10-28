@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SharpDX.Toolkit.Collections;
+using Torch.Collections;
 using VRage.Game;
 using VRage.Library.Utils;
 
@@ -35,7 +36,7 @@ namespace Torch.Server.ViewModels
                 BlockLimits.Add(new BlockLimitViewModel(this, limit.Key, limit.Value));
         }
 
-        public ObservableList<BlockLimitViewModel> BlockLimits { get; } = new ObservableList<BlockLimitViewModel>();
+        public MtObservableList<BlockLimitViewModel> BlockLimits { get; } = new MtObservableList<BlockLimitViewModel>();
 
         #region Multipliers
 

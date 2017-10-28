@@ -27,7 +27,7 @@ namespace Torch.Managers
         private static Logger _log = LogManager.GetLogger(nameof(PluginManager));
         private const string MANIFEST_NAME = "manifest.xml";
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
-        private readonly ObservableDictionary<Guid, ITorchPlugin> _plugins = new ObservableDictionary<Guid, ITorchPlugin>();
+        private readonly MtObservableDictionary<Guid, ITorchPlugin> _plugins = new MtObservableDictionary<Guid, ITorchPlugin>();
 #pragma warning disable 649
         [Dependency]
         private ITorchSessionManager _sessionManager;
