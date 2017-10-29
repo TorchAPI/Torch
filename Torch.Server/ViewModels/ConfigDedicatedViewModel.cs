@@ -26,6 +26,7 @@ namespace Torch.Server.ViewModels
         public ConfigDedicatedViewModel(MyConfigDedicated<MyObjectBuilder_SessionSettings> configDedicated)
         {
             _config = configDedicated;
+            _config.IgnoreLastSession = true;
             SessionSettings = new SessionSettingsViewModel(_config.SessionSettings);
             Administrators = string.Join(Environment.NewLine, _config.Administrators);
             Banned = string.Join(Environment.NewLine, _config.Banned);
@@ -53,6 +54,8 @@ namespace Torch.Server.ViewModels
                     Log.Warn($"'{mod}' is not a valid mod ID.");
             }
 
+            // Never ever
+            _config.IgnoreLastSession = true;
             _config.Save(path);
         }
 
@@ -77,12 +80,6 @@ namespace Torch.Server.ViewModels
         {
             get { return _config.GroupID; }
             set { _config.GroupID = value; OnPropertyChanged(); }
-        }
-
-        public bool IgnoreLastSession
-        {
-            get { return _config.IgnoreLastSession; }
-            set { _config.IgnoreLastSession = value; OnPropertyChanged(); }
         }
 
         public string IP

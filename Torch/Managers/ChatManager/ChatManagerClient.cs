@@ -113,12 +113,7 @@ namespace Torch.Managers.ChatManager
         {
             if (!sendToOthers)
                 return;
-            var torchMsg = new TorchChatMessage()
-            {
-                AuthorSteamId = Sync.MyId,
-                Author = MySession.Static.LocalHumanPlayer?.DisplayName ?? "Player",
-                Message = messageText
-            };
+            var torchMsg = new TorchChatMessage(MySession.Static.LocalHumanPlayer?.DisplayName ?? "Player", Sync.MyId, messageText);
             var consumed = false;
             MessageRecieved?.Invoke(torchMsg, ref consumed);
             if (!consumed)
@@ -138,14 +133,8 @@ namespace Torch.Managers.ChatManager
 
         private void Multiplayer_ChatMessageReceived(ulong steamUserId, string message)
         {
-            var torchMsg = new TorchChatMessage()
-            {
-                AuthorSteamId = steamUserId,
-                Author = Torch.CurrentSession.Managers.GetManager<IMultiplayerManagerBase>()
-                              ?.GetSteamUsername(steamUserId),
-                Font = (steamUserId == MyGameService.UserId) ? "DarkBlue" : "Blue",
-                Message = message
-            };
+            var torchMsg = new TorchChatMessage(steamUserId, message,
+                (steamUserId == MyGameService.UserId) ? MyFontEnum.DarkBlue : MyFontEnum.Blue);
             var consumed = false;
             MessageRecieved?.Invoke(torchMsg, ref consumed);
             if (!consumed && HasHud)
@@ -154,13 +143,7 @@ namespace Torch.Managers.ChatManager
 
         private void Multiplayer_ScriptedChatMessageReceived(string message, string author, string font)
         {
-            var torchMsg = new TorchChatMessage()
-            {
-                AuthorSteamId = null,
-                Author = author,
-                Font = font,
-                Message = message
-            };
+            var torchMsg = new TorchChatMessage(author, message, font);
             var consumed = false;
             MessageRecieved?.Invoke(torchMsg, ref consumed);
             if (!consumed && HasHud)

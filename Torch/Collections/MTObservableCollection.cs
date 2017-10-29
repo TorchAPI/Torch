@@ -40,7 +40,7 @@ namespace Torch.Collections
         /// </summary>
         /// <param name="old">Collection to clear and reuse, or null if none</param>
         /// <returns>The snapshot</returns>
-        protected abstract TC Snapshot(TC old);
+        protected abstract List<TV> Snapshot(List<TV> old);
 
         /// <summary>
         /// Marks all snapshots taken of this collection as dirty.
@@ -104,7 +104,7 @@ namespace Torch.Collections
                     OnPropertyChanged(nameof(Count));
                     OnCollectionChanged(oldIndex.HasValue
                         ? new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, oldIndex.Value)
-                        : new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item));
+                        : new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
                     return true;
                 }
             }
@@ -204,7 +204,6 @@ namespace Torch.Collections
                 for (int i = invokeList.Length - 1; i >= 0; i--)
                 {
                     var wrapper = (DispatcherDelegate)invokeList[i].Target;
-                    Debug.Assert(wrapper._dispatcher == CurrentDispatcher, "Adding and removing should be done from the same dispatcher");
                     if (wrapper._delegate.Equals(evt))
                     {
                         _event -= wrapper.Invoke;
@@ -215,7 +214,7 @@ namespace Torch.Collections
 
             private struct DispatcherDelegate
             {
-                internal readonly Dispatcher _dispatcher;
+                private readonly Dispatcher _dispatcher;
                 internal readonly TEvtHandle _delegate;
 
                 internal DispatcherDelegate(TEvtHandle del)
@@ -244,7 +243,7 @@ namespace Torch.Collections
         private sealed class ThreadView
         {
             private readonly MtObservableCollection<TC, TV> _owner;
-            private readonly WeakReference<TC> _snapshot;
+            private readonly WeakReference<List<TV>> _snapshot;
             /// <summary>
             /// The <see cref="MtObservableCollection{TC,TV}._version"/> of the <see cref="_snapshot"/>
             /// </summary>
@@ -257,17 +256,17 @@ namespace Torch.Collections
             internal ThreadView(MtObservableCollection<TC, TV> owner)
             {
                 _owner = owner;
-                _snapshot = new WeakReference<TC>(null);
+                _snapshot = new WeakReference<List<TV>>(null);
                 _snapshotVersion = 0;
                 _snapshotRefCount = 0;
             }
 
-            private TC GetSnapshot()
+            private List<TV> GetSnapshot()
             {
                 // reading the version number + snapshots
                 using (_owner.Lock.ReadUsing())
                 {
-                    if (!_snapshot.TryGetTarget(out TC currentSnapshot) || _snapshotVersion != _owner._version)
+                    if (!_snapshot.TryGetTarget(out List<TV> currentSnapshot) || _snapshotVersion != _owner._version)
                     {
                         // Update the snapshot, using the old one if it isn't referenced.
                         currentSnapshot = _owner.Snapshot(_snapshotRefCount == 0 ? currentSnapshot : null);

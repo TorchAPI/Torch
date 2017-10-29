@@ -29,7 +29,7 @@ namespace Torch.Collections
         {
         }
 
-        protected override IList<T> Snapshot(IList<T> old)
+        protected override List<T> Snapshot(List<T> old)
         {
             if (old == null)
             {
@@ -37,11 +37,7 @@ namespace Torch.Collections
                 return list;
             }
             old.Clear();
-            if (old is List<T> tmp)
-                tmp.AddRange(Backing);
-            else
-                foreach (T k in Backing)
-                    old.Add(k);
+            old.AddRange(Backing);
             return old;
         }
 
@@ -55,7 +51,7 @@ namespace Torch.Collections
         /// <inheritdoc/>
         public void Insert(int index, T item)
         {
-            using(Lock.WriteUsing())
+            using (Lock.WriteUsing())
             {
                 Backing.Insert(index, item);
                 MarkSnapshotsDirty();
@@ -82,12 +78,13 @@ namespace Torch.Collections
         {
             get
             {
-                using(Lock.ReadUsing())
+                using (Lock.ReadUsing())
                     return Backing[index];
             }
             set
             {
-                using(Lock.ReadUsing()) { 
+                using (Lock.ReadUsing())
+                {
                     T old = Backing[index];
                     Backing[index] = value;
                     MarkSnapshotsDirty();
@@ -109,7 +106,8 @@ namespace Torch.Collections
         /// </summary>
         public void Sort<TKey>(Func<T, TKey> selector, IComparer<TKey> comparer = null)
         {
-            using (Lock.ReadUsing()) { 
+            using (Lock.ReadUsing())
+            {
                 comparer = comparer ?? Comparer<TKey>.Default;
                 if (Backing is List<T> lst)
                     lst.Sort(new TransformComparer<T, TKey>(selector, comparer));

@@ -136,12 +136,12 @@ namespace Torch.Server
             var commands = _server.CurrentSession?.Managers.GetManager<Torch.Commands.CommandManager>();
             if (commands != null && commands.IsCommand(text))
             {
-                InsertMessage(new TorchChatMessage("Server", text) { Font = MyFontEnum.DarkBlue });
+                InsertMessage(new TorchChatMessage("Server", text, MyFontEnum.DarkBlue));
                 _server.Invoke(() =>
                 {
                     string response = commands.HandleCommandFromServer(text);
                     if (!string.IsNullOrWhiteSpace(response))
-                        InsertMessage(new TorchChatMessage("Server", response) { Font = MyFontEnum.Blue });
+                        InsertMessage(new TorchChatMessage("Server", response, MyFontEnum.Blue));
                 });
             }
             else

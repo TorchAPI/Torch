@@ -147,12 +147,9 @@ namespace Torch.Managers.ChatManager
 
         internal void RaiseMessageRecieved(ChatMsg message, ref bool consumed)
         {
-            var torchMsg = new TorchChatMessage()
-            {
-                AuthorSteamId = message.Author,
-                Author = MyMultiplayer.Static?.GetMemberName(message.Author) ?? $"user_{message.Author}",
-                Message = message.Text
-            };
+            var torchMsg =
+                new TorchChatMessage(MyMultiplayer.Static?.GetMemberName(message.Author) ?? $"user_{message.Author}",
+                    message.Author, message.Text);
             MessageProcessing?.Invoke(torchMsg, ref consumed);
         }
 

@@ -2,9 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Torch.Utils;
 
 namespace Torch.Collections
@@ -21,17 +18,16 @@ namespace Torch.Collections
         /// </summary>
         public MtObservableDictionary() : base(new Dictionary<TK, TV>())
         {
-            Keys = new ProxyCollection<TK>(this, Backing.Keys, (x) => x.Key);
-            Values = new ProxyCollection<TV>(this, Backing.Values, (x) => x.Value);
+            ObservableKeys = new ProxyCollection<TK>(this, Backing.Keys, (x) => x.Key);
+            ObservableValues = new ProxyCollection<TV>(this, Backing.Values, (x) => x.Value);
         }
 
-        protected override IDictionary<TK, TV> Snapshot(IDictionary<TK, TV> old)
+        protected override List<KeyValuePair<TK, TV>> Snapshot(List<KeyValuePair<TK, TV>> old)
         {
             if (old == null)
-                return new Dictionary<TK, TV>(Backing);
+                return new List<KeyValuePair<TK, TV>>(Backing);
             old.Clear();
-            foreach (KeyValuePair<TK, TV> k in Backing)
-                old.Add(k);
+            old.AddRange(Backing);
             return old;
         }
 
@@ -83,10 +79,17 @@ namespace Torch.Collections
         }
 
         /// <inheritdoc/>
-        public ICollection<TK> Keys { get; }
+        public ICollection<TK> Keys => ObservableKeys;
 
         /// <inheritdoc/>
-        public ICollection<TV> Values { get; }
+        public ICollection<TV> Values => ObservableValues;
+
+        // TODO when we rewrite this to use a sorted dictionary.
+        /// <inheritdoc cref="Keys"/>
+        private ProxyCollection<TK> ObservableKeys { get; }
+
+        /// <inheritdoc cref="Keys"/>
+        private ProxyCollection<TV> ObservableValues { get; }
 
         internal void RaiseFullReset()
         {
@@ -94,7 +97,11 @@ namespace Torch.Collections
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
-        private class ProxyCollection<TP> : ICollection<TP>
+        /// <summary>
+        /// Proxy collection capable of raising notifications when the parent collection changes.
+        /// </summary>
+        /// <typeparam name="TP">Entry type</typeparam>
+        public class ProxyCollection<TP> : ICollection<TP>
         {
             private readonly MtObservableDictionary<TK, TV> _owner;
             private readonly ICollection<TP> _backing;
@@ -116,17 +123,13 @@ namespace Torch.Collections
             /// <inheritdoc/>
             public void Add(TP item)
             {
-                using (_owner.Lock.WriteUsing())
-                {
-                    _backing.Add(item);
-                    _owner.RaiseFullReset();
-                }
+                throw new NotSupportedException();
             }
 
             /// <inheritdoc/>
             public void Clear()
             {
-                _owner.Clear();
+                throw new NotSupportedException();
             }
 
             /// <inheritdoc/>
@@ -146,13 +149,7 @@ namespace Torch.Collections
             /// <inheritdoc/>
             public bool Remove(TP item)
             {
-                using (_owner.Lock.WriteUsing())
-                {
-                    if (!_backing.Remove(item))
-                        return false;
-                    _owner.RaiseFullReset();
-                    return true;
-                }
+                throw new NotSupportedException();
             }
 
             /// <inheritdoc/>
@@ -165,6 +162,7 @@ namespace Torch.Collections
                 }
             }
 
+            /// <inheritdoc/>
             public bool IsReadOnly => _backing.IsReadOnly;
         }
     }

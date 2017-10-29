@@ -23,7 +23,7 @@ namespace Torch.Server.ViewModels
         /// </summary>
         public SessionSettingsViewModel() : this(new MyObjectBuilder_SessionSettings())
         {
-            
+
         }
 
         /// <summary>
@@ -361,6 +361,19 @@ namespace Torch.Server.ViewModels
         public int WorldSize
         {
             get => _settings.WorldSizeKm; set { _settings.WorldSizeKm = value; OnPropertyChanged(); }
+        }
+
+        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.ProceduralDensity"/>
+        public float ProceduralDensity
+        {
+            get => _settings.ProceduralDensity; set { _settings.ProceduralDensity = value; OnPropertyChanged(); }
+        }
+
+        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.ProceduralSeed"/>
+        public int ProceduralSeed
+        {
+            get => _settings.ProceduralSeed;
+            set { _settings.ProceduralSeed = value; OnPropertyChanged(); }
         }
 
         /// <summary />

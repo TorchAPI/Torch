@@ -5,7 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
+using VRage.Game;
 using VRage.Network;
+using VRage.Replication;
 
 namespace Torch.API.Managers
 {
@@ -19,13 +21,30 @@ namespace Torch.API.Managers
         /// </summary>
         /// <param name="author">Author's name</param>
         /// <param name="message">Message</param>
-        public TorchChatMessage(string author, string message)
+        /// <param name="font">Font</param>
+        public TorchChatMessage(string author, string message, string font = MyFontEnum.Blue)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = null;
             Author = author;
             Message = message;
-            Font = "Blue";
+            Font = font;
+        }
+
+        /// <summary>
+        /// Creates a new torch chat message with the given author and message.
+        /// </summary>
+        /// <param name="author">Author's name</param>
+        /// <param name="authorSteamId">Author's steam ID</param>
+        /// <param name="message">Message</param>
+        /// <param name="font">Font</param>
+        public TorchChatMessage(string author, ulong authorSteamId, string message, string font = MyFontEnum.Blue)
+        {
+            Timestamp = DateTime.Now;
+            AuthorSteamId = authorSteamId;
+            Author = author;
+            Message = message;
+            Font = font;
         }
 
         /// <summary>
@@ -33,35 +52,36 @@ namespace Torch.API.Managers
         /// </summary>
         /// <param name="authorSteamId">Author's steam ID</param>
         /// <param name="message">Message</param>
-        public TorchChatMessage(ulong authorSteamId, string message)
+        /// <param name="font">Font</param>
+        public TorchChatMessage(ulong authorSteamId, string message, string font = MyFontEnum.Blue)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = authorSteamId;
             Author = MyMultiplayer.Static?.GetMemberName(authorSteamId) ?? "Player";
             Message = message;
-            Font = "Blue";
+            Font = font;
         }
 
         /// <summary>
         /// This message's timestamp.
         /// </summary>
-        public DateTime Timestamp;
+        public readonly DateTime Timestamp;
         /// <summary>
         /// The author's steam ID, if available.  Else, null.
         /// </summary>
-        public ulong? AuthorSteamId;
+        public readonly ulong? AuthorSteamId;
         /// <summary>
         /// The author's name, if available.  Else, null.
         /// </summary>
-        public string Author;
+        public readonly string Author;
         /// <summary>
         /// The message contents.
         /// </summary>
-        public string Message;
+        public readonly string Message;
         /// <summary>
         /// The font, or null if default.
         /// </summary>
-        public string Font;
+        public readonly string Font;
     }
 
     /// <summary>
