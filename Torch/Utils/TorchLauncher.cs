@@ -31,7 +31,7 @@ namespace Torch.Utils
                 allPaths.Add(other.ToLower().Replace('/', '\\'));
             var pathPrefix = StringUtils.CommonPrefix(allPaths);
 #pragma warning disable 618
-            AppDomain.CurrentDomain.AppendPrivatePath(String.Join(Path.PathSeparator.ToString(), allPaths));
+            AppDomain.CurrentDomain.AppendPrivatePath(string.Join(Path.PathSeparator.ToString(), allPaths));
 #pragma warning restore 618
             AppDomain.CurrentDomain.SetData(TorchKey, true);
             AppDomain.CurrentDomain.ExecuteAssemblyByName(entryPoint, args);

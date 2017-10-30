@@ -190,6 +190,7 @@
     <Compile Include="Managers\PatchManager\Transpile\LoggingILGenerator.cs" />
     <Compile Include="Managers\PatchManager\Transpile\MethodContext.cs" />
     <Compile Include="Managers\PatchManager\Transpile\MethodTranspiler.cs" />
+    <Compile Include="Patches\GameAnalyticsPatch.cs" />
     <Compile Include="Patches\GameStatePatchShim.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SaveGameStatus.cs" />

@@ -50,6 +50,8 @@ namespace Torch
             ReflectedManager.Process(typeof(TorchBase).Assembly);
             ReflectedManager.Process(typeof(ITorchBase).Assembly);
             PatchManager.AddPatchShim(typeof(GameStatePatchShim));
+            PatchManager.AddPatchShim(typeof(GameAnalyticsPatch));
+            PatchManager.AddPatchShim(typeof(KeenLogPatch));
             PatchManager.CommitInternal();
             RegisterCoreAssembly(typeof(ITorchBase).Assembly);
             RegisterCoreAssembly(typeof(TorchBase).Assembly);
