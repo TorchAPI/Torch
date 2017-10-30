@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:Torch.Server.Views.Entities"
+             xmlns:profiler="clr-namespace:Torch.Managers.Profiler;assembly=Torch"
              xmlns:entities="clr-namespace:Torch.Server.ViewModels.Entities"
              mc:Ignorable="d">
     <UserControl.DataContext>
@@ -18,5 +18,15 @@
             <Label Content="Position" Width="100"/>
             <TextBox Text="{Binding Position}" Margin="3" />
         </StackPanel>
+        <TreeView Margin="3" ItemsSource="{Binding ProfilerTreeAlias}" Name="ProfilerTreeView">
+            <TreeView.Resources>
+                <HierarchicalDataTemplate DataType="{x:Type profiler:ProfilerEntryViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding OwnerName}" Margin="3" MinWidth="200"/>
+                        <TextBlock Text="{Binding UpdateTimeMs, StringFormat=' {0:F4} ms'}" Margin="3" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+            </TreeView.Resources>
+        </TreeView>
     </StackPanel>
 </UserControl>

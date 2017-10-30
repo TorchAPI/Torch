@@ -106,7 +106,8 @@ namespace Torch.Collections
         /// </summary>
         public void Sort<TKey>(Func<T, TKey> selector, IComparer<TKey> comparer = null)
         {
-            using (Lock.ReadUsing())
+            using (DeferredUpdate())
+            using (Lock.WriteUsing())
             {
                 comparer = comparer ?? Comparer<TKey>.Default;
                 if (Backing is List<T> lst)
@@ -118,8 +119,6 @@ namespace Torch.Collections
                     foreach (T v in sortedItems)
                         Backing.Add(v);
                 }
-
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }
         }
     }

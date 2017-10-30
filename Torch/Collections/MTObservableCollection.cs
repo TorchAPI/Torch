@@ -3,13 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Threading;
 using Torch.Utils;
 
 namespace Torch.Collections
@@ -36,6 +33,11 @@ namespace Torch.Collections
         }
 
         /// <summary>
+        /// Should this observable collection actually dispatch events.
+        /// </summary>
+        public bool NotificationsEnabled { get; protected set; } = true;
+
+        /// <summary>
         /// Takes a snapshot of this collection.  Note: This call is only done when a read lock is acquired.
         /// </summary>
         /// <param name="old">Collection to clear and reuse, or null if none</param>
@@ -54,7 +56,7 @@ namespace Torch.Collections
         /// <inheritdoc/>
         public void Add(TV item)
         {
-            using(Lock.WriteUsing())
+            using (Lock.WriteUsing())
             {
                 Backing.Add(item);
                 MarkSnapshotsDirty();
@@ -66,7 +68,7 @@ namespace Torch.Collections
         /// <inheritdoc/>
         public void Clear()
         {
-            using(Lock.WriteUsing())
+            using (Lock.WriteUsing())
             {
                 Backing.Clear();
                 MarkSnapshotsDirty();
@@ -92,11 +94,13 @@ namespace Torch.Collections
         /// <inheritdoc/>
         public bool Remove(TV item)
         {
-            using(Lock.UpgradableReadUsing()) {
+            using (Lock.UpgradableReadUsing())
+            {
                 int? oldIndex = (Backing as IList<TV>)?.IndexOf(item);
                 if (oldIndex == -1)
                     return false;
-                using(Lock.WriteUsing()) {
+                using (Lock.WriteUsing())
+                {
                     if (!Backing.Remove(item))
                         return false;
                     MarkSnapshotsDirty();
@@ -125,6 +129,56 @@ namespace Torch.Collections
         #endregion
 
         #region Event Wrappers
+        private readonly WeakReference<DeferredUpdateToken> _deferredSnapshot = new WeakReference<DeferredUpdateToken>(null);
+        private bool _deferredSnapshotTaken = false;
+        /// <summary>
+        /// Disposable that stops update signals and signals a full refresh when disposed.
+        /// </summary>
+        public IDisposable DeferredUpdate()
+        {
+            using (Lock.WriteUsing())
+            {
+                if (_deferredSnapshotTaken)
+                    return new DummyToken();
+                DeferredUpdateToken token;
+                if (!_deferredSnapshot.TryGetTarget(out token))
+                    _deferredSnapshot.SetTarget(token = new DeferredUpdateToken());
+                token.SetCollection(this);
+                return token;
+            }
+        }
+
+        private struct DummyToken : IDisposable
+        {
+            public void Dispose()
+            {
+            }
+        }
+
+        private class DeferredUpdateToken : IDisposable
+        {
+            private MtObservableCollection<TC, TV> _collection;
+
+            internal void SetCollection(MtObservableCollection<TC, TV> c)
+            {
+                c._deferredSnapshotTaken = true;
+                _collection = c;
+                c.NotificationsEnabled = false;
+            }
+
+            public void Dispose()
+            {
+                using (_collection.Lock.WriteUsing())
+                {
+                    _collection.NotificationsEnabled = true;
+                    _collection.OnPropertyChanged(nameof(Count));
+                    _collection.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    _collection._deferredSnapshotTaken = false;
+                }
+
+            }
+        }
+
         protected void OnPropertyChanged(string propName)
         {
             NotifyEvent(this, new PropertyChangedEventArgs(propName));
@@ -133,20 +187,23 @@ namespace Torch.Collections
         protected void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             NotifyEvent(this, e);
+            OnPropertyChanged("Item[]");
         }
 
         protected void NotifyEvent(object sender, PropertyChangedEventArgs args)
         {
-            _propertyChangedEvent.Raise(sender, args);
+            if (NotificationsEnabled)
+                _propertyChangedEvent.Raise(sender, args);
         }
 
         protected void NotifyEvent(object sender, NotifyCollectionChangedEventArgs args)
         {
-            _collectionChangedEvent.Raise(sender, args);
+            if (NotificationsEnabled)
+                _collectionChangedEvent.Raise(sender, args);
         }
 
-        private readonly DispatcherEvent<PropertyChangedEventArgs, PropertyChangedEventHandler> _propertyChangedEvent =
-            new DispatcherEvent<PropertyChangedEventArgs, PropertyChangedEventHandler>();
+        private readonly MtObservableEvent<PropertyChangedEventArgs, PropertyChangedEventHandler> _propertyChangedEvent =
+            new MtObservableEvent<PropertyChangedEventArgs, PropertyChangedEventHandler>();
         /// <inheritdoc/>
         public event PropertyChangedEventHandler PropertyChanged
         {
@@ -154,84 +211,13 @@ namespace Torch.Collections
             remove => _propertyChangedEvent.Remove(value);
         }
 
-        private readonly DispatcherEvent<NotifyCollectionChangedEventArgs, NotifyCollectionChangedEventHandler> _collectionChangedEvent =
-            new DispatcherEvent<NotifyCollectionChangedEventArgs, NotifyCollectionChangedEventHandler>();
+        private readonly MtObservableEvent<NotifyCollectionChangedEventArgs, NotifyCollectionChangedEventHandler> _collectionChangedEvent =
+            new MtObservableEvent<NotifyCollectionChangedEventArgs, NotifyCollectionChangedEventHandler>();
         /// <inheritdoc/>
         public event NotifyCollectionChangedEventHandler CollectionChanged
         {
             add => _collectionChangedEvent.Add(value);
             remove => _collectionChangedEvent.Remove(value);
-        }
-        /// <summary>
-        /// Event that invokes handlers registered by dispatchers on dispatchers.
-        /// </summary>
-        /// <typeparam name="TEvtArgs">Event argument type</typeparam>
-        /// <typeparam name="TEvtHandle">Event handler delegate type</typeparam>
-        private sealed class DispatcherEvent<TEvtArgs, TEvtHandle> where TEvtArgs : EventArgs
-        {
-            private delegate void DelInvokeHandler(TEvtHandle handler, object sender, TEvtArgs args);
-
-            private static readonly DelInvokeHandler _invokeDirectly;
-            static DispatcherEvent()
-            {
-                MethodInfo invoke = typeof(TEvtHandle).GetMethod("Invoke", BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
-                Debug.Assert(invoke != null, "No invoke method on handler type");
-                _invokeDirectly = (DelInvokeHandler)Delegate.CreateDelegate(typeof(DelInvokeHandler), invoke);
-            }
-
-            private static Dispatcher CurrentDispatcher => Dispatcher.FromThread(Thread.CurrentThread);
-
-
-            private event EventHandler<TEvtArgs> _event;
-
-            internal void Raise(object sender, TEvtArgs args)
-            {
-                _event?.Invoke(sender, args);
-            }
-
-            internal void Add(TEvtHandle evt)
-            {
-                if (evt == null)
-                    return;
-                _event += new DispatcherDelegate(evt).Invoke;
-            }
-
-            internal void Remove(TEvtHandle evt)
-            {
-                if (_event == null || evt == null)
-                    return;
-                Delegate[] invokeList = _event.GetInvocationList();
-                for (int i = invokeList.Length - 1; i >= 0; i--)
-                {
-                    var wrapper = (DispatcherDelegate)invokeList[i].Target;
-                    if (wrapper._delegate.Equals(evt))
-                    {
-                        _event -= wrapper.Invoke;
-                        return;
-                    }
-                }
-            }
-
-            private struct DispatcherDelegate
-            {
-                private readonly Dispatcher _dispatcher;
-                internal readonly TEvtHandle _delegate;
-
-                internal DispatcherDelegate(TEvtHandle del)
-                {
-                    _dispatcher = CurrentDispatcher;
-                    _delegate = del;
-                }
-
-                public void Invoke(object sender, TEvtArgs args)
-                {
-                    if (_dispatcher == null || _dispatcher == CurrentDispatcher)
-                        _invokeDirectly(_delegate, sender, args);
-                    else
-                        // (Delegate) (object) == dual cast so that the compiler likes it
-                        _dispatcher.BeginInvoke((Delegate)(object)_delegate, DispatcherPriority.DataBind, sender, args);
-                }
-            }
         }
 
         #endregion

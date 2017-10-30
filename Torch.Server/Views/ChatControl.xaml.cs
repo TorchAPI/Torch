@@ -44,7 +44,7 @@ namespace Torch.Server
         public void BindServer(ITorchServer server)
         {
             _server = (TorchBase)server;
-            Dispatcher.Invoke(() =>
+            Dispatcher.InvokeAsync(() =>
             {
                 ChatItems.Inlines.Clear();
             });
@@ -59,7 +59,7 @@ namespace Torch.Server
             switch (state)
             {
                 case TorchSessionState.Loading:
-                    Dispatcher.Invoke(() => ChatItems.Inlines.Clear());
+                    Dispatcher.InvokeAsync(() => ChatItems.Inlines.Clear());
                     break;
                 case TorchSessionState.Loaded:
                     {
@@ -112,7 +112,7 @@ namespace Torch.Server
                     ChatScroller.ScrollToBottom();
             }
             else
-                Dispatcher.Invoke(() => InsertMessage(msg));
+                Dispatcher.InvokeAsync(() => InsertMessage(msg));
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)

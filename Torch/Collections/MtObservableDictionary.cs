@@ -91,12 +91,6 @@ namespace Torch.Collections
         /// <inheritdoc cref="Keys"/>
         private ProxyCollection<TV> ObservableValues { get; }
 
-        internal void RaiseFullReset()
-        {
-            OnPropertyChanged(nameof(Count));
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-        }
-
         /// <summary>
         /// Proxy collection capable of raising notifications when the parent collection changes.
         /// </summary>

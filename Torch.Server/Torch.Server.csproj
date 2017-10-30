@@ -221,6 +221,7 @@
     <Compile Include="ViewModels\ILazyLoad.cs" />
     <Compile Include="ViewModels\PluginManagerViewModel.cs" />
     <Compile Include="ViewModels\PluginViewModel.cs" />
+    <Compile Include="ViewModels\ProfilerViewModel.cs" />
     <Compile Include="ViewModels\SessionSettingsViewModel.cs" />
     <Compile Include="ViewModels\Entities\VoxelMapViewModel.cs" />
     <Compile Include="ViewModels\SteamUserViewModel.cs" />
@@ -260,6 +261,9 @@
     </Compile>
     <Compile Include="Views\PluginsControl.xaml.cs">
       <DependentUpon>PluginsControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ProfilerConfigControl.xaml.cs">
+      <DependentUpon>ProfilerConfigControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\TorchUI.xaml.cs">
       <DependentUpon>TorchUI.xaml</DependentUpon>
@@ -346,6 +350,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\PluginsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ProfilerConfigControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

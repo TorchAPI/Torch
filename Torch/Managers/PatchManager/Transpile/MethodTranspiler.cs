@@ -27,6 +27,8 @@ namespace Torch.Managers.PatchManager.Transpile
                 {
                     if (parameter.Name.Equals("__methodBody"))
                         paramList.Add(baseMethod.GetMethodBody());
+                    else if (parameter.Name.Equals("__methodBase"))
+                        paramList.Add(baseMethod);
                     else if (parameter.Name.Equals("__localCreator"))
                         paramList.Add(localCreator);
                     else if (parameter.ParameterType == typeof(IEnumerable<MsilInstruction>))
@@ -39,6 +41,12 @@ namespace Torch.Managers.PatchManager.Transpile
             }
             methodContent = FixBranchAndReturn(methodContent, retLabel);
             foreach (var k in methodContent)
+                k.Emit(output);
+        }
+
+        internal static void Emit(IEnumerable<MsilInstruction> input, LoggingIlGenerator output)
+        {
+            foreach (MsilInstruction k in FixBranchAndReturn(input, null))
                 k.Emit(output);
         }
 

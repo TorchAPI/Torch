@@ -15,6 +15,7 @@ using Sandbox.Game;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
 using Sandbox.Game.World;
+using Sandbox.Graphics.GUI;
 using Sandbox.ModAPI;
 using SpaceEngineers.Game;
 using Torch.API;
@@ -26,12 +27,15 @@ using Torch.Event;
 using Torch.Managers;
 using Torch.Managers.ChatManager;
 using Torch.Managers.PatchManager;
+using Torch.Managers.Profiler;
 using Torch.Patches;
 using Torch.Utils;
 using Torch.Session;
 using VRage.Collections;
 using VRage.FileSystem;
 using VRage.Game;
+using VRage.Game.Common;
+using VRage.Game.Components;
 using VRage.Game.ObjectBuilder;
 using VRage.ObjectBuilders;
 using VRage.Plugins;
@@ -134,6 +138,7 @@ namespace Torch
             Managers.AddManager(new FilesystemManager(this));
             Managers.AddManager(new UpdateManager(this));
             Managers.AddManager(new EventManager(this));
+            Managers.AddManager(new ProfilerManager(this));
             Managers.AddManager(Plugins);
             TorchAPI.Instance = this;
         }
@@ -251,6 +256,7 @@ namespace Torch
             Debug.Assert(!_init, "Torch instance is already initialized.");
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
+            RegisterFromCallingAssemblyPatch.ForceRegisterAssemblies();
 
             Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
             GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
