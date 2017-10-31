@@ -1,7 +1,7 @@
 ﻿using System.Windows.Controls;
 using Torch.API.Managers;
 using Torch.Collections;
-using Torch.Managers.Profiler;
+using Torch.Server.Managers;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
@@ -11,14 +11,24 @@ namespace Torch.Server.ViewModels.Entities
     public class EntityViewModel : ViewModel
     {
         protected EntityTreeViewModel Tree { get; }
-        public IMyEntity Entity { get; }
-        public long Id => Entity.EntityId;
-        public ProfilerEntryViewModel Profiler
+
+        private IMyEntity _backing;
+        public IMyEntity Entity
         {
-            get => ProfilerTreeAlias[0];
-            set => ProfilerTreeAlias[0] = value;
+            get => _backing;
+            protected set
+            {
+                _backing = value;
+                OnPropertyChanged();
+                EntityControls = TorchBase.Instance?.Managers.GetManager<EntityControlManager>()?.BoundModels(this);
+                // ReSharper disable once ExplicitCallerInfoArgument
+                OnPropertyChanged(nameof(EntityControls));
+            }
         }
-        public MtObservableList<ProfilerEntryViewModel> ProfilerTreeAlias { get; } = new MtObservableList<ProfilerEntryViewModel>(1){null};
+
+        public long Id => Entity.EntityId;
+
+        public MtObservableList<EntityControlViewModel> EntityControls { get; private set; }
 
         public virtual string Name
         {
@@ -56,7 +66,6 @@ namespace Torch.Server.ViewModels.Entities
         {
             Entity = entity;
             Tree = tree;
-            Profiler = TorchBase.Instance.Managers.GetManager<ProfilerManager>()?.EntityData(entity, Profiler);
         }
 
         public EntityViewModel()

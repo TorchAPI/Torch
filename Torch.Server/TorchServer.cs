@@ -72,6 +72,7 @@ namespace Torch.Server
         {
             DedicatedInstance = new InstanceManager(this);
             AddManager(DedicatedInstance);
+            AddManager(new EntityControlManager(this));
             Config = config ?? new TorchConfig();
 
             var sessionManager = Managers.GetManager<ITorchSessionManager>();

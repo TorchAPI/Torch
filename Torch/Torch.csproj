@@ -193,13 +193,6 @@
     <Compile Include="Managers\PatchManager\Transpile\MethodContext.cs" />
     <Compile Include="Managers\PatchManager\Transpile\MethodTranspiler.cs" />
     <Compile Include="Patches\GameAnalyticsPatch.cs" />
-    <Compile Include="Managers\Profiler\FatProfilerEntry.cs" />
-    <Compile Include="Managers\Profiler\ProfilerData.cs" />
-    <Compile Include="Managers\Profiler\ProfilerEntryViewModel.cs" />
-    <Compile Include="Managers\Profiler\ProfilerManager.cs" />
-    <Compile Include="Managers\Profiler\ProfilerObjectIdentifier.cs" />
-    <Compile Include="Managers\Profiler\ProfilerPatch.cs" />
-    <Compile Include="Managers\Profiler\SlimProfilerEntry.cs" />
     <Compile Include="Patches\GameStatePatchShim.cs" />
     <Compile Include="Patches\RegisterFromCallingAssemblyPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -226,6 +219,7 @@
     <Compile Include="Managers\UpdateManager.cs" />
     <Compile Include="Persistent.cs" />
     <Compile Include="Plugins\PluginManifest.cs" />
+    <Compile Include="Utils\MiscExtensions.cs" />
     <Compile Include="Utils\Reflected\ReflectedEventReplaceAttribute.cs" />
     <Compile Include="Utils\Reflected\ReflectedEventReplacer.cs" />
     <Compile Include="Utils\Reflected\ReflectedFieldInfoAttribute.cs" />

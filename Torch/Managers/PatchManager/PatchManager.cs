@@ -148,12 +148,20 @@ namespace Torch.Managers.PatchManager
             return count;
         }
 
+
         /// <inheritdoc cref="Commit"/>
         internal static void CommitInternal()
         {
             lock (_rewritePatterns)
-                foreach (DecoratedMethod m in _rewritePatterns.Values)
-                    m.Commit();
+            {
+#if true
+                ParallelTasks.Parallel.ForEach(_rewritePatterns.Values, x => x.Commit());
+#else
+                    foreach (DecoratedMethod m in _rewritePatterns.Values)
+                        m.Commit();
+#endif
+
+            }
         }
 
         /// <summary>

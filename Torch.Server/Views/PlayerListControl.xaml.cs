@@ -57,10 +57,10 @@ namespace Torch.Server
             switch (newState)
             {
                 case TorchSessionState.Loaded:
-                    Dispatcher.Invoke(() => DataContext = _server?.CurrentSession?.Managers.GetManager<MultiplayerManagerDedicated>());
+                    Dispatcher.InvokeAsync(() => DataContext = _server?.CurrentSession?.Managers.GetManager<MultiplayerManagerDedicated>());
                     break;
                 case TorchSessionState.Unloading:
-                    Dispatcher.Invoke(() => DataContext = null);
+                    Dispatcher.InvokeAsync(() => DataContext = null);
                     break;
             }
         }

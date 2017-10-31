@@ -48,7 +48,6 @@ namespace Torch.Server
             Chat.BindServer(server);
             PlayerList.BindServer(server);
             Plugins.BindServer(server);
-            Profiler.BindServer(server);
             LoadConfig((TorchConfig)server.Config);
         }
 

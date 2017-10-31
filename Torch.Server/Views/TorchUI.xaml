@@ -69,9 +69,6 @@
             <TabItem Header="Entity Manager">
                 <views:EntitiesControl />
             </TabItem>
-            <TabItem Header="Profiler">
-                <views:ProfilerControl x:Name="Profiler" />
-            </TabItem>
             <TabItem Header="Plugins">
                 <views:PluginsControl x:Name="Plugins" />
             </TabItem>

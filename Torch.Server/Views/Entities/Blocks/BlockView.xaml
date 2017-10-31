@@ -5,6 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Torch.Server.Views.Blocks"
              xmlns:blocks="clr-namespace:Torch.Server.ViewModels.Blocks"
+             xmlns:entities="clr-namespace:Torch.Server.Views.Entities"
+             xmlns:entities1="clr-namespace:Torch.Server.ViewModels.Entities"
              mc:Ignorable="d">
     <UserControl.DataContext>
         <blocks:BlockViewModel />
@@ -12,6 +14,7 @@
     <Grid Margin="3">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" />
             <RowDefinition/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0">
@@ -22,22 +25,27 @@
             </StackPanel>
             <Label Content="Properties"/>
         </StackPanel>
-        <ListView Grid.Row="1" ItemsSource="{Binding Properties}" Margin="3" IsEnabled="True">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <local:PropertyView />
-                </DataTemplate>
-            </ListView.ItemTemplate>
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Setter Property="HorizontalContentAlignment"
+        <Expander Grid.Row="1" Header="Block Properties">
+            <ListView ItemsSource="{Binding Properties}" Margin="3" IsEnabled="True">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <local:PropertyView />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment"
                             Value="Stretch" />
-                    <Setter Property="VerticalContentAlignment"
+                        <Setter Property="VerticalContentAlignment"
                             Value="Center" />
-                    <Setter Property="Focusable" 
+                        <Setter Property="Focusable" 
                             Value="false" />
-                </Style>
-            </ListView.ItemContainerStyle>
-        </ListView>
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+        </Expander>
+        <ScrollViewer Grid.Row="2" Margin="3" VerticalScrollBarVisibility="Auto">
+            <entities:EntityControlsView DataContext="{Binding}"/>
+        </ScrollViewer>
     </Grid>
 </UserControl>

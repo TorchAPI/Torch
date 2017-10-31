@@ -4,7 +4,6 @@ using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Torch.API.Managers;
 using Torch.Collections;
-using Torch.Managers.Profiler;
 using Torch.Server.ViewModels.Blocks;
 
 namespace Torch.Server.ViewModels.Entities

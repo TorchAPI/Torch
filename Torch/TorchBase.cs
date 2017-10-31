@@ -27,7 +27,6 @@ using Torch.Event;
 using Torch.Managers;
 using Torch.Managers.ChatManager;
 using Torch.Managers.PatchManager;
-using Torch.Managers.Profiler;
 using Torch.Patches;
 using Torch.Utils;
 using Torch.Session;
@@ -138,7 +137,6 @@ namespace Torch
             Managers.AddManager(new FilesystemManager(this));
             Managers.AddManager(new UpdateManager(this));
             Managers.AddManager(new EventManager(this));
-            Managers.AddManager(new ProfilerManager(this));
             Managers.AddManager(Plugins);
             TorchAPI.Instance = this;
         }

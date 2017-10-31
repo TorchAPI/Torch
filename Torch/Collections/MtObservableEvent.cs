@@ -11,7 +11,7 @@ namespace Torch.Collections
     /// </summary>
     /// <typeparam name="TEvtArgs">Event argument type</typeparam>
     /// <typeparam name="TEvtHandle">Event handler delegate type</typeparam>
-    internal sealed class MtObservableEvent<TEvtArgs, TEvtHandle> where TEvtArgs : EventArgs
+    public sealed class MtObservableEvent<TEvtArgs, TEvtHandle> where TEvtArgs : EventArgs
     {
         private delegate void DelInvokeHandler(TEvtHandle handler, object sender, TEvtArgs args);
 
@@ -28,19 +28,32 @@ namespace Torch.Collections
 
         private event EventHandler<TEvtArgs> Event;
 
-        internal void Raise(object sender, TEvtArgs args)
+        /// <summary>
+        /// Raises this event for the given sender, with the given args
+        /// </summary>
+        /// <param name="sender">sender</param>
+        /// <param name="args">args</param>
+        public void Raise(object sender, TEvtArgs args)
         {
             Event?.Invoke(sender, args);
         }
 
-        internal void Add(TEvtHandle evt)
+        /// <summary>
+        /// Adds the given event handler.
+        /// </summary>
+        /// <param name="evt"></param>
+        public void Add(TEvtHandle evt)
         {
             if (evt == null)
                 return;
             Event += new DispatcherDelegate(evt).Invoke;
         }
 
-        internal void Remove(TEvtHandle evt)
+        /// <summary>
+        /// Removes the given event handler
+        /// </summary>
+        /// <param name="evt"></param>
+        public void Remove(TEvtHandle evt)
         {
             if (Event == null || evt == null)
                 return;
