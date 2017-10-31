@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using Torch.Server.Managers;
@@ -18,7 +19,7 @@ namespace Torch.Server.Views.Entities
             DataContextChanged += OnDataContextChanged;
         }
 
-        private void OnDataContextChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
+        private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             if (e.OldValue is ViewModel vmo)
             {
@@ -43,6 +44,12 @@ namespace Torch.Server.Views.Entities
 
         private void RefreshControl()
         {
+            if (Dispatcher.Thread != Thread.CurrentThread)
+            {
+                Dispatcher.InvokeAsync(RefreshControl);
+                return;
+            }
+
             _currentControl = DataContext is EntityControlViewModel ecvm
                 ? TorchBase.Instance?.Managers.GetManager<EntityControlManager>()?.CreateControl(ecvm)
                 : null;
@@ -52,6 +59,11 @@ namespace Torch.Server.Views.Entities
 
         private void RefreshVisibility()
         {
+            if (Dispatcher.Thread != Thread.CurrentThread)
+            {
+                Dispatcher.InvokeAsync(RefreshVisibility);
+                return;
+            }
             Visibility = (DataContext is EntityControlViewModel ecvm) && !ecvm.Hide && _currentControl != null
                 ? Visibility.Visible
                 : Visibility.Collapsed;
