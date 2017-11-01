@@ -103,7 +103,17 @@ namespace Torch.Server
             MyPlugins.Load();
             MyGlobalTypeMetadata.Static.Init();
 
+            Managers.GetManager<ITorchSessionManager>().SessionStateChanged += OnSessionStateChanged;
             GetManager<InstanceManager>().LoadInstance(Config.InstancePath);
+        }
+
+        private void OnSessionStateChanged(ITorchSession session, TorchSessionState newState)
+        {
+            if (newState == TorchSessionState.Unloading || newState == TorchSessionState.Unloaded)
+            {
+                _watchdog?.Dispose();
+                _watchdog = null;
+            }
         }
 
         private void InvokeBeforeRun()

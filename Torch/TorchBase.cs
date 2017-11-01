@@ -260,7 +260,11 @@ namespace Torch
             GameStateChanged += (game, state) =>
             {
                 if (state == TorchGameState.Created)
+                {
                     ObjectFactoryInitPatch.ForceRegisterAssemblies();
+                    // safe to commit here; all important static ctors have run
+                    PatchManager.CommitInternal();
+                }
             };
 
             Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
@@ -292,6 +296,10 @@ namespace Torch
             Managers.GetManager<PluginManager>().LoadPlugins();
             Managers.Attach();
             _init = true;
+
+            if (GameState >= TorchGameState.Created && GameState < TorchGameState.Unloading)
+                // safe to commit here; all important static ctors have run
+                PatchManager.CommitInternal();
         }
 
         private void OnSessionLoading()

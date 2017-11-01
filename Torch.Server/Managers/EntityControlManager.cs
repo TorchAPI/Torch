@@ -15,8 +15,6 @@ using Torch.Managers;
 using Torch.Server.ViewModels.Entities;
 using Torch.Utils;
 
-using WeakEntityControlFactoryResult = System.Collections.Generic.KeyValuePair<System.WeakReference<Torch.Server.ViewModels.Entities.EntityViewModel>, System.WeakReference<Torch.Server.ViewModels.Entities.EntityControlViewModel>>;
-
 namespace Torch.Server.Managers
 {
     /// <summary>
@@ -34,7 +32,59 @@ namespace Torch.Server.Managers
         {
         }
 
-        private readonly Dictionary<Delegate, List<WeakEntityControlFactoryResult>> _modelFactories = new Dictionary<Delegate, List<WeakEntityControlFactoryResult>>();
+        private abstract class ModelFactory
+        {
+            private readonly ConditionalWeakTable<EntityViewModel, EntityControlViewModel> _models = new ConditionalWeakTable<EntityViewModel, EntityControlViewModel>();
+
+            public abstract Delegate Delegate { get; }
+
+            protected abstract EntityControlViewModel Create(EntityViewModel evm);
+
+#pragma warning disable 649
+            [ReflectedGetter(Name = "Keys")]
+            private static readonly Func<ConditionalWeakTable<EntityViewModel, EntityControlViewModel>, ICollection<EntityViewModel>> _weakTableKeys;
+#pragma warning restore 649
+
+            /// <summary>
+            /// Warning: Creates a giant list, avoid if possible.
+            /// </summary>
+            internal ICollection<EntityViewModel> Keys => _weakTableKeys(_models);
+
+            internal EntityControlViewModel GetOrCreate(EntityViewModel evm)
+            {
+                return _models.GetValue(evm, Create);
+            }
+
+            internal bool TryGet(EntityViewModel evm, out EntityControlViewModel res)
+            {
+                return _models.TryGetValue(evm, out res);
+            }
+        }
+
+        private class ModelFactory<T> : ModelFactory where T : EntityViewModel
+        {
+            private readonly Func<T, EntityControlViewModel> _factory;
+            public override Delegate Delegate => _factory;
+
+            internal ModelFactory(Func<T, EntityControlViewModel> factory)
+            {
+                _factory = factory;
+            }
+
+
+            protected override EntityControlViewModel Create(EntityViewModel evm)
+            {
+                if (evm is T m)
+                {
+                    var result = _factory(m);
+                    _log.Debug($"Model factory {_factory.Method} created {result} for {evm}");
+                    return result;
+                }
+                return null;
+            }
+        }
+
+        private readonly List<ModelFactory> _modelFactories = new List<ModelFactory>();
         private readonly List<Delegate> _controlFactories = new List<Delegate>();
 
         private readonly List<WeakReference<EntityViewModel>> _boundEntityViewModels = new List<WeakReference<EntityViewModel>>();
@@ -52,8 +102,8 @@ namespace Torch.Server.Managers
                 throw new ArgumentException("Generic type must match lamda type", nameof(modelFactory));
             lock (this)
             {
-                var results = new List<WeakEntityControlFactoryResult>();
-                _modelFactories.Add(modelFactory, results);
+                var factory = new ModelFactory<TEntityBaseModel>(modelFactory);
+                _modelFactories.Add(factory);
 
                 var i = 0;
                 while (i < _boundEntityViewModels.Count)
@@ -62,15 +112,7 @@ namespace Torch.Server.Managers
                         _boundViewModels.TryGetValue(target, out MtObservableList<EntityControlViewModel> components))
                     {
                         if (target is TEntityBaseModel tent)
-                        {
-                            EntityControlViewModel result = modelFactory.Invoke(tent);
-                            if (result != null)
-                            {
-                                _log.Debug($"Model factory {modelFactory.Method} created {result} for {tent}");
-                                components.Add(result);
-                                results.Add(new WeakEntityControlFactoryResult(new WeakReference<EntityViewModel>(target), new WeakReference<EntityControlViewModel>(result)));
-                            }
-                        }
+                            UpdateBinding(target, components);
                         i++;
                     }
                     else
@@ -91,16 +133,16 @@ namespace Torch.Server.Managers
                 throw new ArgumentException("Generic type must match lamda type", nameof(modelFactory));
             lock (this)
             {
-                if (!_modelFactories.TryGetValue(modelFactory, out var results))
-                    return;
-                _modelFactories.Remove(modelFactory);
-                foreach (WeakEntityControlFactoryResult result in results)
+                for (var i = 0; i < _modelFactories.Count; i++)
                 {
-                    if (result.Key.TryGetTarget(out EntityViewModel target) &&
-                        result.Value.TryGetTarget(out EntityControlViewModel created)
-                        && _boundViewModels.TryGetValue(target, out MtObservableList<EntityControlViewModel> registered))
+                    if (_modelFactories[i].Delegate == (Delegate)modelFactory)
                     {
-                        registered.Remove(created);
+                        foreach (var entry in _modelFactories[i].Keys)
+                            if (_modelFactories[i].TryGet(entry, out EntityControlViewModel ecvm) && ecvm != null
+                                && _boundViewModels.TryGetValue(entry, out var binding))
+                                binding.Remove(ecvm);
+                        _modelFactories.RemoveAt(i);
+                        break;
                     }
                 }
             }
@@ -194,21 +236,30 @@ namespace Torch.Server.Managers
             var binding = new MtObservableList<EntityControlViewModel>();
             lock (this)
             {
-                foreach (KeyValuePair<Delegate, List<WeakEntityControlFactoryResult>> factory in _modelFactories)
-                {
-                    Type ptype = factory.Key.Method.GetParameters()[0].ParameterType;
-                    if (ptype.IsInstanceOfType(key) &&
-                        factory.Key.DynamicInvoke(key) is EntityControlViewModel result)
-                    {
-                        _log.Debug($"Model factory {factory.Key.Method} created {result} for {key}");
-                        binding.Add(result);
-                        result.InvalidateControl();
-                        factory.Value.Add(new WeakEntityControlFactoryResult(new WeakReference<EntityViewModel>(key), new WeakReference<EntityControlViewModel>(result)));
-                    }
-                }
                 _boundEntityViewModels.Add(new WeakReference<EntityViewModel>(key));
             }
+            binding.PropertyChanged += (x, args) =>
+            {
+                if (nameof(binding.IsObserved).Equals(args.PropertyName))
+                    UpdateBinding(key, binding);
+            };
             return binding;
+        }
+
+        private void UpdateBinding(EntityViewModel key, MtObservableList<EntityControlViewModel> binding)
+        {
+            if (!binding.IsObserved)
+                return;
+
+            lock (this)
+            {
+                foreach (ModelFactory factory in _modelFactories)
+                {
+                    var result = factory.GetOrCreate(key);
+                    if (result != null && !binding.Contains(result))
+                        binding.Add(result);
+                }
+            }
         }
     }
 }

@@ -172,12 +172,9 @@ namespace Torch.Managers.PatchManager
             CommitInternal();
         }
 
-        /// <summary>
-        /// Commits any existing patches.
-        /// </summary>
+        /// <inheritdoc cref="Manager.Attach"/>
         public override void Attach()
         {
-            Commit();
         }
 
         /// <summary>

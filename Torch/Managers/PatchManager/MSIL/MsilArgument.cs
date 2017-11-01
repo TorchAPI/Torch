@@ -28,9 +28,20 @@ namespace Torch.Managers.PatchManager.MSIL
         /// </summary>
         public string Name { get; }
 
-        internal MsilArgument(ParameterInfo local)
+        /// <summary>
+        /// Creates an argument from the given parameter info.
+        /// </summary>
+        /// <param name="local">parameter info to use</param>
+        public MsilArgument(ParameterInfo local)
         {
-            Position = (((MethodBase)local.Member).IsStatic ? 0 : 1) + local.Position;
+            bool isStatic;
+            if (local.Member is FieldInfo fi)
+                isStatic = fi.IsStatic;
+            else if (local.Member is MethodBase mb)
+                isStatic = mb.IsStatic;
+            else
+                throw new ArgumentException("ParameterInfo.Member must be MethodBase or FieldInfo", nameof(local));
+            Position = (isStatic ? 0 : 1) + local.Position;
             Type = local.ParameterType;
             Name = local.Name;
         }
