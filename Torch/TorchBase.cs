@@ -254,7 +254,14 @@ namespace Torch
             Debug.Assert(!_init, "Torch instance is already initialized.");
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
-            RegisterFromCallingAssemblyPatch.ForceRegisterAssemblies();
+            // If the attached assemblies change (MySandboxGame.ctor => MySandboxGame.ParseArgs => MyPlugins.RegisterFromArgs)
+            // attach assemblies to object factories again.
+            ObjectFactoryInitPatch.ForceRegisterAssemblies();
+            GameStateChanged += (game, state) =>
+            {
+                if (state == TorchGameState.Created)
+                    ObjectFactoryInitPatch.ForceRegisterAssemblies();
+            };
 
             Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
             GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
