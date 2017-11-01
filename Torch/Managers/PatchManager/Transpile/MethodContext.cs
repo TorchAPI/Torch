@@ -100,47 +100,7 @@ namespace Torch.Managers.PatchManager.Transpile
             }
         }
 
-
-        [Conditional("DEBUG")]
-        public void CheckIntegrity()
-        {
-            var entryStackCount = new Dictionary<MsilLabel, Dictionary<MsilInstruction, int>>();
-            var currentStackSize = 0;
-            foreach (MsilInstruction insn in _instructions)
-            {
-                // I don't want to deal with this, so I won't
-                if (insn.OpCode == OpCodes.Br || insn.OpCode == OpCodes.Br_S || insn.OpCode == OpCodes.Jmp ||
-                    insn.OpCode == OpCodes.Leave || insn.OpCode == OpCodes.Leave_S)
-                    break;
-                foreach (MsilLabel label in insn.Labels)
-                    if (entryStackCount.TryGetValue(label, out Dictionary<MsilInstruction, int> dict))
-                        dict.Add(insn, currentStackSize);
-                    else
-                        (entryStackCount[label] = new Dictionary<MsilInstruction, int>()).Add(insn, currentStackSize);
-
-                currentStackSize += insn.StackChange();
-
-                if (insn.Operand is MsilOperandBrTarget br)
-                    if (entryStackCount.TryGetValue(br.Target, out Dictionary<MsilInstruction, int> dict))
-                        dict.Add(insn, currentStackSize);
-                    else
-                        (entryStackCount[br.Target] = new Dictionary<MsilInstruction, int>()).Add(insn, currentStackSize);
-            }
-            foreach (KeyValuePair<MsilLabel, Dictionary<MsilInstruction, int>> label in entryStackCount)
-            {
-                if (label.Value.Values.Aggregate(new HashSet<int>(), (a, b) =>
-                {
-                    a.Add(b);
-                    return a;
-                }).Count > 1)
-                {
-                    _log.Warn($"Label {label.Key} has multiple entry stack counts");
-                    foreach (KeyValuePair<MsilInstruction, int> kv in label.Value)
-                        _log.Warn($"{kv.Key.Offset:X4} {kv.Key} => {kv.Value}");
-                }
-            }
-        }
-
+        
         public string ToHumanMsil()
         {
             return string.Join("\n", _instructions.Select(x => $"IL_{x.Offset:X4}: {x.StackChange():+0;-#} {x}"));

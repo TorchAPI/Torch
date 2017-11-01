@@ -19,9 +19,7 @@ namespace Torch.Managers.PatchManager.Transpile
         {
             var context = new MethodContext(baseMethod);
             context.Read();
-            context.CheckIntegrity();
-            //            _log.Trace("Input Method:");
-            //            _log.Trace(context.ToHumanMsil);
+            // IntegrityAnalysis(LogLevel.Trace, context.Instructions);
 
             var methodContent = (IEnumerable<MsilInstruction>)context.Instructions;
             foreach (MethodInfo transpiler in transpilers)
@@ -47,7 +45,7 @@ namespace Torch.Managers.PatchManager.Transpile
             if (logMsil)
             {
                 var list = methodContent.ToList();
-                IntegrityAnalysis(list);
+                IntegrityAnalysis(LogLevel.Info, list);
                 foreach (var k in list)
                     k.Emit(output);
             }
@@ -61,8 +59,9 @@ namespace Torch.Managers.PatchManager.Transpile
         /// <summary>
         /// Analyzes the integrity of a set of instructions.
         /// </summary>
+        /// <param name="level">default logging level</param>
         /// <param name="instructions">instructions</param>
-        private static void IntegrityAnalysis(List<MsilInstruction> instructions)
+        private static void IntegrityAnalysis(LogLevel level, IReadOnlyList<MsilInstruction> instructions)
         {
             var targets = new Dictionary<MsilLabel, int>();
             for (var i = 0; i < instructions.Count; i++)
@@ -143,7 +142,7 @@ namespace Torch.Managers.PatchManager.Transpile
                     if (line.StartsWith("WARN", StringComparison.OrdinalIgnoreCase))
                         _log.Warn(line.Substring(4).Trim());
                     else
-                        _log.Info(line.Trim());
+                        _log.Log(level, line.Trim());
                 }
         }
 

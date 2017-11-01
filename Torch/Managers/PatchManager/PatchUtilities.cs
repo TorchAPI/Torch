@@ -24,7 +24,6 @@ namespace Torch.Managers.PatchManager
         {
             var context = new MethodContext(method);
             context.Read();
-            context.CheckIntegrity();
             return context.Instructions;
         }
 
