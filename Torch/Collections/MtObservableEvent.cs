@@ -28,6 +28,13 @@ namespace Torch.Collections
 
         private event EventHandler<TEvtArgs> Event;
 
+        private int _observerCount = 0;
+
+        /// <summary>
+        /// Determines if this event has an observers.
+        /// </summary>
+        public bool IsObserved => _observerCount > 0;
+
         /// <summary>
         /// Raises this event for the given sender, with the given args
         /// </summary>
@@ -46,6 +53,7 @@ namespace Torch.Collections
         {
             if (evt == null)
                 return;
+            _observerCount++;
             Event += new DispatcherDelegate(evt).Invoke;
         }
 
@@ -64,6 +72,7 @@ namespace Torch.Collections
                 if (wrapper._delegate.Equals(evt))
                 {
                     Event -= wrapper.Invoke;
+                    _observerCount--;
                     return;
                 }
             }

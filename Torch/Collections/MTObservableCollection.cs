@@ -207,8 +207,16 @@ namespace Torch.Collections
         /// <inheritdoc/>
         public event PropertyChangedEventHandler PropertyChanged
         {
-            add => _propertyChangedEvent.Add(value);
-            remove => _propertyChangedEvent.Remove(value);
+            add
+            {
+                _propertyChangedEvent.Add(value);
+                OnPropertyChanged(nameof(IsObserved));
+            }
+            remove
+            {
+                _propertyChangedEvent.Remove(value);
+                OnPropertyChanged(nameof(IsObserved));
+            }
         }
 
         private readonly MtObservableEvent<NotifyCollectionChangedEventArgs, NotifyCollectionChangedEventHandler> _collectionChangedEvent =
@@ -216,11 +224,23 @@ namespace Torch.Collections
         /// <inheritdoc/>
         public event NotifyCollectionChangedEventHandler CollectionChanged
         {
-            add => _collectionChangedEvent.Add(value);
-            remove => _collectionChangedEvent.Remove(value);
+            add
+            {
+                _collectionChangedEvent.Add(value);
+                OnPropertyChanged(nameof(IsObserved));
+            }
+            remove
+            {
+                _collectionChangedEvent.Remove(value);
+                OnPropertyChanged(nameof(IsObserved));
+            }
         }
-
         #endregion
+        
+        /// <summary>
+        /// Is this collection observed by any listeners.
+        /// </summary>
+        public bool IsObserved => _collectionChangedEvent.IsObserved || _propertyChangedEvent.IsObserved;
 
         #region Enumeration
         /// <summary>
