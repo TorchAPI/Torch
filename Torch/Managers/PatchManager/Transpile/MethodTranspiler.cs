@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Text;
 using NLog;
 using Torch.Managers.PatchManager.MSIL;
 
@@ -11,7 +13,9 @@ namespace Torch.Managers.PatchManager.Transpile
     {
         public static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
-        internal static void Transpile(MethodBase baseMethod, Func<Type, MsilLocal> localCreator, IEnumerable<MethodInfo> transpilers, LoggingIlGenerator output, Label? retLabel)
+        internal static void Transpile(MethodBase baseMethod, Func<Type, MsilLocal> localCreator,
+            IEnumerable<MethodInfo> transpilers, LoggingIlGenerator output, Label? retLabel,
+            bool logMsil)
         {
             var context = new MethodContext(baseMethod);
             context.Read();
@@ -40,8 +44,107 @@ namespace Torch.Managers.PatchManager.Transpile
                 methodContent = (IEnumerable<MsilInstruction>)transpiler.Invoke(null, paramList.ToArray());
             }
             methodContent = FixBranchAndReturn(methodContent, retLabel);
-            foreach (var k in methodContent)
-                k.Emit(output);
+            if (logMsil)
+            {
+                var list = methodContent.ToList();
+                IntegrityAnalysis(list);
+                foreach (var k in list)
+                    k.Emit(output);
+            }
+            else
+            {
+                foreach (var k in methodContent)
+                    k.Emit(output);
+            }
+        }
+
+        /// <summary>
+        /// Analyzes the integrity of a set of instructions.
+        /// </summary>
+        /// <param name="instructions">instructions</param>
+        private static void IntegrityAnalysis(List<MsilInstruction> instructions)
+        {
+            var targets = new Dictionary<MsilLabel, int>();
+            for (var i = 0; i < instructions.Count; i++)
+                foreach (var label in instructions[i].Labels)
+                {
+                    if (targets.TryGetValue(label, out var other))
+                        _log.Warn($"Label {label} is applied to ({i}: {instructions[i]}) and ({other}: {instructions[other]})");
+                    targets[label] = i;
+                }
+
+            var reparsed = new HashSet<MsilLabel>();
+            var labelStackSize = new Dictionary<MsilLabel, Dictionary<int, int>>();
+            var stack = 0;
+            var unreachable = false;
+            var data = new StringBuilder[instructions.Count];
+            for (var i = 0; i < instructions.Count; i++)
+            {
+                var k = instructions[i];
+                var line = (data[i] ?? (data[i] = new StringBuilder())).Clear();
+                if (!unreachable)
+                {
+                    foreach (var label in k.Labels)
+                    {
+                        if (!labelStackSize.TryGetValue(label, out Dictionary<int, int> otherStack))
+                            labelStackSize[label] = otherStack = new Dictionary<int, int>();
+
+                        otherStack.Add(i - 1, stack);
+                        if (otherStack.Values.Distinct().Count() > 1 || (otherStack.Count == 1 && !otherStack.ContainsValue(stack)))
+                        {
+                            string otherDesc = string.Join(", ", otherStack.Select(x => $"{x.Key:X4}=>{x.Value}"));
+                            line.AppendLine($"WARN// | Label {label} has multiple entry stack sizes ({otherDesc})");
+                        }
+                    }
+                }
+                foreach (var label in k.Labels)
+                {
+                    if (!labelStackSize.TryGetValue(label, out var entry))
+                        continue;
+                    string desc = string.Join(", ", entry.Select(x => $"{x.Key:X4}=>{x.Value}"));
+                    line.AppendLine($"// \\/ Label {label} has stack sizes {desc}");
+                    if (unreachable && entry.Any())
+                    {
+                        stack = entry.Values.First();
+                        unreachable = false;
+                    }
+                }
+                stack += k.StackChange();
+                line.AppendLine($"{i:X4} S:{stack:D2} dS:{k.StackChange():+0;-#}\t{k}" + (unreachable ? "\t// UNREACHABLE" : ""));
+                if (k.Operand is MsilOperandBrTarget br)
+                {
+                    if (!targets.ContainsKey(br.Target))
+                        line.AppendLine($"WARN// ^ Unknown target {br.Target}");
+
+                    if (!labelStackSize.TryGetValue(br.Target, out Dictionary<int, int> otherStack))
+                        labelStackSize[br.Target] = otherStack = new Dictionary<int, int>();
+
+                    otherStack[i] = stack;
+                    if (otherStack.Values.Distinct().Count() > 1 || (otherStack.Count == 1 && !otherStack.ContainsValue(stack)))
+                    {
+                        string otherDesc = string.Join(", ", otherStack.Select(x => $"{x.Key:X4}=>{x.Value}"));
+                        line.AppendLine($"WARN// ^ Label {br.Target} has multiple entry stack sizes ({otherDesc})");
+                    }
+                    if (targets.TryGetValue(br.Target, out var target) && target < i && reparsed.Add(br.Target))
+                    {
+                        i = target - 1;
+                        unreachable = false;
+                        continue;
+                    }
+                }
+                if (k.OpCode == OpCodes.Br || k.OpCode == OpCodes.Br_S)
+                    unreachable = true;
+            }
+            foreach (var k in data)
+                foreach (var line in k.ToString().Split('\n'))
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
+                    if (line.StartsWith("WARN", StringComparison.OrdinalIgnoreCase))
+                        _log.Warn(line.Substring(4).Trim());
+                    else
+                        _log.Info(line.Trim());
+                }
         }
 
         internal static void Emit(IEnumerable<MsilInstruction> input, LoggingIlGenerator output)

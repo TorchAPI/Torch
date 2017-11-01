@@ -29,20 +29,30 @@ namespace Torch.Managers.PatchManager
 
         internal void Commit()
         {
-            if (!Prefixes.HasChanges() && !Suffixes.HasChanges() && !Transpilers.HasChanges())
-                return;
-            Revert();
+            try
+            {
+                if (!Prefixes.HasChanges() && !Suffixes.HasChanges() && !Transpilers.HasChanges())
+                    return;
+                Revert();
 
-            if (Prefixes.Count == 0 && Suffixes.Count == 0 && Transpilers.Count == 0)
-                return;
-            _log.Debug($"Begin patching {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
-            var patch = ComposePatchedMethod();
+                if (Prefixes.Count == 0 && Suffixes.Count == 0 && Transpilers.Count == 0)
+                    return;
+                _log.Debug(
+                    $"Begin patching {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
+                var patch = ComposePatchedMethod();
 
-            _revertAddress = AssemblyMemory.GetMethodBodyStart(_method);
-            var newAddress = AssemblyMemory.GetMethodBodyStart(patch);
-            _revertData = AssemblyMemory.WriteJump(_revertAddress, newAddress);
-            _pinnedPatch = GCHandle.Alloc(patch);
-            _log.Debug($"Done patching {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
+                _revertAddress = AssemblyMemory.GetMethodBodyStart(_method);
+                var newAddress = AssemblyMemory.GetMethodBodyStart(patch);
+                _revertData = AssemblyMemory.WriteJump(_revertAddress, newAddress);
+                _pinnedPatch = GCHandle.Alloc(patch);
+                _log.Debug(
+                    $"Done patching {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
+            }
+            catch
+            {
+                _log.Fatal($"Error patching {_method.DeclaringType?.FullName}#{_method}");
+                throw;
+            }
         }
 
         internal void Revert()
@@ -156,7 +166,7 @@ namespace Torch.Managers.PatchManager
             target.EmitComment("Prefixes End");
 
             target.EmitComment("Original Begin");
-            MethodTranspiler.Transpile(_method, (type) => new MsilLocal(target.DeclareLocal(type)), Transpilers, target, labelAfterOriginalContent);
+            MethodTranspiler.Transpile(_method, (type) => new MsilLocal(target.DeclareLocal(type)), Transpilers, target, labelAfterOriginalContent, PrintMsil);
             target.EmitComment("Original End");
 
             target.MarkLabel(labelAfterOriginalContent);

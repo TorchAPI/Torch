@@ -159,6 +159,24 @@ namespace Torch.Managers.PatchManager
         public MethodRewriteSet Suffixes { get; }
 
         /// <summary>
+        /// Should the resulting MSIL of this patch operation be printed.
+        /// </summary>
+        public bool PrintMsil
+        {
+            get => _parent?.PrintMsil ?? _printMsilBacking;
+            set
+            {
+                if (_parent != null)
+                    _parent.PrintMsil = value;
+                else
+                    _printMsilBacking = value;
+            }
+        }
+
+        private bool _printMsilBacking;
+        private readonly MethodRewritePattern _parent;
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="parentPattern">The pattern to track changes on, or null</param>
@@ -167,6 +185,7 @@ namespace Torch.Managers.PatchManager
             Prefixes = new MethodRewriteSet(parentPattern?.Prefixes);
             Transpilers = new MethodRewriteSet(parentPattern?.Transpilers);
             Suffixes = new MethodRewriteSet(parentPattern?.Suffixes);
+            _parent = parentPattern;
         }
     }
 }
