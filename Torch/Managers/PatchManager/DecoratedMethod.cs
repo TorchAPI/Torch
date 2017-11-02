@@ -27,11 +27,16 @@ namespace Torch.Managers.PatchManager
         private byte[] _revertData = null;
         private GCHandle? _pinnedPatch;
 
+        internal bool HasChanged()
+        {
+            return Prefixes.HasChanges() || Suffixes.HasChanges() || Transpilers.HasChanges();
+        }
+
         internal void Commit()
         {
             try
             {
-                if (!Prefixes.HasChanges() && !Suffixes.HasChanges() && !Transpilers.HasChanges())
+                if (!Prefixes.HasChanges(true) && !Suffixes.HasChanges(true) && !Transpilers.HasChanges(true))
                     return;
                 Revert();
 

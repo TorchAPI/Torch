@@ -36,9 +36,11 @@ namespace Torch.Managers.PatchManager
 
             private int _hasChanges = 0;
 
-            internal bool HasChanges()
+            internal bool HasChanges(bool reset = false)
             {
-                return Interlocked.Exchange(ref _hasChanges, 0) != 0;
+                if (reset)
+                    return Interlocked.Exchange(ref _hasChanges, 0) != 0;
+                return _hasChanges != 0;
             }
 
             /// <summary>
