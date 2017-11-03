@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
+using System.Windows.Documents;
 using NLog;
 using Torch.Managers.PatchManager.MSIL;
 
@@ -42,17 +43,60 @@ namespace Torch.Managers.PatchManager.Transpile
                 methodContent = (IEnumerable<MsilInstruction>)transpiler.Invoke(null, paramList.ToArray());
             }
             methodContent = FixBranchAndReturn(methodContent, retLabel);
+            var list = methodContent.ToList();
             if (logMsil)
             {
-                var list = methodContent.ToList();
                 IntegrityAnalysis(LogLevel.Info, list);
-                foreach (var k in list)
-                    k.Emit(output);
             }
-            else
+            EmitMethod(list, output);
+        }
+
+        internal static void EmitMethod(IReadOnlyList<MsilInstruction> instructions, LoggingIlGenerator target)
+        {
+            for (var i = 0; i < instructions.Count; i++)
             {
-                foreach (var k in methodContent)
-                    k.Emit(output);
+                MsilInstruction il = instructions[i];
+                if (il.TryCatchOperation != null)
+                    switch (il.TryCatchOperation.Type)
+                    {
+                        case MsilTryCatchOperationType.BeginExceptionBlock:
+                            target.BeginExceptionBlock();
+                            break;
+                        case MsilTryCatchOperationType.BeginCatchBlock:
+                            target.BeginCatchBlock(il.TryCatchOperation.CatchType);
+                            break;
+                        case MsilTryCatchOperationType.BeginFinallyBlock:
+                            target.BeginFinallyBlock();
+                            break;
+                        case MsilTryCatchOperationType.EndExceptionBlock:
+                            target.EndExceptionBlock();
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                foreach (MsilLabel label in il.Labels)
+                    target.MarkLabel(label.LabelFor(target));
+
+                MsilInstruction ilNext = i < instructions.Count - 1 ? instructions[i + 1] : null;
+
+                // Leave opcodes emitted by these:
+                if (il.OpCode == OpCodes.Endfilter && ilNext?.TryCatchOperation?.Type ==
+                    MsilTryCatchOperationType.BeginCatchBlock)
+                    continue;
+                if ((il.OpCode == OpCodes.Leave || il.OpCode == OpCodes.Leave_S) &&
+                    (ilNext?.TryCatchOperation?.Type == MsilTryCatchOperationType.EndExceptionBlock ||
+                     ilNext?.TryCatchOperation?.Type == MsilTryCatchOperationType.BeginCatchBlock ||
+                     ilNext?.TryCatchOperation?.Type == MsilTryCatchOperationType.BeginFinallyBlock))
+                    continue;
+                if ((il.OpCode == OpCodes.Leave || il.OpCode == OpCodes.Leave_S) &&
+                    ilNext?.TryCatchOperation?.Type == MsilTryCatchOperationType.EndExceptionBlock)
+                    continue;
+                
+                if (il.Operand != null)
+                    il.Operand.Emit(target);
+                else
+                    target.Emit(il.OpCode);
             }
         }
 
@@ -109,6 +153,8 @@ namespace Torch.Managers.PatchManager.Transpile
                     }
                 }
                 stack += k.StackChange();
+                if (k.TryCatchOperation != null)
+                    line.AppendLine($"// .{k.TryCatchOperation.Type} ({k.TryCatchOperation.CatchType})");
                 line.AppendLine($"{i:X4} S:{stack:D2} dS:{k.StackChange():+0;-#}\t{k}" + (unreachable ? "\t// UNREACHABLE" : ""));
                 if (k.Operand is MsilOperandBrTarget br)
                 {
@@ -146,21 +192,13 @@ namespace Torch.Managers.PatchManager.Transpile
                 }
         }
 
-        internal static void Emit(IEnumerable<MsilInstruction> input, LoggingIlGenerator output)
-        {
-            foreach (MsilInstruction k in FixBranchAndReturn(input, null))
-                k.Emit(output);
-        }
-
         private static IEnumerable<MsilInstruction> FixBranchAndReturn(IEnumerable<MsilInstruction> insn, Label? retTarget)
         {
             foreach (MsilInstruction i in insn)
             {
                 if (retTarget.HasValue && i.OpCode == OpCodes.Ret)
                 {
-                    MsilInstruction j = new MsilInstruction(OpCodes.Br).InlineTarget(new MsilLabel(retTarget.Value));
-                    foreach (MsilLabel l in i.Labels)
-                        j.Labels.Add(l);
+                    var j = i.CopyWith(OpCodes.Br).InlineTarget(new MsilLabel(retTarget.Value));
                     _log.Trace($"Replacing {i} with {j}");
                     yield return j;
                 }

@@ -16,6 +16,7 @@ namespace Torch.Managers.PatchManager.Transpile
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         public readonly MethodBase Method;
+        public readonly MethodBody MethodBody;
         private readonly byte[] _msilBytes;
 
         internal Dictionary<int, MsilLabel> Labels { get; } = new Dictionary<int, MsilLabel>();
@@ -35,7 +36,9 @@ namespace Torch.Managers.PatchManager.Transpile
         public MethodContext(MethodBase method)
         {
             Method = method;
-            _msilBytes = Method.GetMethodBody().GetILAsByteArray();
+            MethodBody = method.GetMethodBody();
+            Debug.Assert(MethodBody != null, "Method body is null");
+            _msilBytes = MethodBody.GetILAsByteArray();
             TokenResolver = new NormalTokenResolver(method);
         }
 
@@ -43,6 +46,7 @@ namespace Torch.Managers.PatchManager.Transpile
         {
             ReadInstructions();
             ResolveLabels();
+            ResolveCatchClauses();
         }
 
         private void ReadInstructions()
@@ -53,7 +57,7 @@ namespace Torch.Managers.PatchManager.Transpile
             using (var reader = new BinaryReader(memory))
                 while (memory.Length > memory.Position)
                 {
-                    var opcodeOffset = (int) memory.Position;
+                    var opcodeOffset = (int)memory.Position;
                     var instructionValue = (short)memory.ReadByte();
                     if (Prefixes.Contains(instructionValue))
                     {
@@ -72,35 +76,47 @@ namespace Torch.Managers.PatchManager.Transpile
                 }
         }
 
+        private void ResolveCatchClauses()
+        {
+            foreach (ExceptionHandlingClause clause in MethodBody.ExceptionHandlingClauses)
+            {
+                var beginInstruction = FindInstruction(clause.TryOffset);
+                var catchInstruction = FindInstruction(clause.HandlerOffset);
+                var finalInstruction = FindInstruction(clause.HandlerOffset + clause.HandlerLength);
+                beginInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.BeginExceptionBlock);
+                if ((clause.Flags & ExceptionHandlingClauseOptions.Clause) != 0)
+                    catchInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.BeginCatchBlock, clause.CatchType);
+                else if ((clause.Flags & ExceptionHandlingClauseOptions.Finally) != 0)
+                    catchInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.BeginFinallyBlock);
+                finalInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.EndExceptionBlock);
+                _log.Info($"Init try catch ({clause.Flags} {clause.Flags}):\n{beginInstruction}\n{catchInstruction}\n{finalInstruction}");
+            }
+        }
+
+        private MsilInstruction FindInstruction(int offset)
+        {
+            int min = 0, max = _instructions.Count;
+            while (min != max)
+            {
+                int mid = (min + max) / 2;
+                if (_instructions[mid].Offset < offset)
+                    min = mid + 1;
+                else
+                    max = mid;
+            }
+            return min >= 0 && min < _instructions.Count ? _instructions[min] : null;
+        }
+
         private void ResolveLabels()
         {
             foreach (var label in Labels)
             {
-                int min = 0, max = _instructions.Count;
-                while (min != max)
-                {
-                    int mid = (min + max) / 2;
-                    if (_instructions[mid].Offset < label.Key)
-                        min = mid + 1;
-                    else
-                        max = mid;
-                }
-#if DEBUG
-                if (min >= _instructions.Count || min < 0)
-                {
-                    _log.Trace(
-                        $"Want offset {label.Key} for {label.Value}, instruction offsets at\n {string.Join("\n", _instructions.Select(x => $"IL_{x.Offset:X4} {x}"))}");
-                }
-                MsilInstruction prevInsn = min > 0 ? _instructions[min - 1] : null;
-                if ((prevInsn == null || prevInsn.Offset >= label.Key) ||
-                    _instructions[min].Offset < label.Key)
-                    _log.Error($"Label {label.Value} wanted {label.Key} but instruction is at {_instructions[min].Offset}.  Previous instruction is at {prevInsn?.Offset ?? -1}");
-#endif
-                _instructions[min]?.Labels?.Add(label.Value);
+                MsilInstruction target = FindInstruction(label.Key);
+                target.Labels?.Add(label.Value);
             }
         }
 
-        
+
         public string ToHumanMsil()
         {
             return string.Join("\n", _instructions.Select(x => $"IL_{x.Offset:X4}: {x.StackChange():+0;-#} {x}"));

@@ -34,7 +34,7 @@ namespace Torch.Managers.PatchManager
         /// <param name="generator">Output</param>
         public static void EmitInstructions(IEnumerable<MsilInstruction> insn, LoggingIlGenerator generator)
         {
-            MethodTranspiler.Emit(insn, generator);
+            MethodTranspiler.EmitMethod(insn.ToList(), generator);
         }
     }
 }

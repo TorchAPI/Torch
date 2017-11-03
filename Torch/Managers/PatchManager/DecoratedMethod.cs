@@ -53,9 +53,9 @@ namespace Torch.Managers.PatchManager
                 _log.Debug(
                     $"Done patching {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
             }
-            catch
+            catch (Exception exception)
             {
-                _log.Fatal($"Error patching {_method.DeclaringType?.FullName}#{_method}");
+                _log.Fatal(exception, $"Error patching {_method.DeclaringType?.FullName}#{_method}");
                 throw;
             }
         }

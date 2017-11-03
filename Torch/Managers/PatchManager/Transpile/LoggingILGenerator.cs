@@ -114,7 +114,7 @@ namespace Torch.Managers.PatchManager.Transpile
 
 
 #pragma warning disable 649
-        [ReflectedGetter(Name="m_label")]
+        [ReflectedGetter(Name = "m_label")]
         private static Func<Label, int> _labelID;
 #pragma warning restore 649
 
@@ -145,6 +145,51 @@ namespace Torch.Managers.PatchManager.Transpile
             _log?.Trace($"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
+
+
+        #region Exceptions
+        /// <inheritdoc cref="ILGenerator.BeginExceptionBlock"/>
+        public Label BeginExceptionBlock()
+        {
+            _log?.Trace($"BeginExceptionBlock");
+            return Backing.BeginExceptionBlock();
+        }
+
+        /// <inheritdoc cref="ILGenerator.BeginCatchBlock"/>
+        public void BeginCatchBlock(Type caught)
+        {
+            _log?.Trace($"BeginCatchBlock {caught}");
+            Backing.BeginCatchBlock(caught);
+        }
+
+        /// <inheritdoc cref="ILGenerator.BeginExceptFilterBlock"/>
+        public void BeginExceptFilterBlock()
+        {
+            _log?.Trace($"BeginExceptFilterBlock");
+            Backing.BeginExceptFilterBlock();
+        }
+
+        /// <inheritdoc cref="ILGenerator.BeginFaultBlock"/>
+        public void BeginFaultBlock()
+        {
+            _log?.Trace($"BeginFaultBlock");
+            Backing.BeginFaultBlock();
+        }
+
+        /// <inheritdoc cref="ILGenerator.BeginFinallyBlock"/>
+        public void BeginFinallyBlock()
+        {
+            _log?.Trace($"BeginFinallyBlock");
+            Backing.BeginFinallyBlock();
+        }
+
+        /// <inheritdoc cref="ILGenerator.EndExceptionBlock"/>
+        public void EndExceptionBlock()
+        {
+            _log?.Trace($"EndExceptionBlock");
+            Backing.EndExceptionBlock();
+        }
+        #endregion
 
         /// <inheritdoc cref="ILGenerator.MarkLabel(Label)"/>
         public void MarkLabel(Label label)

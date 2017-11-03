@@ -104,6 +104,11 @@ namespace Torch.Managers.PatchManager.MSIL
         /// </summary>
         public HashSet<MsilLabel> Labels { get; } = new HashSet<MsilLabel>();
 
+        /// <summary>
+        /// The try catch operation that is performed here.
+        /// </summary>
+        public MsilTryCatchOperation TryCatchOperation { get; set; } = null;
+
 
         private static readonly ConcurrentDictionary<Type, PropertyInfo> _setterInfoForInlines = new ConcurrentDictionary<Type, PropertyInfo>();
 
@@ -147,6 +152,7 @@ namespace Torch.Managers.PatchManager.MSIL
             Operand?.CopyTo(result.Operand);
             foreach (MsilLabel x in Labels)
                 result.Labels.Add(x);
+            result.TryCatchOperation = TryCatchOperation;
             return result;
         }
 
@@ -170,20 +176,6 @@ namespace Torch.Managers.PatchManager.MSIL
         {
             ((MsilOperandBrTarget)Operand).Target = label;
             return this;
-        }
-
-        /// <summary>
-        ///     Emits this instruction to the given generator
-        /// </summary>
-        /// <param name="target">Emit target</param>
-        public void Emit(LoggingIlGenerator target)
-        {
-            foreach (MsilLabel label in Labels)
-                target.MarkLabel(label.LabelFor(target));
-            if (Operand != null)
-                Operand.Emit(target);
-            else
-                target.Emit(OpCode);
         }
 
         /// <inheritdoc />

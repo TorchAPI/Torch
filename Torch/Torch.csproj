@@ -184,6 +184,7 @@
     <Compile Include="Managers\PatchManager\MSIL\MsilOperandInline.cs" />
     <Compile Include="Managers\PatchManager\MSIL\MsilOperandSwitch.cs" />
     <Compile Include="Managers\PatchManager\MethodRewritePattern.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilTryCatchOperation.cs" />
     <Compile Include="Managers\PatchManager\PatchShimAttribute.cs" />
     <Compile Include="Managers\PatchManager\PatchContext.cs" />
     <Compile Include="Managers\PatchManager\PatchManager.cs" />
