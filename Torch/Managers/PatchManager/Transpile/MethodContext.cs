@@ -89,7 +89,6 @@ namespace Torch.Managers.PatchManager.Transpile
                 else if ((clause.Flags & ExceptionHandlingClauseOptions.Finally) != 0)
                     catchInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.BeginFinallyBlock);
                 finalInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.EndExceptionBlock);
-                _log.Info($"Init try catch ({clause.Flags} {clause.Flags}):\n{beginInstruction}\n{catchInstruction}\n{finalInstruction}");
             }
         }
 
