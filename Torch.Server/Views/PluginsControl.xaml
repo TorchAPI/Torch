@@ -29,7 +29,7 @@
             </ListView>
             <Button Grid.Row="1" Content="Open Folder" Margin="3" DockPanel.Dock="Bottom" Click="OpenFolder_OnClick"/>
         </Grid>
-        <ScrollViewer Grid.Column="1" Content="{Binding SelectedPlugin.Control}"/>
+        <Frame Grid.Column="1" NavigationUIVisibility="Hidden" Content="{Binding SelectedPlugin.Control}"/>
     </Grid>
 </UserControl>
 
