@@ -42,6 +42,21 @@ namespace Torch.Managers.PatchManager.Transpile
             TokenResolver = new NormalTokenResolver(method);
         }
 
+
+
+#pragma warning disable 649
+        [ReflectedMethod(Name = "BakeByteArray")]
+        private static Func<ILGenerator, byte[]> _ilGeneratorBakeByteArray;
+#pragma warning restore 649
+
+        public MethodContext(DynamicMethod method)
+        {
+            Method = null;
+            MethodBody = null;
+            _msilBytes = _ilGeneratorBakeByteArray(method.GetILGenerator());
+            TokenResolver = new DynamicMethodTokenResolver(method);
+        }
+
         public void Read()
         {
             ReadInstructions();
@@ -64,7 +79,12 @@ namespace Torch.Managers.PatchManager.Transpile
                         instructionValue = (short)((instructionValue << 8) | memory.ReadByte());
                     }
                     if (!OpCodeLookup.TryGetValue(instructionValue, out OpCode opcode))
-                        throw new Exception($"Unknown opcode {instructionValue:X}");
+                    {
+                        var msg = $"Unknown opcode {instructionValue:X}";
+                        _log.Error(msg);
+                        Debug.Assert(false, msg);
+                        continue;
+                    }
                     if (opcode.Size != memory.Position - opcodeOffset)
                         throw new Exception($"Opcode said it was {opcode.Size} but we read {memory.Position - opcodeOffset}");
                     var instruction = new MsilInstruction(opcode)
@@ -78,6 +98,8 @@ namespace Torch.Managers.PatchManager.Transpile
 
         private void ResolveCatchClauses()
         {
+            if (MethodBody == null)
+                return;
             foreach (ExceptionHandlingClause clause in MethodBody.ExceptionHandlingClauses)
             {
                 var beginInstruction = FindInstruction(clause.TryOffset);
@@ -111,7 +133,8 @@ namespace Torch.Managers.PatchManager.Transpile
             foreach (var label in Labels)
             {
                 MsilInstruction target = FindInstruction(label.Key);
-                target.Labels?.Add(label.Value);
+                Debug.Assert(target != null, $"No label for offset {label.Key}");
+                target?.Labels?.Add(label.Value);
             }
         }
 

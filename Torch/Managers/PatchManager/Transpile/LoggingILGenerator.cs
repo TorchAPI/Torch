@@ -24,20 +24,23 @@ namespace Torch.Managers.PatchManager.Transpile
         /// </summary>
         public ILGenerator Backing { get; }
 
+        private readonly LogLevel _level;
+
         /// <summary>
         /// Creates a new logging IL generator backed by the given generator.
         /// </summary>
         /// <param name="backing">Backing generator</param>
-        public LoggingIlGenerator(ILGenerator backing)
+        public LoggingIlGenerator(ILGenerator backing, LogLevel level)
         {
             Backing = backing;
+            _level = level;
         }
 
         /// <inheritdoc cref="ILGenerator.DeclareLocal(Type, bool)"/>
         public LocalBuilder DeclareLocal(Type localType, bool isPinned = false)
         {
             LocalBuilder res = Backing.DeclareLocal(localType, isPinned);
-            _log?.Trace($"DclLoc\t{res.LocalIndex}\t=> {res.LocalType} {res.IsPinned}");
+            _log?.Log(_level, $"DclLoc\t{res.LocalIndex}\t=> {res.LocalType} {res.IsPinned}");
             return res;
         }
 
@@ -45,70 +48,84 @@ namespace Torch.Managers.PatchManager.Transpile
         /// <inheritdoc cref="ILGenerator.Emit(OpCode)"/>
         public void Emit(OpCode op)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding}");
             Backing.Emit(op);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, LocalBuilder)"/>
         public void Emit(OpCode op, LocalBuilder arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding} Local:{arg.LocalIndex}/{arg.LocalType}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding} Local:{arg.LocalIndex}/{arg.LocalType}");
+            Backing.Emit(op, arg);
+        }
+
+        /// <inheritdoc cref="ILGenerator.Emit(OpCode, byte)"/>
+        public void Emit(OpCode op, byte arg)
+        {
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding} {arg}");
+            Backing.Emit(op, arg);
+        }
+
+        /// <inheritdoc cref="ILGenerator.Emit(OpCode, int)"/>
+        public void Emit(OpCode op, short arg)
+        {
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, int)"/>
         public void Emit(OpCode op, int arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding} {arg}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, long)"/>
         public void Emit(OpCode op, long arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding} {arg}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, float)"/>
         public void Emit(OpCode op, float arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding} {arg}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, double)"/>
         public void Emit(OpCode op, double arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding} {arg}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, string)"/>
         public void Emit(OpCode op, string arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding} {arg}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, Type)"/>
         public void Emit(OpCode op, Type arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding} {arg}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, FieldInfo)"/>
         public void Emit(OpCode op, FieldInfo arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding} {arg}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, MethodInfo)"/>
         public void Emit(OpCode op, MethodInfo arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding} {arg}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
@@ -121,28 +138,28 @@ namespace Torch.Managers.PatchManager.Transpile
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, Label)"/>
         public void Emit(OpCode op, Label arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding}\tL:{_labelID.Invoke(arg)}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding}\tL:{_labelID.Invoke(arg)}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, Label[])"/>
         public void Emit(OpCode op, Label[] arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding}\t{string.Join(", ", arg.Select(x => "L:" + _labelID.Invoke(x)))}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding}\t{string.Join(", ", arg.Select(x => "L:" + _labelID.Invoke(x)))}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, SignatureHelper)"/>
         public void Emit(OpCode op, SignatureHelper arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding} {arg}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
         /// <inheritdoc cref="ILGenerator.Emit(OpCode, ConstructorInfo)"/>
         public void Emit(OpCode op, ConstructorInfo arg)
         {
-            _log?.Trace($"Emit\t{op,_opcodePadding} {arg}");
+            _log?.Log(_level, $"Emit\t{op,_opcodePadding} {arg}");
             Backing.Emit(op, arg);
         }
 
@@ -151,42 +168,42 @@ namespace Torch.Managers.PatchManager.Transpile
         /// <inheritdoc cref="ILGenerator.BeginExceptionBlock"/>
         public Label BeginExceptionBlock()
         {
-            _log?.Trace($"BeginExceptionBlock");
+            _log?.Log(_level, $"BeginExceptionBlock");
             return Backing.BeginExceptionBlock();
         }
 
         /// <inheritdoc cref="ILGenerator.BeginCatchBlock"/>
         public void BeginCatchBlock(Type caught)
         {
-            _log?.Trace($"BeginCatchBlock {caught}");
+            _log?.Log(_level, $"BeginCatchBlock {caught}");
             Backing.BeginCatchBlock(caught);
         }
 
         /// <inheritdoc cref="ILGenerator.BeginExceptFilterBlock"/>
         public void BeginExceptFilterBlock()
         {
-            _log?.Trace($"BeginExceptFilterBlock");
+            _log?.Log(_level, $"BeginExceptFilterBlock");
             Backing.BeginExceptFilterBlock();
         }
 
         /// <inheritdoc cref="ILGenerator.BeginFaultBlock"/>
         public void BeginFaultBlock()
         {
-            _log?.Trace($"BeginFaultBlock");
+            _log?.Log(_level, $"BeginFaultBlock");
             Backing.BeginFaultBlock();
         }
 
         /// <inheritdoc cref="ILGenerator.BeginFinallyBlock"/>
         public void BeginFinallyBlock()
         {
-            _log?.Trace($"BeginFinallyBlock");
+            _log?.Log(_level, $"BeginFinallyBlock");
             Backing.BeginFinallyBlock();
         }
 
         /// <inheritdoc cref="ILGenerator.EndExceptionBlock"/>
         public void EndExceptionBlock()
         {
-            _log?.Trace($"EndExceptionBlock");
+            _log?.Log(_level, $"EndExceptionBlock");
             Backing.EndExceptionBlock();
         }
         #endregion
@@ -194,7 +211,7 @@ namespace Torch.Managers.PatchManager.Transpile
         /// <inheritdoc cref="ILGenerator.MarkLabel(Label)"/>
         public void MarkLabel(Label label)
         {
-            _log?.Trace($"MkLbl\tL:{_labelID.Invoke(label)}");
+            _log?.Log(_level, $"MkLbl\tL:{_labelID.Invoke(label)}");
             Backing.MarkLabel(label);
         }
 
@@ -211,7 +228,7 @@ namespace Torch.Managers.PatchManager.Transpile
         [Conditional("DEBUG")]
         public void EmitComment(string comment)
         {
-            _log?.Trace($"// {comment}");
+            _log?.Log(_level, $"// {comment}");
         }
     }
 #pragma warning restore 162

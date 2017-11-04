@@ -14,15 +14,19 @@ namespace Torch.Managers.PatchManager.Transpile
     {
         public static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
-        internal static void Transpile(MethodBase baseMethod, Func<Type, MsilLocal> localCreator,
-            IEnumerable<MethodInfo> transpilers, LoggingIlGenerator output, Label? retLabel,
-            bool logMsil)
+        internal static IEnumerable<MsilInstruction> Transpile(MethodBase baseMethod, Func<Type, MsilLocal> localCreator,
+            IEnumerable<MethodInfo> transpilers, MsilLabel retLabel)
         {
             var context = new MethodContext(baseMethod);
             context.Read();
             // IntegrityAnalysis(LogLevel.Trace, context.Instructions);
+            return Transpile(baseMethod, context.Instructions, localCreator, transpilers, retLabel);
+        }
 
-            var methodContent = (IEnumerable<MsilInstruction>)context.Instructions;
+        internal static IEnumerable<MsilInstruction> Transpile(MethodBase baseMethod, IEnumerable<MsilInstruction> methodContent,
+            Func<Type, MsilLocal> localCreator,
+            IEnumerable<MethodInfo> transpilers, MsilLabel retLabel)
+        { 
             foreach (MethodInfo transpiler in transpilers)
             {
                 var paramList = new List<object>();
@@ -42,13 +46,7 @@ namespace Torch.Managers.PatchManager.Transpile
                 }
                 methodContent = (IEnumerable<MsilInstruction>)transpiler.Invoke(null, paramList.ToArray());
             }
-            methodContent = FixBranchAndReturn(methodContent, retLabel);
-            var list = methodContent.ToList();
-            if (logMsil)
-            {
-                IntegrityAnalysis(LogLevel.Info, list);
-            }
-            EmitMethod(list, output);
+            return FixBranchAndReturn(methodContent, retLabel);
         }
 
         internal static void EmitMethod(IReadOnlyList<MsilInstruction> instructions, LoggingIlGenerator target)
@@ -89,7 +87,7 @@ namespace Torch.Managers.PatchManager.Transpile
                      ilNext?.TryCatchOperation?.Type == MsilTryCatchOperationType.BeginCatchBlock ||
                      ilNext?.TryCatchOperation?.Type == MsilTryCatchOperationType.BeginFinallyBlock))
                     continue;
-                if ((il.OpCode == OpCodes.Leave || il.OpCode == OpCodes.Leave_S) &&
+                if ((il.OpCode == OpCodes.Leave || il.OpCode == OpCodes.Leave_S || il.OpCode == OpCodes.Endfinally) &&
                     ilNext?.TryCatchOperation?.Type == MsilTryCatchOperationType.EndExceptionBlock)
                     continue;
                 
@@ -105,7 +103,7 @@ namespace Torch.Managers.PatchManager.Transpile
         /// </summary>
         /// <param name="level">default logging level</param>
         /// <param name="instructions">instructions</param>
-        private static void IntegrityAnalysis(LogLevel level, IReadOnlyList<MsilInstruction> instructions)
+        public static void IntegrityAnalysis(LogLevel level, IReadOnlyList<MsilInstruction> instructions)
         {
             var targets = new Dictionary<MsilLabel, int>();
             for (var i = 0; i < instructions.Count; i++)
@@ -192,13 +190,13 @@ namespace Torch.Managers.PatchManager.Transpile
                 }
         }
 
-        private static IEnumerable<MsilInstruction> FixBranchAndReturn(IEnumerable<MsilInstruction> insn, Label? retTarget)
+        private static IEnumerable<MsilInstruction> FixBranchAndReturn(IEnumerable<MsilInstruction> insn, MsilLabel retTarget)
         {
             foreach (MsilInstruction i in insn)
             {
-                if (retTarget.HasValue && i.OpCode == OpCodes.Ret)
+                if (retTarget != null && i.OpCode == OpCodes.Ret)
                 {
-                    var j = i.CopyWith(OpCodes.Br).InlineTarget(new MsilLabel(retTarget.Value));
+                    var j = i.CopyWith(OpCodes.Br).InlineTarget(retTarget);
                     _log.Trace($"Replacing {i} with {j}");
                     yield return j;
                 }

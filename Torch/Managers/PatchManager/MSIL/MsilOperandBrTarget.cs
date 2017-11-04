@@ -21,15 +21,40 @@ namespace Torch.Managers.PatchManager.MSIL
 
         internal override void Read(MethodContext context, BinaryReader reader)
         {
-            int val = Instruction.OpCode.OperandType == OperandType.InlineBrTarget
-                ? reader.ReadInt32()
-                : reader.ReadSByte();
-            Target = context.LabelAt((int)reader.BaseStream.Position + val);
+
+            long offset;
+
+            // ReSharper disable once SwitchStatementMissingSomeCases
+            switch (Instruction.OpCode.OperandType)
+            {
+                case OperandType.ShortInlineBrTarget:
+                    offset = reader.ReadSByte();
+                    break;
+                case OperandType.InlineBrTarget:
+                    offset = reader.ReadInt32();
+                    break;
+                default:
+                    throw new InvalidBranchException(
+                        $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+            }
+
+            Target = context.LabelAt((int)(reader.BaseStream.Position + offset));
         }
 
         internal override void Emit(LoggingIlGenerator generator)
         {
-            generator.Emit(Instruction.OpCode, Target.LabelFor(generator));
+            // ReSharper disable once SwitchStatementMissingSomeCases
+            switch (Instruction.OpCode.OperandType)
+            {
+                case OperandType.ShortInlineBrTarget:
+                case OperandType.InlineBrTarget:
+                    generator.Emit(Instruction.OpCode, Target.LabelFor(generator));
+                    break;
+                default:
+                    throw new InvalidBranchException(
+                        $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+            }
+
         }
 
         internal override void CopyTo(MsilOperand operand)

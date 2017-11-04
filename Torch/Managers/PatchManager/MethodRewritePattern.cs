@@ -156,12 +156,17 @@ namespace Torch.Managers.PatchManager
         /// </summary>
         public MethodRewriteSet Transpilers { get; }
         /// <summary>
+        /// Methods capable of accepting one <see cref="IEnumerable{MsilInstruction}"/> and returing another, modified.
+        /// Runs after prefixes, suffixes, and normal transpilers are applied.
+        /// </summary>
+        public MethodRewriteSet PostTranspilers { get; }
+        /// <summary>
         /// Methods run after the original method has run.
         /// </summary>
         public MethodRewriteSet Suffixes { get; }
 
         /// <summary>
-        /// Should the resulting MSIL of this patch operation be printed.
+        /// Should the resulting MSIL of the transpile operation be printed.
         /// </summary>
         public bool PrintMsil
         {
@@ -174,8 +179,8 @@ namespace Torch.Managers.PatchManager
                     _printMsilBacking = value;
             }
         }
-
         private bool _printMsilBacking;
+
         private readonly MethodRewritePattern _parent;
 
         /// <summary>
@@ -186,6 +191,7 @@ namespace Torch.Managers.PatchManager
         {
             Prefixes = new MethodRewriteSet(parentPattern?.Prefixes);
             Transpilers = new MethodRewriteSet(parentPattern?.Transpilers);
+            PostTranspilers = new MethodRewriteSet(parentPattern?.PostTranspilers);
             Suffixes = new MethodRewriteSet(parentPattern?.Suffixes);
             _parent = parentPattern;
         }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using Torch.Managers.PatchManager.Transpile;
+using Torch.Utils;
 
 namespace Torch.Managers.PatchManager.MSIL
 {
@@ -45,47 +46,6 @@ namespace Torch.Managers.PatchManager.MSIL
     public static class MsilOperandInline
     {
         /// <summary>
-        ///     Inline unsigned byte
-        /// </summary>
-        public class MsilOperandUInt8 : MsilOperandInline<byte>
-        {
-            internal MsilOperandUInt8(MsilInstruction instruction) : base(instruction)
-            {
-            }
-
-            internal override void Read(MethodContext context, BinaryReader reader)
-            {
-                Value = reader.ReadByte();
-            }
-
-            internal override void Emit(LoggingIlGenerator generator)
-            {
-                generator.Emit(Instruction.OpCode, Value);
-            }
-        }
-
-        /// <summary>
-        ///     Inline signed byte
-        /// </summary>
-        public class MsilOperandInt8 : MsilOperandInline<sbyte>
-        {
-            internal MsilOperandInt8(MsilInstruction instruction) : base(instruction)
-            {
-            }
-
-            internal override void Read(MethodContext context, BinaryReader reader)
-            {
-                Value =
-                    (sbyte)reader.ReadByte();
-            }
-
-            internal override void Emit(LoggingIlGenerator generator)
-            {
-                generator.Emit(Instruction.OpCode, Value);
-            }
-        }
-
-        /// <summary>
         ///     Inline integer
         /// </summary>
         public class MsilOperandInt32 : MsilOperandInline<int>
@@ -96,12 +56,36 @@ namespace Torch.Managers.PatchManager.MSIL
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
-                Value = reader.ReadInt32();
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.ShortInlineI:
+                        Value = reader.ReadByte();
+                        return;
+                    case OperandType.InlineI:
+                        Value = reader.ReadInt32();
+                        return;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
             }
 
             internal override void Emit(LoggingIlGenerator generator)
             {
-                generator.Emit(Instruction.OpCode, Value);
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.ShortInlineI:
+                        generator.Emit(Instruction.OpCode, (byte)Value);
+                        return;
+                    case OperandType.InlineI:
+                        generator.Emit(Instruction.OpCode, Value);
+                        return;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }   
             }
         }
 
@@ -116,12 +100,30 @@ namespace Torch.Managers.PatchManager.MSIL
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
-                Value = reader.ReadSingle();
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.ShortInlineR:
+                        Value = reader.ReadSingle();
+                        return;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
             }
 
             internal override void Emit(LoggingIlGenerator generator)
             {
-                generator.Emit(Instruction.OpCode, Value);
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.ShortInlineR:
+                        generator.Emit(Instruction.OpCode, Value);
+                        return;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
             }
         }
 
@@ -136,12 +138,30 @@ namespace Torch.Managers.PatchManager.MSIL
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
-                Value = reader.ReadDouble();
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.InlineR:
+                        Value = reader.ReadDouble();
+                        return;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
             }
 
             internal override void Emit(LoggingIlGenerator generator)
             {
-                generator.Emit(Instruction.OpCode, Value);
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.InlineR:
+                        generator.Emit(Instruction.OpCode, Value);
+                        return;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
             }
         }
 
@@ -156,12 +176,30 @@ namespace Torch.Managers.PatchManager.MSIL
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
-                Value = reader.ReadInt64();
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.InlineI8:
+                        Value = reader.ReadInt64();
+                        return;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
             }
 
             internal override void Emit(LoggingIlGenerator generator)
             {
-                generator.Emit(Instruction.OpCode, Value);
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.InlineI8:
+                        generator.Emit(Instruction.OpCode, Value);
+                        return;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
             }
         }
 
@@ -176,13 +214,30 @@ namespace Torch.Managers.PatchManager.MSIL
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
-                Value =
-                    context.TokenResolver.ResolveString(reader.ReadInt32());
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.InlineString:
+                        Value = context.TokenResolver.ResolveString(reader.ReadInt32());
+                        return;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
             }
 
             internal override void Emit(LoggingIlGenerator generator)
             {
-                generator.Emit(Instruction.OpCode, Value);
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.InlineString:
+                        generator.Emit(Instruction.OpCode, Value);
+                        return;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
             }
         }
 
@@ -197,14 +252,28 @@ namespace Torch.Managers.PatchManager.MSIL
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
-                byte[] sig = context.TokenResolver
-                    .ResolveSignature(reader.ReadInt32());
-                throw new ArgumentException("Can't figure out how to convert this.");
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.InlineSig:
+                        throw new NotImplementedException();
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
             }
 
             internal override void Emit(LoggingIlGenerator generator)
             {
-                generator.Emit(Instruction.OpCode, Value);
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.InlineSig:
+                        throw new NotImplementedException();
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
             }
         }
 
@@ -219,18 +288,45 @@ namespace Torch.Managers.PatchManager.MSIL
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
-                int paramID =
-                    Instruction.OpCode.OperandType == OperandType.ShortInlineVar
-                        ? reader.ReadByte()
-                        : reader.ReadUInt16();
-                if (paramID == 0 && !context.Method.IsStatic)
+                int id;
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.ShortInlineVar:
+                        id = reader.ReadByte();
+                        break;
+                    case OperandType.InlineVar:
+                        id = reader.ReadUInt16();
+                        break;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
+
+                if (id == 0 && !context.Method.IsStatic)
                     throw new ArgumentException("Haven't figured out how to ldarg with the \"this\" argument");
-                Value = new MsilArgument(context.Method.GetParameters()[paramID - (context.Method.IsStatic ? 0 : 1)]);
+                // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
+                if (context.Method == null)
+                    Value = new MsilArgument(id);
+                else
+                    Value = new MsilArgument(context.Method.GetParameters()[id - (context.Method.IsStatic ? 0 : 1)]);
             }
 
             internal override void Emit(LoggingIlGenerator generator)
             {
-                generator.Emit(Instruction.OpCode, Value.Position);
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.ShortInlineVar:
+                        generator.Emit(Instruction.OpCode, (byte) Value.Position);
+                        break;
+                    case OperandType.InlineVar:
+                        generator.Emit(Instruction.OpCode, (short)Value.Position);
+                        break;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
             }
         }
 
@@ -245,16 +341,42 @@ namespace Torch.Managers.PatchManager.MSIL
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
-                Value =
-                    new MsilLocal(context.Method.GetMethodBody().LocalVariables[
-                        Instruction.OpCode.OperandType == OperandType.ShortInlineVar
-                            ? reader.ReadByte()
-                            : reader.ReadUInt16()]);
+                int id;
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.ShortInlineVar:
+                        id = reader.ReadByte();
+                        break;
+                    case OperandType.InlineVar:
+                        id = reader.ReadUInt16();
+                        break;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
+                // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
+                if (context.MethodBody == null)
+                    Value = new MsilLocal(id);
+                else
+                    Value = new MsilLocal(context.MethodBody.LocalVariables[id]);
             }
 
             internal override void Emit(LoggingIlGenerator generator)
             {
-                generator.Emit(Instruction.OpCode, Value.Index);
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.ShortInlineVar:
+                        generator.Emit(Instruction.OpCode, (byte)Value.Index);
+                        break;
+                    case OperandType.InlineVar:
+                        generator.Emit(Instruction.OpCode, (short)Value.Index);
+                        break;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
             }
         }
 
@@ -286,16 +408,40 @@ namespace Torch.Managers.PatchManager.MSIL
                         value = context.TokenResolver.ResolveField(reader.ReadInt32());
                         break;
                     default:
-                        throw new ArgumentException("Reflected operand only applies to inline reflected types");
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
                 }
                 if (value is TY vty)
                     Value = vty;
+                else if (value == null)
+                    Value = null;
                 else
                     throw new Exception($"Expected type {typeof(TY).Name} from operand {Instruction.OpCode.OperandType}, got {value.GetType()?.Name ?? "null"}");
             }
 
             internal override void Emit(LoggingIlGenerator generator)
             {
+
+                switch (Instruction.OpCode.OperandType)
+                {
+                    case OperandType.InlineTok:
+                        Debug.Assert(Value is MethodBase || Value is Type || Value is FieldInfo,
+                            $"Value {Value?.GetType()} doesn't match operand type");
+                        break;
+                    case OperandType.InlineType:
+                        Debug.Assert(Value is Type, $"Value {Value?.GetType()} doesn't match operand type");
+                        break;
+                    case OperandType.InlineMethod:
+                        Debug.Assert(Value is MethodBase, $"Value {Value?.GetType()} doesn't match operand type");
+                        break;
+                    case OperandType.InlineField:
+                        Debug.Assert(Value is FieldInfo, $"Value {Value?.GetType()} doesn't match operand type");
+                        break;
+                    default:
+                        throw new InvalidBranchException(
+                            $"OpCode {Instruction.OpCode}, operand type {Instruction.OpCode.OperandType} doesn't match {GetType().Name}");
+                }
+
                 if (Value is ConstructorInfo)
                     generator.Emit(Instruction.OpCode, Value as ConstructorInfo);
                 else if (Value is FieldInfo)

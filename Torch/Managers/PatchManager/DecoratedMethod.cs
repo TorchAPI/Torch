@@ -29,20 +29,21 @@ namespace Torch.Managers.PatchManager
 
         internal bool HasChanged()
         {
-            return Prefixes.HasChanges() || Suffixes.HasChanges() || Transpilers.HasChanges();
+            return Prefixes.HasChanges() || Suffixes.HasChanges() || Transpilers.HasChanges() || PostTranspilers.HasChanges();
         }
 
         internal void Commit()
         {
             try
             {
-                if (!Prefixes.HasChanges(true) && !Suffixes.HasChanges(true) && !Transpilers.HasChanges(true))
+                // non-greedy so they are all reset
+                if (!Prefixes.HasChanges(true) & !Suffixes.HasChanges(true) & !Transpilers.HasChanges(true) & !PostTranspilers.HasChanges(true))
                     return;
                 Revert();
 
-                if (Prefixes.Count == 0 && Suffixes.Count == 0 && Transpilers.Count == 0)
+                if (Prefixes.Count == 0 && Suffixes.Count == 0 && Transpilers.Count == 0 && PostTranspilers.Count == 0)
                     return;
-                _log.Debug(
+                _log.Log(PrintMsil ? LogLevel.Info : LogLevel.Debug,
                     $"Begin patching {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
                 var patch = ComposePatchedMethod();
 
@@ -50,7 +51,7 @@ namespace Torch.Managers.PatchManager
                 var newAddress = AssemblyMemory.GetMethodBodyStart(patch);
                 _revertData = AssemblyMemory.WriteJump(_revertAddress, newAddress);
                 _pinnedPatch = GCHandle.Alloc(patch);
-                _log.Debug(
+                _log.Log(PrintMsil ? LogLevel.Info : LogLevel.Debug,
                     $"Done patching {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
             }
             catch (Exception exception)
@@ -110,100 +111,119 @@ namespace Torch.Managers.PatchManager
         public DynamicMethod ComposePatchedMethod()
         {
             DynamicMethod method = AllocatePatchMethod();
-            var generator = new LoggingIlGenerator(method.GetILGenerator());
-            EmitPatched(generator);
+            var generator = new LoggingIlGenerator(method.GetILGenerator(), PrintMsil ? LogLevel.Info : LogLevel.Trace);
+            List<MsilInstruction> il = EmitPatched((type, pinned) => new MsilLocal(generator.DeclareLocal(type, pinned))).ToList();
+            if (PrintMsil)
+            {
+                lock (_log)
+                {
+                    MethodTranspiler.IntegrityAnalysis(LogLevel.Info, il);
+                }
+            }
+            MethodTranspiler.EmitMethod(il, generator);
 
-            // Force it to compile
-            RuntimeMethodHandle handle = _getMethodHandle.Invoke(method);
-            object runtimeMethodInfo = _getMethodInfo.Invoke(handle);
-            _compileDynamicMethod.Invoke(runtimeMethodInfo);
+            try
+            {
+                // Force it to compile
+                RuntimeMethodHandle handle = _getMethodHandle.Invoke(method);
+                object runtimeMethodInfo = _getMethodInfo.Invoke(handle);
+                _compileDynamicMethod.Invoke(runtimeMethodInfo);
+            }
+            catch
+            {
+                lock (_log)
+                {
+                    var ctx = new MethodContext(method);
+                    ctx.Read();
+                    MethodTranspiler.IntegrityAnalysis(LogLevel.Warn, ctx.Instructions);
+                }
+                throw;
+            }
             return method;
         }
         #endregion
 
         #region Emit
-        private void EmitPatched(LoggingIlGenerator target)
+        private IEnumerable<MsilInstruction> EmitPatched(Func<Type, bool, MsilLocal> declareLocal)
         {
-            var originalLocalVariables = _method.GetMethodBody().LocalVariables
-                .Select(x =>
-                {
-                    Debug.Assert(x.LocalType != null);
-                    return target.DeclareLocal(x.LocalType, x.IsPinned);
-                }).ToArray();
+            var methodBody = _method.GetMethodBody();
+            Debug.Assert(methodBody != null, "Method body is null");
+            foreach (var localVar in methodBody.LocalVariables)
+            {
+                Debug.Assert(localVar.LocalType != null);
+                declareLocal(localVar.LocalType, localVar.IsPinned);
+            }
+            var instructions = new List<MsilInstruction>();
+            var specialVariables = new Dictionary<string, MsilLocal>();
 
-            var specialVariables = new Dictionary<string, LocalBuilder>();
-
-            Label labelAfterOriginalContent = target.DefineLabel();
-            Label labelSkipMethodContent = target.DefineLabel();
+            var labelAfterOriginalContent = new MsilLabel();
+            var labelSkipMethodContent = new MsilLabel();
 
 
             Type returnType = _method is MethodInfo meth ? meth.ReturnType : typeof(void);
-            LocalBuilder resultVariable = null;
+            MsilLocal resultVariable = null;
             if (returnType != typeof(void))
             {
-                if (Prefixes.Concat(Suffixes).SelectMany(x => x.GetParameters()).Any(x => x.Name == RESULT_PARAMETER))
-                    resultVariable = target.DeclareLocal(returnType);
-                else if (Prefixes.Any(x => x.ReturnType == typeof(bool)))
-                    resultVariable = target.DeclareLocal(returnType);
+                if (Prefixes.Concat(Suffixes).SelectMany(x => x.GetParameters()).Any(x => x.Name == RESULT_PARAMETER)
+                    || Prefixes.Any(x => x.ReturnType == typeof(bool)))
+                    resultVariable = declareLocal(returnType, false);
             }
-            resultVariable?.SetToDefault(target);
-            LocalBuilder prefixSkippedVariable = null;
+            if (resultVariable != null)
+                instructions.AddRange(resultVariable.SetToDefault());
+            MsilLocal prefixSkippedVariable = null;
             if (Prefixes.Count > 0 && Suffixes.Any(x => x.GetParameters()
                     .Any(y => y.Name.Equals(PREFIX_SKIPPED_PARAMETER))))
             {
-                prefixSkippedVariable = target.DeclareLocal(typeof(bool));
+                prefixSkippedVariable = declareLocal(typeof(bool), false);
                 specialVariables.Add(PREFIX_SKIPPED_PARAMETER, prefixSkippedVariable);
             }
 
             if (resultVariable != null)
                 specialVariables.Add(RESULT_PARAMETER, resultVariable);
 
-            target.EmitComment("Prefixes Begin");
             foreach (MethodInfo prefix in Prefixes)
             {
-                EmitMonkeyCall(target, prefix, specialVariables);
+                instructions.AddRange(EmitMonkeyCall(prefix, specialVariables));
                 if (prefix.ReturnType == typeof(bool))
-                    target.Emit(OpCodes.Brfalse, labelSkipMethodContent);
+                    instructions.Add(new MsilInstruction(OpCodes.Brfalse).InlineTarget(labelSkipMethodContent));
                 else if (prefix.ReturnType != typeof(void))
                     throw new Exception(
                         $"Prefixes must return void or bool.  {prefix.DeclaringType?.FullName}.{prefix.Name} returns {prefix.ReturnType}");
             }
-            target.EmitComment("Prefixes End");
+            instructions.AddRange(MethodTranspiler.Transpile(_method, (x) => declareLocal(x, false), Transpilers, labelAfterOriginalContent));
 
-            target.EmitComment("Original Begin");
-            MethodTranspiler.Transpile(_method, (type) => new MsilLocal(target.DeclareLocal(type)), Transpilers, target, labelAfterOriginalContent, PrintMsil);
-            target.EmitComment("Original End");
-
-            target.MarkLabel(labelAfterOriginalContent);
+            instructions.Add(new MsilInstruction(OpCodes.Nop).LabelWith(labelAfterOriginalContent));
             if (resultVariable != null)
-                target.Emit(OpCodes.Stloc, resultVariable);
-            Label notSkip = target.DefineLabel();
-            target.Emit(OpCodes.Br, notSkip);
-            target.MarkLabel(labelSkipMethodContent);
+                instructions.Add(new MsilInstruction(OpCodes.Stloc).InlineValue(resultVariable));
+            var notSkip = new MsilLabel();
+            instructions.Add(new MsilInstruction(OpCodes.Br).InlineTarget(notSkip));
+            instructions.Add(new MsilInstruction(OpCodes.Nop).LabelWith(labelSkipMethodContent));
             if (prefixSkippedVariable != null)
             {
-                target.Emit(OpCodes.Ldc_I4_1);
-                target.Emit(OpCodes.Stloc, prefixSkippedVariable);
+                instructions.Add(new MsilInstruction(OpCodes.Ldc_I4_1));
+                instructions.Add(new MsilInstruction(OpCodes.Stloc).InlineValue(prefixSkippedVariable));
             }
-            target.MarkLabel(notSkip);
+            instructions.Add(new MsilInstruction(OpCodes.Nop).LabelWith(notSkip));
 
-            target.EmitComment("Suffixes Begin");
             foreach (MethodInfo suffix in Suffixes)
             {
-                EmitMonkeyCall(target, suffix, specialVariables);
+                instructions.AddRange(EmitMonkeyCall(suffix, specialVariables));
                 if (suffix.ReturnType != typeof(void))
                     throw new Exception($"Suffixes must return void.  {suffix.DeclaringType?.FullName}.{suffix.Name} returns {suffix.ReturnType}");
             }
-            target.EmitComment("Suffixes End");
             if (resultVariable != null)
-                target.Emit(OpCodes.Ldloc, resultVariable);
-            target.Emit(OpCodes.Ret);
+                instructions.Add(new MsilInstruction(OpCodes.Ldloc).InlineValue(resultVariable));
+            instructions.Add(new MsilInstruction(OpCodes.Ret));
+
+            var result = MethodTranspiler.Transpile(_method, instructions, (x) => declareLocal(x, false), PostTranspilers, null).ToList();
+            if (result.Last().OpCode != OpCodes.Ret)
+                result.Add(new MsilInstruction(OpCodes.Ret));
+            return result;
         }
 
-        private void EmitMonkeyCall(LoggingIlGenerator target, MethodInfo patch,
-            IReadOnlyDictionary<string, LocalBuilder> specialVariables)
+        private IEnumerable<MsilInstruction> EmitMonkeyCall(MethodInfo patch,
+            IReadOnlyDictionary<string, MsilLocal> specialVariables)
         {
-            target.EmitComment($"Call {patch.DeclaringType?.FullName}#{patch.Name}");
             foreach (var param in patch.GetParameters())
             {
                 switch (param.Name)
@@ -211,25 +231,26 @@ namespace Torch.Managers.PatchManager
                     case INSTANCE_PARAMETER:
                         if (_method.IsStatic)
                             throw new Exception("Can't use an instance parameter for a static method");
-                        target.Emit(OpCodes.Ldarg_0);
+                        yield return new MsilInstruction(OpCodes.Ldarg_0);
                         break;
                     case PREFIX_SKIPPED_PARAMETER:
                         if (param.ParameterType != typeof(bool))
                             throw new Exception($"Prefix skipped parameter {param.ParameterType} must be of type bool");
                         if (param.ParameterType.IsByRef || param.IsOut)
                             throw new Exception($"Prefix skipped parameter {param.ParameterType} can't be a reference type");
-                        if (specialVariables.TryGetValue(PREFIX_SKIPPED_PARAMETER, out LocalBuilder prefixSkip))
-                            target.Emit(OpCodes.Ldloc, prefixSkip);
+                        if (specialVariables.TryGetValue(PREFIX_SKIPPED_PARAMETER, out MsilLocal prefixSkip))
+                            yield return new MsilInstruction(OpCodes.Ldloc).InlineValue(prefixSkip);
                         else
-                            target.Emit(OpCodes.Ldc_I4_0);
+                            yield return new MsilInstruction(OpCodes.Ldc_I4_0);
                         break;
                     case RESULT_PARAMETER:
                         Type retType = param.ParameterType.IsByRef
                             ? param.ParameterType.GetElementType()
                             : param.ParameterType;
-                        if (retType == null || !retType.IsAssignableFrom(specialVariables[RESULT_PARAMETER].LocalType))
-                            throw new Exception($"Return type {specialVariables[RESULT_PARAMETER].LocalType} can't be assigned to result parameter type {retType}");
-                        target.Emit(param.ParameterType.IsByRef ? OpCodes.Ldloca : OpCodes.Ldloc, specialVariables[RESULT_PARAMETER]);
+                        if (retType == null || !retType.IsAssignableFrom(specialVariables[RESULT_PARAMETER].Type))
+                            throw new Exception($"Return type {specialVariables[RESULT_PARAMETER].Type} can't be assigned to result parameter type {retType}");
+                        yield return new MsilInstruction(param.ParameterType.IsByRef ? OpCodes.Ldloca : OpCodes.Ldloc)
+                            .InlineValue(specialVariables[RESULT_PARAMETER]);
                         break;
                     default:
                         ParameterInfo declParam = _method.GetParameters().FirstOrDefault(x => x.Name == param.Name);
@@ -240,18 +261,18 @@ namespace Torch.Managers.PatchManager
                         bool patchByRef = param.IsOut || param.ParameterType.IsByRef;
                         bool declByRef = declParam.IsOut || declParam.ParameterType.IsByRef;
                         if (patchByRef == declByRef)
-                            target.Emit(OpCodes.Ldarg, paramIdx);
+                            yield return new MsilInstruction(OpCodes.Ldarg).InlineValue(new MsilArgument(paramIdx));
                         else if (patchByRef)
-                            target.Emit(OpCodes.Ldarga, paramIdx);
+                            yield return new MsilInstruction(OpCodes.Ldarga).InlineValue(new MsilArgument(paramIdx));
                         else
                         {
-                            target.Emit(OpCodes.Ldarg, paramIdx);
-                            target.EmitDereference(declParam.ParameterType);
+                            yield return new MsilInstruction(OpCodes.Ldarg).InlineValue(new MsilArgument(paramIdx));
+                            yield return EmitExtensions.EmitDereference(declParam.ParameterType);
                         }
                         break;
                 }
             }
-            target.Emit(OpCodes.Call, patch);
+            yield return new MsilInstruction(OpCodes.Call).InlineValue(patch);
         }
         #endregion
     }

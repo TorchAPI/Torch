@@ -34,6 +34,7 @@ namespace Torch.Managers.PatchManager.MSIL
                 case OperandType.InlineField:
                     Operand = new MsilOperandInline.MsilOperandReflected<FieldInfo>(this);
                     break;
+                case OperandType.ShortInlineI:
                 case OperandType.InlineI:
                     Operand = new MsilOperandInline.MsilOperandInt32(this);
                     break;
@@ -63,15 +64,10 @@ namespace Torch.Managers.PatchManager.MSIL
                     break;
                 case OperandType.ShortInlineVar:
                 case OperandType.InlineVar:
-                    if (OpCode.Name.IndexOf("loc", StringComparison.OrdinalIgnoreCase) != -1)
+                    if (OpCode.IsLocalStore() || OpCode.IsLocalLoad() || OpCode.IsLocalLoadByRef())
                         Operand = new MsilOperandInline.MsilOperandLocal(this);
                     else
                         Operand = new MsilOperandInline.MsilOperandArgument(this);
-                    break;
-                case OperandType.ShortInlineI:
-                    Operand = OpCode == OpCodes.Ldc_I4_S
-                        ? (MsilOperand)new MsilOperandInline.MsilOperandInt8(this)
-                        : new MsilOperandInline.MsilOperandUInt8(this);
                     break;
                 case OperandType.ShortInlineR:
                     Operand = new MsilOperandInline.MsilOperandSingle(this);
@@ -206,6 +202,8 @@ namespace Torch.Managers.PatchManager.MSIL
                 Operand is MsilOperandInline<MethodBase> inline)
             {
                 MethodBase op = inline.Value;
+                if (op == null)
+                    return num;
                 if (op is MethodInfo mi && mi.ReturnType != typeof(void))
                     num++;
                 num -= op.GetParameters().Length;
