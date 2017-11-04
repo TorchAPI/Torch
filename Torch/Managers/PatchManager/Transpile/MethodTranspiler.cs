@@ -132,7 +132,7 @@ namespace Torch.Managers.PatchManager.Transpile
                         if (!labelStackSize.TryGetValue(label, out Dictionary<int, int> otherStack))
                             labelStackSize[label] = otherStack = new Dictionary<int, int>();
 
-                        otherStack.Add(i - 1, stack);
+                        otherStack[i - 1] = stack;
                         if (otherStack.Values.Distinct().Count() > 1 || (otherStack.Count == 1 && !otherStack.ContainsValue(stack)))
                         {
                             string otherDesc = string.Join(", ", otherStack.Select(x => $"{x.Key:X4}=>{x.Value}"));
