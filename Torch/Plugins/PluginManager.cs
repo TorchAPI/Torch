@@ -272,6 +272,7 @@ namespace Torch.Managers
                         stream.Read(data, 0, data.Length);
                         Assembly asm = Assembly.Load(data);
                         TorchBase.RegisterAuxAssembly(asm);
+                        assemblies.Add(asm);
                     }
                 }
             }
