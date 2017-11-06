@@ -232,7 +232,7 @@ namespace Torch.Managers
 
             foreach (var file in files)
             {
-                if (!file.Contains(".dll", StringComparison.CurrentCultureIgnoreCase))
+                if (!file.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
                     continue;
 
                 using (var stream = File.OpenRead(file))
@@ -263,7 +263,7 @@ namespace Torch.Managers
 
                 foreach (var entry in zipFile.Entries)
                 {
-                    if (!entry.Name.Contains(".dll", StringComparison.CurrentCultureIgnoreCase))
+                    if (!entry.Name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
                         continue;
 
                     using (var stream = entry.Open())
