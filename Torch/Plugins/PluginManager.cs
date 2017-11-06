@@ -241,10 +241,10 @@ namespace Torch.Managers
                     stream.Read(data, 0, data.Length);
                     Assembly asm = Assembly.Load(data);
                     assemblies.Add(asm);
-                    TorchBase.RegisterAuxAssembly(asm);
                 }
             }
 
+            RegisterAllAssemblies(assemblies);
             InstantiatePlugin(manifest, assemblies);
         }
 
@@ -271,13 +271,45 @@ namespace Torch.Managers
                         var data = new byte[entry.Length];
                         stream.Read(data, 0, data.Length);
                         Assembly asm = Assembly.Load(data);
-                        TorchBase.RegisterAuxAssembly(asm);
                         assemblies.Add(asm);
                     }
                 }
             }
 
+            RegisterAllAssemblies(assemblies);
             InstantiatePlugin(manifest, assemblies);
+        }
+
+        private void RegisterAllAssemblies(IEnumerable<Assembly> assemblies)
+        {
+            ResolveEventHandler resolveDependentAssembly = (object sender, ResolveEventArgs args) =>
+            {
+                var requiredAssemblyName = new AssemblyName(args.Name);
+                foreach (Assembly asm in assemblies)
+                {
+                    if (IsAssemblyCompatible(requiredAssemblyName, asm.GetName()))
+                        return asm;
+                }
+                throw new Exception($"Could find dependent assembly! Requesting assembly: {args.RequestingAssembly}, dependent assembly: {requiredAssemblyName}");
+            };
+
+            try
+            {
+                AppDomain.CurrentDomain.AssemblyResolve += resolveDependentAssembly;
+                foreach (Assembly asm in assemblies)
+                {
+                    TorchBase.RegisterAuxAssembly(asm);
+                }
+            }
+            finally
+            {
+                AppDomain.CurrentDomain.AssemblyResolve -= resolveDependentAssembly;
+            }
+        }
+
+        private bool IsAssemblyCompatible(AssemblyName a, AssemblyName b)
+        {
+            return a.Name == b.Name && a.Version.Major == b.Version.Major && a.Version.Minor == b.Version.Minor;
         }
 
         private PluginManifest GetManifestFromZip(string path)
