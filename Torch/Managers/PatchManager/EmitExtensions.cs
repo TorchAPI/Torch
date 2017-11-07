@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection.Emit;
+using Torch.Managers.PatchManager.MSIL;
 using Torch.Managers.PatchManager.Transpile;
 
 namespace Torch.Managers.PatchManager
@@ -11,65 +13,64 @@ namespace Torch.Managers.PatchManager
         /// Sets the given local to its default value in the given IL generator.
         /// </summary>
         /// <param name="local">Local to set to default</param>
-        /// <param name="target">The IL generator</param>
-        public static void SetToDefault(this LocalBuilder local, LoggingIlGenerator target)
+        /// <returns>Instructions</returns>
+        public static IEnumerable<MsilInstruction> SetToDefault(this MsilLocal local)
         {
-            Debug.Assert(local.LocalType != null);
-            if (local.LocalType.IsEnum || local.LocalType.IsPrimitive)
+            Debug.Assert(local.Type != null);
+            if (local.Type.IsEnum || local.Type.IsPrimitive)
             {
-                if (local.LocalType == typeof(float))
-                    target.Emit(OpCodes.Ldc_R4, 0f);
-                else if (local.LocalType == typeof(double))
-                    target.Emit(OpCodes.Ldc_R8, 0d);
-                else if (local.LocalType == typeof(long) || local.LocalType == typeof(ulong))
-                    target.Emit(OpCodes.Ldc_I8, 0L);
+                if (local.Type == typeof(float))
+                    yield return new MsilInstruction(OpCodes.Ldc_R4).InlineValue(0f);
+                else if (local.Type == typeof(double))
+                    yield return new MsilInstruction(OpCodes.Ldc_R8).InlineValue(0d);
+                else if (local.Type == typeof(long) || local.Type == typeof(ulong))
+                    yield return new MsilInstruction(OpCodes.Ldc_I8).InlineValue(0L);
                 else
-                    target.Emit(OpCodes.Ldc_I4, 0);
-                target.Emit(OpCodes.Stloc, local);
+                    yield return new MsilInstruction(OpCodes.Ldc_I4).InlineValue(0);
+                yield return new MsilInstruction(OpCodes.Stloc).InlineValue(local);
             }
-            else if (local.LocalType.IsValueType) // struct
+            else if (local.Type.IsValueType) // struct
             {
-                target.Emit(OpCodes.Ldloca, local);
-                target.Emit(OpCodes.Initobj, local.LocalType);
+                yield return new MsilInstruction(OpCodes.Ldloca).InlineValue(local);
+                yield return new MsilInstruction(OpCodes.Initobj).InlineValue(local.Type);
             }
             else // class
             {
-                target.Emit(OpCodes.Ldnull);
-                target.Emit(OpCodes.Stloc, local);
+                yield return new MsilInstruction(OpCodes.Ldnull);
+                yield return new MsilInstruction(OpCodes.Stloc).InlineValue(local);
             }
         }
 
         /// <summary>
         /// Emits a dereference for the given type.
         /// </summary>
-        /// <param name="target">IL Generator to emit on</param>
         /// <param name="type">Type to dereference</param>
-        public static void EmitDereference(this LoggingIlGenerator target, Type type)
+        /// <returns>Derference instruction</returns>
+        public static MsilInstruction EmitDereference(Type type)
         {
             if (type.IsByRef)
                 type = type.GetElementType();
             Debug.Assert(type != null);
 
             if (type == typeof(float))
-                target.Emit(OpCodes.Ldind_R4);
-            else if (type == typeof(double))
-                target.Emit(OpCodes.Ldind_R8);
-            else if (type == typeof(byte))
-                target.Emit(OpCodes.Ldind_U1);
-            else if (type == typeof(ushort) || type == typeof(char))
-                target.Emit(OpCodes.Ldind_U2);
-            else if (type == typeof(uint))
-                target.Emit(OpCodes.Ldind_U4);
-            else if (type == typeof(sbyte))
-                target.Emit(OpCodes.Ldind_I1);
-            else if (type == typeof(short))
-                target.Emit(OpCodes.Ldind_I2);
-            else if (type == typeof(int) || type.IsEnum)
-                target.Emit(OpCodes.Ldind_I4);
-            else if (type == typeof(long) || type == typeof(ulong))
-                target.Emit(OpCodes.Ldind_I8);
-            else
-                target.Emit(OpCodes.Ldind_Ref);
+                return new MsilInstruction(OpCodes.Ldind_R4);
+            if (type == typeof(double))
+                return new MsilInstruction(OpCodes.Ldind_R8);
+            if (type == typeof(byte))
+                return new MsilInstruction(OpCodes.Ldind_U1);
+            if (type == typeof(ushort) || type == typeof(char))
+                return new MsilInstruction(OpCodes.Ldind_U2);
+            if (type == typeof(uint))
+                return new MsilInstruction(OpCodes.Ldind_U4);
+            if (type == typeof(sbyte))
+                return new MsilInstruction(OpCodes.Ldind_I1);
+            if (type == typeof(short))
+                return new MsilInstruction(OpCodes.Ldind_I2);
+            if (type == typeof(int) || type.IsEnum)
+                return new MsilInstruction(OpCodes.Ldind_I4);
+            if (type == typeof(long) || type == typeof(ulong))
+                return new MsilInstruction(OpCodes.Ldind_I8);
+            return new MsilInstruction(OpCodes.Ldind_Ref);
         }
     }
 }

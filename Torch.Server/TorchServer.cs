@@ -72,6 +72,7 @@ namespace Torch.Server
         {
             DedicatedInstance = new InstanceManager(this);
             AddManager(DedicatedInstance);
+            AddManager(new EntityControlManager(this));
             Config = config ?? new TorchConfig();
 
             var sessionManager = Managers.GetManager<ITorchSessionManager>();
@@ -102,7 +103,17 @@ namespace Torch.Server
             MyPlugins.Load();
             MyGlobalTypeMetadata.Static.Init();
 
+            Managers.GetManager<ITorchSessionManager>().SessionStateChanged += OnSessionStateChanged;
             GetManager<InstanceManager>().LoadInstance(Config.InstancePath);
+        }
+
+        private void OnSessionStateChanged(ITorchSession session, TorchSessionState newState)
+        {
+            if (newState == TorchSessionState.Unloading || newState == TorchSessionState.Unloaded)
+            {
+                _watchdog?.Dispose();
+                _watchdog = null;
+            }
         }
 
         private void InvokeBeforeRun()
@@ -202,11 +213,18 @@ namespace Torch.Server
             ((TorchServer)state).Invoke(() => mre.Set());
             if (!mre.WaitOne(TimeSpan.FromSeconds(Instance.Config.TickTimeout)))
             {
+#if DEBUG
+                Log.Error($"Server watchdog detected that the server was frozen for at least {((TorchServer)state).Config.TickTimeout} seconds.");
+                Log.Error(DumpFrozenThread(MySandboxGame.Static.UpdateThread));
+#else
                 Log.Error(DumpFrozenThread(MySandboxGame.Static.UpdateThread));
                 throw new TimeoutException($"Server watchdog detected that the server was frozen for at least {((TorchServer)state).Config.TickTimeout} seconds.");
+#endif
             }
-
-            Log.Debug("Server watchdog responded");
+            else
+            {
+                Log.Debug("Server watchdog responded");
+            }
         }
 
         private static string DumpFrozenThread(Thread thread, int traces = 3, int pause = 5000)

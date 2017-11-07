@@ -62,7 +62,7 @@ namespace Torch.Managers.PatchManager.MSIL
     {
         internal static readonly NullTokenResolver Instance = new NullTokenResolver();
 
-        private NullTokenResolver()
+        internal NullTokenResolver()
         {
         }
 

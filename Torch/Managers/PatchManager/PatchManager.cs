@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using NLog;
 using Torch.API;
 using Torch.Managers.PatchManager.Transpile;
@@ -148,12 +150,43 @@ namespace Torch.Managers.PatchManager
             return count;
         }
 
+
+        private static int _finishedPatchCount, _dirtyPatchCount;
+
+        private static void DoCommit(DecoratedMethod method)
+        {
+            if (!method.HasChanged())
+                return;
+            method.Commit();
+            int value = Interlocked.Increment(ref _finishedPatchCount);
+            var actualPercentage = (value * 100) / _dirtyPatchCount;
+            var currentPrintGroup = actualPercentage / 10;
+            var prevPrintGroup = (value - 1) * 10 / _dirtyPatchCount;
+            if (currentPrintGroup != prevPrintGroup && value >= 1)
+            {
+                _log.Info($"Patched {value}/{_dirtyPatchCount}.  ({actualPercentage:D2}%)");
+            }
+        }
+
         /// <inheritdoc cref="Commit"/>
         internal static void CommitInternal()
         {
             lock (_rewritePatterns)
+            {
+                _log.Info("Patching begins...");
+                _finishedPatchCount = 0;
+                _dirtyPatchCount = _rewritePatterns.Values.Sum(x => x.HasChanged() ? 1 : 0);
+#if true
+                ParallelTasks.Parallel.ForEach(_rewritePatterns.Values.Where(x => !x.PrintMsil), DoCommit);
+                foreach (DecoratedMethod m in _rewritePatterns.Values.Where(x => x.PrintMsil))
+                    DoCommit(m);
+#else
                 foreach (DecoratedMethod m in _rewritePatterns.Values)
-                    m.Commit();
+                    DoCommit(m);
+#endif
+                _log.Info("Patching done");
+
+            }
         }
 
         /// <summary>
@@ -164,12 +197,9 @@ namespace Torch.Managers.PatchManager
             CommitInternal();
         }
 
-        /// <summary>
-        /// Commits any existing patches.
-        /// </summary>
+        /// <inheritdoc cref="Manager.Attach"/>
         public override void Attach()
         {
-            Commit();
         }
 
         /// <summary>

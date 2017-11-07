@@ -38,6 +38,8 @@ namespace Torch.Utils
             return path.StartsWith(_removablePathPrefix) ? path.Substring(_removablePathPrefix.Length) : path;
         }
 
+        private static readonly string[] _tryExtensions = {".dll", ".exe"};
+
         private Assembly CurrentDomainOnAssemblyResolve(object sender, ResolveEventArgs args)
         {
             string assemblyName = new AssemblyName(args.Name).Name;
@@ -57,18 +59,21 @@ namespace Torch.Utils
                 {
                     try
                     {
-                        string assemblyPath = Path.Combine(path, assemblyName + ".dll");
-                        if (!File.Exists(assemblyPath))
-                            continue;
-                        _log.Trace("Loading {0} from {1}", assemblyName, SimplifyPath(assemblyPath));
-                        LogManager.Flush();
-                        Assembly asm = Assembly.LoadFrom(assemblyPath);
-                        _assemblies.Add(assemblyName, asm);
-                        // Recursively load SE dependencies since they don't trigger AssemblyResolve.
-                        // This trades some performance on load for actually working code.
-                        foreach (AssemblyName dependency in asm.GetReferencedAssemblies())
-                            CurrentDomainOnAssemblyResolve(sender, new ResolveEventArgs(dependency.Name, asm));
-                        return asm;
+                        foreach (var tryExt in _tryExtensions)
+                        {
+                            string assemblyPath = Path.Combine(path, assemblyName + tryExt);
+                            if (!File.Exists(assemblyPath))
+                                continue;
+                            _log.Trace("Loading {0} from {1}", assemblyName, SimplifyPath(assemblyPath));
+                            LogManager.Flush();
+                            Assembly asm = Assembly.LoadFrom(assemblyPath);
+                            _assemblies.Add(assemblyName, asm);
+                            // Recursively load SE dependencies since they don't trigger AssemblyResolve.
+                            // This trades some performance on load for actually working code.
+                            foreach (AssemblyName dependency in asm.GetReferencedAssemblies())
+                                CurrentDomainOnAssemblyResolve(sender, new ResolveEventArgs(dependency.Name, asm));
+                            return asm;
+                        }
                     }
                     catch
                     {

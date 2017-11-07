@@ -195,6 +195,7 @@
       <Link>Properties\AssemblyVersion.cs</Link>
     </Compile>
     <Compile Include="ListBoxExtensions.cs" />
+    <Compile Include="Managers\EntityControlManager.cs" />
     <Compile Include="Managers\MultiplayerManagerDedicated.cs" />
     <Compile Include="Managers\InstanceManager.cs" />
     <Compile Include="NativeMethods.cs" />
@@ -214,6 +215,13 @@
     <Compile Include="ViewModels\Entities\Blocks\PropertyViewModel.cs" />
     <Compile Include="ViewModels\Entities\CharacterViewModel.cs" />
     <Compile Include="ViewModels\ConfigDedicatedViewModel.cs" />
+    <Compile Include="ViewModels\Entities\EntityControlViewModel.cs" />
+    <Compile Include="Views\Entities\EntityControlHost.xaml.cs">
+      <DependentUpon>EntityControlHost.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Entities\EntityControlsView.xaml.cs">
+      <DependentUpon>EntityControlsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\EntityTreeViewModel.cs" />
     <Compile Include="ViewModels\Entities\EntityViewModel.cs" />
     <Compile Include="ViewModels\Entities\FloatingObjectViewModel.cs" />
@@ -305,6 +313,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Views\Entities\EntityControlHost.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Entities\EntityControlsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\AddWorkshopItemsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -333,6 +349,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\PluginsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\Entities\VoxelMapView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -342,10 +362,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\ModsControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\PluginsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

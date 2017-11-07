@@ -34,6 +34,7 @@ namespace Torch.Managers.PatchManager.MSIL
                 case OperandType.InlineField:
                     Operand = new MsilOperandInline.MsilOperandReflected<FieldInfo>(this);
                     break;
+                case OperandType.ShortInlineI:
                 case OperandType.InlineI:
                     Operand = new MsilOperandInline.MsilOperandInt32(this);
                     break;
@@ -63,15 +64,10 @@ namespace Torch.Managers.PatchManager.MSIL
                     break;
                 case OperandType.ShortInlineVar:
                 case OperandType.InlineVar:
-                    if (OpCode.Name.IndexOf("loc", StringComparison.OrdinalIgnoreCase) != -1)
+                    if (OpCode.IsLocalStore() || OpCode.IsLocalLoad() || OpCode.IsLocalLoadByRef())
                         Operand = new MsilOperandInline.MsilOperandLocal(this);
                     else
                         Operand = new MsilOperandInline.MsilOperandArgument(this);
-                    break;
-                case OperandType.ShortInlineI:
-                    Operand = OpCode == OpCodes.Ldc_I4_S
-                        ? (MsilOperand)new MsilOperandInline.MsilOperandInt8(this)
-                        : new MsilOperandInline.MsilOperandUInt8(this);
                     break;
                 case OperandType.ShortInlineR:
                     Operand = new MsilOperandInline.MsilOperandSingle(this);
@@ -103,6 +99,11 @@ namespace Torch.Managers.PatchManager.MSIL
         ///     Labels pointing to this instruction.
         /// </summary>
         public HashSet<MsilLabel> Labels { get; } = new HashSet<MsilLabel>();
+
+        /// <summary>
+        /// The try catch operation that is performed here.
+        /// </summary>
+        public MsilTryCatchOperation TryCatchOperation { get; set; } = null;
 
 
         private static readonly ConcurrentDictionary<Type, PropertyInfo> _setterInfoForInlines = new ConcurrentDictionary<Type, PropertyInfo>();
@@ -147,6 +148,7 @@ namespace Torch.Managers.PatchManager.MSIL
             Operand?.CopyTo(result.Operand);
             foreach (MsilLabel x in Labels)
                 result.Labels.Add(x);
+            result.TryCatchOperation = TryCatchOperation;
             return result;
         }
 
@@ -170,20 +172,6 @@ namespace Torch.Managers.PatchManager.MSIL
         {
             ((MsilOperandBrTarget)Operand).Target = label;
             return this;
-        }
-
-        /// <summary>
-        ///     Emits this instruction to the given generator
-        /// </summary>
-        /// <param name="target">Emit target</param>
-        public void Emit(LoggingIlGenerator target)
-        {
-            foreach (MsilLabel label in Labels)
-                target.MarkLabel(label.LabelFor(target));
-            if (Operand != null)
-                Operand.Emit(target);
-            else
-                target.Emit(OpCode);
         }
 
         /// <inheritdoc />
@@ -214,6 +202,8 @@ namespace Torch.Managers.PatchManager.MSIL
                 Operand is MsilOperandInline<MethodBase> inline)
             {
                 MethodBase op = inline.Value;
+                if (op == null)
+                    return num;
                 if (op is MethodInfo mi && mi.ReturnType != typeof(void))
                     num++;
                 num -= op.GetParameters().Length;

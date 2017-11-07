@@ -15,6 +15,7 @@ using Sandbox.Game;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
 using Sandbox.Game.World;
+using Sandbox.Graphics.GUI;
 using Sandbox.ModAPI;
 using SpaceEngineers.Game;
 using Torch.API;
@@ -32,6 +33,8 @@ using Torch.Session;
 using VRage.Collections;
 using VRage.FileSystem;
 using VRage.Game;
+using VRage.Game.Common;
+using VRage.Game.Components;
 using VRage.Game.ObjectBuilder;
 using VRage.ObjectBuilders;
 using VRage.Plugins;
@@ -251,6 +254,18 @@ namespace Torch
             Debug.Assert(!_init, "Torch instance is already initialized.");
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
+            // If the attached assemblies change (MySandboxGame.ctor => MySandboxGame.ParseArgs => MyPlugins.RegisterFromArgs)
+            // attach assemblies to object factories again.
+            ObjectFactoryInitPatch.ForceRegisterAssemblies();
+            GameStateChanged += (game, state) =>
+            {
+                if (state == TorchGameState.Created)
+                {
+                    ObjectFactoryInitPatch.ForceRegisterAssemblies();
+                    // safe to commit here; all important static ctors have run
+                    PatchManager.CommitInternal();
+                }
+            };
 
             Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
             GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
@@ -281,6 +296,10 @@ namespace Torch
             Managers.GetManager<PluginManager>().LoadPlugins();
             Managers.Attach();
             _init = true;
+
+            if (GameState >= TorchGameState.Created && GameState < TorchGameState.Unloading)
+                // safe to commit here; all important static ctors have run
+                PatchManager.CommitInternal();
         }
 
         private void OnSessionLoading()

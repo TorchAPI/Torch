@@ -19,8 +19,7 @@ namespace Torch.Managers.PatchManager.MSIL
         /// </summary>
         public static bool IsLocalLoad(this MsilInstruction me)
         {
-            return me.OpCode == OpCodes.Ldloc || me.OpCode == OpCodes.Ldloc_S || me.OpCode == OpCodes.Ldloc_0 ||
-                   me.OpCode == OpCodes.Ldloc_1 || me.OpCode == OpCodes.Ldloc_2 || me.OpCode == OpCodes.Ldloc_3;
+            return me.OpCode.IsLocalLoad();
         }
 
         /// <summary>
@@ -28,7 +27,7 @@ namespace Torch.Managers.PatchManager.MSIL
         /// </summary>
         public static bool IsLocalLoadByRef(this MsilInstruction me)
         {
-            return me.OpCode == OpCodes.Ldloca || me.OpCode == OpCodes.Ldloca_S;
+            return me.OpCode.IsLocalLoadByRef();
         }
 
         /// <summary>
@@ -36,8 +35,33 @@ namespace Torch.Managers.PatchManager.MSIL
         /// </summary>
         public static bool IsLocalStore(this MsilInstruction me)
         {
-            return me.OpCode == OpCodes.Stloc || me.OpCode == OpCodes.Stloc_S || me.OpCode == OpCodes.Stloc_0 ||
-                   me.OpCode == OpCodes.Stloc_1 || me.OpCode == OpCodes.Stloc_2 || me.OpCode == OpCodes.Stloc_3;
+            return me.OpCode.IsLocalStore();
+        }
+
+        /// <summary>
+        /// Is this instruction a local load-by-value instruction.
+        /// </summary>
+        public static bool IsLocalLoad(this OpCode opcode)
+        {
+            return opcode == OpCodes.Ldloc || opcode == OpCodes.Ldloc_S || opcode == OpCodes.Ldloc_0 ||
+                   opcode == OpCodes.Ldloc_1 || opcode == OpCodes.Ldloc_2 || opcode == OpCodes.Ldloc_3;
+        }
+
+        /// <summary>
+        /// Is this instruction a local load-by-reference instruction.
+        /// </summary>
+        public static bool IsLocalLoadByRef(this OpCode opcode)
+        {
+            return opcode == OpCodes.Ldloca || opcode == OpCodes.Ldloca_S;
+        }
+
+        /// <summary>
+        /// Is this instruction a local store instruction.
+        /// </summary>
+        public static bool IsLocalStore(this OpCode opcode)
+        {
+            return opcode == OpCodes.Stloc || opcode == OpCodes.Stloc_S || opcode == OpCodes.Stloc_0 ||
+                   opcode == OpCodes.Stloc_1 || opcode == OpCodes.Stloc_2 || opcode == OpCodes.Stloc_3;
         }
 
         /// <summary>

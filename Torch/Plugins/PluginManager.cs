@@ -17,6 +17,7 @@ using Torch.API.Plugins;
 using Torch.API.Session;
 using Torch.Collections;
 using Torch.Commands;
+using Torch.Utils;
 
 namespace Torch.Managers
 {
@@ -235,11 +236,35 @@ namespace Torch.Managers
                 if (!file.Contains(".dll", StringComparison.CurrentCultureIgnoreCase))
                     continue;
 
+                if (false)
+                {
+                    var asm = Assembly.LoadFrom(file);
+                    assemblies.Add(asm);
+                    TorchBase.RegisterAuxAssembly(asm);
+                    continue;
+                }
+
                 using (var stream = File.OpenRead(file))
                 {
-                    var data = new byte[stream.Length];
-                    stream.Read(data, 0, data.Length);
+                    var data = stream.ReadToEnd();
+#if DEBUG
+                    byte[] symbol = null;
+                    var symbolPath = Path.Combine(Path.GetDirectoryName(file) ?? ".",
+                        Path.GetFileNameWithoutExtension(file) + ".pdb");
+                    if (File.Exists(symbolPath))
+                        try
+                        {
+                            using (var symbolStream = File.OpenRead(symbolPath))
+                                symbol = symbolStream.ReadToEnd();
+                        }
+                        catch (Exception e)
+                        {
+                            _log.Warn(e, $"Failed to read debugging symbols from {symbolPath}");
+                        }
+                    Assembly asm = symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data);
+#else
                     Assembly asm = Assembly.Load(data);
+#endif
                     assemblies.Add(asm);
                     TorchBase.RegisterAuxAssembly(asm);
                 }
@@ -266,11 +291,29 @@ namespace Torch.Managers
                     if (!entry.Name.Contains(".dll", StringComparison.CurrentCultureIgnoreCase))
                         continue;
 
+
                     using (var stream = entry.Open())
                     {
-                        var data = new byte[entry.Length];
-                        stream.Read(data, 0, data.Length);
+                        var data = stream.ReadToEnd((int)entry.Length);
+#if DEBUG
+                        byte[] symbol = null;
+                        var symbolEntryName = entry.FullName.Substring(0, entry.FullName.Length - "dll".Length) + "pdb";
+                        var symbolEntry = zipFile.GetEntry(symbolEntryName);
+                        if (symbolEntry != null)
+                            try
+                            {
+                                using (var symbolStream = symbolEntry.Open())
+                                    symbol = symbolStream.ReadToEnd((int)symbolEntry.Length);
+                            }
+                            catch (Exception e)
+                            {
+                                _log.Warn(e, $"Failed to read debugging symbols from {path}:{symbolEntryName}");
+                            }
+                        Assembly asm = symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data);
+#else
                         Assembly asm = Assembly.Load(data);
+#endif
+                        assemblies.Add(asm);
                         TorchBase.RegisterAuxAssembly(asm);
                     }
                 }

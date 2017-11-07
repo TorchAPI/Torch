@@ -36,9 +36,11 @@ namespace Torch.Managers.PatchManager
 
             private int _hasChanges = 0;
 
-            internal bool HasChanges()
+            internal bool HasChanges(bool reset = false)
             {
-                return Interlocked.Exchange(ref _hasChanges, 0) != 0;
+                if (reset)
+                    return Interlocked.Exchange(ref _hasChanges, 0) != 0;
+                return _hasChanges != 0;
             }
 
             /// <summary>
@@ -154,9 +156,32 @@ namespace Torch.Managers.PatchManager
         /// </summary>
         public MethodRewriteSet Transpilers { get; }
         /// <summary>
+        /// Methods capable of accepting one <see cref="IEnumerable{MsilInstruction}"/> and returing another, modified.
+        /// Runs after prefixes, suffixes, and normal transpilers are applied.
+        /// </summary>
+        public MethodRewriteSet PostTranspilers { get; }
+        /// <summary>
         /// Methods run after the original method has run.
         /// </summary>
         public MethodRewriteSet Suffixes { get; }
+
+        /// <summary>
+        /// Should the resulting MSIL of the transpile operation be printed.
+        /// </summary>
+        public bool PrintMsil
+        {
+            get => _parent?.PrintMsil ?? _printMsilBacking;
+            set
+            {
+                if (_parent != null)
+                    _parent.PrintMsil = value;
+                else
+                    _printMsilBacking = value;
+            }
+        }
+        private bool _printMsilBacking;
+
+        private readonly MethodRewritePattern _parent;
 
         /// <summary>
         /// 
@@ -166,7 +191,9 @@ namespace Torch.Managers.PatchManager
         {
             Prefixes = new MethodRewriteSet(parentPattern?.Prefixes);
             Transpilers = new MethodRewriteSet(parentPattern?.Transpilers);
+            PostTranspilers = new MethodRewriteSet(parentPattern?.PostTranspilers);
             Suffixes = new MethodRewriteSet(parentPattern?.Suffixes);
+            _parent = parentPattern;
         }
     }
 }

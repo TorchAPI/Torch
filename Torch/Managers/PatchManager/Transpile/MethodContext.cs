@@ -16,6 +16,7 @@ namespace Torch.Managers.PatchManager.Transpile
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         public readonly MethodBase Method;
+        public readonly MethodBody MethodBody;
         private readonly byte[] _msilBytes;
 
         internal Dictionary<int, MsilLabel> Labels { get; } = new Dictionary<int, MsilLabel>();
@@ -35,14 +36,32 @@ namespace Torch.Managers.PatchManager.Transpile
         public MethodContext(MethodBase method)
         {
             Method = method;
-            _msilBytes = Method.GetMethodBody().GetILAsByteArray();
+            MethodBody = method.GetMethodBody();
+            Debug.Assert(MethodBody != null, "Method body is null");
+            _msilBytes = MethodBody.GetILAsByteArray();
             TokenResolver = new NormalTokenResolver(method);
+        }
+
+
+
+#pragma warning disable 649
+        [ReflectedMethod(Name = "BakeByteArray")]
+        private static Func<ILGenerator, byte[]> _ilGeneratorBakeByteArray;
+#pragma warning restore 649
+
+        public MethodContext(DynamicMethod method)
+        {
+            Method = null;
+            MethodBody = null;
+            _msilBytes = _ilGeneratorBakeByteArray(method.GetILGenerator());
+            TokenResolver = new DynamicMethodTokenResolver(method);
         }
 
         public void Read()
         {
             ReadInstructions();
             ResolveLabels();
+            ResolveCatchClauses();
         }
 
         private void ReadInstructions()
@@ -53,14 +72,19 @@ namespace Torch.Managers.PatchManager.Transpile
             using (var reader = new BinaryReader(memory))
                 while (memory.Length > memory.Position)
                 {
-                    var opcodeOffset = (int) memory.Position;
+                    var opcodeOffset = (int)memory.Position;
                     var instructionValue = (short)memory.ReadByte();
                     if (Prefixes.Contains(instructionValue))
                     {
                         instructionValue = (short)((instructionValue << 8) | memory.ReadByte());
                     }
                     if (!OpCodeLookup.TryGetValue(instructionValue, out OpCode opcode))
-                        throw new Exception($"Unknown opcode {instructionValue:X}");
+                    {
+                        var msg = $"Unknown opcode {instructionValue:X}";
+                        _log.Error(msg);
+                        Debug.Assert(false, msg);
+                        continue;
+                    }
                     if (opcode.Size != memory.Position - opcodeOffset)
                         throw new Exception($"Opcode said it was {opcode.Size} but we read {memory.Position - opcodeOffset}");
                     var instruction = new MsilInstruction(opcode)
@@ -72,74 +96,48 @@ namespace Torch.Managers.PatchManager.Transpile
                 }
         }
 
+        private void ResolveCatchClauses()
+        {
+            if (MethodBody == null)
+                return;
+            foreach (ExceptionHandlingClause clause in MethodBody.ExceptionHandlingClauses)
+            {
+                var beginInstruction = FindInstruction(clause.TryOffset);
+                var catchInstruction = FindInstruction(clause.HandlerOffset);
+                var finalInstruction = FindInstruction(clause.HandlerOffset + clause.HandlerLength);
+                beginInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.BeginExceptionBlock);
+                if ((clause.Flags & ExceptionHandlingClauseOptions.Clause) != 0)
+                    catchInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.BeginCatchBlock, clause.CatchType);
+                else if ((clause.Flags & ExceptionHandlingClauseOptions.Finally) != 0)
+                    catchInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.BeginFinallyBlock);
+                finalInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.EndExceptionBlock);
+            }
+        }
+
+        private MsilInstruction FindInstruction(int offset)
+        {
+            int min = 0, max = _instructions.Count;
+            while (min != max)
+            {
+                int mid = (min + max) / 2;
+                if (_instructions[mid].Offset < offset)
+                    min = mid + 1;
+                else
+                    max = mid;
+            }
+            return min >= 0 && min < _instructions.Count ? _instructions[min] : null;
+        }
+
         private void ResolveLabels()
         {
             foreach (var label in Labels)
             {
-                int min = 0, max = _instructions.Count;
-                while (min != max)
-                {
-                    int mid = (min + max) / 2;
-                    if (_instructions[mid].Offset < label.Key)
-                        min = mid + 1;
-                    else
-                        max = mid;
-                }
-#if DEBUG
-                if (min >= _instructions.Count || min < 0)
-                {
-                    _log.Trace(
-                        $"Want offset {label.Key} for {label.Value}, instruction offsets at\n {string.Join("\n", _instructions.Select(x => $"IL_{x.Offset:X4} {x}"))}");
-                }
-                MsilInstruction prevInsn = min > 0 ? _instructions[min - 1] : null;
-                if ((prevInsn == null || prevInsn.Offset >= label.Key) ||
-                    _instructions[min].Offset < label.Key)
-                    _log.Error($"Label {label.Value} wanted {label.Key} but instruction is at {_instructions[min].Offset}.  Previous instruction is at {prevInsn?.Offset ?? -1}");
-#endif
-                _instructions[min]?.Labels?.Add(label.Value);
+                MsilInstruction target = FindInstruction(label.Key);
+                Debug.Assert(target != null, $"No label for offset {label.Key}");
+                target?.Labels?.Add(label.Value);
             }
         }
 
-
-        [Conditional("DEBUG")]
-        public void CheckIntegrity()
-        {
-            var entryStackCount = new Dictionary<MsilLabel, Dictionary<MsilInstruction, int>>();
-            var currentStackSize = 0;
-            foreach (MsilInstruction insn in _instructions)
-            {
-                // I don't want to deal with this, so I won't
-                if (insn.OpCode == OpCodes.Br || insn.OpCode == OpCodes.Br_S || insn.OpCode == OpCodes.Jmp ||
-                    insn.OpCode == OpCodes.Leave || insn.OpCode == OpCodes.Leave_S)
-                    break;
-                foreach (MsilLabel label in insn.Labels)
-                    if (entryStackCount.TryGetValue(label, out Dictionary<MsilInstruction, int> dict))
-                        dict.Add(insn, currentStackSize);
-                    else
-                        (entryStackCount[label] = new Dictionary<MsilInstruction, int>()).Add(insn, currentStackSize);
-
-                currentStackSize += insn.StackChange();
-
-                if (insn.Operand is MsilOperandBrTarget br)
-                    if (entryStackCount.TryGetValue(br.Target, out Dictionary<MsilInstruction, int> dict))
-                        dict.Add(insn, currentStackSize);
-                    else
-                        (entryStackCount[br.Target] = new Dictionary<MsilInstruction, int>()).Add(insn, currentStackSize);
-            }
-            foreach (KeyValuePair<MsilLabel, Dictionary<MsilInstruction, int>> label in entryStackCount)
-            {
-                if (label.Value.Values.Aggregate(new HashSet<int>(), (a, b) =>
-                {
-                    a.Add(b);
-                    return a;
-                }).Count > 1)
-                {
-                    _log.Warn($"Label {label.Key} has multiple entry stack counts");
-                    foreach (KeyValuePair<MsilInstruction, int> kv in label.Value)
-                        _log.Warn($"{kv.Key.Offset:X4} {kv.Key} => {kv.Value}");
-                }
-            }
-        }
 
         public string ToHumanMsil()
         {

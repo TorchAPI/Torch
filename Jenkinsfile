@@ -39,8 +39,8 @@ node {
 		} else {
 			buildMode = "Debug"
 		}
-		bat "rmdir /Q /S \"bin\""
-		bat "rmdir /Q /S \"bin-test\""
+		bat "IF EXIST \"bin\" rmdir /Q /S \"bin\""
+		bat "IF EXIST \"bin-test\" rmdir /Q /S \"bin-test\""
 		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=${buildMode} /p:Platform=x64 /t:Clean"
 		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=${buildMode} /p:Platform=x64"
 	}

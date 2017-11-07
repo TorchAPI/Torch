@@ -17,6 +17,8 @@ namespace Torch.Server.ViewModels
 {
     public class EntityTreeViewModel : ViewModel
     {
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+
         //TODO: these should be sorted sets for speed
         public MtObservableList<GridViewModel> Grids { get; set; } = new MtObservableList<GridViewModel>();
         public MtObservableList<CharacterViewModel> Characters { get; set; } = new MtObservableList<CharacterViewModel>();
@@ -46,39 +48,55 @@ namespace Torch.Server.ViewModels
 
         private void MyEntities_OnEntityRemove(VRage.Game.Entity.MyEntity obj)
         {
-            switch (obj)
+            try
             {
-                case MyCubeGrid grid:
-                    Grids.RemoveWhere(m => m.Id == grid.EntityId);
-                    break;
-                case MyCharacter character:
-                    Characters.RemoveWhere(m => m.Id == character.EntityId);
-                    break;
-                case MyFloatingObject floating:
-                    FloatingObjects.RemoveWhere(m => m.Id == floating.EntityId);
-                    break;
-                case MyVoxelBase voxel:
-                    VoxelMaps.RemoveWhere(m => m.Id == voxel.EntityId);
-                    break;
+                switch (obj)
+                {
+                    case MyCubeGrid grid:
+                        Grids.RemoveWhere(m => m.Id == grid.EntityId);
+                        break;
+                    case MyCharacter character:
+                        Characters.RemoveWhere(m => m.Id == character.EntityId);
+                        break;
+                    case MyFloatingObject floating:
+                        FloatingObjects.RemoveWhere(m => m.Id == floating.EntityId);
+                        break;
+                    case MyVoxelBase voxel:
+                        VoxelMaps.RemoveWhere(m => m.Id == voxel.EntityId);
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                _log.Error(e);
+                // ignore error "it's only UI"
             }
         }
 
         private void MyEntities_OnEntityAdd(VRage.Game.Entity.MyEntity obj)
         {
-            switch (obj)
+            try
             {
-                case MyCubeGrid grid:
-                    Grids.Add(new GridViewModel(grid, this));
-                    break;
-                case MyCharacter character:
-                    Characters.Add(new CharacterViewModel(character, this));
-                    break;
-                case MyFloatingObject floating:
-                    FloatingObjects.Add(new FloatingObjectViewModel(floating, this));
-                    break;
-                case MyVoxelBase voxel:
-                    VoxelMaps.Add(new VoxelMapViewModel(voxel, this));
-                    break;
+                switch (obj)
+                {
+                    case MyCubeGrid grid:
+                        Grids.Add(new GridViewModel(grid, this));
+                        break;
+                    case MyCharacter character:
+                        Characters.Add(new CharacterViewModel(character, this));
+                        break;
+                    case MyFloatingObject floating:
+                        FloatingObjects.Add(new FloatingObjectViewModel(floating, this));
+                        break;
+                    case MyVoxelBase voxel:
+                        VoxelMaps.Add(new VoxelMapViewModel(voxel, this));
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                _log.Error(e);
+                // ignore error "it's only UI"
             }
         }
     }
