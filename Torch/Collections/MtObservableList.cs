@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace Torch.Collections
     /// Multithread safe, observable list
     /// </summary>
     /// <typeparam name="T">Value type</typeparam>
-    public class MtObservableList<T> : MtObservableCollection<IList<T>, T>, IList<T>
+    public class MtObservableList<T> : MtObservableCollection<IList<T>, T>, IList<T>, IList
     {
         /// <summary>
         /// Initializes a new instance of the MtObservableList class that is empty and has the default initial capacity.
@@ -56,7 +57,8 @@ namespace Torch.Collections
                 Backing.Insert(index, item);
                 MarkSnapshotsDirty();
                 OnPropertyChanged(nameof(Count));
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
+                OnCollectionChanged(
+                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
             }
         }
 
@@ -69,7 +71,8 @@ namespace Torch.Collections
                 Backing.RemoveAt(index);
                 MarkSnapshotsDirty();
                 OnPropertyChanged(nameof(Count));
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, old, index));
+                OnCollectionChanged(
+                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, old, index));
             }
         }
 
@@ -88,7 +91,8 @@ namespace Torch.Collections
                     T old = Backing[index];
                     Backing[index] = value;
                     MarkSnapshotsDirty();
-                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, value, old, index));
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace,
+                        value, old, index));
                 }
             }
         }
@@ -121,5 +125,51 @@ namespace Torch.Collections
                 }
             }
         }
+
+        /// <inheritdoc/>
+        int IList.Add(object value)
+        {
+            if (value is T t)
+                using (Lock.WriteUsing())
+                {
+                    int index = Backing.Count;
+                    Backing.Add(t);
+                    return index;
+                }
+            return -1;
+        }
+
+        bool IList.Contains(object value)
+        {
+            return value is T t && Contains(t);
+        }
+
+        int IList.IndexOf(object value)
+        {
+            return value is T t ? IndexOf(t) : -1;
+        }
+
+        /// <inheritdoc/>
+        void IList.Insert(int index, object value)
+        {
+            Insert(index, (T) value);
+        }
+
+        /// <inheritdoc/>
+        void IList.Remove(object value)
+        {
+            if (value is T t)
+                base.Remove(t);
+        }
+
+        /// <inheritdoc/>
+        object IList.this[int index]
+        {
+            get => this[index];
+            set => this[index] = (T) value;
+        }
+
+        /// <inheritdoc/>
+        bool IList.IsFixedSize => false;
     }
 }

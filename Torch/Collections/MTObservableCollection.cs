@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -16,7 +17,8 @@ namespace Torch.Collections
     /// </summary>
     /// <typeparam name="TC">Collection type</typeparam>
     /// <typeparam name="TV">Value type</typeparam>
-    public abstract class MtObservableCollection<TC, TV> : INotifyPropertyChanged, INotifyCollectionChanged, IEnumerable<TV> where TC : class, ICollection<TV>
+    public abstract class MtObservableCollection<TC, TV> : INotifyPropertyChanged, INotifyCollectionChanged,
+        IEnumerable<TV>, ICollection where TC : class, ICollection<TV>
     {
         protected readonly ReaderWriterLockSlim Lock;
         protected readonly TC Backing;
@@ -30,6 +32,13 @@ namespace Torch.Collections
             Lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
             _version = 0;
             _threadViews = new ThreadLocal<ThreadView>(() => new ThreadView(this));
+            _deferredSnapshot = new DeferredUpdateToken(this);
+            _flushEventQueue = new Timer(FlushCollectionEventQueue);
+        }
+
+        ~MtObservableCollection()
+        {
+            _flushEventQueue.Dispose();
         }
 
         /// <summary>
@@ -53,6 +62,7 @@ namespace Torch.Collections
         }
 
         #region ICollection
+
         /// <inheritdoc/>
         public void Add(TV item)
         {
@@ -61,7 +71,8 @@ namespace Torch.Collections
                 Backing.Add(item);
                 MarkSnapshotsDirty();
                 OnPropertyChanged(nameof(Count));
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, Backing.Count - 1));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item,
+                    Backing.Count - 1));
             }
         }
 
@@ -107,7 +118,8 @@ namespace Torch.Collections
 
                     OnPropertyChanged(nameof(Count));
                     OnCollectionChanged(oldIndex.HasValue
-                        ? new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, oldIndex.Value)
+                        ? new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item,
+                            oldIndex.Value)
                         : new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
                     return true;
                 }
@@ -126,11 +138,13 @@ namespace Torch.Collections
 
         /// <inheritdoc/>
         public bool IsReadOnly => Backing.IsReadOnly;
+
         #endregion
 
         #region Event Wrappers
-        private readonly WeakReference<DeferredUpdateToken> _deferredSnapshot = new WeakReference<DeferredUpdateToken>(null);
-        private bool _deferredSnapshotTaken = false;
+
+        private readonly DeferredUpdateToken _deferredSnapshot;
+
         /// <summary>
         /// Disposable that stops update signals and signals a full refresh when disposed.
         /// </summary>
@@ -138,13 +152,8 @@ namespace Torch.Collections
         {
             using (Lock.WriteUsing())
             {
-                if (_deferredSnapshotTaken)
-                    return new DummyToken();
-                DeferredUpdateToken token;
-                if (!_deferredSnapshot.TryGetTarget(out token))
-                    _deferredSnapshot.SetTarget(token = new DeferredUpdateToken());
-                token.SetCollection(this);
-                return token;
+                _deferredSnapshot.Enter();
+                return _deferredSnapshot;
             }
         }
 
@@ -157,53 +166,81 @@ namespace Torch.Collections
 
         private class DeferredUpdateToken : IDisposable
         {
-            private MtObservableCollection<TC, TV> _collection;
+            private readonly MtObservableCollection<TC, TV> _collection;
+            private int _depth;
 
-            internal void SetCollection(MtObservableCollection<TC, TV> c)
+            internal DeferredUpdateToken(MtObservableCollection<TC, TV> c)
             {
-                c._deferredSnapshotTaken = true;
                 _collection = c;
-                c.NotificationsEnabled = false;
+            }
+
+            internal void Enter()
+            {
+                if (Interlocked.Increment(ref _depth) == 1)
+                {
+                    _collection.NotificationsEnabled = false;
+                }
             }
 
             public void Dispose()
             {
-                using (_collection.Lock.WriteUsing())
-                {
-                    _collection.NotificationsEnabled = true;
-                    _collection.OnPropertyChanged(nameof(Count));
-                    _collection.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-                    _collection._deferredSnapshotTaken = false;
-                }
-
+                if (Interlocked.Decrement(ref _depth) == 0)
+                    using (_collection.Lock.WriteUsing())
+                    {
+                        _collection.NotificationsEnabled = true;
+                        _collection.OnPropertyChanged(nameof(Count));
+                        _collection.OnCollectionChanged(
+                            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    }
             }
         }
 
         protected void OnPropertyChanged(string propName)
         {
-            NotifyEvent(this, new PropertyChangedEventArgs(propName));
+            if (!NotificationsEnabled)
+                return;
+            _propertyChangedEvent.Raise(this, new PropertyChangedEventArgs(propName));
         }
 
         protected void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            NotifyEvent(this, e);
-            OnPropertyChanged("Item[]");
+            if (!NotificationsEnabled)
+                return;
+            _collectionEventQueue.Enqueue(e);
+            // In half a second, flush the events
+            _flushEventQueue.Change(500, -1);
         }
 
-        protected void NotifyEvent(object sender, PropertyChangedEventArgs args)
+        private readonly Timer _flushEventQueue;
+
+        private readonly Queue<NotifyCollectionChangedEventArgs> _collectionEventQueue =
+            new Queue<NotifyCollectionChangedEventArgs>();
+
+        private void FlushCollectionEventQueue(object data)
         {
-            if (NotificationsEnabled)
-                _propertyChangedEvent.Raise(sender, args);
+            bool reset = _collectionEventQueue.Count >= 2;
+            var itemsChanged = false;
+            while (_collectionEventQueue.TryDequeue(out NotifyCollectionChangedEventArgs e))
+                if (!reset)
+                {
+                    _collectionChangedEvent.Raise(this, e);
+                    itemsChanged = true;
+                }
+
+            if (reset)
+            {
+                _collectionChangedEvent.Raise(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                itemsChanged = true;
+            }
+
+            if (itemsChanged)
+                OnPropertyChanged("Item[]");
         }
 
-        protected void NotifyEvent(object sender, NotifyCollectionChangedEventArgs args)
-        {
-            if (NotificationsEnabled)
-                _collectionChangedEvent.Raise(sender, args);
-        }
-
-        private readonly MtObservableEvent<PropertyChangedEventArgs, PropertyChangedEventHandler> _propertyChangedEvent =
+        private readonly MtObservableEvent<PropertyChangedEventArgs, PropertyChangedEventHandler> _propertyChangedEvent
+            =
             new MtObservableEvent<PropertyChangedEventArgs, PropertyChangedEventHandler>();
+
         /// <inheritdoc/>
         public event PropertyChangedEventHandler PropertyChanged
         {
@@ -219,8 +256,10 @@ namespace Torch.Collections
             }
         }
 
-        private readonly MtObservableEvent<NotifyCollectionChangedEventArgs, NotifyCollectionChangedEventHandler> _collectionChangedEvent =
-            new MtObservableEvent<NotifyCollectionChangedEventArgs, NotifyCollectionChangedEventHandler>();
+        private readonly MtObservableEvent<NotifyCollectionChangedEventArgs, NotifyCollectionChangedEventHandler>
+            _collectionChangedEvent =
+                new MtObservableEvent<NotifyCollectionChangedEventArgs, NotifyCollectionChangedEventHandler>();
+
         /// <inheritdoc/>
         public event NotifyCollectionChangedEventHandler CollectionChanged
         {
@@ -235,14 +274,16 @@ namespace Torch.Collections
                 OnPropertyChanged(nameof(IsObserved));
             }
         }
+
         #endregion
-        
+
         /// <summary>
         /// Is this collection observed by any listeners.
         /// </summary>
         public bool IsObserved => _collectionChangedEvent.IsObserved || _propertyChangedEvent.IsObserved;
 
         #region Enumeration
+
         /// <summary>
         /// Manages a snapshot to a collection and dispatches enumerators from that snapshot.
         /// </summary>
@@ -250,10 +291,12 @@ namespace Torch.Collections
         {
             private readonly MtObservableCollection<TC, TV> _owner;
             private readonly WeakReference<List<TV>> _snapshot;
+
             /// <summary>
             /// The <see cref="MtObservableCollection{TC,TV}._version"/> of the <see cref="_snapshot"/>
             /// </summary>
             private int _snapshotVersion;
+
             /// <summary>
             /// Number of strong references to the value pointed to be <see cref="_snapshot"/>
             /// </summary>
@@ -358,6 +401,28 @@ namespace Torch.Collections
 
         /// <inheritdoc/>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
         #endregion
+
+        /// <inheritdoc/>
+        void ICollection.CopyTo(Array array, int index)
+        {
+            using (Lock.ReadUsing())
+            {
+                int i = index;
+                foreach (TV value in Backing)
+                {
+                    if (i >= array.Length)
+                        break;
+                    array.SetValue(value, i++);
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        object ICollection.SyncRoot => this;
+
+        /// <inheritdoc/>
+        bool ICollection.IsSynchronized => true;
     }
 }

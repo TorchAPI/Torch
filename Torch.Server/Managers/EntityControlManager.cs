@@ -77,7 +77,7 @@ namespace Torch.Server.Managers
                 if (evm is T m)
                 {
                     var result = _factory(m);
-                    _log.Debug($"Model factory {_factory.Method} created {result} for {evm}");
+                    _log.Trace($"Model factory {_factory.Method} created {result} for {evm}");
                     return result;
                 }
                 return null;
@@ -224,7 +224,7 @@ namespace Torch.Server.Managers
                     if (factory.Method.GetParameters()[0].ParameterType.IsInstanceOfType(model) &&
                         factory.DynamicInvoke(model) is Control result)
                     {
-                        _log.Debug($"Control factory {factory.Method} created {result}");
+                        _log.Trace($"Control factory {factory.Method} created {result}");
                         return result;
                     }
             _log.Warn($"No control created for {model}");
