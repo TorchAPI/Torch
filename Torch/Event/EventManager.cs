@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -36,7 +37,7 @@ namespace Torch.Event
                 _log.Warn($"Registering type {type.FullName} as an event dispatch type, even though it isn't declared singleton");
             var listsFound = 0;
             RuntimeHelpers.RunClassConstructor(type.TypeHandle);
-            foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
                 if (field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(EventList<>))
                 {
                     Type eventType = field.FieldType.GenericTypeArguments[0];
@@ -70,7 +71,7 @@ namespace Torch.Event
                     ParameterInfo[] ps = x.GetParameters();
                     if (ps.Length != 1)
                         return false;
-                    return ps[0].ParameterType.IsByRef && typeof(IEvent).IsAssignableFrom(ps[0].ParameterType);
+                    return ps[0].ParameterType.IsByRef && typeof(IEvent).IsAssignableFrom(ps[0].ParameterType.GetElementType());
                 });
             return exploreType.BaseType != null ? enumerable.Concat(EventHandlers(exploreType.BaseType)) : enumerable;
         }
@@ -78,9 +79,12 @@ namespace Torch.Event
         /// <inheritdoc/>
         private static void RegisterHandlerInternal(IEventHandler instance)
         {
+            var foundHandler = false;
             foreach (MethodInfo handler in EventHandlers(instance.GetType()))
             {
-                Type eventType = handler.GetParameters()[0].ParameterType;
+                Type eventType = handler.GetParameters()[0].ParameterType.GetElementType();
+                Debug.Assert(eventType != null);
+                foundHandler = true;
                 if (eventType.IsInterface)
                 {
                     var foundList = false;
@@ -100,6 +104,9 @@ namespace Torch.Event
                 }
                 _log.Error($"Unable to find event handler list for event type {eventType.FullName}");
             }
+            if (!foundHandler)
+                _log.Warn($"Found no handlers in {instance.GetType().FullName} or base types");
+
         }
 
         /// <summary>

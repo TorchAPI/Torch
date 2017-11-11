@@ -1,11 +1,12 @@
 ﻿using System.Runtime.CompilerServices;
+using Torch.API.Managers;
 
 namespace Torch.API.Event
 {
     /// <summary>
     /// Manager class responsible for registration of event handlers.
     /// </summary>
-    public interface IEventManager
+    public interface IEventManager : IManager
     {
         /// <summary>
         /// Registers all event handler methods contained in the given instance 

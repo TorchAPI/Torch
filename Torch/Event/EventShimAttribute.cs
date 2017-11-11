@@ -14,7 +14,7 @@ namespace Torch.Event
     /// Event shims should be singleton, and have one (or more) fields that are of type <see cref="EventList{T}"/>.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class)]
-    internal class EventShimAttribute : Attribute
+    public class EventShimAttribute : Attribute
     {
     }
 }

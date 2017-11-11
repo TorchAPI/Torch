@@ -198,6 +198,7 @@
     <Compile Include="Managers\EntityControlManager.cs" />
     <Compile Include="Managers\MultiplayerManagerDedicated.cs" />
     <Compile Include="Managers\InstanceManager.cs" />
+    <Compile Include="Managers\MultiplayerManagerDedicatedEventShim.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Initializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

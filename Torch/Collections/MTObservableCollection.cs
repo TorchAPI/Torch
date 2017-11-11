@@ -38,7 +38,9 @@ namespace Torch.Collections
 
         ~MtObservableCollection()
         {
-            _flushEventQueue.Dispose();
+            Timer queue = _flushEventQueue;
+            _flushEventQueue = null;
+            queue?.Dispose();
         }
 
         /// <summary>
@@ -208,10 +210,10 @@ namespace Torch.Collections
                 return;
             _collectionEventQueue.Enqueue(e);
             // In half a second, flush the events
-            _flushEventQueue.Change(500, -1);
+            _flushEventQueue?.Change(500, -1);
         }
 
-        private readonly Timer _flushEventQueue;
+        private Timer _flushEventQueue;
 
         private readonly Queue<NotifyCollectionChangedEventArgs> _collectionEventQueue =
             new Queue<NotifyCollectionChangedEventArgs>();
