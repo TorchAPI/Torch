@@ -60,8 +60,11 @@ namespace Torch.Managers.PatchManager.Transpile
                         case MsilTryCatchOperationType.BeginExceptionBlock:
                             target.BeginExceptionBlock();
                             break;
-                        case MsilTryCatchOperationType.BeginCatchBlock:
+                        case MsilTryCatchOperationType.BeginClauseBlock:
                             target.BeginCatchBlock(il.TryCatchOperation.CatchType);
+                            break;
+                        case MsilTryCatchOperationType.BeginFaultBlock:
+                            target.BeginFaultBlock();
                             break;
                         case MsilTryCatchOperationType.BeginFinallyBlock:
                             target.BeginFinallyBlock();
@@ -80,11 +83,12 @@ namespace Torch.Managers.PatchManager.Transpile
 
                 // Leave opcodes emitted by these:
                 if (il.OpCode == OpCodes.Endfilter && ilNext?.TryCatchOperation?.Type ==
-                    MsilTryCatchOperationType.BeginCatchBlock)
+                    MsilTryCatchOperationType.BeginClauseBlock)
                     continue;
                 if ((il.OpCode == OpCodes.Leave || il.OpCode == OpCodes.Leave_S) &&
                     (ilNext?.TryCatchOperation?.Type == MsilTryCatchOperationType.EndExceptionBlock ||
-                     ilNext?.TryCatchOperation?.Type == MsilTryCatchOperationType.BeginCatchBlock ||
+                     ilNext?.TryCatchOperation?.Type == MsilTryCatchOperationType.BeginClauseBlock ||
+                     ilNext?.TryCatchOperation?.Type == MsilTryCatchOperationType.BeginFaultBlock ||
                      ilNext?.TryCatchOperation?.Type == MsilTryCatchOperationType.BeginFinallyBlock))
                     continue;
                 if ((il.OpCode == OpCodes.Leave || il.OpCode == OpCodes.Leave_S || il.OpCode == OpCodes.Endfinally) &&
@@ -175,7 +179,7 @@ namespace Torch.Managers.PatchManager.Transpile
                         continue;
                     }
                 }
-                if (k.OpCode == OpCodes.Br || k.OpCode == OpCodes.Br_S)
+                if (k.OpCode == OpCodes.Br || k.OpCode == OpCodes.Br_S || k.OpCode == OpCodes.Leave || k.OpCode == OpCodes.Leave_S)
                     unreachable = true;
             }
             foreach (var k in data)

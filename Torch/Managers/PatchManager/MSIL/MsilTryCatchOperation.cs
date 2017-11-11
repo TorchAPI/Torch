@@ -12,19 +12,9 @@ namespace Torch.Managers.PatchManager.MSIL
     /// </summary>
     public enum MsilTryCatchOperationType
     {
-        // TryCatchBlockIL:
-        // var exBlock = ILGenerator.BeginExceptionBlock();
-        // try{
-        // ILGenerator.BeginCatchBlock(typeof(Exception));
-        // } catch(Exception e) {
-        // ILGenerator.BeginCatchBlock(null);
-        // } catch {
-        // ILGenerator.BeginFinallyBlock();
-        // }finally {
-        // ILGenerator.EndExceptionBlock();
-        // }
         BeginExceptionBlock,
-        BeginCatchBlock,
+        BeginClauseBlock,
+        BeginFaultBlock,
         BeginFinallyBlock,
         EndExceptionBlock
     }
@@ -46,9 +36,11 @@ namespace Torch.Managers.PatchManager.MSIL
         public MsilTryCatchOperation(MsilTryCatchOperationType op, Type caughtType = null)
         {
             Type = op;
-            if (caughtType != null && op != MsilTryCatchOperationType.BeginCatchBlock)
+            if (caughtType != null && op != MsilTryCatchOperationType.BeginClauseBlock)
                 throw new ArgumentException($"Can't use caught type with operation type {op}", nameof(caughtType));
             CatchType = caughtType;
         }
+
+        public override string ToString() => $"{Type} -> {CatchType}";
     }
 }

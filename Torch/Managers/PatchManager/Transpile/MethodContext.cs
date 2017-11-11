@@ -43,10 +43,8 @@ namespace Torch.Managers.PatchManager.Transpile
         }
 
 
-
 #pragma warning disable 649
-        [ReflectedMethod(Name = "BakeByteArray")]
-        private static Func<ILGenerator, byte[]> _ilGeneratorBakeByteArray;
+        [ReflectedMethod(Name = "BakeByteArray")] private static Func<ILGenerator, byte[]> _ilGeneratorBakeByteArray;
 #pragma warning restore 649
 
         public MethodContext(DynamicMethod method)
@@ -72,11 +70,11 @@ namespace Torch.Managers.PatchManager.Transpile
             using (var reader = new BinaryReader(memory))
                 while (memory.Length > memory.Position)
                 {
-                    var opcodeOffset = (int)memory.Position;
-                    var instructionValue = (short)memory.ReadByte();
+                    var opcodeOffset = (int) memory.Position;
+                    var instructionValue = (short) memory.ReadByte();
                     if (Prefixes.Contains(instructionValue))
                     {
-                        instructionValue = (short)((instructionValue << 8) | memory.ReadByte());
+                        instructionValue = (short) ((instructionValue << 8) | memory.ReadByte());
                     }
                     if (!OpCodeLookup.TryGetValue(instructionValue, out OpCode opcode))
                     {
@@ -86,7 +84,8 @@ namespace Torch.Managers.PatchManager.Transpile
                         continue;
                     }
                     if (opcode.Size != memory.Position - opcodeOffset)
-                        throw new Exception($"Opcode said it was {opcode.Size} but we read {memory.Position - opcodeOffset}");
+                        throw new Exception(
+                            $"Opcode said it was {opcode.Size} but we read {memory.Position - opcodeOffset}");
                     var instruction = new MsilInstruction(opcode)
                     {
                         Offset = opcodeOffset
@@ -105,16 +104,24 @@ namespace Torch.Managers.PatchManager.Transpile
                 var beginInstruction = FindInstruction(clause.TryOffset);
                 var catchInstruction = FindInstruction(clause.HandlerOffset);
                 var finalInstruction = FindInstruction(clause.HandlerOffset + clause.HandlerLength);
-                beginInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.BeginExceptionBlock);
-                if ((clause.Flags & ExceptionHandlingClauseOptions.Clause) != 0)
-                    catchInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.BeginCatchBlock, clause.CatchType);
+                beginInstruction.TryCatchOperation =
+                    new MsilTryCatchOperation(MsilTryCatchOperationType.BeginExceptionBlock);
+                if ((clause.Flags & ExceptionHandlingClauseOptions.Fault) != 0)
+                    catchInstruction.TryCatchOperation =
+                        new MsilTryCatchOperation(MsilTryCatchOperationType.BeginFaultBlock);
                 else if ((clause.Flags & ExceptionHandlingClauseOptions.Finally) != 0)
-                    catchInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.BeginFinallyBlock);
-                finalInstruction.TryCatchOperation = new MsilTryCatchOperation(MsilTryCatchOperationType.EndExceptionBlock);
+                    catchInstruction.TryCatchOperation =
+                        new MsilTryCatchOperation(MsilTryCatchOperationType.BeginFinallyBlock);
+                else
+                    catchInstruction.TryCatchOperation =
+                        new MsilTryCatchOperation(MsilTryCatchOperationType.BeginClauseBlock, clause.CatchType);
+
+                finalInstruction.TryCatchOperation =
+                    new MsilTryCatchOperation(MsilTryCatchOperationType.EndExceptionBlock);
             }
         }
 
-        private MsilInstruction FindInstruction(int offset)
+        public MsilInstruction FindInstruction(int offset)
         {
             int min = 0, max = _instructions.Count;
             while (min != max)
@@ -153,12 +160,12 @@ namespace Torch.Managers.PatchManager.Transpile
             Prefixes = new HashSet<short>();
             foreach (FieldInfo field in typeof(OpCodes).GetFields(BindingFlags.Static | BindingFlags.Public))
             {
-                var opcode = (OpCode)field.GetValue(null);
+                var opcode = (OpCode) field.GetValue(null);
                 if (opcode.OpCodeType != OpCodeType.Nternal)
                     OpCodeLookup.Add(opcode.Value, opcode);
-                if ((ushort)opcode.Value > 0xFF)
+                if ((ushort) opcode.Value > 0xFF)
                 {
-                    Prefixes.Add((short)((ushort)opcode.Value >> 8));
+                    Prefixes.Add((short) ((ushort) opcode.Value >> 8));
                 }
             }
         }
