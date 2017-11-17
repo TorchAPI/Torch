@@ -45,7 +45,9 @@ quit";
             if (_init)
                 return false;
 
+#if !DEBUG
             AppDomain.CurrentDomain.UnhandledException += HandleException;
+#endif
 
             if (!args.Contains("-noupdate"))
                 RunSteamCmd();
@@ -61,11 +63,11 @@ quit";
                     var pid = int.Parse(_config.WaitForPID);
                     var waitProc = Process.GetProcessById(pid);
                     Log.Info("Continuing in 5 seconds.");
-                    Thread.Sleep(5000);
-                    if (!waitProc.HasExited)
+                    Log.Warn($"Waiting for process {pid} to close");
+                    while (!waitProc.HasExited)
                     {
-                        Log.Warn($"Killing old process {pid}.");
-                        waitProc.Kill();
+                        Console.Write(".");
+                        Thread.Sleep(1000);
                     }
 
                 }

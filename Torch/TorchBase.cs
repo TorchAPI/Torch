@@ -193,7 +193,7 @@ namespace Torch
         /// <param name="action"></param>
         public void Invoke(Action action)
         {
-            MySandboxGame.Static.Invoke(action);
+            MySandboxGame.Static.Invoke(action, "Torch");
         }
 
         /// <summary>
@@ -240,7 +240,7 @@ namespace Torch
                 {
                     e.Set();
                 }
-            });
+            }, "Torch");
 
             if (!e.WaitOne(60000))
                 throw new TimeoutException("The game action timed out.");

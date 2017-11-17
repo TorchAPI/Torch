@@ -163,6 +163,7 @@ namespace Torch.Server
             Log.Info("Starting server.");
 
             MySandboxGame.IsDedicated = true;
+            MySandboxGame.ConfigDedicated = DedicatedInstance.DedicatedConfig.Model;
             Environment.SetEnvironmentVariable("SteamAppId", MyPerServerSettings.AppId.ToString());
 
             VRage.Service.ExitListenerSTA.OnExit += delegate { MySandboxGame.Static?.Exit(); };
@@ -309,6 +310,7 @@ namespace Torch.Server
             var exe = Assembly.GetExecutingAssembly().Location;
             ((TorchConfig)Config).WaitForPID = Process.GetCurrentProcess().Id.ToString();
             Process.Start(exe, Config.ToString());
+            Stop();
             Environment.Exit(0);
         }
 
