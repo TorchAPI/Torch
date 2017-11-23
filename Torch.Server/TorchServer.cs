@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xml.Serialization.GeneratedAssembly;
+using NLog;
 using Sandbox.Engine.Analytics;
 using Sandbox.Game.Multiplayer;
 using Sandbox.ModAPI;
@@ -297,9 +298,11 @@ namespace Torch.Server
             MySandboxGame.Static.Exit();
 
             Log.Info("Server stopped.");
+            LogManager.Flush();
             _stopHandle.Set();
             State = ServerState.Stopped;
             IsRunning = false;
+            Process.GetCurrentProcess().Kill();
         }
 
         /// <summary>
@@ -309,9 +312,12 @@ namespace Torch.Server
         {
             var exe = Assembly.GetExecutingAssembly().Location;
             ((TorchConfig)Config).WaitForPID = Process.GetCurrentProcess().Id.ToString();
+            Config.Autostart = true;
             Process.Start(exe, Config.ToString());
+            Save(0).Wait();
             Stop();
-            Environment.Exit(0);
+            LogManager.Flush();
+            Process.GetCurrentProcess().Kill();
         }
 
         /// <inheritdoc/>

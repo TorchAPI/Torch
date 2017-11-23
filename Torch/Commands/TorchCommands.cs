@@ -151,7 +151,6 @@ namespace Torch.Commands
                 {
                     Context.Torch.Invoke(() =>
                     {
-                        Context.Torch.Save(0).Wait();
                         Context.Torch.Restart();
                     });
                     yield break;

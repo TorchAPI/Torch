@@ -183,14 +183,14 @@ quit";
             LogException(ex);
             Console.WriteLine("Exiting in 5 seconds.");
             Thread.Sleep(5000);
+            LogManager.Flush();
             if (_config.RestartOnCrash)
             {
                 var exe = typeof(Program).Assembly.Location;
                 _config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
                 Process.Start(exe, _config.ToString());
             }
-            //1627 = Function failed during execution.
-            Environment.Exit(1627);
+            Process.GetCurrentProcess().Kill();
         }
     }
 }

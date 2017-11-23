@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
+using ProtoBuf.Meta;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game;
@@ -191,16 +192,18 @@ namespace Torch
         /// Invokes an action on the game thread.
         /// </summary>
         /// <param name="action"></param>
-        public void Invoke(Action action)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public void Invoke(Action action, [CallerMemberName] string caller = "")
         {
-            MySandboxGame.Static.Invoke(action, "Torch");
+            MySandboxGame.Static.Invoke(action, caller);
         }
 
         /// <summary>
         /// Invokes an action on the game thread asynchronously.
         /// </summary>
         /// <param name="action"></param>
-        public Task InvokeAsync(Action action)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public Task InvokeAsync(Action action, [CallerMemberName] string caller = "")
         {
             if (Thread.CurrentThread == MySandboxGame.Static.UpdateThread)
             {
@@ -209,14 +212,15 @@ namespace Torch
                 return Task.CompletedTask;
             }
 
-            return Task.Run(() => InvokeBlocking(action));
+            return Task.Run(() => InvokeBlocking(action, caller));
         }
 
         /// <summary>
         /// Invokes an action on the game thread and blocks until it is completed.
         /// </summary>
         /// <param name="action"></param>
-        public void InvokeBlocking(Action action)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public void InvokeBlocking(Action action, [CallerMemberName] string caller = "")
         {
             if (action == null)
                 return;
@@ -240,7 +244,7 @@ namespace Torch
                 {
                     e.Set();
                 }
-            }, "Torch");
+            }, caller);
 
             if (!e.WaitOne(60000))
                 throw new TimeoutException("The game action timed out.");

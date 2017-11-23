@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Torch.API.Managers;
@@ -65,18 +66,18 @@ namespace Torch.API
         /// <summary>
         /// Invoke an action on the game thread.
         /// </summary>
-        void Invoke(Action action);
+        void Invoke(Action action, [CallerMemberName] string caller = "");
 
         /// <summary>
         /// Invoke an action on the game thread and block until it has completed.
         /// If this is called on the game thread the action will execute immediately.
         /// </summary>
-        void InvokeBlocking(Action action);
+        void InvokeBlocking(Action action, [CallerMemberName] string caller = "");
 
         /// <summary>
         /// Invoke an action on the game thread asynchronously.
         /// </summary>
-        Task InvokeAsync(Action action);
+        Task InvokeAsync(Action action, [CallerMemberName] string caller = "");
 
         /// <summary>
         /// Start the Torch instance.
