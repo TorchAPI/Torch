@@ -14,6 +14,7 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Session;
 using Torch.Client.Manager;
+using Torch.Client.UI;
 using Torch.Session;
 using VRage;
 using VRage.FileSystem;
@@ -27,7 +28,9 @@ namespace Torch.Client
     {
         private MyCommonProgramStartup _startup;
         private IMyRender _renderer;
-        private const uint APP_ID = 244850;
+
+        protected override uint SteamAppId => 244850;
+        protected override string SteamAppName => "Space Engineers";
 
         public TorchClient()
         {
@@ -46,10 +49,9 @@ namespace Torch.Client
             Directory.SetCurrentDirectory(Program.SpaceEngineersInstallAlias);
             MyFileSystem.ExePath = Path.Combine(Program.SpaceEngineersInstallAlias, Program.SpaceEngineersBinaries);
             Log.Info("Initializing Torch Client");
-            base.Init();
-            
-            SpaceEngineersGame.SetupBasicGameInfo();
             _startup = new MyCommonProgramStartup(RunArgs);
+            SpaceEngineersGame.SetupBasicGameInfo();
+            SpaceEngineersGame.SetupPerGameSettings();
             if (_startup.PerformReporting())
                 throw new InvalidOperationException("Torch client won't launch when started in error reporting mode");
 
@@ -58,27 +60,16 @@ namespace Torch.Client
                 throw new InvalidOperationException("Only one instance of Space Engineers can be running at a time.");
 
             var appDataPath = _startup.GetAppDataPath();
-            MyInitializer.InvokeBeforeRun(APP_ID, MyPerGameSettings.BasicGameInfo.ApplicationName, appDataPath);
-            MyInitializer.InitCheckSum();
-            _startup.InitSplashScreen();
-            if (!_startup.Check64Bit())
-                throw new InvalidOperationException("Torch requires a 64bit operating system");
+            Config.InstancePath = appDataPath;
+            base.Init();
+            OverrideMenus();
+            SetRenderWindowTitle($"Space Engineers v{GameVersion} with Torch v{TorchVersion}");
+        }
 
-            _startup.DetectSharpDxLeaksBeforeRun();
-            var steamService = new SteamService(Game.IsDedicated, APP_ID);
-            MyServiceManager.Instance.AddService<IMyGameService>(steamService);
-            _renderer = null;
-            SpaceEngineersGame.SetupPerGameSettings();
-            // I'm sorry, but it's what Keen does in SpaceEngineers.MyProgram
-#pragma warning disable 612
-            SpaceEngineersGame.SetupRender();
-#pragma warning restore 612
-            InitializeRender();
-            if (!_startup.CheckSteamRunning())
-                throw new InvalidOperationException("Space Engineers requires steam to be running");
-
-            if (!Game.IsDedicated)
-                MyFileSystem.InitUserSpecific(MyGameService.UserId.ToString());
+        public override void Dispose()
+        {
+            base.Dispose();
+            _startup.DetectSharpDxLeaksAfterRun();
         }
 
         private void OverrideMenus()
@@ -94,18 +85,6 @@ namespace Torch.Client
             MyPerGameSettings.Credits.Departments.Insert(0, credits);
 
             MyPerGameSettings.GUI.MainMenu = typeof(TorchMainMenuScreen);
-        }
-        
-        public override void Start()
-        {
-            using (var spaceEngineersGame = new SpaceEngineersGame(RunArgs))
-            {
-                Log.Info("Starting client");
-                OverrideMenus();
-                spaceEngineersGame.OnGameLoaded += SpaceEngineersGame_OnGameLoaded;
-                spaceEngineersGame.OnGameExit += Dispose;
-                spaceEngineersGame.Run(false, _startup.DisposeSplashScreen);
-            }
         }
 
         private void SetRenderWindowTitle(string title)
@@ -125,58 +104,9 @@ namespace Torch.Client
                 });
         }
 
-        private void SpaceEngineersGame_OnGameLoaded(object sender, EventArgs e)
+        public override void Restart()
         {
-            SetRenderWindowTitle($"Space Engineers v{GameVersion} with Torch v{TorchVersion}");
-        }
-
-        public override void Dispose()
-        {
-            MyGameService.ShutDown();
-            _startup.DetectSharpDxLeaksAfterRun();
-            MyInitializer.InvokeAfterRun();
-        }
-
-        public override void Stop()
-        {
-            MySandboxGame.ExitThreadSafe();
-        }
-
-        private void InitializeRender()
-        {
-            try
-            {
-                if (Game.IsDedicated)
-                {
-                    _renderer = new MyNullRender();
-                }
-                else
-                {
-                    var graphicsRenderer = MySandboxGame.Config.GraphicsRenderer;
-                    if (graphicsRenderer == MySandboxGame.DirectX11RendererKey)
-                    {
-                        _renderer = new MyDX11Render();
-                        if (!_renderer.IsSupported)
-                        {
-                            MySandboxGame.Log.WriteLine("DirectX 11 renderer not supported. No renderer to revert back to.");
-                            _renderer = null;
-                        }
-                    }
-                    if (_renderer == null)
-                        throw new MyRenderException("The current version of the game requires a Dx11 card. \\n For more information please see : http://blog.marekrosa.org/2016/02/space-engineers-news-full-source-code_26.html", MyRenderExceptionEnum.GpuNotSupported);
-
-                    MySandboxGame.Config.GraphicsRenderer = graphicsRenderer;
-                }
-
-                MyRenderProxy.Initialize(_renderer);
-                MyRenderProxy.GetRenderProfiler().SetAutocommit(false);
-                MyRenderProxy.GetRenderProfiler().InitMemoryHack("MainEntryPoint");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Render Initialization Failed");
-                Environment.Exit(-1);
-            }
+            throw new NotImplementedException();
         }
     }
 }

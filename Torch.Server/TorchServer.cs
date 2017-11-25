@@ -44,19 +44,58 @@ namespace Torch.Server
     {
         //public MyConfigDedicated<MyObjectBuilder_SessionSettings> DedicatedConfig { get; set; }
         /// <inheritdoc />
-        public float SimulationRatio { get => _simRatio; set { _simRatio = value; OnPropertyChanged(); } }
+        public float SimulationRatio
+        {
+            get => _simRatio;
+            set
+            {
+                _simRatio = value;
+                OnPropertyChanged();
+            }
+        }
+
         /// <inheritdoc />
-        public TimeSpan ElapsedPlayTime { get => _elapsedPlayTime; set { _elapsedPlayTime = value; OnPropertyChanged(); } }
+        public TimeSpan ElapsedPlayTime
+        {
+            get => _elapsedPlayTime;
+            set
+            {
+                _elapsedPlayTime = value;
+                OnPropertyChanged();
+            }
+        }
+
         /// <inheritdoc />
         public Thread GameThread { get; private set; }
+
         /// <inheritdoc />
-        public ServerState State { get => _state; private set { _state = value; OnPropertyChanged(); } }
+        public ServerState State
+        {
+            get => _state;
+            private set
+            {
+                _state = value;
+                OnPropertyChanged();
+            }
+        }
+
         /// <inheritdoc />
-        public bool IsRunning { get => _isRunning; set { _isRunning = value; OnPropertyChanged(); } }
+        public bool IsRunning
+        {
+            get => _isRunning;
+            set
+            {
+                _isRunning = value;
+                OnPropertyChanged();
+            }
+        }
+
         /// <inheritdoc />
         public InstanceManager DedicatedInstance { get; }
+
         /// <inheritdoc />
         public string InstanceName => Config?.InstanceName;
+
         /// <inheritdoc />
         public string InstancePath => Config?.InstancePath;
 
@@ -80,29 +119,19 @@ namespace Torch.Server
             sessionManager.AddFactory((x) => new MultiplayerManagerDedicated(this));
         }
 
+        /// <inheritdoc/>
+        protected override uint SteamAppId => 244850;
+
+        /// <inheritdoc/>
+        protected override string SteamAppName => "SpaceEngineersDedicated";
+
         /// <inheritdoc />
         public override void Init()
         {
             Log.Info($"Init server '{Config.InstanceName}' at '{Config.InstancePath}'");
+            Sandbox.Engine.Platform.Game.IsDedicated = true;
+
             base.Init();
-
-            MyPerGameSettings.SendLogToKeen = false;
-            MyPerServerSettings.GameName = MyPerGameSettings.GameName;
-            MyPerServerSettings.GameNameSafe = MyPerGameSettings.GameNameSafe;
-            MyPerServerSettings.GameDSName = MyPerServerSettings.GameNameSafe + "Dedicated";
-            MyPerServerSettings.GameDSDescription = "Your place for space engineering, destruction and exploring.";
-            MySessionComponentExtDebug.ForceDisable = true;
-            MyPerServerSettings.AppId = 244850;
-            MyFinalBuildConstants.APP_VERSION = MyPerGameSettings.BasicGameInfo.GameVersion;
-            InvokeBeforeRun();
-
-            //MyObjectBuilderSerializer.RegisterFromAssembly(typeof(MyObjectBuilder_CheckpointSerializer).Assembly);
-            MyPlugins.RegisterGameAssemblyFile(MyPerGameSettings.GameModAssembly);
-            MyPlugins.RegisterGameObjectBuildersAssemblyFile(MyPerGameSettings.GameModObjBuildersAssembly);
-            MyPlugins.RegisterSandboxAssemblyFile(MyPerGameSettings.SandboxAssembly);
-            MyPlugins.RegisterSandboxGameAssemblyFile(MyPerGameSettings.SandboxGameAssembly);
-            MyPlugins.Load();
-            MyGlobalTypeMetadata.Static.Init();
 
             Managers.GetManager<ITorchSessionManager>().SessionStateChanged += OnSessionStateChanged;
             GetManager<InstanceManager>().LoadInstance(Config.InstancePath);
@@ -117,81 +146,64 @@ namespace Torch.Server
             }
         }
 
-        private void InvokeBeforeRun()
-        {
-            MySandboxGame.Log.Init("SpaceEngineers-Dedicated.log", MyFinalBuildConstants.APP_VERSION_STRING);
-            MySandboxGame.Log.WriteLine("Steam build: Always true");
-            MySandboxGame.Log.WriteLine("Environment.ProcessorCount: " + MyEnvironment.ProcessorCount);
-            //MySandboxGame.Log.WriteLine("Environment.OSVersion: " + GetOsName());
-            MySandboxGame.Log.WriteLine("Environment.CommandLine: " + Environment.CommandLine);
-            MySandboxGame.Log.WriteLine("Environment.Is64BitProcess: " + MyEnvironment.Is64BitProcess);
-            MySandboxGame.Log.WriteLine("Environment.Is64BitOperatingSystem: " + Environment.Is64BitOperatingSystem);
-            //MySandboxGame.Log.WriteLine("Environment.Version: " + GetNETFromRegistry());
-            MySandboxGame.Log.WriteLine("Environment.CurrentDirectory: " + Environment.CurrentDirectory);
-            MySandboxGame.Log.WriteLine("MainAssembly.ProcessorArchitecture: " + Assembly.GetExecutingAssembly().GetArchitecture());
-            MySandboxGame.Log.WriteLine("ExecutingAssembly.ProcessorArchitecture: " + MyFileSystem.MainAssembly.GetArchitecture());
-            MySandboxGame.Log.WriteLine("IntPtr.Size: " + IntPtr.Size);
-            MySandboxGame.Log.WriteLine("Default Culture: " + CultureInfo.CurrentCulture.Name);
-            MySandboxGame.Log.WriteLine("Default UI Culture: " + CultureInfo.CurrentUICulture.Name);
-            MySandboxGame.Log.WriteLine("IsAdmin: " + new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator));
-
-            MyLog.Default = MySandboxGame.Log;
-
-            Thread.CurrentThread.Name = "Main thread";
-
-            //Because we want exceptions from users to be in english
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-            Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
-
-            MySandboxGame.Config = new MyConfig("SpaceEngineers-Dedicated.cfg");
-            MySandboxGame.Config.Load();
-        }
-
-        [ReflectedStaticMethod(Type = typeof(DedicatedServer), Name = "RunInternal")]
-        private static Action _dsRunInternal;
-
-        /// <inheritdoc />
         public override void Start()
         {
             if (State != ServerState.Stopped)
                 return;
+            State = ServerState.Starting;
+            IsRunning = true;
+            Log.Info("Starting server.");
+            MySandboxGame.ConfigDedicated = DedicatedInstance.DedicatedConfig.Model;
 
             DedicatedInstance.SaveConfig();
             _uptime = Stopwatch.StartNew();
-            IsRunning = true;
-            GameThread = Thread.CurrentThread;
-            State = ServerState.Starting;
-            Log.Info("Starting server.");
-
-            MySandboxGame.IsDedicated = true;
-            MySandboxGame.ConfigDedicated = DedicatedInstance.DedicatedConfig.Model;
-            Environment.SetEnvironmentVariable("SteamAppId", MyPerServerSettings.AppId.ToString());
-
-            VRage.Service.ExitListenerSTA.OnExit += delegate { MySandboxGame.Static?.Exit(); };
-
             base.Start();
-            // Stops RunInternal from calling MyFileSystem.InitUserSpecific(null), we call it in InstanceManager.
-            MySandboxGame.IsReloading = true;
-            try
-            {
-                _dsRunInternal.Invoke();
-            }
-            catch (TargetInvocationException e)
-            {
-                // Makes log formatting a little nicer.
-                throw e.InnerException ?? e;
-            }
+        }
 
-            MySandboxGame.Log.Close();
+        /// <inheritdoc />
+        public override void Stop()
+        {
+            if (State == ServerState.Stopped)
+                Log.Error("Server is already stopped");
+            Log.Info("Stopping server.");
+            base.Stop();
+            Log.Info("Server stopped.");
+            LogManager.Flush();
+            _stopHandle.Set();
+
             State = ServerState.Stopped;
+            IsRunning = false;
+        }
+
+        /// <summary>
+        /// Restart the program. DOES NOT SAVE!
+        /// </summary>
+        public override void Restart()
+        {
+            var exe = Assembly.GetExecutingAssembly().Location;
+            ((TorchConfig) Config).WaitForPID = Process.GetCurrentProcess().Id.ToString();
+            Config.Autostart = true;
+            Process.Start(exe, Config.ToString());
+            Save(0).Wait();
+            Stop();
+            LogManager.Flush();
+            Process.GetCurrentProcess().Kill();
         }
 
         /// <inheritdoc />
         public override void Init(object gameInstance)
         {
             base.Init(gameInstance);
-            State = ServerState.Running;
-            SteamServerAPI.Instance.GameServer.SetKeyValue("SM", "Torch");
+            var game = gameInstance as MySandboxGame;
+            if (game != null && MySession.Static != null)
+            {
+                State = ServerState.Running;
+//                SteamServerAPI.Instance.GameServer.SetKeyValue("SM", "Torch");
+            }
+            else
+            {
+                State = ServerState.Stopped;
+            }
         }
 
         /// <inheritdoc />
@@ -205,18 +217,22 @@ namespace Torch.Server
             if (_watchdog == null && Config.TickTimeout > 0)
             {
                 Log.Info("Starting server watchdog.");
-                _watchdog = new Timer(CheckServerResponding, this, TimeSpan.Zero, TimeSpan.FromSeconds(Config.TickTimeout));
+                _watchdog = new Timer(CheckServerResponding, this, TimeSpan.Zero,
+                    TimeSpan.FromSeconds(Config.TickTimeout));
             }
         }
+
+        #region Freeze Detection
 
         private static void CheckServerResponding(object state)
         {
             var mre = new ManualResetEvent(false);
-            ((TorchServer)state).Invoke(() => mre.Set());
+            ((TorchServer) state).Invoke(() => mre.Set());
             if (!mre.WaitOne(TimeSpan.FromSeconds(Instance.Config.TickTimeout)))
             {
 #if DEBUG
-                Log.Error($"Server watchdog detected that the server was frozen for at least {((TorchServer)state).Config.TickTimeout} seconds.");
+                Log.Error(
+                    $"Server watchdog detected that the server was frozen for at least {((TorchServer) state).Config.TickTimeout} seconds.");
                 Log.Error(DumpFrozenThread(MySandboxGame.Static.UpdateThread));
 #else
                 Log.Error(DumpFrozenThread(MySandboxGame.Static.UpdateThread));
@@ -278,47 +294,7 @@ namespace Torch.Server
             return stack;
         }
 
-        /// <inheritdoc />
-        public override void Stop()
-        {
-            if (State == ServerState.Stopped)
-                Log.Error("Server is already stopped");
-
-            if (Thread.CurrentThread != MySandboxGame.Static.UpdateThread)
-            {
-                Log.Debug("Invoking server stop on game thread.");
-                Invoke(Stop);
-                return;
-            }
-
-            Log.Info("Stopping server.");
-
-            //Unload all the static junk.
-            //TODO: Finish unloading all server data so it's in a completely clean state.
-            MySandboxGame.Static.Exit();
-
-            Log.Info("Server stopped.");
-            LogManager.Flush();
-            _stopHandle.Set();
-            State = ServerState.Stopped;
-            IsRunning = false;
-            Process.GetCurrentProcess().Kill();
-        }
-
-        /// <summary>
-        /// Restart the program. DOES NOT SAVE!
-        /// </summary>
-        public override void Restart()
-        {
-            var exe = Assembly.GetExecutingAssembly().Location;
-            ((TorchConfig)Config).WaitForPID = Process.GetCurrentProcess().Id.ToString();
-            Config.Autostart = true;
-            Process.Start(exe, Config.ToString());
-            Save(0).Wait();
-            Stop();
-            LogManager.Flush();
-            Process.GetCurrentProcess().Kill();
-        }
+        #endregion
 
         /// <inheritdoc/>
         public override Task Save(long callerId)
@@ -357,7 +333,8 @@ namespace Torch.Server
             }
             if (MySession.Static.Players.TryGetPlayerId(callerId, out MyPlayer.PlayerId result))
             {
-                Managers.GetManager<IChatManagerServer>()?.SendMessageAsOther("Server", response, statusCode == SaveGameStatus.Success ? MyFontEnum.Green : MyFontEnum.Red, result.SteamId);
+                Managers.GetManager<IChatManagerServer>()?.SendMessageAsOther("Server", response,
+                    statusCode == SaveGameStatus.Success ? MyFontEnum.Green : MyFontEnum.Red, result.SteamId);
             }
         }
     }

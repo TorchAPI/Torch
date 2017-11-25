@@ -101,9 +101,14 @@ namespace Torch.API
         Task Save(long callerId);
 
         /// <summary>
-        /// Initialize the Torch instance.
+        /// Initialize the Torch instance.  Before this <see cref="Start"/> is invalid.
         /// </summary>
         void Init();
+
+        /// <summary>
+        /// Disposes the Torch instance.  After this <see cref="Start"/> is invalid.
+        /// </summary>
+        void Dispose();
 
         /// <summary>
         /// The current state of the game this instance of torch is controlling.

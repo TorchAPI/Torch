@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime;
 using System.Runtime.CompilerServices;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +15,9 @@ using NLog;
 using ProtoBuf.Meta;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
+using Sandbox.Engine.Networking;
+using Sandbox.Engine.Platform.VideoMode;
+using Sandbox.Engine.Utils;
 using Sandbox.Game;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
@@ -19,6 +25,7 @@ using Sandbox.Game.World;
 using Sandbox.Graphics.GUI;
 using Sandbox.ModAPI;
 using SpaceEngineers.Game;
+using SpaceEngineers.Game.GUI;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.ModAPI;
@@ -31,16 +38,22 @@ using Torch.Managers.PatchManager;
 using Torch.Patches;
 using Torch.Utils;
 using Torch.Session;
+using VRage;
 using VRage.Collections;
 using VRage.FileSystem;
 using VRage.Game;
 using VRage.Game.Common;
 using VRage.Game.Components;
 using VRage.Game.ObjectBuilder;
+using VRage.Game.SessionComponents;
+using VRage.GameServices;
+using VRage.Library;
 using VRage.ObjectBuilders;
 using VRage.Plugins;
 using VRage.Scripting;
+using VRage.Steam;
 using VRage.Utils;
+using VRageRender;
 
 namespace Torch
 {
@@ -67,8 +80,10 @@ namespace Torch
         /// Use only if necessary, prefer dependency injection.
         /// </summary>
         public static ITorchBase Instance { get; private set; }
+
         /// <inheritdoc />
         public ITorchConfig Config { get; protected set; }
+
         /// <inheritdoc />
         public Version TorchVersion { get; }
 
@@ -79,8 +94,10 @@ namespace Torch
 
         /// <inheritdoc />
         public Version GameVersion { get; private set; }
+
         /// <inheritdoc />
         public string[] RunArgs { get; set; }
+
         /// <inheritdoc />
         [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public IPluginManager Plugins { get; protected set; }
@@ -90,10 +107,13 @@ namespace Torch
 
         /// <inheritdoc />
         public event Action SessionLoading;
+
         /// <inheritdoc />
         public event Action SessionLoaded;
+
         /// <inheritdoc />
         public event Action SessionUnloading;
+
         /// <inheritdoc />
         public event Action SessionUnloaded;
 
@@ -120,7 +140,9 @@ namespace Torch
             Instance = this;
 
             TorchVersion = Assembly.GetExecutingAssembly().GetName().Version;
-            TorchVersionVerbose = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? TorchVersion.ToString();
+            TorchVersionVerbose = Assembly.GetEntryAssembly()
+                                      .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                                      ?.InformationalVersion ?? TorchVersion.ToString();
             RunArgs = new string[0];
 
             Managers = new DependencyManager();
@@ -140,6 +162,39 @@ namespace Torch
             Managers.AddManager(new EventManager(this));
             Managers.AddManager(Plugins);
             TorchAPI.Instance = this;
+
+            GameStateChanged += (game, state) =>
+            {
+                if (state == TorchGameState.Created)
+                {
+                    // If the attached assemblies change (MySandboxGame.ctor => MySandboxGame.ParseArgs => MyPlugins.RegisterFromArgs)
+                    // attach assemblies to object factories again.
+                    ObjectFactoryInitPatch.ForceRegisterAssemblies();
+                    // safe to commit here; all important static ctors have run
+                    PatchManager.CommitInternal();
+                }
+            };
+
+            sessionManager.SessionStateChanged += (session, state) =>
+            {
+                switch (state)
+                {
+                    case TorchSessionState.Loading:
+                        SessionLoading?.Invoke();
+                        break;
+                    case TorchSessionState.Loaded:
+                        SessionLoaded?.Invoke();
+                        break;
+                    case TorchSessionState.Unloading:
+                        SessionUnloading?.Invoke();
+                        break;
+                    case TorchSessionState.Unloaded:
+                        SessionUnloaded?.Invoke();
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(state), state, null);
+                }
+            };
         }
 
         [Obsolete("Prefer using Managers.GetManager for global managers")]
@@ -252,34 +307,30 @@ namespace Torch
 
         #endregion
 
+        #region Torch Init/Destroy
+
+        protected abstract uint SteamAppId { get; }
+        protected abstract string SteamAppName { get; }
+
         /// <inheritdoc />
         public virtual void Init()
         {
             Debug.Assert(!_init, "Torch instance is already initialized.");
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
-            // If the attached assemblies change (MySandboxGame.ctor => MySandboxGame.ParseArgs => MyPlugins.RegisterFromArgs)
-            // attach assemblies to object factories again.
             ObjectFactoryInitPatch.ForceRegisterAssemblies();
-            GameStateChanged += (game, state) =>
-            {
-                if (state == TorchGameState.Created)
-                {
-                    ObjectFactoryInitPatch.ForceRegisterAssemblies();
-                    // safe to commit here; all important static ctors have run
-                    PatchManager.CommitInternal();
-                }
-            };
 
-            Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
-            GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
+            Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null,
+                "MyPerGameSettings.BasicGameInfo.GameVersion != null");
+            GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText
+                .ToString().Replace("_", "."));
             try
             {
                 Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}";
             }
             catch
             {
-                // Running as service
+                // Running without a console
             }
 
 #if DEBUG
@@ -292,11 +343,7 @@ namespace Torch
             Log.Info($"Executing assembly: {Assembly.GetEntryAssembly().FullName}");
             Log.Info($"Executing directory: {AppDomain.CurrentDomain.BaseDirectory}");
 
-            MySession.OnLoading += OnSessionLoading;
-            MySession.AfterLoading += OnSessionLoaded;
-            MySession.OnUnloading += OnSessionUnloading;
-            MySession.OnUnloaded += OnSessionUnloaded;
-            RegisterVRagePlugin();
+            InitVRageInstance();
             Managers.GetManager<PluginManager>().LoadPlugins();
             Managers.Attach();
             _init = true;
@@ -306,109 +353,156 @@ namespace Torch
                 PatchManager.CommitInternal();
         }
 
-        private void OnSessionLoading()
+        /// <inheritdoc />
+        public virtual void Dispose()
         {
-            Log.Debug("Session loading");
-            try
-            {
-                SessionLoading?.Invoke();
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                throw;
-            }
+            Managers.Detach();
+            DisposeVRageInstance();
         }
 
-        private void OnSessionLoaded()
-        {
-            Log.Debug("Session loaded");
-            try
-            {
-                SessionLoaded?.Invoke();
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                throw;
-            }
-        }
+        #endregion
 
-        private void OnSessionUnloading()
-        {
-            Log.Debug("Session unloading");
-            try
-            {
-                SessionUnloading?.Invoke();
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                throw;
-            }
-        }
+        #region VRage Instance Init/Destroy
 
-        private void OnSessionUnloaded()
+#pragma warning disable 649
+        [ReflectedGetter(Name = "m_plugins", Type = typeof(MyPlugins))]
+        private static readonly Func<List<IPlugin>> _getVRagePluginList;
+#pragma warning restore 649
+
+        protected SpaceEngineersGame GameInstance { get; private set; }
+
+        /// <summary>
+        /// Sets up the VRage instance.
+        /// Any flags (ie <see cref="Sandbox.Engine.Platform.Game.IsDedicated"/>) must be set before this is called.
+        /// </summary>
+        protected virtual void InitVRageInstance()
         {
-            Log.Debug("Session unloaded");
-            try
+            bool dedicated = Sandbox.Engine.Platform.Game.IsDedicated;
+            Environment.SetEnvironmentVariable("SteamAppId", SteamAppId.ToString());
+            MyServiceManager.Instance.AddService<IMyGameService>(new MySteamService(dedicated, SteamAppId));
+            if (dedicated && !MyGameService.HasGameServer)
             {
-                SessionUnloaded?.Invoke();
+                Log.Warn("Steam service is not running! Please reinstall dedicated server.");
+                return;
             }
-            catch (Exception e)
+
+            SpaceEngineersGame.SetupBasicGameInfo();
+            SpaceEngineersGame.SetupPerGameSettings();
+            MyFinalBuildConstants.APP_VERSION = MyPerGameSettings.BasicGameInfo.GameVersion;
+            MySessionComponentExtDebug.ForceDisable = true;
+            MyPerGameSettings.SendLogToKeen = false;
+            // SpaceEngineersGame.SetupAnalytics();
+
+            MyFileSystem.ExePath = Path.GetDirectoryName(typeof(SpaceEngineersGame).Assembly.Location);
+
+            TweakGameSettings();
+
+            MyInitializer.InvokeBeforeRun(SteamAppId, SteamAppName, Config.InstancePath);
+            // MyInitializer.InitCheckSum();
+
+
+            // Hook into the VRage plugin system for updates.
+            _getVRagePluginList().Add(this);
+
+            if (!MySandboxGame.IsReloading)
+                MyFileSystem.InitUserSpecific(dedicated ? null : MyGameService.UserId.ToString());
+            MySandboxGame.IsReloading = dedicated;
+
+            // render init
             {
-                Log.Error(e);
-                throw;
+                IMyRender renderer = null;
+                if (dedicated)
+                {
+                    renderer = new MyNullRender();
+                }
+                else
+                {
+                    MyPerformanceSettings preset = MyGuiScreenOptionsGraphics.GetPreset(MyRenderQualityEnum.NORMAL);
+                    MyRenderProxy.Settings.User = MyVideoSettingsManager.GetGraphicsSettingsFromConfig(ref preset)
+                        .PerformanceSettings.RenderSettings;
+                    MyStringId graphicsRenderer = MySandboxGame.Config.GraphicsRenderer;
+                    if (graphicsRenderer == MySandboxGame.DirectX11RendererKey)
+                    {
+                        renderer = new MyDX11Render(new MyRenderSettings?(MyRenderProxy.Settings));
+                        if (!renderer.IsSupported)
+                        {
+                            MySandboxGame.Log.WriteLine(
+                                "DirectX 11 renderer not supported. No renderer to revert back to.");
+                            renderer = null;
+                        }
+                    }
+                    if (renderer == null)
+                    {
+                        throw new MyRenderException(
+                            "The current version of the game requires a Dx11 card. \\n For more information please see : http://blog.marekrosa.org/2016/02/space-engineers-news-full-source-code_26.html",
+                            MyRenderExceptionEnum.GpuNotSupported);
+                    }
+                    MySandboxGame.Config.GraphicsRenderer = graphicsRenderer;
+                }
+                MyRenderProxy.Initialize(renderer);
+                MyRenderProxy.GetRenderProfiler().SetAutocommit(false);
+                MyRenderProxy.GetRenderProfiler().InitMemoryHack("MainEntryPoint");
             }
+
+            GameInstance = new SpaceEngineersGame(RunArgs);
         }
 
         /// <summary>
-        /// Hook into the VRage plugin system for updates.
+        /// Called after the basic game information is filled, but before the game is created.
         /// </summary>
-        private void RegisterVRagePlugin()
+        protected virtual void TweakGameSettings()
         {
-            var fieldName = "m_plugins";
-            var pluginList = typeof(MyPlugins).GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as List<IPlugin>;
-            if (pluginList == null)
-                throw new TypeLoadException($"{fieldName} field not found in {nameof(MyPlugins)}");
-
-            pluginList.Add(this);
         }
+
+        /// <summary>
+        /// Tears down the VRage instance
+        /// </summary>
+        protected virtual void DisposeVRageInstance()
+        {
+            GameInstance.Dispose();
+            GameInstance = null;
+
+            MyGameService.ShutDown();
+
+            _getVRagePluginList().Remove(this);
+
+            MyInitializer.InvokeAfterRun();
+        }
+
+        #endregion
 
         /// <inheritdoc/>
         public virtual Task Save(long callerId)
         {
-            return Task.CompletedTask;
+            return SaveGameAsync(null);
         }
 
         /// <inheritdoc/> 
         public virtual void Start()
         {
-
+            if (MySandboxGame.FatalErrorDuringInit)
+            {
+                Log.Warn($"Failed to start sandbox game: fatal error during init");
+                return;
+            }
+            GameInstance.Run();
         }
 
         /// <inheritdoc />
         public virtual void Stop()
         {
-
+            if (IsOnGameThread())
+                MySandboxGame.Static.Exit();
+            else
+                InvokeBlocking(MySandboxGame.Static.Exit);
         }
 
         /// <inheritdoc />
-        public virtual void Restart()
-        {
-
-        }
-
-        /// <inheritdoc />
-        public virtual void Dispose()
-        {
-            Managers.Detach();
-        }
+        public abstract void Restart();
 
         /// <inheritdoc />
         public virtual void Init(object gameInstance)
         {
-
         }
 
         /// <inheritdoc />
@@ -435,6 +529,7 @@ namespace Torch
         public event TorchGameStateChangedDel GameStateChanged;
 
         private static readonly HashSet<Assembly> _registeredCoreAssemblies = new HashSet<Assembly>();
+
         /// <summary>
         /// Registers a core (Torch) assembly with the system, including its
         /// <see cref="EventManager"/> shims, <see cref="PatchManager"/> shims, and <see cref="ReflectedManager"/> components.

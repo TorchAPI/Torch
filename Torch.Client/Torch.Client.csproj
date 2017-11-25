@@ -127,7 +127,6 @@
     <Compile Include="TorchClient.cs" />
     <Compile Include="TorchClientConfig.cs" />
     <Compile Include="TorchConsoleScreen.cs" />
-    <Compile Include="TorchMainMenuScreen.cs" />
     <Compile Include="TorchSettingsScreen.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -140,6 +139,9 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="UI\TorchMainMenuScreen.cs" />
+    <Compile Include="UI\TorchNavScreen.cs" />
+    <Compile Include="UI\TorchSettingsScreen.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

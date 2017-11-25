@@ -97,6 +97,7 @@ namespace Torch.Session
                         CurrentSession.Managers.AddManager(manager);
                 }
                 (CurrentSession as TorchSession)?.Attach();
+                _log.Info($"Loaded torch session for {MySession.Static.Name}");
                 SetState(TorchSessionState.Loaded);
             }
             catch (Exception e)
@@ -115,7 +116,9 @@ namespace Torch.Session
                     _log.Warn("Session unloading event occurred when we don't have a session.");
                     return;
                 }
+                _log.Info($"Unloading torch session for {_currentSession.KeenSession.Name}");
                 SetState(TorchSessionState.Unloading);
+                _currentSession.Detach();
             }
             catch (Exception e)
             {
@@ -133,9 +136,8 @@ namespace Torch.Session
                     _log.Warn("Session unloading event occurred when we don't have a session.");
                     return;
                 }
-                _log.Info($"Unloading torch session for {_currentSession.KeenSession.Name}");
+                _log.Info($"Unloaded torch session for {_currentSession.KeenSession.Name}");
                 SetState(TorchSessionState.Unloaded);
-                _currentSession.Detach();
                 _currentSession = null;
             }
             catch (Exception e)

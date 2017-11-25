@@ -24,20 +24,9 @@ namespace Torch.Server.Managers
         }
     }
 
-//    class AdminsCanJoinExample : IEventHandler
-//    {
-//        [EventHandler(SkipCancelled = false)]
-//        public void Handle(ref ValidateAuthTicketEvent info)
-//        {
-//            if (MySandboxGame.ConfigDedicated.Administrators.Contains(info.SteamID.ToString())
-//                || (info.ServerGroup == MySandboxGame.ConfigDedicated.GroupID && info.Officer))
-//                info.Verdict = JoinResult.OK;
-//        }
-//    }
-
     /// <summary>
-    /// Event that occurs when a player tries to connect to the server.
-    /// Use these values to choose a <see cref="ValidateAuthTicketEvent.Verdict"/>, 
+    /// Event that occurs when a player tries to connect to a dedicated server.
+    /// Use these values to choose a <see cref="ValidateAuthTicketEvent.FutureVerdict"/>, 
     /// or leave it unset to allow the default logic to handle the request.
     /// </summary>
     public struct ValidateAuthTicketEvent : IEvent
@@ -73,7 +62,7 @@ namespace Torch.Server.Managers
         public readonly bool Officer;
 
         /// <summary>
-        /// A future verdict on this authorization request.  If null, let the default logic choose.
+        /// A future verdict on this authorization request.  If null, let the default logic choose.  If not async use <see cref="Task.FromResult{TResult}(TResult)"/>
         /// </summary>
         public Task<JoinResult> FutureVerdict;
 
