@@ -10,13 +10,16 @@ using Havok;
 using NLog;
 using NLog.Fluent;
 using Sandbox;
+using Sandbox.Engine.Multiplayer;
 using Sandbox.Engine.Networking;
 using Sandbox.Engine.Platform.VideoMode;
 using Sandbox.Game;
+using Sandbox.Game.World;
 using SpaceEngineers.Game;
 using SpaceEngineers.Game.GUI;
 using Torch.Utils;
 using VRage;
+using VRage.Audio;
 using VRage.FileSystem;
 using VRage.Game;
 using VRage.Game.SessionComponents;
@@ -35,6 +38,17 @@ namespace Torch
 #pragma warning disable 649
         [ReflectedGetter(Name = "m_plugins", Type = typeof(MyPlugins))]
         private static readonly Func<List<IPlugin>> _getVRagePluginList;
+
+        [ReflectedGetter(Name = "Static", TypeName = "Sandbox.Game.Audio.MyMusicController, Sandbox.Game")]
+        private static readonly Func<object> _getMusicControllerStatic;
+
+
+        [ReflectedSetter(Name = "Static", TypeName = "Sandbox.Game.Audio.MyMusicController, Sandbox.Game")]
+        private static readonly Action<object> _setMusicControllerStatic;
+
+
+        [ReflectedMethod(Name = "Unload", TypeName = "Sandbox.Game.Audio.MyMusicController, Sandbox.Game")]
+        private static readonly Action<object> _musicControllerUnload;
 #pragma warning restore 649
 
         private readonly TorchBase _torch;
@@ -207,6 +221,34 @@ namespace Torch
             finally
             {
                 StateChange(GameState.Stopped);
+            }
+        }
+
+        private void LoadSession(string sessionPath)
+        {
+            // ?
+            MySessionLoader.LoadSingleplayerSession(sessionPath);
+        }
+
+        private void UnloadSession()
+        {
+            if (MySession.Static != null)
+            {
+                MySession.Static.Unload();
+                MySession.Static = null;
+            }
+            {
+                var musicCtl = _getMusicControllerStatic();
+                if (musicCtl != null)
+                {
+                    _musicControllerUnload(musicCtl);
+                    _setMusicControllerStatic(null);
+                    MyAudio.Static.MusicAllowed = true;
+                }
+            }
+            if (MyMultiplayer.Static != null)
+            {
+                MyMultiplayer.Static.Dispose();
             }
         }
 

@@ -237,8 +237,12 @@ namespace Torch.Utils
                         argExp[i] = Expression.Convert(paramExp[i + 1], invokeTypes[i]);
                     else
                         argExp[i] = paramExp[i + 1];
+                Debug.Assert(methodInstance.DeclaringType != null);
+                Expression instanceExp = paramExp[0].Type != methodInstance.DeclaringType
+                    ? Expression.Convert(paramExp[0], methodInstance.DeclaringType)
+                    : (Expression) paramExp[0];
                 field.SetValue(null,
-                    Expression.Lambda(Expression.Call(paramExp[0], methodInstance, argExp), paramExp)
+                    Expression.Lambda(Expression.Call(instanceExp, methodInstance, argExp), paramExp)
                               .Compile());
                 _log.Trace($"Reflecting field {field.DeclaringType?.FullName}#{field.Name} with {methodInstance.DeclaringType?.FullName}#{methodInstance.Name}");
             }
