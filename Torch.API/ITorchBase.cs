@@ -80,12 +80,12 @@ namespace Torch.API
         Task InvokeAsync(Action action, [CallerMemberName] string caller = "");
 
         /// <summary>
-        /// Start the Torch instance.
+        /// Signals the torch instance to start, then blocks until it's started.
         /// </summary>
         void Start();
 
         /// <summary>
-        /// Stop the Torch instance.
+        /// Signals the torch instance to stop, then blocks until it's stopped.
         /// </summary>
         void Stop();
 

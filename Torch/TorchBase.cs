@@ -343,7 +343,9 @@ namespace Torch
             Log.Info($"Executing assembly: {Assembly.GetEntryAssembly().FullName}");
             Log.Info($"Executing directory: {AppDomain.CurrentDomain.BaseDirectory}");
 
-            InitVRageInstance();
+            _game = new VRageGame(this, TweakGameSettings, SteamAppName, SteamAppId, Config.InstancePath, RunArgs);
+            if (!_game.WaitFor(VRageGame.GameState.Stopped, TimeSpan.FromMinutes(5)))
+                Log.Warn("Failed to wait for game to be initialized");
             Managers.GetManager<PluginManager>().LoadPlugins();
             Managers.Attach();
             _init = true;
@@ -357,95 +359,15 @@ namespace Torch
         public virtual void Dispose()
         {
             Managers.Detach();
-            DisposeVRageInstance();
+            _game.SignalDestroy();
+            if (!_game.WaitFor(VRageGame.GameState.Destroyed, TimeSpan.FromSeconds(15)))
+                Log.Warn("Failed to wait for the game to be destroyed");
+            _game = null;
         }
 
         #endregion
 
-        #region VRage Instance Init/Destroy
-
-#pragma warning disable 649
-        [ReflectedGetter(Name = "m_plugins", Type = typeof(MyPlugins))]
-        private static readonly Func<List<IPlugin>> _getVRagePluginList;
-#pragma warning restore 649
-
-        protected SpaceEngineersGame GameInstance { get; private set; }
-
-        /// <summary>
-        /// Sets up the VRage instance.
-        /// Any flags (ie <see cref="Sandbox.Engine.Platform.Game.IsDedicated"/>) must be set before this is called.
-        /// </summary>
-        protected virtual void InitVRageInstance()
-        {
-            bool dedicated = Sandbox.Engine.Platform.Game.IsDedicated;
-            Environment.SetEnvironmentVariable("SteamAppId", SteamAppId.ToString());
-            MyServiceManager.Instance.AddService<IMyGameService>(new MySteamService(dedicated, SteamAppId));
-            if (dedicated && !MyGameService.HasGameServer)
-            {
-                Log.Warn("Steam service is not running! Please reinstall dedicated server.");
-                return;
-            }
-
-            SpaceEngineersGame.SetupBasicGameInfo();
-            SpaceEngineersGame.SetupPerGameSettings();
-            MyFinalBuildConstants.APP_VERSION = MyPerGameSettings.BasicGameInfo.GameVersion;
-            MySessionComponentExtDebug.ForceDisable = true;
-            MyPerGameSettings.SendLogToKeen = false;
-            // SpaceEngineersGame.SetupAnalytics();
-
-            MyFileSystem.ExePath = Path.GetDirectoryName(typeof(SpaceEngineersGame).Assembly.Location);
-
-            TweakGameSettings();
-
-            MyInitializer.InvokeBeforeRun(SteamAppId, SteamAppName, Config.InstancePath);
-            // MyInitializer.InitCheckSum();
-
-
-            // Hook into the VRage plugin system for updates.
-            _getVRagePluginList().Add(this);
-
-            if (!MySandboxGame.IsReloading)
-                MyFileSystem.InitUserSpecific(dedicated ? null : MyGameService.UserId.ToString());
-            MySandboxGame.IsReloading = dedicated;
-
-            // render init
-            {
-                IMyRender renderer = null;
-                if (dedicated)
-                {
-                    renderer = new MyNullRender();
-                }
-                else
-                {
-                    MyPerformanceSettings preset = MyGuiScreenOptionsGraphics.GetPreset(MyRenderQualityEnum.NORMAL);
-                    MyRenderProxy.Settings.User = MyVideoSettingsManager.GetGraphicsSettingsFromConfig(ref preset)
-                        .PerformanceSettings.RenderSettings;
-                    MyStringId graphicsRenderer = MySandboxGame.Config.GraphicsRenderer;
-                    if (graphicsRenderer == MySandboxGame.DirectX11RendererKey)
-                    {
-                        renderer = new MyDX11Render(new MyRenderSettings?(MyRenderProxy.Settings));
-                        if (!renderer.IsSupported)
-                        {
-                            MySandboxGame.Log.WriteLine(
-                                "DirectX 11 renderer not supported. No renderer to revert back to.");
-                            renderer = null;
-                        }
-                    }
-                    if (renderer == null)
-                    {
-                        throw new MyRenderException(
-                            "The current version of the game requires a Dx11 card. \\n For more information please see : http://blog.marekrosa.org/2016/02/space-engineers-news-full-source-code_26.html",
-                            MyRenderExceptionEnum.GpuNotSupported);
-                    }
-                    MySandboxGame.Config.GraphicsRenderer = graphicsRenderer;
-                }
-                MyRenderProxy.Initialize(renderer);
-                MyRenderProxy.GetRenderProfiler().SetAutocommit(false);
-                MyRenderProxy.GetRenderProfiler().InitMemoryHack("MainEntryPoint");
-            }
-
-            GameInstance = new SpaceEngineersGame(RunArgs);
-        }
+        private VRageGame _game;
 
         /// <summary>
         /// Called after the basic game information is filled, but before the game is created.
@@ -453,23 +375,7 @@ namespace Torch
         protected virtual void TweakGameSettings()
         {
         }
-
-        /// <summary>
-        /// Tears down the VRage instance
-        /// </summary>
-        protected virtual void DisposeVRageInstance()
-        {
-            GameInstance.Dispose();
-            GameInstance = null;
-
-            MyGameService.ShutDown();
-
-            _getVRagePluginList().Remove(this);
-
-            MyInitializer.InvokeAfterRun();
-        }
-
-        #endregion
+        
 
         /// <inheritdoc/>
         public virtual Task Save(long callerId)
@@ -480,21 +386,17 @@ namespace Torch
         /// <inheritdoc/> 
         public virtual void Start()
         {
-            if (MySandboxGame.FatalErrorDuringInit)
-            {
-                Log.Warn($"Failed to start sandbox game: fatal error during init");
-                return;
-            }
-            GameInstance.Run();
+            _game.SignalStart();
+            if (!_game.WaitFor(VRageGame.GameState.Running, TimeSpan.FromSeconds(15)))
+                Log.Warn("Failed to wait for the game to be started");
         }
 
         /// <inheritdoc />
         public virtual void Stop()
         {
-            if (IsOnGameThread())
-                MySandboxGame.Static.Exit();
-            else
-                InvokeBlocking(MySandboxGame.Static.Exit);
+            _game.SignalStop();
+            if (!_game.WaitFor(VRageGame.GameState.Stopped, TimeSpan.FromSeconds(15)))
+                Log.Warn("Failed to wait for the game to be stopped");
         }
 
         /// <inheritdoc />

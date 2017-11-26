@@ -146,6 +146,7 @@ namespace Torch.Server
             }
         }
 
+        /// <inheritdoc />
         public override void Start()
         {
             if (State != ServerState.Stopped)
@@ -176,17 +177,19 @@ namespace Torch.Server
         }
 
         /// <summary>
-        /// Restart the program. DOES NOT SAVE!
+        /// Restart the program.
         /// </summary>
         public override void Restart()
         {
-            var exe = Assembly.GetExecutingAssembly().Location;
-            ((TorchConfig) Config).WaitForPID = Process.GetCurrentProcess().Id.ToString();
-            Config.Autostart = true;
-            Process.Start(exe, Config.ToString());
             Save(0).Wait();
             Stop();
             LogManager.Flush();
+
+            var exe = Assembly.GetExecutingAssembly().Location;
+            ((TorchConfig)Config).WaitForPID = Process.GetCurrentProcess().Id.ToString();
+            Config.Autostart = true;
+            Process.Start(exe, Config.ToString());
+
             Process.GetCurrentProcess().Kill();
         }
 
