@@ -322,7 +322,12 @@ namespace Torch.Utils
             Expression impl;
             if (attr is ReflectedSetterAttribute)
             {
-                impl = Expression.Block(Expression.Assign(fieldExp, paramExp[isStatic ? 0 : 1]), Expression.Default(typeof(void)));
+                var valParam = paramExp[isStatic ? 0 : 1];
+                var valExpr = (Expression)valParam;
+                var setType = sourceField?.FieldType ?? sourceProperty.PropertyType;
+                if (valParam.Type != setType)
+                    valExpr = Expression.Convert(valExpr, setType);
+                impl = Expression.Block(Expression.Assign(fieldExp, valExpr), Expression.Default(typeof(void)));
             }
             else
             {
