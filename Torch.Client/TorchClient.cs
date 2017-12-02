@@ -4,12 +4,17 @@ using System.IO;
 using System.Reflection;
 using System.Windows;
 using Sandbox;
+using Sandbox.Engine.Multiplayer;
 using Sandbox.Engine.Networking;
 using Sandbox.Engine.Platform;
 using Sandbox.Game;
 using SpaceEngineers.Game;
 using VRage.Steam;
 using Torch.API;
+using Torch.API.Managers;
+using Torch.API.Session;
+using Torch.Client.Manager;
+using Torch.Session;
 using VRage;
 using VRage.FileSystem;
 using VRage.GameServices;
@@ -27,6 +32,13 @@ namespace Torch.Client
         public TorchClient()
         {
             Config = new TorchClientConfig();
+            var sessionManager = Managers.GetManager<ITorchSessionManager>();
+            sessionManager.AddFactory((x) => MyMultiplayer.Static is MyMultiplayerLobby
+                                                 ? new MultiplayerManagerLobby(this)
+                                                 : null);
+            sessionManager.AddFactory((x) => MyMultiplayer.Static is MyMultiplayerClientBase
+                                                 ? new MultiplayerManagerClient(this)
+                                                 : null);
         }
 
         public override void Init()

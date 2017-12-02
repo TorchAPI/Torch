@@ -45,7 +45,6 @@
                                 <Label Content=":" Width="12" />
                                 <TextBox Text="{Binding Port}" Width="48" Height="20" />
                             </StackPanel>
-                            <CheckBox IsChecked="{Binding IgnoreLastSession}" Content="Ignore Last Session" Margin="3" />
                             <CheckBox IsChecked="{Binding PauseGameWhenEmpty}" Content="Pause When Empty" Margin="3" />
                         </StackPanel>
                         <StackPanel Margin="3">
@@ -173,6 +172,14 @@
                                           ItemsSource="{Binding EnvironmentHostilityValues}" Margin="3" Width="100"
                                           DockPanel.Dock="Left" />
                                 <Label Content="Environment Hostility" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Text="{Binding ProceduralDensity}" Margin="3" Width="70" />
+                                <Label Content="Procedural Density" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Text="{Binding ProceduralSeed}" Margin="3" Width="70" />
+                                <Label Content="Procedural Seed" />
                             </StackPanel>
                         </StackPanel>
                     </Expander>

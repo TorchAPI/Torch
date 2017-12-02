@@ -18,6 +18,12 @@ namespace Torch.API.Managers
         /// Register a network handler.
         /// </summary>
         void RegisterNetworkHandler(INetworkHandler handler);
+
+        /// <summary>
+        /// Unregister a network handler.
+        /// </summary>
+        /// <returns>true if the handler was unregistered, false if it wasn't registered to begin with</returns>
+        bool UnregisterNetworkHandler(INetworkHandler handler);
     }
 
     /// <summary>
@@ -33,6 +39,7 @@ namespace Torch.API.Managers
         /// <summary>
         /// Processes a network message.
         /// </summary>
+        /// <returns>true if the message should be discarded</returns>
         bool Handle(ulong remoteUserId, CallSite site, BitStream stream, object obj, MyPacket packet);
     }
 }

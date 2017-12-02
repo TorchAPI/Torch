@@ -2,6 +2,8 @@
 using System.Linq;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
+using Torch.API.Managers;
+using Torch.Collections;
 using Torch.Server.ViewModels.Blocks;
 
 namespace Torch.Server.ViewModels.Entities
@@ -9,7 +11,7 @@ namespace Torch.Server.ViewModels.Entities
     public class GridViewModel : EntityViewModel, ILazyLoad
     {
         private MyCubeGrid Grid => (MyCubeGrid)Entity;
-        public ObservableList<BlockViewModel> Blocks { get; } = new ObservableList<BlockViewModel>();
+        public MtObservableList<BlockViewModel> Blocks { get; } = new MtObservableList<BlockViewModel>();
 
         /// <inheritdoc />
         public string DescriptiveName { get; }
@@ -34,7 +36,7 @@ namespace Torch.Server.ViewModels.Entities
         {
             var block = obj.FatBlock as IMyTerminalBlock;
             if (block != null)
-                Blocks.Insert(new BlockViewModel(block, Tree), b => b.Name);
+                Blocks.Add(new BlockViewModel(block, Tree));
 
             OnPropertyChanged(nameof(Name));
         }

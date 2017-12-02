@@ -45,5 +45,20 @@ namespace Torch.Session
         {
             Managers.Detach();
         }
+
+        private TorchSessionState _state = TorchSessionState.Loading;
+        /// <inheritdoc/>
+        public TorchSessionState State
+        {
+            get => _state;
+            internal set
+            {
+                _state = value;
+                StateChanged?.Invoke(this, _state);
+            }
+        }
+
+        /// <inheritdoc/>
+        public event TorchSessionStateChangedDel StateChanged;
     }
 }

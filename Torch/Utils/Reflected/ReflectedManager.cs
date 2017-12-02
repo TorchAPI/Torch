@@ -7,170 +7,35 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
 using Sandbox.Engine.Multiplayer;
 using Torch.API;
+using Torch.Utils.Reflected;
 
 namespace Torch.Utils
 {
-    public abstract class ReflectedMemberAttribute : Attribute
-    {
-        /// <summary>
-        /// Name of the member to access.  If null, the tagged field's name.
-        /// </summary>
-        public string Name { get; set; } = null;
+    #region MemberInfoAttributes
 
-        /// <summary>
-        /// Declaring type of the member to access.  If null, inferred from the instance argument type.
-        /// </summary>
-        public Type Type { get; set; } = null;
+    #endregion
 
-        /// <summary>
-        /// Assembly qualified name of <see cref="Type"/>
-        /// </summary>
-        public string TypeName
-        {
-            get => Type?.AssemblyQualifiedName;
-            set => Type = value == null ? null : Type.GetType(value, true);
-        }
-    }
+    #region FieldPropGetSet
 
-    /// <summary>
-    /// Indicates that this field should contain a delegate capable of retrieving the value of a field.
-    /// </summary>
-    /// <example>
-    /// <code>
-    /// <![CDATA[
-    /// [ReflectedGetterAttribute(Name="_instanceField")]
-    /// private static Func<Example, int> _instanceGetter;
-    /// 
-    /// [ReflectedGetterAttribute(Name="_staticField", Type=typeof(Example))]
-    /// private static Func<int> _staticGetter;
-    /// 
-    /// private class Example {
-    ///     private int _instanceField;
-    ///     private static int _staticField;
-    /// }
-    /// ]]>
-    /// </code>
-    /// </example>
-    [AttributeUsage(AttributeTargets.Field)]
-    public class ReflectedGetterAttribute : ReflectedMemberAttribute
-    {
-    }
+    #endregion
 
-    /// <summary>
-    /// Indicates that this field should contain a delegate capable of setting the value of a field.
-    /// </summary>
-    /// <example>
-    /// <code>
-    /// <![CDATA[
-    /// [ReflectedSetterAttribute(Name="_instanceField")]
-    /// private static Action<Example, int> _instanceSetter;
-    /// 
-    /// [ReflectedSetterAttribute(Name="_staticField", Type=typeof(Example))]
-    /// private static Action<int> _staticSetter;
-    /// 
-    /// private class Example {
-    ///     private int _instanceField;
-    ///     private static int _staticField;
-    /// }
-    /// ]]>
-    /// </code>
-    /// </example>
-    [AttributeUsage(AttributeTargets.Field)]
-    public class ReflectedSetterAttribute : ReflectedMemberAttribute
-    {
-    }
+    #region Invoker
 
-    /// <summary>
-    /// Indicates that this field should contain a delegate capable of invoking an instance method.
-    /// </summary>
-    /// <example>
-    /// <code>
-    /// <![CDATA[
-    /// [ReflectedMethodAttribute]
-    /// private static Func<Example, int, float, string> ExampleInstance;
-    /// 
-    /// private class Example {
-    ///     private int ExampleInstance(int a, float b) {
-    ///         return a + ", " + b;
-    ///     }
-    /// }
-    /// ]]>
-    /// </code>
-    /// </example>
-    [AttributeUsage(AttributeTargets.Field)]
-    public class ReflectedMethodAttribute : ReflectedMemberAttribute
-    {
-        /// <summary>
-        /// When set the parameters types for the method are assumed to be this.
-        /// </summary>
-        public Type[] OverrideTypes { get; set; }
+    #endregion
 
-        /// <summary>
-        /// Assembly qualified names of <see cref="OverrideTypes"/>
-        /// </summary>
-        public string[] OverrideTypeNames
-        {
-            get => OverrideTypes.Select(x => x.AssemblyQualifiedName).ToArray();
-            set => OverrideTypes = value?.Select(x => x == null ? null : Type.GetType(x)).ToArray();
-        }
-    }
+    #region EventReplacer
 
-    /// <summary>
-    /// Indicates that this field should contain a delegate capable of invoking a static method.
-    /// </summary>
-    /// <example>
-    /// <code>
-    /// <![CDATA[
-    /// [ReflectedMethodAttribute(Type = typeof(Example)]
-    /// private static Func<int, float, string> ExampleStatic;
-    /// 
-    /// private class Example {
-    ///     private static int ExampleStatic(int a, float b) {
-    ///         return a + ", " + b;
-    ///     }
-    /// }
-    /// ]]>
-    /// </code>
-    /// </example>
-    [AttributeUsage(AttributeTargets.Field)]
-    public class ReflectedStaticMethodAttribute : ReflectedMethodAttribute
-    {
-    }
+    #endregion
 
     /// <summary>
     /// Automatically calls <see cref="ReflectedManager.Process(Assembly)"/> for every assembly already loaded, and every assembly that is loaded in the future.
     /// </summary>
-    public class ReflectedManager
+    public static class ReflectedManager
     {
-        private static readonly string[] _namespaceBlacklist = new[] {
-            "System", "VRage", "Sandbox", "SpaceEngineers"
-        };
-
-        /// <summary>
-        /// Registers the assembly load event and loads every already existing assembly.
-        /// </summary>
-        public void Attach()
-        {
-            foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
-                Process(asm);
-            AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
-        }
-
-        /// <summary>
-        /// Deregisters the assembly load event
-        /// </summary>
-        public void Detach()
-        {
-            AppDomain.CurrentDomain.AssemblyLoad -= CurrentDomain_AssemblyLoad;
-        }
-
-        private void CurrentDomain_AssemblyLoad(object sender, AssemblyLoadEventArgs args)
-        {
-            Process(args.LoadedAssembly);
-        }
-
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private static readonly HashSet<Type> _processedTypes = new HashSet<Type>();
 
         /// <summary>
@@ -181,11 +46,23 @@ namespace Torch.Utils
         {
             if (_processedTypes.Add(t))
             {
-                foreach (string ns in _namespaceBlacklist)
-                    if (t.FullName.StartsWith(ns))
-                        return;
-                foreach (FieldInfo field in t.GetFields(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-                    Process(field);
+                foreach (FieldInfo field in t.GetFields(BindingFlags.Static | BindingFlags.Instance |
+                                                        BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    try
+                    {
+#if DEBUG
+                        if (Process(field))
+                            _log?.Trace($"Field {field.DeclaringType?.FullName}#{field.Name} = {field.GetValue(null) ?? "null"}");
+#else
+                        Process(field);
+#endif
+                    }
+                    catch (Exception e)
+                    {
+                        _log?.Error(e.InnerException ?? e, $"Unable to fill {field.DeclaringType?.FullName}#{field.Name}. {(e.InnerException ?? e).Message}");
+                    }
+                }
             }
         }
 
@@ -196,7 +73,8 @@ namespace Torch.Utils
         public static void Process(Assembly asm)
         {
             foreach (Type type in asm.GetTypes())
-                Process(type);
+                if (!type.HasAttribute<ReflectedLazyAttribute>())
+                    Process(type);
         }
 
         /// <summary>
@@ -207,35 +85,93 @@ namespace Torch.Utils
         /// <exception cref="ArgumentException">If the field failed to process</exception>
         public static bool Process(FieldInfo field)
         {
-            var attr = field.GetCustomAttribute<ReflectedMethodAttribute>();
-            if (attr != null)
+            foreach (ReflectedMemberAttribute attr in field.GetCustomAttributes<ReflectedMemberAttribute>())
             {
                 if (!field.IsStatic)
                     throw new ArgumentException("Field must be static to be reflected");
-                ProcessReflectedMethod(field, attr);
-                return true;
-            }
-            var attr2 = field.GetCustomAttribute<ReflectedGetterAttribute>();
-            if (attr2 != null)
-            {
-                if (!field.IsStatic)
-                    throw new ArgumentException("Field must be static to be reflected");
-                ProcessReflectedField(field, attr2);
-                return true;
-            }
-            var attr3 = field.GetCustomAttribute<ReflectedSetterAttribute>();
-            if (attr3 != null)
-            {
-                if (!field.IsStatic)
+                switch (attr)
                 {
-                    throw new ArgumentException("Field must be static to be reflected");
+                    case ReflectedMethodAttribute rma:
+                        ProcessReflectedMethod(field, rma);
+                        return true;
+                    case ReflectedGetterAttribute rga:
+                        ProcessReflectedField(field, rga);
+                        return true;
+                    case ReflectedSetterAttribute rsa:
+                        ProcessReflectedField(field, rsa);
+                        return true;
+                    case ReflectedFieldInfoAttribute rfia:
+                        ProcessReflectedMemberInfo(field, rfia);
+                        return true;
+                    case ReflectedPropertyInfoAttribute rpia:
+                        ProcessReflectedMemberInfo(field, rpia);
+                        return true;
+                    case ReflectedMethodInfoAttribute rmia:
+                        ProcessReflectedMemberInfo(field, rmia);
+                        return true;
                 }
-
-                ProcessReflectedField(field, attr3);
-                return true;
             }
 
+            var reflectedEventReplacer = field.GetCustomAttribute<ReflectedEventReplaceAttribute>();
+            if (reflectedEventReplacer != null)
+            {
+                if (!field.IsStatic)
+                    throw new ArgumentException("Field must be static to be reflected");
+                field.SetValue(null,
+                    new Func<ReflectedEventReplacer>(() => new ReflectedEventReplacer(reflectedEventReplacer)));
+                return true;
+            }
             return false;
+        }
+
+        private static void ProcessReflectedMemberInfo(FieldInfo field, ReflectedMemberAttribute attr)
+        {
+            MemberInfo info = null;
+            if (attr.Type == null)
+                throw new ArgumentException("Reflected member info attributes require Type to be defined");
+            if (attr.Name == null)
+                throw new ArgumentException("Reflected member info attributes require Name to be defined");
+            switch (attr)
+            {
+                case ReflectedFieldInfoAttribute rfia:
+                    info = GetFieldPropRecursive(rfia.Type, rfia.Name,
+                        BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public,
+                        (type, name, bindingFlags) => type.GetField(name, bindingFlags));
+                    if (info == null)
+                        throw new ArgumentException($"Unable to find field {rfia.Type.FullName}#{rfia.Name}");
+                    break;
+                case ReflectedPropertyInfoAttribute rpia:
+                    info = GetFieldPropRecursive(rpia.Type, rpia.Name,
+                            BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public,
+                            (type, name, bindingFlags) => type.GetProperty(name, bindingFlags));
+                    if (info == null)
+                        throw new ArgumentException($"Unable to find property {rpia.Type.FullName}#{rpia.Name}");
+                    break;
+                case ReflectedMethodInfoAttribute rmia:
+                    if (rmia.Parameters != null)
+                    {
+                        info = rmia.Type.GetMethod(rmia.Name,
+                             BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                             null, CallingConventions.Any, rmia.Parameters, null);
+                        if (info == null)
+                            throw new ArgumentException(
+                                $"Unable to find method {rmia.Type.FullName}#{rmia.Name}({string.Join(", ", rmia.Parameters.Select(x => x.FullName))})");
+                    }
+                    else
+                    {
+                        info = rmia.Type.GetMethod(rmia.Name,
+                             BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        if (info == null)
+                            throw new ArgumentException(
+                                $"Unable to find method {rmia.Type.FullName}#{rmia.Name}");
+                    }
+                    if (rmia.ReturnType != null && !rmia.ReturnType.IsAssignableFrom(((MethodInfo)info).ReturnType))
+                        throw new ArgumentException($"Method {rmia.Type.FullName}#{rmia.Name} has return type {((MethodInfo)info).ReturnType.FullName}, expected {rmia.ReturnType.FullName}");
+                    break;
+            }
+            if (info == null)
+                throw new ArgumentException($"Unable to find member info for {attr.GetType().Name}[{attr.Type.FullName}#{attr.Name}");
+            field.SetValue(null, info);
         }
 
         private static void ProcessReflectedMethod(FieldInfo field, ReflectedMethodAttribute attr)
@@ -304,10 +240,11 @@ namespace Torch.Utils
                 field.SetValue(null,
                     Expression.Lambda(Expression.Call(paramExp[0], methodInstance, argExp), paramExp)
                               .Compile());
+                _log.Trace($"Reflecting field {field.DeclaringType?.FullName}#{field.Name} with {methodInstance.DeclaringType?.FullName}#{methodInstance.Name}");
             }
         }
 
-        private static T GetFieldPropRecursive<T>(Type baseType, string name, BindingFlags flags, Func<Type, string, BindingFlags, T> getter) where T : class
+        internal static T GetFieldPropRecursive<T>(Type baseType, string name, BindingFlags flags, Func<Type, string, BindingFlags, T> getter) where T : class
         {
             while (baseType != null)
             {
@@ -372,7 +309,7 @@ namespace Torch.Utils
             Expression instanceExpr = null;
             if (!isStatic)
             {
-                instanceExpr = trueType == paramExp[0].Type ? (Expression) paramExp[0] : Expression.Convert(paramExp[0], trueType);
+                instanceExpr = trueType == paramExp[0].Type ? (Expression)paramExp[0] : Expression.Convert(paramExp[0], trueType);
             }
 
             MemberExpression fieldExp = sourceField != null
@@ -389,6 +326,7 @@ namespace Torch.Utils
             }
 
             field.SetValue(null, Expression.Lambda(impl, paramExp).Compile());
+            _log.Trace($"Reflecting field {field.DeclaringType?.FullName}#{field.Name} with {field.DeclaringType?.FullName}#{field.Name}");
         }
     }
 }

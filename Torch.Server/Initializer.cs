@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +28,6 @@ login anonymous
 app_update 298740
 quit";
 
-        private TorchAssemblyResolver _resolver;
         private TorchConfig _config;
         private TorchServer _server;
         private string _basePath;
@@ -45,12 +45,13 @@ quit";
             if (_init)
                 return false;
 
+#if !DEBUG
             AppDomain.CurrentDomain.UnhandledException += HandleException;
+#endif
 
             if (!args.Contains("-noupdate"))
                 RunSteamCmd();
 
-            _resolver = new TorchAssemblyResolver(Path.Combine(_basePath, "DedicatedServer64"));
             _config = InitConfig();
             if (!_config.Parse(args))
                 return false;
@@ -62,11 +63,11 @@ quit";
                     var pid = int.Parse(_config.WaitForPID);
                     var waitProc = Process.GetProcessById(pid);
                     Log.Info("Continuing in 5 seconds.");
-                    Thread.Sleep(5000);
-                    if (!waitProc.HasExited)
+                    Log.Warn($"Waiting for process {pid} to close");
+                    while (!waitProc.HasExited)
                     {
-                        Log.Warn($"Killing old process {pid}.");
-                        waitProc.Kill();
+                        Console.Write(".");
+                        Thread.Sleep(1000);
                     }
 
                 }
@@ -94,8 +95,6 @@ quit";
             }
             else
                 _server.Start();
-
-            _resolver?.Dispose();
         }
 
         private TorchConfig InitConfig()
@@ -165,21 +164,33 @@ quit";
             }
         }
 
+        private void LogException(Exception ex)
+        {
+            if (ex.InnerException != null)
+            {
+                LogException(ex.InnerException);
+            }
+            Log.Fatal(ex);
+            if (ex is ReflectionTypeLoadException exti)
+                foreach (Exception exl in exti.LoaderExceptions)
+                    LogException(exl);
+            
+        }
 
         private void HandleException(object sender, UnhandledExceptionEventArgs e)
         {
             var ex = (Exception)e.ExceptionObject;
-            Log.Fatal(ex);
+            LogException(ex);
             Console.WriteLine("Exiting in 5 seconds.");
             Thread.Sleep(5000);
+            LogManager.Flush();
             if (_config.RestartOnCrash)
             {
                 var exe = typeof(Program).Assembly.Location;
                 _config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
                 Process.Start(exe, _config.ToString());
             }
-            //1627 = Function failed during execution.
-            Environment.Exit(1627);
+            Process.GetCurrentProcess().Kill();
         }
     }
 }

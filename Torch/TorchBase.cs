@@ -9,11 +9,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
+using ProtoBuf.Meta;
 using Sandbox;
+using Sandbox.Engine.Multiplayer;
 using Sandbox.Game;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
 using Sandbox.Game.World;
+using Sandbox.Graphics.GUI;
 using Sandbox.ModAPI;
 using SpaceEngineers.Game;
 using Torch.API;
@@ -21,11 +24,18 @@ using Torch.API.Managers;
 using Torch.API.ModAPI;
 using Torch.API.Session;
 using Torch.Commands;
+using Torch.Event;
 using Torch.Managers;
+using Torch.Managers.ChatManager;
+using Torch.Managers.PatchManager;
+using Torch.Patches;
 using Torch.Utils;
 using Torch.Session;
 using VRage.Collections;
 using VRage.FileSystem;
+using VRage.Game;
+using VRage.Game.Common;
+using VRage.Game.Components;
 using VRage.Game.ObjectBuilder;
 using VRage.ObjectBuilders;
 using VRage.Plugins;
@@ -41,8 +51,15 @@ namespace Torch
     {
         static TorchBase()
         {
-            // We can safely never detach this since we don't reload assemblies.
-            new ReflectedManager().Attach();
+            ReflectedManager.Process(typeof(TorchBase).Assembly);
+            ReflectedManager.Process(typeof(ITorchBase).Assembly);
+            PatchManager.AddPatchShim(typeof(GameStatePatchShim));
+            PatchManager.AddPatchShim(typeof(GameAnalyticsPatch));
+            PatchManager.AddPatchShim(typeof(KeenLogPatch));
+            PatchManager.CommitInternal();
+            RegisterCoreAssembly(typeof(ITorchBase).Assembly);
+            RegisterCoreAssembly(typeof(TorchBase).Assembly);
+            RegisterCoreAssembly(Assembly.GetEntryAssembly());
         }
 
         /// <summary>
@@ -67,18 +84,6 @@ namespace Torch
         /// <inheritdoc />
         [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
         public IPluginManager Plugins { get; protected set; }
-        /// <inheritdoc />
-        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
-        public IMultiplayerManager Multiplayer { get; protected set; }
-        /// <inheritdoc />
-        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
-        public EntityManager Entities { get; protected set; }
-        /// <inheritdoc />
-        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
-        public INetworkManager Network { get; protected set; }
-        /// <inheritdoc />
-        [Obsolete("Use GetManager<T>() or the [Dependency] attribute.")]
-        public CommandManager Commands { get; protected set; }
 
         /// <inheritdoc />
         public ITorchSession CurrentSession => Managers?.GetManager<ITorchSessionManager>()?.CurrentSession;
@@ -108,6 +113,7 @@ namespace Torch
         /// <exception cref="InvalidOperationException">Thrown if a TorchBase instance already exists.</exception>
         protected TorchBase()
         {
+            RegisterCoreAssembly(GetType().Assembly);
             if (Instance != null)
                 throw new InvalidOperationException("A TorchBase instance already exists.");
 
@@ -120,31 +126,29 @@ namespace Torch
             Managers = new DependencyManager();
 
             Plugins = new PluginManager(this);
-            Multiplayer = new MultiplayerManager(this);
-            Entities = new EntityManager(this);
-            Network = new NetworkManager(this);
-            Commands = new CommandManager(this);
 
-            Managers.AddManager(new TorchSessionManager(this));
+            var sessionManager = new TorchSessionManager(this);
+            sessionManager.AddFactory((x) => MyMultiplayer.Static?.SyncLayer != null ? new NetworkManager(this) : null);
+            sessionManager.AddFactory((x) => Sync.IsServer ? new ChatManagerServer(this) : new ChatManagerClient(this));
+            sessionManager.AddFactory((x) => Sync.IsServer ? new CommandManager(this) : null);
+            sessionManager.AddFactory((x) => new EntityManager(this));
+
+            Managers.AddManager(sessionManager);
+            Managers.AddManager(new PatchManager(this));
             Managers.AddManager(new FilesystemManager(this));
             Managers.AddManager(new UpdateManager(this));
-            Managers.AddManager(Network);
-            Managers.AddManager(Commands);
+            Managers.AddManager(new EventManager(this));
             Managers.AddManager(Plugins);
-            Managers.AddManager(Multiplayer);
-            Managers.AddManager(Entities);
-            Managers.AddManager(new ChatManager(this));
-
             TorchAPI.Instance = this;
         }
 
-        /// <inheritdoc />
+        [Obsolete("Prefer using Managers.GetManager for global managers")]
         public T GetManager<T>() where T : class, IManager
         {
             return Managers.GetManager<T>();
         }
 
-        /// <inheritdoc />
+        [Obsolete("Prefer using Managers.AddManager for global managers")]
         public bool AddManager<T>(T manager) where T : class, IManager
         {
             return Managers.AddManager(manager);
@@ -188,16 +192,18 @@ namespace Torch
         /// Invokes an action on the game thread.
         /// </summary>
         /// <param name="action"></param>
-        public void Invoke(Action action)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public void Invoke(Action action, [CallerMemberName] string caller = "")
         {
-            MySandboxGame.Static.Invoke(action);
+            MySandboxGame.Static.Invoke(action, caller);
         }
 
         /// <summary>
         /// Invokes an action on the game thread asynchronously.
         /// </summary>
         /// <param name="action"></param>
-        public Task InvokeAsync(Action action)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public Task InvokeAsync(Action action, [CallerMemberName] string caller = "")
         {
             if (Thread.CurrentThread == MySandboxGame.Static.UpdateThread)
             {
@@ -206,14 +212,15 @@ namespace Torch
                 return Task.CompletedTask;
             }
 
-            return Task.Run(() => InvokeBlocking(action));
+            return Task.Run(() => InvokeBlocking(action, caller));
         }
 
         /// <summary>
         /// Invokes an action on the game thread and blocks until it is completed.
         /// </summary>
         /// <param name="action"></param>
-        public void InvokeBlocking(Action action)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public void InvokeBlocking(Action action, [CallerMemberName] string caller = "")
         {
             if (action == null)
                 return;
@@ -237,7 +244,7 @@ namespace Torch
                 {
                     e.Set();
                 }
-            });
+            }, caller);
 
             if (!e.WaitOne(60000))
                 throw new TimeoutException("The game action timed out.");
@@ -251,13 +258,28 @@ namespace Torch
             Debug.Assert(!_init, "Torch instance is already initialized.");
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
+            // If the attached assemblies change (MySandboxGame.ctor => MySandboxGame.ParseArgs => MyPlugins.RegisterFromArgs)
+            // attach assemblies to object factories again.
+            ObjectFactoryInitPatch.ForceRegisterAssemblies();
+            GameStateChanged += (game, state) =>
+            {
+                if (state == TorchGameState.Created)
+                {
+                    ObjectFactoryInitPatch.ForceRegisterAssemblies();
+                    // safe to commit here; all important static ctors have run
+                    PatchManager.CommitInternal();
+                }
+            };
 
             Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
             GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText.ToString().Replace("_", "."));
-            try { Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}"; }
+            try
+            {
+                Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}";
+            }
             catch
             {
-                ///Running as service 
+                // Running as service
             }
 
 #if DEBUG
@@ -275,32 +297,69 @@ namespace Torch
             MySession.OnUnloading += OnSessionUnloading;
             MySession.OnUnloaded += OnSessionUnloaded;
             RegisterVRagePlugin();
+            Managers.GetManager<PluginManager>().LoadPlugins();
             Managers.Attach();
             _init = true;
+
+            if (GameState >= TorchGameState.Created && GameState < TorchGameState.Unloading)
+                // safe to commit here; all important static ctors have run
+                PatchManager.CommitInternal();
         }
 
         private void OnSessionLoading()
         {
             Log.Debug("Session loading");
-            SessionLoading?.Invoke();
+            try
+            {
+                SessionLoading?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
         }
 
         private void OnSessionLoaded()
         {
             Log.Debug("Session loaded");
-            SessionLoaded?.Invoke();
+            try
+            {
+                SessionLoaded?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
         }
 
         private void OnSessionUnloading()
         {
             Log.Debug("Session unloading");
-            SessionUnloading?.Invoke();
+            try
+            {
+                SessionUnloading?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
         }
 
         private void OnSessionUnloaded()
         {
             Log.Debug("Session unloaded");
-            SessionUnloaded?.Invoke();
+            try
+            {
+                SessionUnloaded?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw;
+            }
         }
 
         /// <summary>
@@ -355,7 +414,57 @@ namespace Torch
         /// <inheritdoc />
         public virtual void Update()
         {
-            GetManager<IPluginManager>().UpdatePlugins();
+            Managers.GetManager<IPluginManager>().UpdatePlugins();
+        }
+
+
+        private TorchGameState _gameState = TorchGameState.Unloaded;
+
+        /// <inheritdoc/>
+        public TorchGameState GameState
+        {
+            get => _gameState;
+            internal set
+            {
+                _gameState = value;
+                GameStateChanged?.Invoke(MySandboxGame.Static, _gameState);
+            }
+        }
+
+        /// <inheritdoc/>
+        public event TorchGameStateChangedDel GameStateChanged;
+
+        private static readonly HashSet<Assembly> _registeredCoreAssemblies = new HashSet<Assembly>();
+        /// <summary>
+        /// Registers a core (Torch) assembly with the system, including its
+        /// <see cref="EventManager"/> shims, <see cref="PatchManager"/> shims, and <see cref="ReflectedManager"/> components.
+        /// </summary>
+        /// <param name="asm">Assembly to register</param>
+        internal static void RegisterCoreAssembly(Assembly asm)
+        {
+            lock (_registeredCoreAssemblies)
+                if (_registeredCoreAssemblies.Add(asm))
+                {
+                    ReflectedManager.Process(asm);
+                    EventManager.AddDispatchShims(asm);
+                    PatchManager.AddPatchShims(asm);
+                }
+        }
+
+        private static readonly HashSet<Assembly> _registeredAuxAssemblies = new HashSet<Assembly>();
+
+        /// <summary>
+        /// Registers an auxillary (plugin) assembly with the system, including its
+        /// <see cref="ReflectedManager"/> related components.
+        /// </summary>
+        /// <param name="asm">Assembly to register</param>
+        internal static void RegisterAuxAssembly(Assembly asm)
+        {
+            lock (_registeredAuxAssemblies)
+                if (_registeredAuxAssemblies.Add(asm))
+                {
+                    ReflectedManager.Process(asm);
+                }
         }
     }
 }

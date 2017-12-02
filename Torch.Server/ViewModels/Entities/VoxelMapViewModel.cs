@@ -4,6 +4,7 @@ using Sandbox.Game.Entities;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using System.Threading.Tasks;
+using Torch.Collections;
 
 namespace Torch.Server.ViewModels.Entities
 {
@@ -15,7 +16,7 @@ namespace Torch.Server.ViewModels.Entities
 
         public override bool CanStop => false;
 
-        public ObservableList<GridViewModel> AttachedGrids { get; } = new ObservableList<GridViewModel>();
+        public MtObservableList<GridViewModel> AttachedGrids { get; } = new MtObservableList<GridViewModel>();
 
         public async Task UpdateAttachedGrids()
         {

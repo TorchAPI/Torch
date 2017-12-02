@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Torch.API.Managers;
@@ -44,16 +45,18 @@ namespace Torch.API
         /// </summary>
         ITorchConfig Config { get; }
 
-        /// <inheritdoc cref="IMultiplayerManager"/>
-        [Obsolete]
-        IMultiplayerManager Multiplayer { get; }
-
         /// <inheritdoc cref="IPluginManager"/>
         [Obsolete]
         IPluginManager Plugins { get; }
 
         /// <inheritdoc cref="IDependencyManager"/>
         IDependencyManager Managers { get; }
+
+        [Obsolete("Prefer using Managers.GetManager for global managers")]
+        T GetManager<T>() where T : class, IManager;
+
+        [Obsolete("Prefer using Managers.AddManager for global managers")]
+        bool AddManager<T>(T manager) where T : class, IManager;
 
         /// <summary>
         /// The binary version of the current instance.
@@ -63,18 +66,18 @@ namespace Torch.API
         /// <summary>
         /// Invoke an action on the game thread.
         /// </summary>
-        void Invoke(Action action);
+        void Invoke(Action action, [CallerMemberName] string caller = "");
 
         /// <summary>
         /// Invoke an action on the game thread and block until it has completed.
         /// If this is called on the game thread the action will execute immediately.
         /// </summary>
-        void InvokeBlocking(Action action);
+        void InvokeBlocking(Action action, [CallerMemberName] string caller = "");
 
         /// <summary>
         /// Invoke an action on the game thread asynchronously.
         /// </summary>
-        Task InvokeAsync(Action action);
+        Task InvokeAsync(Action action, [CallerMemberName] string caller = "");
 
         /// <summary>
         /// Start the Torch instance.
@@ -101,6 +104,16 @@ namespace Torch.API
         /// Initialize the Torch instance.
         /// </summary>
         void Init();
+
+        /// <summary>
+        /// The current state of the game this instance of torch is controlling.
+        /// </summary>
+        TorchGameState GameState { get; }
+
+        /// <summary>
+        /// Event raised when <see cref="GameState"/> changes.
+        /// </summary>
+        event TorchGameStateChangedDel GameStateChanged;
     }
 
     /// <summary>
@@ -108,6 +121,11 @@ namespace Torch.API
     /// </summary>
     public interface ITorchServer : ITorchBase
     {
+        /// <summary>
+        /// The current <see cref="ServerState"/>
+        /// </summary>
+        ServerState State { get; }
+
         /// <summary>
         /// Path of the dedicated instance folder.
         /// </summary>
@@ -119,6 +137,6 @@ namespace Torch.API
     /// </summary>
     public interface ITorchClient : ITorchBase
     {
-        
+
     }
 }

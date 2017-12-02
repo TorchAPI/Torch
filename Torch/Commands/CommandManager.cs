@@ -9,6 +9,7 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
 using Torch.Managers;
+using VRage.Game;
 using VRage.Game.ModAPI;
 using VRage.Network;
 
@@ -21,7 +22,7 @@ namespace Torch.Commands
         public CommandTree Commands { get; set; } = new CommandTree();
         private Logger _log = LogManager.GetLogger(nameof(CommandManager));
         [Dependency]
-        private ChatManager _chatManager;
+        private IChatManagerServer _chatManager;
 
         public CommandManager(ITorchBase torch, char prefix = '!') : base(torch)
         {
@@ -31,7 +32,7 @@ namespace Torch.Commands
         public override void Attach()
         {
             RegisterCommandModule(typeof(TorchCommands));
-            _chatManager.MessageRecieved += HandleCommand;
+            _chatManager.MessageProcessing += HandleCommand;
         }
 
         public bool HasPermission(ulong steamId, Command command)
@@ -65,6 +66,11 @@ namespace Torch.Commands
             }
         }
 
+        public void UnregisterPluginCommands(ITorchPlugin plugin)
+        {
+            // TODO
+        }
+
         public void RegisterPluginCommands(ITorchPlugin plugin)
         {
             var assembly = plugin.GetType().Assembly;
@@ -93,20 +99,21 @@ namespace Torch.Commands
             return context.Response;
         }
 
-        public void HandleCommand(ChatMsg msg, ref bool sendToOthers)
+        public void HandleCommand(TorchChatMessage msg, ref bool consumed)
         {
-            HandleCommand(msg.Text, msg.Author, ref sendToOthers);
+            if (msg.AuthorSteamId.HasValue)
+                HandleCommand(msg.Message, msg.AuthorSteamId.Value, ref consumed);
         }
 
-        public void HandleCommand(string message, ulong steamId, ref bool sendToOthers, bool serverConsole = false)
+        public void HandleCommand(string message, ulong steamId, ref bool consumed, bool serverConsole = false)
         {
 
             if (message.Length < 1 || message[0] != Prefix)
                 return;
 
-            sendToOthers = false;
+            consumed = true;
 
-            var player = Torch.Multiplayer.GetPlayerBySteamId(steamId);
+            var player = Torch.CurrentSession.Managers.GetManager<IMultiplayerManagerBase>().GetPlayerBySteamId(steamId);
             if (player == null)
             {
                 _log.Error($"Command {message} invoked by nonexistant player");
@@ -123,7 +130,7 @@ namespace Torch.Commands
                 if (!HasPermission(steamId, command))
                 {
                     _log.Info($"{player.DisplayName} tried to use command {cmdPath} without permission");
-                    Torch.Multiplayer.SendMessage($"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", playerId: player.IdentityId);
+                    _chatManager.SendMessageAsOther("Server", $"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", MyFontEnum.Red, steamId);
                     return;
                 }
 

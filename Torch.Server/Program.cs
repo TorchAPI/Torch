@@ -44,13 +44,16 @@ namespace Torch.Server
             var binDir = Path.Combine(workingDir, "DedicatedServer64");
             Directory.SetCurrentDirectory(workingDir);
 
+            if (!TorchLauncher.IsTorchWrapped())
+            {
+                TorchLauncher.Launch(Assembly.GetEntryAssembly().FullName,args,  binDir);
+                return;
+            }
+
             if (!Environment.UserInteractive)
             {
                 using (var service = new TorchService())
-                using (new TorchAssemblyResolver(binDir))
-                {
                     ServiceBase.Run(service);
-                }
                 return;
             }
 

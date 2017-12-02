@@ -10,6 +10,7 @@ namespace Torch.API.Plugins
     /// <summary>
     /// Indicates that the given type should be loaded by the plugin manager as a plugin.
     /// </summary>
+    [Obsolete("All plugin meta-information is now defined in the manifest.xml.")]
     [AttributeUsage(AttributeTargets.Class)]
     public class PluginAttribute : Attribute
     {

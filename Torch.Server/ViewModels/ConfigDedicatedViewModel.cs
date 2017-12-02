@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NLog;
 using Sandbox.Engine.Utils;
+using Torch.Collections;
 using VRage.Game;
 using VRage.Game.ModAPI;
 
@@ -25,6 +26,7 @@ namespace Torch.Server.ViewModels
         public ConfigDedicatedViewModel(MyConfigDedicated<MyObjectBuilder_SessionSettings> configDedicated)
         {
             _config = configDedicated;
+            _config.IgnoreLastSession = true;
             SessionSettings = new SessionSettingsViewModel(_config.SessionSettings);
             Administrators = string.Join(Environment.NewLine, _config.Administrators);
             Banned = string.Join(Environment.NewLine, _config.Banned);
@@ -52,13 +54,15 @@ namespace Torch.Server.ViewModels
                     Log.Warn($"'{mod}' is not a valid mod ID.");
             }
 
+            // Never ever
+            _config.IgnoreLastSession = true;
             _config.Save(path);
         }
 
         private SessionSettingsViewModel _sessionSettings;
         public SessionSettingsViewModel SessionSettings { get => _sessionSettings; set { _sessionSettings = value; OnPropertyChanged(); } }
 
-        public ObservableList<string> WorldPaths { get; } = new ObservableList<string>();
+        public MtObservableList<string> WorldPaths { get; } = new MtObservableList<string>();
         private string _administrators;
         public string Administrators { get => _administrators; set { _administrators = value; OnPropertyChanged(); } }
         private string _banned;
@@ -76,12 +80,6 @@ namespace Torch.Server.ViewModels
         {
             get { return _config.GroupID; }
             set { _config.GroupID = value; OnPropertyChanged(); }
-        }
-
-        public bool IgnoreLastSession
-        {
-            get { return _config.IgnoreLastSession; }
-            set { _config.IgnoreLastSession = value; OnPropertyChanged(); }
         }
 
         public string IP

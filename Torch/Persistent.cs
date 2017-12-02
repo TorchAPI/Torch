@@ -44,7 +44,7 @@ namespace Torch
                 path = Path;
 
             var ser = new XmlSerializer(typeof(T));
-            using (var f = File.Create(path))
+            using (var f = File.CreateText(path))
             {
                 ser.Serialize(f, Data);
             }
@@ -57,7 +57,7 @@ namespace Torch
             if (File.Exists(path))
             {
                 var ser = new XmlSerializer(typeof(T));
-                using (var f = File.OpenRead(path))
+                using (var f = File.OpenText(path))
                 {
                     config.Data = (T)ser.Deserialize(f);
                 }

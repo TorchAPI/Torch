@@ -6,18 +6,19 @@ using System.Threading.Tasks;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
+using Torch.Collections;
 
 namespace Torch.Server.ViewModels
 {
     public class PluginManagerViewModel : ViewModel
     {
-        public ObservableList<PluginViewModel> Plugins { get; } = new ObservableList<PluginViewModel>();
+        public MtObservableList<PluginViewModel> Plugins { get; } = new MtObservableList<PluginViewModel>();
 
         private PluginViewModel _selectedPlugin;
         public PluginViewModel SelectedPlugin
         {
             get => _selectedPlugin;
-            set { _selectedPlugin = value; OnPropertyChanged(); }
+            set { _selectedPlugin = value; OnPropertyChanged(nameof(SelectedPlugin)); }
         }
 
         public PluginManagerViewModel() { }
@@ -29,7 +30,7 @@ namespace Torch.Server.ViewModels
             pluginManager.PluginsLoaded += PluginManager_PluginsLoaded;
         }
 
-        private void PluginManager_PluginsLoaded(IList<ITorchPlugin> obj)
+        private void PluginManager_PluginsLoaded(IReadOnlyCollection<ITorchPlugin> obj)
         {
             Plugins.Clear();
             foreach (var plugin in obj)
