@@ -103,7 +103,6 @@ namespace Torch.Server
         private ServerState _state;
         private TimeSpan _elapsedPlayTime;
         private float _simRatio;
-        private readonly AutoResetEvent _stopHandle = new AutoResetEvent(false);
         private Timer _watchdog;
         private Stopwatch _uptime;
 
@@ -169,8 +168,6 @@ namespace Torch.Server
             Log.Info("Stopping server.");
             base.Stop();
             Log.Info("Server stopped.");
-            LogManager.Flush();
-            _stopHandle.Set();
 
             State = ServerState.Stopped;
             IsRunning = false;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using Torch.Utils;
 
@@ -42,8 +43,15 @@ namespace Torch.Tests
 
         public ReflectionTestManager Init(Assembly asm)
         {
-            foreach (Type type in asm.GetTypes())
-                Init(type);
+            try
+            {
+                foreach (Type type in asm.GetTypes())
+                    Init(type);
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                throw e.LoaderExceptions[0];
+            }
             return this;
         }
 

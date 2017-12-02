@@ -71,16 +71,4 @@ node {
 	        ]]
 	    ])
 	}
-
-	if (env.BRANCH_NAME == "master") {
-		gitVersion = bat(returnStdout: true, script: "@git describe --tags").trim()
-		gitSimpleVersion = bat(returnStdout: true, script: "@git describe --tags --abbrev=0").trim()
-		if (gitVersion == gitSimpleVersion) {
-			stage('${buildMode}') {
-				withCredentials([usernamePassword(credentialsId: 'torch-github', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-					powershell "& ./Jenkins/${buildMode}.ps1 \"https://api.github.com/repos/TorchAPI/Torch/\" \"$gitSimpleVersion\" \"$USERNAME:$PASSWORD\" @(\"bin/torch-server.zip\", \"bin/torch-client.zip\")"
-				}
-			}
-		}
-	}
 }

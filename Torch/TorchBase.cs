@@ -394,6 +394,7 @@ namespace Torch
         /// <inheritdoc />
         public virtual void Stop()
         {
+            LogManager.Flush();
             _game.SignalStop();
             if (!_game.WaitFor(VRageGame.GameState.Stopped, TimeSpan.FromSeconds(15)))
                 Log.Warn("Failed to wait for the game to be stopped");

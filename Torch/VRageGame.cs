@@ -223,7 +223,7 @@ namespace Torch
                 StateChange(GameState.Stopped);
             }
         }
-
+        
         private void LoadSession(string sessionPath)
         {
             // ?
