@@ -255,6 +255,7 @@
     <Compile Include="Views\CollectionEditor.xaml.cs">
       <DependentUpon>CollectionEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="VRageGame.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Torch.API\Torch.API.csproj">

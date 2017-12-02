@@ -32,23 +32,13 @@ namespace Torch.Server.Managers
         {
             
         }
-
-        /// <inheritdoc />
-        public override void Attach()
-        {
-            MyFileSystem.ExePath = Path.Combine(_filesystemManager.TorchDirectory, "DedicatedServer64");
-            MyFileSystem.Init("Content", Torch.Config.InstancePath);
-            //Initializes saves path. Why this isn't in Init() we may never know.
-            MyFileSystem.InitUserSpecific(null);
-        }
-
+        
         public void LoadInstance(string path, bool validate = true)
         {
             if (validate)
                 ValidateInstance(path);
 
             MyFileSystem.Reset();
-            MyFileSystem.ExePath = Path.Combine(_filesystemManager.TorchDirectory, "DedicatedServer64");
             MyFileSystem.Init("Content", path);
             //Initializes saves path. Why this isn't in Init() we may never know.
             MyFileSystem.InitUserSpecific(null);

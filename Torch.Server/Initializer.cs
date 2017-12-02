@@ -90,7 +90,7 @@ quit";
             {
                 var ui = new TorchUI(_server);
                 if (_config.Autostart)
-                    new Thread(_server.Start).Start();
+                    _server.Start();
                 ui.ShowDialog();
             }
             else

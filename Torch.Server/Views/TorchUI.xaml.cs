@@ -66,7 +66,7 @@ namespace Torch.Server
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
             _server.GetManager<InstanceManager>().SaveConfig();
-            new Thread(_server.Start).Start();
+            _server.Start();
         }
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)

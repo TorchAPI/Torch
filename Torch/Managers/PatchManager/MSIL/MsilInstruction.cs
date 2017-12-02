@@ -186,10 +186,10 @@ namespace Torch.Managers.PatchManager.MSIL
 
 
 
-#pragma warning disable 169
+#pragma warning disable 649
         [ReflectedMethod(Name = "StackChange")]
         private static Func<OpCode, int> _stackChange;
-#pragma warning restore 169
+#pragma warning restore 649
 
         /// <summary>
         /// Estimates the stack delta for this instruction.

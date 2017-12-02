@@ -237,8 +237,12 @@ namespace Torch.Utils
                         argExp[i] = Expression.Convert(paramExp[i + 1], invokeTypes[i]);
                     else
                         argExp[i] = paramExp[i + 1];
+                Debug.Assert(methodInstance.DeclaringType != null);
+                Expression instanceExp = paramExp[0].Type != methodInstance.DeclaringType
+                    ? Expression.Convert(paramExp[0], methodInstance.DeclaringType)
+                    : (Expression) paramExp[0];
                 field.SetValue(null,
-                    Expression.Lambda(Expression.Call(paramExp[0], methodInstance, argExp), paramExp)
+                    Expression.Lambda(Expression.Call(instanceExp, methodInstance, argExp), paramExp)
                               .Compile());
                 _log.Trace($"Reflecting field {field.DeclaringType?.FullName}#{field.Name} with {methodInstance.DeclaringType?.FullName}#{methodInstance.Name}");
             }
@@ -318,7 +322,12 @@ namespace Torch.Utils
             Expression impl;
             if (attr is ReflectedSetterAttribute)
             {
-                impl = Expression.Block(Expression.Assign(fieldExp, paramExp[isStatic ? 0 : 1]), Expression.Default(typeof(void)));
+                var valParam = paramExp[isStatic ? 0 : 1];
+                var valExpr = (Expression)valParam;
+                var setType = sourceField?.FieldType ?? sourceProperty.PropertyType;
+                if (valParam.Type != setType)
+                    valExpr = Expression.Convert(valExpr, setType);
+                impl = Expression.Block(Expression.Assign(fieldExp, valExpr), Expression.Default(typeof(void)));
             }
             else
             {

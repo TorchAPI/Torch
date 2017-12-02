@@ -80,12 +80,12 @@ namespace Torch.API
         Task InvokeAsync(Action action, [CallerMemberName] string caller = "");
 
         /// <summary>
-        /// Start the Torch instance.
+        /// Signals the torch instance to start, then blocks until it's started.
         /// </summary>
         void Start();
 
         /// <summary>
-        /// Stop the Torch instance.
+        /// Signals the torch instance to stop, then blocks until it's stopped.
         /// </summary>
         void Stop();
 
@@ -101,9 +101,14 @@ namespace Torch.API
         Task Save(long callerId);
 
         /// <summary>
-        /// Initialize the Torch instance.
+        /// Initialize the Torch instance.  Before this <see cref="Start"/> is invalid.
         /// </summary>
         void Init();
+
+        /// <summary>
+        /// Disposes the Torch instance.  After this <see cref="Start"/> is invalid.
+        /// </summary>
+        void Dispose();
 
         /// <summary>
         /// The current state of the game this instance of torch is controlling.
