@@ -84,17 +84,26 @@ quit";
         public void Run()
         {
             _server = new TorchServer(_config);
-            _server.Init();
-
-            if (!_config.NoGui)
+            try
             {
-                var ui = new TorchUI(_server);
-                if (_config.Autostart)
+                _server.Init();
+
+                if (!_config.NoGui)
+                {
+                    var ui = new TorchUI(_server);
+                    if (_config.Autostart)
+                        _server.Start();
+                    ui.ShowDialog();
+                }
+                else
                     _server.Start();
-                ui.ShowDialog();
             }
-            else
-                _server.Start();
+            finally
+            {
+                if (_server.IsRunning)
+                    _server.Stop();
+                _server.Destroy();
+            }
         }
 
         private TorchConfig InitConfig()

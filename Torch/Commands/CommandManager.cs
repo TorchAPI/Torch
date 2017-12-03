@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using NLog;
+using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Torch.API;
 using Torch.API.Managers;
@@ -80,23 +81,22 @@ namespace Torch.Commands
             }
         }
 
-        public string HandleCommandFromServer(string message)
+        public bool HandleCommandFromServer(string message)
         {
             var cmdText = new string(message.Skip(1).ToArray());
             var command = Commands.GetCommand(cmdText, out string argText);
             if (command == null)
-                return null;
+                return false;
             var cmdPath = string.Join(".", command.Path);
 
             var splitArgs = Regex.Matches(argText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
             _log.Trace($"Invoking {cmdPath} for server.");
-            var context = new CommandContext(Torch, command.Plugin, null, argText, splitArgs);
+            var context = new CommandContext(Torch, command.Plugin, Sync.MyId, argText, splitArgs);
             if (command.TryInvoke(context))
                 _log.Info($"Server ran command '{message}'");
             else
                 context.Respond($"Invalid Syntax: {command.SyntaxHelp}");
-
-            return context.Response;
+            return true;
         }
 
         public void HandleCommand(TorchChatMessage msg, ref bool consumed)
@@ -136,7 +136,7 @@ namespace Torch.Commands
 
                 var splitArgs = Regex.Matches(argText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
                 _log.Trace($"Invoking {cmdPath} for player {player.DisplayName}");
-                var context = new CommandContext(Torch, command.Plugin, player, argText, splitArgs);
+                var context = new CommandContext(Torch, command.Plugin, steamId, argText, splitArgs);
                 Torch.Invoke(() =>
                 {
                     if (command.TryInvoke(context))

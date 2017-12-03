@@ -214,33 +214,6 @@ namespace Torch
             return Thread.CurrentThread.ManagedThreadId == MySandboxGame.Static.UpdateThread.ManagedThreadId;
         }
 
-        public Task SaveGameAsync(Action<SaveGameStatus> callback)
-        {
-            Log.Info("Saving game");
-
-            if (!MySandboxGame.IsGameReady)
-            {
-                callback?.Invoke(SaveGameStatus.GameNotReady);
-            }
-            else if (MyAsyncSaving.InProgress)
-            {
-                callback?.Invoke(SaveGameStatus.SaveInProgress);
-            }
-            else
-            {
-                var e = new AutoResetEvent(false);
-                MyAsyncSaving.Start(() => e.Set());
-
-                return Task.Run(() =>
-                {
-                    callback?.Invoke(e.WaitOne(5000) ? SaveGameStatus.Success : SaveGameStatus.TimedOut);
-                    e.Dispose();
-                });
-            }
-
-            return Task.CompletedTask;
-        }
-
         #region Game Actions
 
         /// <summary>
@@ -355,8 +328,16 @@ namespace Torch
                 PatchManager.CommitInternal();
         }
 
+        /// <summary>
+        /// Dispose callback for VRage plugin.  Do not use.
+        /// </summary>
+        [Obsolete("Do not use; only there for VRage capability")]
+        public void Dispose()
+        {
+        }
+
         /// <inheritdoc />
-        public virtual void Dispose()
+        public virtual void Destroy()
         {
             Managers.Detach();
             _game.SignalDestroy();
@@ -375,12 +356,35 @@ namespace Torch
         protected virtual void TweakGameSettings()
         {
         }
-        
 
+
+        private int _inProgressSaves = 0;
         /// <inheritdoc/>
-        public virtual Task Save(long callerId)
+        public virtual Task<GameSaveResult> Save(int timeoutMs = -1, bool exclusive = false)
         {
-            return SaveGameAsync(null);
+            if (exclusive)
+            {
+                if (MyAsyncSaving.InProgress || Interlocked.Increment(ref _inProgressSaves) != 1)
+                {
+                    Log.Error("Failed to save game, game is already saving");
+                    return null;
+                }
+            }
+            return TorchAsyncSaving.Save(this, timeoutMs).ContinueWith((task, torchO) =>
+            {
+                var torch = (TorchBase) torchO;
+                Interlocked.Decrement(ref torch._inProgressSaves);
+                if (task.IsFaulted)
+                {
+                    Log.Error(task.Exception, "Failed to save game");
+                    return GameSaveResult.UnknownError;
+                }
+                if (task.Result != GameSaveResult.Success)
+                    Log.Error($"Failed to save game: {task.Result}");
+                else
+                    Log.Info("Saved game");
+                return task.Result;
+            }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
         }
 
         /// <inheritdoc/> 

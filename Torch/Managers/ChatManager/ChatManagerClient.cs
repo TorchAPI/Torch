@@ -114,8 +114,7 @@ namespace Torch.Managers.ChatManager
             if (!sendToOthers)
                 return;
             var torchMsg = new TorchChatMessage(MySession.Static.LocalHumanPlayer?.DisplayName ?? "Player", Sync.MyId, messageText);
-            var consumed = false;
-            MessageRecieved?.Invoke(torchMsg, ref consumed);
+            bool consumed = RaiseMessageRecieved(torchMsg);
             if (!consumed)
                 consumed = OfflineMessageProcessor(torchMsg);
             sendToOthers = !consumed;
@@ -135,19 +134,22 @@ namespace Torch.Managers.ChatManager
         {
             var torchMsg = new TorchChatMessage(steamUserId, message,
                 (steamUserId == MyGameService.UserId) ? MyFontEnum.DarkBlue : MyFontEnum.Blue);
-            var consumed = false;
-            MessageRecieved?.Invoke(torchMsg, ref consumed);
-            if (!consumed && HasHud)
+            if (!RaiseMessageRecieved(torchMsg) && HasHud)
                 _hudChatMessageReceived.Invoke(MyHud.Chat, steamUserId, message);
         }
 
         private void Multiplayer_ScriptedChatMessageReceived(string message, string author, string font)
         {
             var torchMsg = new TorchChatMessage(author, message, font);
-            var consumed = false;
-            MessageRecieved?.Invoke(torchMsg, ref consumed);
-            if (!consumed && HasHud)
+            if (!RaiseMessageRecieved(torchMsg) && HasHud)
                 _hudChatScriptedMessageReceived.Invoke(MyHud.Chat, author, message, font);
+        }
+
+        protected bool RaiseMessageRecieved(TorchChatMessage msg)
+        {
+            var consumed = false;
+            MessageRecieved?.Invoke(msg, ref consumed);
+            return consumed;
         }
 
         private const string _hudChatMessageReceivedName = "Multiplayer_ChatMessageReceived";

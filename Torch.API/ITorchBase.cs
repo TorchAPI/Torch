@@ -18,21 +18,25 @@ namespace Torch.API
         /// <summary>
         /// Fired when the session begins loading.
         /// </summary>
+        [Obsolete("Prefer using the TorchSessionManager.SessionStateChanged event")]
         event Action SessionLoading;
-        
+
         /// <summary>
         /// Fired when the session finishes loading.
         /// </summary>
+        [Obsolete("Prefer using the TorchSessionManager.SessionStateChanged event")]
         event Action SessionLoaded;
 
         /// <summary>
         /// Fires when the session begins unloading.
         /// </summary>
+        [Obsolete("Prefer using the TorchSessionManager.SessionStateChanged event")]
         event Action SessionUnloading;
 
         /// <summary>
         /// Fired when the session finishes unloading.
         /// </summary>
+        [Obsolete("Prefer using the TorchSessionManager.SessionStateChanged event")]
         event Action SessionUnloaded;
 
         /// <summary>
@@ -90,15 +94,17 @@ namespace Torch.API
         void Stop();
 
         /// <summary>
-        /// Restart the Torch instance.
+        /// Restart the Torch instance, blocking until the restart has been performed.
         /// </summary>
         void Restart();
 
         /// <summary>
         /// Initializes a save of the game.
         /// </summary>
-        /// <param name="callerId">Id of the player who initiated the save.</param>
-        Task Save(long callerId);
+        /// <param name="timeoutMs">timeout before the save is treated as failed, or -1 for no timeout</param>
+        /// <param name="exclusive">Only start saving if we aren't already saving</param>
+        /// <returns>Future result of the save, or null if one is in progress and in exclusive mode</returns>
+        Task<GameSaveResult> Save(int timeoutMs = -1, bool exclusive = false);
 
         /// <summary>
         /// Initialize the Torch instance.  Before this <see cref="Start"/> is invalid.
@@ -108,7 +114,7 @@ namespace Torch.API
         /// <summary>
         /// Disposes the Torch instance.  After this <see cref="Start"/> is invalid.
         /// </summary>
-        void Dispose();
+        void Destroy();
 
         /// <summary>
         /// The current state of the game this instance of torch is controlling.

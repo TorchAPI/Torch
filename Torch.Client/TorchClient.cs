@@ -66,9 +66,9 @@ namespace Torch.Client
             SetRenderWindowTitle($"Space Engineers v{GameVersion} with Torch v{TorchVersion}");
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
-            base.Dispose();
+            base.Destroy();
             _startup.DetectSharpDxLeaksAfterRun();
         }
 

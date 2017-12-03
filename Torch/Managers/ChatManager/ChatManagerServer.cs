@@ -41,6 +41,11 @@ namespace Torch.Managers.ChatManager
         /// <inheritdoc />
         public void SendMessageAsOther(ulong authorId, string message, ulong targetSteamId = 0)
         {
+            if (targetSteamId == Sync.MyId)
+            {
+                RaiseMessageRecieved(new TorchChatMessage(authorId, message));
+                return;
+            }
             if (MyMultiplayer.Static == null)
             {
                 if ((targetSteamId == MyGameService.UserId || targetSteamId == 0) && HasHud)
@@ -53,7 +58,6 @@ namespace Torch.Managers.ChatManager
                 var msg = new ChatMsg() { Author = authorId, Text = message };
                 _dedicatedServerBaseSendChatMessage.Invoke(ref msg);
                 _dedicatedServerBaseOnChatMessage.Invoke(dedicated, new object[] { msg });
-
             }
         }
 
@@ -71,6 +75,11 @@ namespace Torch.Managers.ChatManager
         /// <inheritdoc />
         public void SendMessageAsOther(string author, string message, string font, ulong targetSteamId = 0)
         {
+            if (targetSteamId == Sync.MyId)
+            {
+                RaiseMessageRecieved(new TorchChatMessage(author, message, font));
+                return;
+            }
             if (MyMultiplayer.Static == null)
             {
                 if ((targetSteamId == MyGameService.UserId || targetSteamId == 0) && HasHud)

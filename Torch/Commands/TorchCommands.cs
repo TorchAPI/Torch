@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -8,10 +9,13 @@ using System.Threading.Tasks;
 using System.Timers;
 using Sandbox.ModAPI;
 using Torch;
+using Torch.API;
 using Torch.API.Managers;
+using Torch.API.Session;
 using Torch.Commands.Permissions;
 using Torch.Managers;
 using VRage.Game.ModAPI;
+using Log = NLog.Fluent.Log;
 
 namespace Torch.Commands
 {
@@ -49,7 +53,8 @@ namespace Torch.Commands
             }
             else
             {
-                Context.Respond($"Use the {commandManager.Prefix}longhelp command and check your Comms menu for a full list of commands.");
+                Context.Respond(
+                    $"Use the {commandManager.Prefix}longhelp command and check your Comms menu for a full list of commands.");
             }
         }
 
@@ -106,7 +111,8 @@ namespace Torch.Commands
         [Permission(MyPromoteLevel.None)]
         public void Plugins()
         {
-            var plugins = Context.Torch.Managers.GetManager<PluginManager>()?.Plugins.Select(p => p.Value.Name) ?? Enumerable.Empty<string>();
+            var plugins = Context.Torch.Managers.GetManager<PluginManager>()?.Plugins.Select(p => p.Value.Name) ??
+                          Enumerable.Empty<string>();
             Context.Respond($"Loaded plugins: {string.Join(", ", plugins)}");
         }
 
@@ -115,8 +121,14 @@ namespace Torch.Commands
         {
             Context.Respond("Stopping server.");
             if (save)
-                Context.Torch.Save(Context.Player?.IdentityId ?? 0).Wait();
-            Context.Torch.Stop();
+                DoSave()?.ContinueWith((a, mod) =>
+                {
+                    ITorchBase torch = (mod as CommandModule)?.Context?.Torch;
+                    Debug.Assert(torch != null);
+                    torch.Stop();
+                }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
+            else
+                Context.Torch.Stop();
         }
 
         [Command("restart", "Restarts the server.")]
@@ -138,21 +150,20 @@ namespace Torch.Commands
             {
                 if (i >= 60 && i % 60 == 0)
                 {
-                    Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>().SendMessageAsSelf($"Restarting server in {i / 60} minute{Pluralize(i / 60)}.");
+                    Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                        .SendMessageAsSelf($"Restarting server in {i / 60} minute{Pluralize(i / 60)}.");
                     yield return null;
                 }
                 else if (i > 0)
                 {
                     if (i < 11)
-                        Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>().SendMessageAsSelf($"Restarting server in {i} second{Pluralize(i)}.");
+                        Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                            .SendMessageAsSelf($"Restarting server in {i} second{Pluralize(i)}.");
                     yield return null;
                 }
                 else
                 {
-                    Context.Torch.Invoke(() =>
-                    {
-                        Context.Torch.Restart();
-                    });
+                    Context.Torch.Restart();
                     yield break;
                 }
             }
@@ -171,7 +182,45 @@ namespace Torch.Commands
         public void Save()
         {
             Context.Respond("Saving game.");
-            Context.Torch.Save(Context.Player?.IdentityId ?? 0);
+            DoSave();
+        }
+
+        private Task DoSave()
+        {
+            Task<GameSaveResult> task = Context.Torch.Save(60 * 1000, true);
+            if (task == null)
+            {
+                Context.Respond("Save failed, a save is already in progress");
+                return null;
+            }
+            return task.ContinueWith((taskCapture, state) =>
+            {
+                CommandContext context = (state as CommandModule)?.Context;
+                Debug.Assert(context != null);
+                switch (taskCapture.Result)
+                {
+                    case GameSaveResult.Success:
+                        context.Respond("Saved game.");
+                        break;
+                    case GameSaveResult.GameNotReady:
+                        context.Respond("Save failed: Game was not ready.");
+                        break;
+                    case GameSaveResult.TimedOut:
+                        context.Respond("Save failed: Save timed out.");
+                        break;
+                    case GameSaveResult.FailedToTakeSnapshot:
+                        context.Respond("Save failed: unable to take snapshot");
+                        break;
+                    case GameSaveResult.FailedToSaveToDisk:
+                        context.Respond("Save failed: unable to save to disk");
+                        break;
+                    case GameSaveResult.UnknownError:
+                        context.Respond("Save failed: unknown reason");
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
         }
     }
 }

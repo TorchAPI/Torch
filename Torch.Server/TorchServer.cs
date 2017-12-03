@@ -178,16 +178,22 @@ namespace Torch.Server
         /// </summary>
         public override void Restart()
         {
-            Save(0).Wait();
-            Stop();
-            LogManager.Flush();
+            Save().ContinueWith((task, torchO) =>
+            {
+                var torch = (TorchServer) torchO;
+                torch.Stop();
+                // TODO clone this
+                var config = (TorchConfig) torch.Config;
+                LogManager.Flush();
 
-            var exe = Assembly.GetExecutingAssembly().Location;
-            ((TorchConfig)Config).WaitForPID = Process.GetCurrentProcess().Id.ToString();
-            Config.Autostart = true;
-            Process.Start(exe, Config.ToString());
+                string exe = Assembly.GetExecutingAssembly().Location;
+                Debug.Assert(exe != null);
+                config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
+                config.Autostart = true;
+                Process.Start(exe, config.ToString());
 
-            Process.GetCurrentProcess().Kill();
+                Process.GetCurrentProcess().Kill();
+            }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
         }
 
         /// <inheritdoc />
@@ -295,47 +301,5 @@ namespace Torch.Server
         }
 
         #endregion
-
-        /// <inheritdoc/>
-        public override Task Save(long callerId)
-        {
-            return SaveGameAsync(statusCode => SaveCompleted(statusCode, callerId));
-        }
-
-        /// <summary>
-        /// Callback for when save has finished.
-        /// </summary>
-        /// <param name="statusCode">Return code of the save operation</param>
-        /// <param name="callerId">Caller of the save operation</param>
-        private void SaveCompleted(SaveGameStatus statusCode, long callerId = 0)
-        {
-            string response = null;
-            switch (statusCode)
-            {
-                case SaveGameStatus.Success:
-                    Log.Info("Save completed.");
-                    response = "Saved game.";
-                    break;
-                case SaveGameStatus.SaveInProgress:
-                    Log.Error("Save failed, a save is already in progress.");
-                    response = "Save failed, a save is already in progress.";
-                    break;
-                case SaveGameStatus.GameNotReady:
-                    Log.Error("Save failed, game was not ready.");
-                    response = "Save failed, game was not ready.";
-                    break;
-                case SaveGameStatus.TimedOut:
-                    Log.Error("Save failed, save timed out.");
-                    response = "Save failed, save timed out.";
-                    break;
-                default:
-                    break;
-            }
-            if (MySession.Static.Players.TryGetPlayerId(callerId, out MyPlayer.PlayerId result))
-            {
-                Managers.GetManager<IChatManagerServer>()?.SendMessageAsOther("Server", response,
-                    statusCode == SaveGameStatus.Success ? MyFontEnum.Green : MyFontEnum.Red, result.SteamId);
-            }
-        }
     }
 }

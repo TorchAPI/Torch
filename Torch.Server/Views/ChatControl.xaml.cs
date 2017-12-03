@@ -139,9 +139,7 @@ namespace Torch.Server
                 InsertMessage(new TorchChatMessage("Server", text, MyFontEnum.DarkBlue));
                 _server.Invoke(() =>
                 {
-                    string response = commands.HandleCommandFromServer(text);
-                    if (!string.IsNullOrWhiteSpace(response))
-                        InsertMessage(new TorchChatMessage("Server", response, MyFontEnum.Blue));
+                    commands.HandleCommandFromServer(text);
                 });
             }
             else
