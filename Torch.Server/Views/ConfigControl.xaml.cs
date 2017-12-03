@@ -17,7 +17,13 @@ namespace Torch.Server.Views
         {
             InitializeComponent();
             _instanceManager = TorchBase.Instance.Managers.GetManager<InstanceManager>();
+            _instanceManager.InstanceLoaded += _instanceManager_InstanceLoaded;
             DataContext = _instanceManager.DedicatedConfig;
+        }
+
+        private void _instanceManager_InstanceLoaded(ConfigDedicatedViewModel obj)
+        {
+            Dispatcher.Invoke(() => DataContext = obj);
         }
 
         private void Save_OnClick(object sender, RoutedEventArgs e)
@@ -25,20 +31,9 @@ namespace Torch.Server.Views
             _instanceManager.SaveConfig();
         }
 
-        private void RemoveLimit_OnClick(object sender, RoutedEventArgs e)
-        {
-            var vm = (BlockLimitViewModel)((Button)sender).DataContext;
-            _instanceManager.DedicatedConfig.SessionSettings.BlockLimits.Remove(vm);
-        }
-
-        private void AddLimit_OnClick(object sender, RoutedEventArgs e)
-        {
-            _instanceManager.DedicatedConfig.SessionSettings.BlockLimits.Add(new BlockLimitViewModel(_instanceManager.DedicatedConfig.SessionSettings, "", 0));
-        }
-
         private void NewWorld_OnClick(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Feature coming soon :)");
+            new WorldGeneratorDialog(_instanceManager).ShowDialog();
         }
 
         private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -46,7 +41,9 @@ namespace Torch.Server.Views
             //The control doesn't update the binding before firing the event.
             if (e.AddedItems.Count > 0)
             {
-                _instanceManager.SelectWorld((string)e.AddedItems[0]);
+                var result = MessageBoxResult.Yes; //MessageBox.Show("Do you want to import the session settings from the selected world?", "Import Config", MessageBoxButton.YesNo);
+                var world = (WorldViewModel)e.AddedItems[0];
+                _instanceManager.SelectWorld(world.WorldPath, result != MessageBoxResult.Yes);
             }
         }
     }

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NLog;
 using Sandbox.Engine.Utils;
 using Torch.Collections;
+using Torch.Server.Managers;
 using VRage.Game;
 using VRage.Game.ModAPI;
 
@@ -62,7 +63,18 @@ namespace Torch.Server.ViewModels
         private SessionSettingsViewModel _sessionSettings;
         public SessionSettingsViewModel SessionSettings { get => _sessionSettings; set { _sessionSettings = value; OnPropertyChanged(); } }
 
-        public MtObservableList<string> WorldPaths { get; } = new MtObservableList<string>();
+        public MtObservableList<WorldViewModel> Worlds { get; } = new MtObservableList<WorldViewModel>();
+        private WorldViewModel _selectedWorld;
+        public WorldViewModel SelectedWorld
+        {
+            get => _selectedWorld;
+            set
+            {
+                SetValue(ref _selectedWorld, value);
+                LoadWorld = _selectedWorld.WorldPath;
+            }
+        }
+
         private string _administrators;
         public string Administrators { get => _administrators; set { _administrators = value; OnPropertyChanged(); } }
         private string _banned;

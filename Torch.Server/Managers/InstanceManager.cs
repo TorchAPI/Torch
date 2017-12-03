@@ -23,6 +23,8 @@ namespace Torch.Server.Managers
     public class InstanceManager : Manager
     {
         private const string CONFIG_NAME = "SpaceEngineers-Dedicated.cfg";
+
+        public event Action<ConfigDedicatedViewModel> InstanceLoaded;
         public ConfigDedicatedViewModel DedicatedConfig { get; set; }
         private static readonly Logger Log = LogManager.GetLogger(nameof(InstanceManager));
         [Dependency]
@@ -57,30 +59,46 @@ namespace Torch.Server.Managers
             var worldFolders = Directory.EnumerateDirectories(Path.Combine(Torch.Config.InstancePath, "Saves"));
 
             foreach (var f in worldFolders)
-                DedicatedConfig.WorldPaths.Add(f);
+                DedicatedConfig.Worlds.Add(new WorldViewModel(f, true));
 
-            if (DedicatedConfig.WorldPaths.Count == 0)
+            if (DedicatedConfig.Worlds.Count == 0)
             {
                 Log.Warn($"No worlds found in the current instance {path}.");
                 return;
             }
 
-            ImportWorldConfig();
+            SelectWorld(DedicatedConfig.LoadWorld ?? DedicatedConfig.Worlds.First().WorldPath, false);
 
-            /*
-            if (string.IsNullOrEmpty(DedicatedConfig.LoadWorld))
-            {
-                Log.Warn("No world specified, importing first available world.");
-                SelectWorld(DedicatedConfig.WorldPaths[0], false);
-            }*/
+            InstanceLoaded?.Invoke(DedicatedConfig);
         }
 
         public void SelectWorld(string worldPath, bool modsOnly = true)
         {
             DedicatedConfig.LoadWorld = worldPath;
+            DedicatedConfig.SelectedWorld = DedicatedConfig.Worlds.FirstOrDefault(x => x.WorldPath == worldPath);
             ImportWorldConfig(modsOnly);
         }
 
+        public void SelectWorld(WorldViewModel world, bool modsOnly = true)
+        {
+            DedicatedConfig.LoadWorld = world.WorldPath;
+            DedicatedConfig.SelectedWorld = world;
+            ImportWorldConfig(world, modsOnly);
+        }
+
+        private void ImportWorldConfig(WorldViewModel world, bool modsOnly = true)
+        {
+            var sb = new StringBuilder();
+            foreach (var mod in world.Checkpoint.Mods)
+                sb.AppendLine(mod.PublishedFileId.ToString());
+
+            DedicatedConfig.Mods = sb.ToString();
+
+            Log.Debug("Loaded mod list from world");
+
+            if (!modsOnly)
+                DedicatedConfig.SessionSettings = world.Checkpoint.Settings;
+        }
 
         private void ImportWorldConfig(bool modsOnly = true)
         {
@@ -160,6 +178,42 @@ namespace Torch.Server.Managers
 
             var config = new MyConfigDedicated<MyObjectBuilder_SessionSettings>(configPath);
             config.Save(configPath);
+        }
+    }
+
+    public class WorldViewModel : ViewModel
+    {
+        public string FolderName { get; set; }
+        public string WorldPath { get; }
+        private string _checkpointPath;
+        public CheckpointViewModel Checkpoint { get; private set; }
+
+        public WorldViewModel(string worldPath, bool loadCheckpointAsync = false)
+        {
+            WorldPath = worldPath;
+            _checkpointPath = Path.Combine(WorldPath, "Sandbox.sbc");
+            FolderName = Path.GetFileName(worldPath);
+            LoadCheckpointAsync();
+        }
+
+        public async Task SaveCheckpointAsync()
+        {
+            await Task.Run(() =>
+            {
+                using (var f = File.Open(_checkpointPath, FileMode.Create))
+                    MyObjectBuilderSerializer.SerializeXML(f, (MyObjectBuilder_Checkpoint)Checkpoint);
+            });
+        }
+
+        public async Task<CheckpointViewModel> LoadCheckpointAsync()
+        {
+            Checkpoint = await Task.Run(() =>
+            {
+                MyObjectBuilderSerializer.DeserializeXML(_checkpointPath, out MyObjectBuilder_Checkpoint checkpoint);
+                return new CheckpointViewModel(checkpoint);
+            });
+            OnPropertyChanged("Checkpoint");
+            return Checkpoint;
         }
     }
 }

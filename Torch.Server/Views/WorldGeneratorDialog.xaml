@@ -1,0 +1,38 @@
+﻿<Window x:Class="Torch.Server.WorldGeneratorDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Torch.Server"
+        xmlns:views="clr-namespace:Torch.Server.Views"
+        mc:Ignorable="d"
+        Title="WorldGeneratorDialog" Height="300" Width="700">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="440"/>
+        </Grid.ColumnDefinitions>
+        <ListView Grid.Column="0" x:Name="PremadeCheckpoints" ScrollViewer.CanContentScroll="False" HorizontalContentAlignment="Center" Margin="3">
+            <ListView.ItemTemplate>
+                <DataTemplate DataType="local:PremadeCheckpointItem">
+                    <StackPanel HorizontalAlignment="Center">
+                        <Label Content="{Binding Name}" HorizontalAlignment="Center"/>
+                        <Image Stretch="Uniform" MaxHeight="100" HorizontalAlignment="Center">
+                            <Image.Source>
+                                <BitmapImage UriSource="{Binding Icon}"/>
+                            </Image.Source>
+                        </Image>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <StackPanel Grid.Column="1" Margin="3">
+            <StackPanel Orientation="Horizontal">
+                <Label Content="World Name: "/>
+                <TextBox x:Name="WorldName" Width="300" Margin="3"/>
+            </StackPanel>
+            <views:SessionSettingsView/>
+            <Button Content="Create World" Click="ButtonBase_OnClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

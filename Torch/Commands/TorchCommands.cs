@@ -136,7 +136,7 @@ namespace Torch.Commands
         {
             Task.Run(() =>
             {
-                var countdown = RestartCountdown(countdownSeconds).GetEnumerator();
+                var countdown = RestartCountdown(countdownSeconds, save).GetEnumerator();
                 while (countdown.MoveNext())
                 {
                     Thread.Sleep(1000);
@@ -144,7 +144,7 @@ namespace Torch.Commands
             });
         }
 
-        private IEnumerable RestartCountdown(int countdown)
+        private IEnumerable RestartCountdown(int countdown, bool save)
         {
             for (var i = countdown; i >= 0; i--)
             {
@@ -163,10 +163,16 @@ namespace Torch.Commands
                 }
                 else
                 {
-                    Context.Torch.Restart();
+                    if (save)
+                        Context.Torch.Save(Context.Player?.IdentityId ?? 0).ContinueWith(x => Restart());
+                    else
+                        Restart();
+                        
                     yield break;
                 }
             }
+
+            void Restart() => Context.Torch.Invoke(() => Context.Torch.Restart());
         }
 
         private string Pluralize(int num)

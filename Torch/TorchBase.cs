@@ -309,10 +309,9 @@ namespace Torch
             SpaceEngineersGame.SetupPerGameSettings();
             ObjectFactoryInitPatch.ForceRegisterAssemblies();
 
-            Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null,
-                "MyPerGameSettings.BasicGameInfo.GameVersion != null");
-            GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText
-                .ToString().Replace("_", "."));
+            Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
+            GameVersion = new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value);
+
             try
             {
                 Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}";

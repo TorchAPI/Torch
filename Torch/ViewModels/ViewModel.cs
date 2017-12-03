@@ -50,7 +50,7 @@ namespace Torch
 
         protected virtual void SetValue<T>(ref T backingField, T value, [CallerMemberName] string propName = "")
         {
-            if (backingField.Equals(value))
+            if (backingField != null && backingField.Equals(value))
                 return;
 
             backingField = value;

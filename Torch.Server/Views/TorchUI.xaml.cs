@@ -59,7 +59,7 @@ namespace Torch.Server
             _config = config;
             Dispatcher.Invoke(() =>
             {
-                InstancePathBox.Text = config.InstancePath;
+                //InstancePathBox.Text = config.InstancePath;
             });
         }
 
