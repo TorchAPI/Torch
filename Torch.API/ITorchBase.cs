@@ -65,7 +65,7 @@ namespace Torch.API
         /// <summary>
         /// The binary version of the current instance.
         /// </summary>
-        Version TorchVersion { get; }
+        InformationalVersion TorchVersion { get; }
 
         /// <summary>
         /// Invoke an action on the game thread.

@@ -15,7 +15,7 @@ namespace Torch
         public static bool TryExtractVersion(this string version, out Version result)
         {
             result = null;
-            var match = Regex.Match(version, @"(\d+\.)?(\d+\.)?(\d+)");
+            var match = Regex.Match(version, @"(\d+\.)?(\d+\.)?(\d+\.)?(\d+)");
             return match.Success && Version.TryParse(match.Value, out result);
         }
     }

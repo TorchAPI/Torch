@@ -24,8 +24,8 @@
                     <DataTemplate DataType="managers:WorldViewModel">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <Label Content="Name: " Padding="0"/>
-                                <Label Content="{Binding Checkpoint.SessionName}" FontStyle="Oblique" Padding="0"/>
+                                <Label Content="{Binding Checkpoint.SessionName}" FontWeight="Bold" Padding="0"/>
+                                <Label Content="{Binding WorldPath}" Padding="5,0,0,0"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <Label Content="Last saved: " Padding="0"/>

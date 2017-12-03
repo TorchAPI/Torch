@@ -85,12 +85,7 @@ namespace Torch
         public ITorchConfig Config { get; protected set; }
 
         /// <inheritdoc />
-        public Version TorchVersion { get; }
-
-        /// <summary>
-        /// The version of Torch used, with extra data.
-        /// </summary>
-        public string TorchVersionVerbose { get; }
+        public InformationalVersion TorchVersion { get; }
 
         /// <inheritdoc />
         public Version GameVersion { get; private set; }
@@ -139,10 +134,15 @@ namespace Torch
 
             Instance = this;
 
-            TorchVersion = Assembly.GetExecutingAssembly().GetName().Version;
-            TorchVersionVerbose = Assembly.GetEntryAssembly()
+            var versionString = Assembly.GetEntryAssembly()
                                       .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                                      ?.InformationalVersion ?? TorchVersion.ToString();
+                                      .InformationalVersion;
+            
+            if (!InformationalVersion.TryParse(versionString, out InformationalVersion version))
+                throw new TypeLoadException("Unable to parse the Torch version from the assembly.");
+
+            TorchVersion = version;
+
             RunArgs = new string[0];
 
             Managers = new DependencyManager();
@@ -326,7 +326,7 @@ namespace Torch
 #else
             Log.Info("RELEASE");
 #endif
-            Log.Info($"Torch Version: {TorchVersionVerbose}");
+            Log.Info($"Torch Version: {TorchVersion}");
             Log.Info($"Game Version: {GameVersion}");
             Log.Info($"Executing assembly: {Assembly.GetEntryAssembly().FullName}");
             Log.Info($"Executing directory: {AppDomain.CurrentDomain.BaseDirectory}");
