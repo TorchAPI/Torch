@@ -74,14 +74,22 @@ namespace Torch.API
 
         /// <summary>
         /// Invoke an action on the game thread and block until it has completed.
-        /// If this is called on the game thread the action will execute immediately.
         /// </summary>
-        void InvokeBlocking(Action action, [CallerMemberName] string caller = "");
+        /// <param name="action">Action to execute</param>
+        /// <param name="caller">Caller of the invoke function</param>
+        /// <param name="timeoutMs">Timeout before <see cref="TimeoutException"/> is thrown, or -1 to never timeout</param>
+        /// <exception cref="TimeoutException">If the action times out</exception>
+        void InvokeBlocking(Action action, int timeoutMs = -1, [CallerMemberName] string caller = "");
 
         /// <summary>
         /// Invoke an action on the game thread asynchronously.
         /// </summary>
         Task InvokeAsync(Action action, [CallerMemberName] string caller = "");
+
+        /// <summary>
+        /// Invoke a function on the game thread asynchronously.
+        /// </summary>
+        Task<T> InvokeAsync<T>(Func<T> func, [CallerMemberName] string caller = "");
 
         /// <summary>
         /// Signals the torch instance to start, then blocks until it's started.

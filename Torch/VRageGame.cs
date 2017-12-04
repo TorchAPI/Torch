@@ -10,11 +10,15 @@ using Havok;
 using NLog;
 using NLog.Fluent;
 using Sandbox;
+using Sandbox.Engine.Analytics;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Engine.Networking;
 using Sandbox.Engine.Platform.VideoMode;
+using Sandbox.Engine.Utils;
 using Sandbox.Game;
+using Sandbox.Game.Gui;
 using Sandbox.Game.World;
+using Sandbox.Graphics.GUI;
 using SpaceEngineers.Game;
 using SpaceEngineers.Game.GUI;
 using Torch.Utils;
@@ -223,15 +227,64 @@ namespace Torch
                 StateChange(GameState.Stopped);
             }
         }
-        
-        private void LoadSession(string sessionPath)
+
+        private void DoDisableAutoload()
         {
-            // ?
-            MySessionLoader.LoadSingleplayerSession(sessionPath);
+            if (MySandboxGame.ConfigDedicated is MyConfigDedicated<MyObjectBuilder_SessionSettings> config)
+            {
+                var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                Directory.CreateDirectory(tempDirectory);
+                config.LoadWorld = null;
+                config.PremadeCheckpointPath = tempDirectory;
+            }
         }
 
-        private void UnloadSession()
+
+#pragma warning disable 649
+        [ReflectedMethod(Name = "StartServer")]
+        private static Action<MySession, MyMultiplayerBase> _hostServerForSession;
+#pragma warning restore 649
+
+        private void DoLoadSession(string sessionPath)
         {
+            if (!Path.IsPathRooted(sessionPath))
+                sessionPath = Path.Combine(MyFileSystem.SavesPath, sessionPath);
+
+            if (!Sandbox.Engine.Platform.Game.IsDedicated)
+            {
+                MySessionLoader.LoadSingleplayerSession(sessionPath);
+                return;
+            }
+            ulong checkpointSize;
+            MyObjectBuilder_Checkpoint checkpoint = MyLocalCache.LoadCheckpoint(sessionPath, out checkpointSize);
+            if (MySession.IsCompatibleVersion(checkpoint))
+            {
+                if (MySteamWorkshop.DownloadWorldModsBlocking(checkpoint.Mods).Success)
+                {
+                    // MySpaceAnalytics.Instance.SetEntry(MyGameEntryEnum.Load);
+                    MySession.Load(sessionPath, checkpoint, checkpointSize);
+                    _hostServerForSession(MySession.Static, MyMultiplayer.Static);
+                }
+                else
+                    MyLog.Default.WriteLineAndConsole("Unable to download mods");
+            }
+            else
+                MyLog.Default.WriteLineAndConsole(MyTexts.Get(MyCommonTexts.DialogTextIncompatibleWorldVersion)
+                    .ToString());
+        }
+
+        private void DoJoinSession(ulong lobbyId)
+        {
+            MyJoinGameHelper.JoinGame(lobbyId);
+        }
+
+        private void DoUnloadSession()
+        {
+            if (!Sandbox.Engine.Platform.Game.IsDedicated)
+            {
+                MyScreenManager.CloseAllScreensExcept(null);
+                MyGuiSandbox.Update(16);
+            }
             if (MySession.Static != null)
             {
                 MySession.Static.Unload();
@@ -249,6 +302,10 @@ namespace Torch
             if (MyMultiplayer.Static != null)
             {
                 MyMultiplayer.Static.Dispose();
+            }
+            if (!Sandbox.Engine.Platform.Game.IsDedicated)
+            {
+                MyGuiSandbox.AddScreen(MyGuiSandbox.CreateScreen(MyPerGameSettings.GUI.MainMenu));
             }
         }
 
@@ -284,6 +341,21 @@ namespace Torch
             _destroyGame = true;
             SignalStop();
             _commandChanged.Set();
+        }
+
+        public Task LoadSession(string path)
+        {
+            return _torch.InvokeAsync(()=>DoLoadSession(path));
+        }
+
+        public Task JoinSession(ulong lobbyId)
+        {
+            return _torch.InvokeAsync(()=>DoJoinSession(lobbyId));
+        }
+
+        public Task UnloadSession()
+        {
+            return _torch.InvokeAsync(DoUnloadSession);
         }
 
         /// <summary>

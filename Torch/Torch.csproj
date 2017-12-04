@@ -198,7 +198,6 @@
     <Compile Include="Patches\ObjectFactoryInitPatch.cs" />
     <Compile Include="Patches\TorchAsyncSaving.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SaveGameStatus.cs" />
     <Compile Include="Collections\KeyTree.cs" />
     <Compile Include="Collections\RollingAverage.cs" />
     <Compile Include="CommandLine.cs" />

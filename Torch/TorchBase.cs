@@ -226,56 +226,90 @@ namespace Torch
             MySandboxGame.Static.Invoke(action, caller);
         }
 
-        /// <summary>
-        /// Invokes an action on the game thread asynchronously.
-        /// </summary>
-        /// <param name="action"></param>
+
+        /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public void InvokeBlocking(Action action, int timeoutMs = -1, [CallerMemberName] string caller = "")
+        {
+            // ReSharper disable once ExplicitCallerInfoArgument
+            if (!InvokeAsync(action, caller).Wait(timeoutMs))
+                throw new TimeoutException("The game action timed out");
+        }
+
+        /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public Task<T> InvokeAsync<T>(Func<T> action, [CallerMemberName] string caller = "")
+        {
+            if (Thread.CurrentThread == MySandboxGame.Static.UpdateThread)
+            {
+                Debug.Assert(false, $"{nameof(InvokeAsync)} should not be called on the game thread.");
+                // ReSharper disable once HeuristicUnreachableCode
+                try
+                {
+                    return Task.FromResult(action.Invoke());
+                }
+                catch (Exception e)
+                {
+                    return Task.FromException<T>(e);
+                }
+            }
+            var ctx = new TaskCompletionSource<T>();
+            MySandboxGame.Static.Invoke(() =>
+            {
+                try
+                {
+                    ctx.SetResult(action.Invoke());
+                }
+                catch (Exception e)
+                {
+                    ctx.SetException(e);
+                }
+                finally
+                {
+                    Debug.Assert(ctx.Task.IsCompleted);
+                }
+            }, caller);
+            return ctx.Task;
+
+        }
+
+
+        /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.NoInlining)]
         public Task InvokeAsync(Action action, [CallerMemberName] string caller = "")
         {
             if (Thread.CurrentThread == MySandboxGame.Static.UpdateThread)
             {
                 Debug.Assert(false, $"{nameof(InvokeAsync)} should not be called on the game thread.");
-                action?.Invoke();
-                return Task.CompletedTask;
+                // ReSharper disable once HeuristicUnreachableCode
+                try
+                {
+                    action.Invoke();
+                    return Task.CompletedTask;
+                }
+                catch (Exception e)
+                {
+                    return Task.FromException(e);
+                }
             }
-
-            return Task.Run(() => InvokeBlocking(action, caller));
-        }
-
-        /// <summary>
-        /// Invokes an action on the game thread and blocks until it is completed.
-        /// </summary>
-        /// <param name="action"></param>
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public void InvokeBlocking(Action action, [CallerMemberName] string caller = "")
-        {
-            if (action == null)
-                return;
-
-            if (Thread.CurrentThread == MySandboxGame.Static.UpdateThread)
-            {
-                Debug.Assert(false, $"{nameof(InvokeBlocking)} should not be called on the game thread.");
-                action.Invoke();
-                return;
-            }
-
-            var e = new AutoResetEvent(false);
-
+            var ctx = new TaskCompletionSource<bool>();
             MySandboxGame.Static.Invoke(() =>
             {
                 try
                 {
                     action.Invoke();
+                    ctx.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    ctx.SetException(e);
                 }
                 finally
                 {
-                    e.Set();
+                    Debug.Assert(ctx.Task.IsCompleted);
                 }
             }, caller);
-
-            if (!e.WaitOne(60000))
-                throw new TimeoutException("The game action timed out.");
+            return ctx.Task;
         }
 
         #endregion
@@ -316,8 +350,8 @@ namespace Torch
             Log.Info($"Executing assembly: {Assembly.GetEntryAssembly().FullName}");
             Log.Info($"Executing directory: {AppDomain.CurrentDomain.BaseDirectory}");
 
-            _game = new VRageGame(this, TweakGameSettings, SteamAppName, SteamAppId, Config.InstancePath, RunArgs);
-            if (!_game.WaitFor(VRageGame.GameState.Stopped, TimeSpan.FromMinutes(5)))
+            Game = new VRageGame(this, TweakGameSettings, SteamAppName, SteamAppId, Config.InstancePath, RunArgs);
+            if (!Game.WaitFor(VRageGame.GameState.Stopped, TimeSpan.FromMinutes(5)))
                 Log.Warn("Failed to wait for game to be initialized");
             Managers.GetManager<PluginManager>().LoadPlugins();
             Managers.Attach();
@@ -340,15 +374,15 @@ namespace Torch
         public virtual void Destroy()
         {
             Managers.Detach();
-            _game.SignalDestroy();
-            if (!_game.WaitFor(VRageGame.GameState.Destroyed, TimeSpan.FromSeconds(15)))
+            Game.SignalDestroy();
+            if (!Game.WaitFor(VRageGame.GameState.Destroyed, TimeSpan.FromSeconds(15)))
                 Log.Warn("Failed to wait for the game to be destroyed");
-            _game = null;
+            Game = null;
         }
 
         #endregion
 
-        private VRageGame _game;
+        protected VRageGame Game { get; private set; }
 
         /// <summary>
         /// Called after the basic game information is filled, but before the game is created.
@@ -390,8 +424,8 @@ namespace Torch
         /// <inheritdoc/> 
         public virtual void Start()
         {
-            _game.SignalStart();
-            if (!_game.WaitFor(VRageGame.GameState.Running, TimeSpan.FromSeconds(15)))
+            Game.SignalStart();
+            if (!Game.WaitFor(VRageGame.GameState.Running, TimeSpan.FromSeconds(15)))
                 Log.Warn("Failed to wait for the game to be started");
         }
 
@@ -399,8 +433,8 @@ namespace Torch
         public virtual void Stop()
         {
             LogManager.Flush();
-            _game.SignalStop();
-            if (!_game.WaitFor(VRageGame.GameState.Stopped, TimeSpan.FromSeconds(15)))
+            Game.SignalStop();
+            if (!Game.WaitFor(VRageGame.GameState.Stopped, TimeSpan.FromSeconds(15)))
                 Log.Warn("Failed to wait for the game to be stopped");
         }
 
