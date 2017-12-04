@@ -159,13 +159,6 @@ namespace Torch.Collections
             }
         }
 
-        private struct DummyToken : IDisposable
-        {
-            public void Dispose()
-            {
-            }
-        }
-
         private class DeferredUpdateToken : IDisposable
         {
             private readonly MtObservableCollection<TC, TV> _collection;
@@ -220,7 +213,8 @@ namespace Torch.Collections
 
         private void FlushCollectionEventQueue(object data)
         {
-            bool reset = _collectionEventQueue.Count >= 2;
+            // :/, but works better
+            bool reset = _collectionEventQueue.Count > 0;
             var itemsChanged = false;
             while (_collectionEventQueue.TryDequeue(out NotifyCollectionChangedEventArgs e))
                 if (!reset)
