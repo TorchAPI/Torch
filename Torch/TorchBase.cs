@@ -232,8 +232,11 @@ namespace Torch
         public void InvokeBlocking(Action action, int timeoutMs = -1, [CallerMemberName] string caller = "")
         {
             // ReSharper disable once ExplicitCallerInfoArgument
-            if (!InvokeAsync(action, caller).Wait(timeoutMs))
+            Task task = InvokeAsync(action, caller);
+            if (!task.Wait(timeoutMs))
                 throw new TimeoutException("The game action timed out");
+            if (task.IsFaulted && task.Exception != null)
+                throw task.Exception;
         }
 
         /// <inheritdoc/>
@@ -312,9 +315,9 @@ namespace Torch
             return ctx.Task;
         }
 
-        #endregion
+#endregion
 
-        #region Torch Init/Destroy
+#region Torch Init/Destroy
 
         protected abstract uint SteamAppId { get; }
         protected abstract string SteamAppName { get; }
@@ -380,7 +383,7 @@ namespace Torch
             Game = null;
         }
 
-        #endregion
+#endregion
 
         protected VRageGame Game { get; private set; }
 

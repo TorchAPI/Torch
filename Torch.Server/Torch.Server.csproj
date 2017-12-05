@@ -217,6 +217,7 @@
     <Compile Include="ViewModels\Entities\CharacterViewModel.cs" />
     <Compile Include="ViewModels\ConfigDedicatedViewModel.cs" />
     <Compile Include="ViewModels\Entities\EntityControlViewModel.cs" />
+    <Compile Include="Views\Converters\DefinitionToIdConverter.cs" />
     <Compile Include="Views\Entities\EntityControlHost.xaml.cs">
       <DependentUpon>EntityControlHost.xaml</DependentUpon>
     </Compile>

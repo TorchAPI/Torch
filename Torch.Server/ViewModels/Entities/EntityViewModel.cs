@@ -32,7 +32,7 @@ namespace Torch.Server.ViewModels.Entities
 
         public virtual string Name
         {
-            get => Entity.DisplayName;
+            get => Entity?.DisplayName;
             set
             {
                 TorchBase.Instance.InvokeBlocking(() => Entity.DisplayName = value);
@@ -42,7 +42,7 @@ namespace Torch.Server.ViewModels.Entities
 
         public virtual string Position
         {
-            get => Entity.GetPosition().ToString();
+            get => Entity?.GetPosition().ToString();
             set
             {
                 if (!Vector3D.TryParse(value, out Vector3D v))

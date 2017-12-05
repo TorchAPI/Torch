@@ -29,11 +29,10 @@ namespace Torch.Server.ViewModels.Entities
             await TorchBase.Instance.InvokeAsync(() => MyEntities.GetTopMostEntitiesInBox(ref box, entities)).ConfigureAwait(false);
             foreach (var entity in entities.Where(e => e is IMyCubeGrid))
             {
-                var gridModel = Tree.Grids.FirstOrDefault(g => g.Entity.EntityId == entity.EntityId);
-                if (gridModel == null)
+                if (Tree.Grids.TryGetValue(entity.EntityId, out var gridModel))
                 {
                     gridModel = new GridViewModel((MyCubeGrid)entity, Tree);
-                    Tree.Grids.Add(gridModel);
+                    Tree.Grids.Add(entity.EntityId, gridModel);
                 }
 
                 AttachedGrids.Add(gridModel);

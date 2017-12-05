@@ -20,10 +20,10 @@ namespace Torch.Server.ViewModels
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         //TODO: these should be sorted sets for speed
-        public MtObservableList<GridViewModel> Grids { get; set; } = new MtObservableList<GridViewModel>();
-        public MtObservableList<CharacterViewModel> Characters { get; set; } = new MtObservableList<CharacterViewModel>();
-        public MtObservableList<EntityViewModel> FloatingObjects { get; set; } = new MtObservableList<EntityViewModel>();
-        public MtObservableList<VoxelMapViewModel> VoxelMaps { get; set; } = new MtObservableList<VoxelMapViewModel>();
+        public MtObservableSortedDictionary<long, GridViewModel> Grids { get; set; } = new MtObservableSortedDictionary<long, GridViewModel>();
+        public MtObservableSortedDictionary<long, CharacterViewModel> Characters { get; set; } = new MtObservableSortedDictionary<long, CharacterViewModel>();
+        public MtObservableSortedDictionary<long, EntityViewModel> FloatingObjects { get; set; } = new MtObservableSortedDictionary<long, EntityViewModel>();
+        public MtObservableSortedDictionary<long, VoxelMapViewModel> VoxelMaps { get; set; } = new MtObservableSortedDictionary<long, VoxelMapViewModel>();
         public Dispatcher ControlDispatcher => _control.Dispatcher;
 
         private EntityViewModel _currentEntity;
@@ -33,6 +33,11 @@ namespace Torch.Server.ViewModels
         {
             get => _currentEntity;
             set { _currentEntity = value; OnPropertyChanged(nameof(CurrentEntity)); }
+        }
+
+        // I hate you today WPF
+        public EntityTreeViewModel() : this(null)
+        {
         }
 
         public EntityTreeViewModel(UserControl control)
@@ -53,16 +58,16 @@ namespace Torch.Server.ViewModels
                 switch (obj)
                 {
                     case MyCubeGrid grid:
-                        Grids.RemoveWhere(m => m.Id == grid.EntityId);
+                        Grids.Remove(grid.EntityId);
                         break;
                     case MyCharacter character:
-                        Characters.RemoveWhere(m => m.Id == character.EntityId);
+                        Characters.Remove(character.EntityId);
                         break;
                     case MyFloatingObject floating:
-                        FloatingObjects.RemoveWhere(m => m.Id == floating.EntityId);
+                        FloatingObjects.Remove(floating.EntityId);
                         break;
                     case MyVoxelBase voxel:
-                        VoxelMaps.RemoveWhere(m => m.Id == voxel.EntityId);
+                        VoxelMaps.Remove(voxel.EntityId);
                         break;
                 }
             }
@@ -80,16 +85,16 @@ namespace Torch.Server.ViewModels
                 switch (obj)
                 {
                     case MyCubeGrid grid:
-                        Grids.Add(new GridViewModel(grid, this));
+                        Grids.Add(obj.EntityId, new GridViewModel(grid, this));
                         break;
                     case MyCharacter character:
-                        Characters.Add(new CharacterViewModel(character, this));
+                        Characters.Add(obj.EntityId, new CharacterViewModel(character, this));
                         break;
                     case MyFloatingObject floating:
-                        FloatingObjects.Add(new FloatingObjectViewModel(floating, this));
+                        FloatingObjects.Add(obj.EntityId, new FloatingObjectViewModel(floating, this));
                         break;
                     case MyVoxelBase voxel:
-                        VoxelMaps.Add(new VoxelMapViewModel(voxel, this));
+                        VoxelMaps.Add(obj.EntityId, new VoxelMapViewModel(voxel, this));
                         break;
                 }
             }

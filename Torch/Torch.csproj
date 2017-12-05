@@ -155,7 +155,8 @@
       <Link>Properties\AssemblyVersion.cs</Link>
     </Compile>
     <Compile Include="Collections\MtObservableCollection.cs" />
-    <Compile Include="Collections\MtObservableDictionary.cs" />
+    <Compile Include="Collections\MtObservableCollectionBase.cs" />
+    <Compile Include="Collections\MtObservableSortedDictionary.cs" />
     <Compile Include="Collections\MtObservableEvent.cs" />
     <Compile Include="Collections\MtObservableList.cs" />
     <Compile Include="Collections\TransformComparer.cs" />
