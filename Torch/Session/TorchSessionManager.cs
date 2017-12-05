@@ -169,11 +169,9 @@ namespace Torch.Session
             if (_currentSession != null)
             {
                 if (_currentSession.State == TorchSessionState.Loaded)
-                    SetState(TorchSessionState.Unloading);
+                    SessionUnloading();
                 if (_currentSession.State == TorchSessionState.Unloading)
-                    SetState(TorchSessionState.Unloaded);
-                _currentSession.Detach();
-                _currentSession = null;
+                    SessionUnloaded();
             }
         }
     }

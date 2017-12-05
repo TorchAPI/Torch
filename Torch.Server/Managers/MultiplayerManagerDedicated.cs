@@ -166,13 +166,13 @@ namespace Torch.Server.Managers
                     CommitVerdict(info.SteamID, JoinResult.KickedRecently);
                 else if (info.SteamResponse != JoinResult.OK)
                     CommitVerdict(info.SteamID, info.SteamResponse);
-                else if (MyMultiplayer.Static.MemberLimit > 0 &&
-                         MyMultiplayer.Static.MemberCount + 1 > MyMultiplayer.Static.MemberLimit)
-                    CommitVerdict(info.SteamID, JoinResult.ServerFull);
                 else if (MySandboxGame.ConfigDedicated.GroupID == 0uL ||
                          MySandboxGame.ConfigDedicated.Administrators.Contains(info.SteamID.ToString()) ||
                          MySandboxGame.ConfigDedicated.Administrators.Contains(_convertSteamIDFrom64(info.SteamID)))
                     CommitVerdict(info.SteamID, JoinResult.OK);
+                else if (MyMultiplayer.Static.MemberLimit > 0 &&
+                         MyMultiplayer.Static.MemberCount + 1 > MyMultiplayer.Static.MemberLimit)
+                    CommitVerdict(info.SteamID, JoinResult.ServerFull);
                 else if (MySandboxGame.ConfigDedicated.GroupID == info.Group && (info.Member || info.Officer))
                     CommitVerdict(info.SteamID, JoinResult.OK);
                 else

@@ -378,7 +378,7 @@ namespace Torch
         {
             Managers.Detach();
             Game.SignalDestroy();
-            if (!Game.WaitFor(VRageGame.GameState.Destroyed, TimeSpan.FromSeconds(15)))
+            if (!Game.WaitFor(VRageGame.GameState.Destroyed, _gameStateChangeTimeout))
                 Log.Warn("Failed to wait for the game to be destroyed");
             Game = null;
         }
@@ -428,7 +428,7 @@ namespace Torch
         public virtual void Start()
         {
             Game.SignalStart();
-            if (!Game.WaitFor(VRageGame.GameState.Running, TimeSpan.FromSeconds(15)))
+            if (!Game.WaitFor(VRageGame.GameState.Running, _gameStateChangeTimeout))
                 Log.Warn("Failed to wait for the game to be started");
         }
 
@@ -437,7 +437,7 @@ namespace Torch
         {
             LogManager.Flush();
             Game.SignalStop();
-            if (!Game.WaitFor(VRageGame.GameState.Stopped, TimeSpan.FromSeconds(15)))
+            if (!Game.WaitFor(VRageGame.GameState.Stopped, _gameStateChangeTimeout))
                 Log.Warn("Failed to wait for the game to be stopped");
         }
 
@@ -491,6 +491,7 @@ namespace Torch
         }
 
         private static readonly HashSet<Assembly> _registeredAuxAssemblies = new HashSet<Assembly>();
+        private static readonly TimeSpan _gameStateChangeTimeout = TimeSpan.FromMinutes(1);
 
         /// <summary>
         /// Registers an auxillary (plugin) assembly with the system, including its
