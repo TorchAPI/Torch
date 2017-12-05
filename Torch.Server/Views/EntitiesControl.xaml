@@ -13,7 +13,7 @@
         <viewModels:EntityTreeViewModel />
     </UserControl.DataContext>
     <UserControl.Resources>
-        <converters:DefinitionToIdConverter x:Key="DefinitionConverter"/>
+        <converters:DefinitionToIdConverter x:Key="DefinitionConverter" />
     </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -33,7 +33,10 @@
                         <TextBlock Text="{Binding DescriptiveName}" />
                         <HierarchicalDataTemplate.ItemTemplate>
                             <HierarchicalDataTemplate ItemsSource="{Binding Value.Values}">
-                                <TextBlock Text="{Binding Path=Key, Converter={StaticResource DefinitionConverter}, Mode=OneWay}" />
+                                <TextBlock>
+                                    <Run Text="{Binding Path=Key, Converter={StaticResource DefinitionConverter}, Mode=OneWay}" />
+                                    <Run Text="{Binding Path=Value.Count, StringFormat=' ({0} blocks)', Mode=OneWay}" />
+                                </TextBlock>
                                 <HierarchicalDataTemplate.ItemTemplate>
                                     <DataTemplate DataType="{x:Type blocks:BlockViewModel}">
                                         <TextBlock Text="{Binding Path=Name}" />
