@@ -26,22 +26,19 @@ namespace Torch.Client
 {
     public class TorchClient : TorchBase, ITorchClient
     {
-        private MyCommonProgramStartup _startup;
-        private IMyRender _renderer;
-
         protected override uint SteamAppId => 244850;
-        protected override string SteamAppName => "Space Engineers";
+        protected override string SteamAppName => "SpaceEngineers";
 
         public TorchClient()
         {
             Config = new TorchClientConfig();
             var sessionManager = Managers.GetManager<ITorchSessionManager>();
             sessionManager.AddFactory((x) => MyMultiplayer.Static is MyMultiplayerLobby
-                                                 ? new MultiplayerManagerLobby(this)
-                                                 : null);
+                ? new MultiplayerManagerLobby(this)
+                : null);
             sessionManager.AddFactory((x) => MyMultiplayer.Static is MyMultiplayerClientBase
-                                                 ? new MultiplayerManagerClient(this)
-                                                 : null);
+                ? new MultiplayerManagerClient(this)
+                : null);
         }
 
         public override void Init()
@@ -49,27 +46,11 @@ namespace Torch.Client
             Directory.SetCurrentDirectory(Program.SpaceEngineersInstallAlias);
             MyFileSystem.ExePath = Path.Combine(Program.SpaceEngineersInstallAlias, Program.SpaceEngineersBinaries);
             Log.Info("Initializing Torch Client");
-            _startup = new MyCommonProgramStartup(RunArgs);
-            SpaceEngineersGame.SetupBasicGameInfo();
-            SpaceEngineersGame.SetupPerGameSettings();
-            if (_startup.PerformReporting())
-                throw new InvalidOperationException("Torch client won't launch when started in error reporting mode");
-
-            _startup.PerformAutoconnect();
-            if (!_startup.CheckSingleInstance())
-                throw new InvalidOperationException("Only one instance of Space Engineers can be running at a time.");
-
-            var appDataPath = _startup.GetAppDataPath();
-            Config.InstancePath = appDataPath;
+            Config.InstancePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                SteamAppName);
             base.Init();
             OverrideMenus();
             SetRenderWindowTitle($"Space Engineers v{GameVersion} with Torch v{TorchVersion}");
-        }
-
-        public override void Destroy()
-        {
-            base.Destroy();
-            _startup.DetectSharpDxLeaksAfterRun();
         }
 
         private void OverrideMenus()
@@ -77,10 +58,10 @@ namespace Torch.Client
             var credits = new MyCreditsDepartment("Torch Developed By")
             {
                 Persons = new List<MyCreditsPerson>
-                    {
-                        new MyCreditsPerson("THE TORCH TEAM"),
-                        new MyCreditsPerson("http://github.com/TorchSE"),
-                    }
+                {
+                    new MyCreditsPerson("THE TORCH TEAM"),
+                    new MyCreditsPerson("http://github.com/TorchSE"),
+                }
             };
             MyPerGameSettings.Credits.Departments.Insert(0, credits);
 
@@ -96,12 +77,11 @@ namespace Torch.Client
                 BindingFlags.Instance | BindingFlags.NonPublic);
             if (renderWindowField == null)
                 return;
-            var window = renderWindowField.GetValue(MySandboxGame.Static.GameRenderComponent.RenderThread) as System.Windows.Forms.Form;
+            var window =
+                renderWindowField.GetValue(MySandboxGame.Static.GameRenderComponent.RenderThread) as
+                    System.Windows.Forms.Form;
             if (window != null)
-                renderThread.Invoke(() =>
-                {
-                    window.Text = title;
-                });
+                renderThread.Invoke(() => { window.Text = title; });
         }
 
         public override void Restart()

@@ -18,6 +18,7 @@ namespace Torch.Client
     {
         public const string SpaceEngineersBinaries = "Bin64";
         private static string _spaceEngInstallAlias = null;
+
         public static string SpaceEngineersInstallAlias
         {
             get
@@ -26,7 +27,8 @@ namespace Torch.Client
                 if (_spaceEngInstallAlias == null)
                 {
                     // ReSharper disable once AssignNullToNotNullAttribute
-                    _spaceEngInstallAlias = Path.Combine(Path.GetDirectoryName(typeof(Program).Assembly.Location), "SpaceEngineersAlias");
+                    _spaceEngInstallAlias = Path.Combine(Path.GetDirectoryName(typeof(Program).Assembly.Location),
+                        "SpaceEngineersAlias");
                 }
                 return _spaceEngInstallAlias;
             }
@@ -52,16 +54,20 @@ namespace Torch.Client
             {
                 AllocConsole();
 #endif
-                AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-
-                // Early config: Resolve SE install directory.
-                if (!File.Exists(Path.Combine(SpaceEngineersInstallAlias, _spaceEngineersVerifyFile)))
-                    SetupSpaceEngInstallAlias();
-
-                using (new TorchAssemblyResolver(Path.Combine(SpaceEngineersInstallAlias, SpaceEngineersBinaries)))
+                if (!TorchLauncher.IsTorchWrapped())
                 {
-                    RunClient();
+                    AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
+                    // Early config: Resolve SE install directory.
+                    if (!File.Exists(Path.Combine(SpaceEngineersInstallAlias, _spaceEngineersVerifyFile)))
+                        SetupSpaceEngInstallAlias();
+
+                    TorchLauncher.Launch(Assembly.GetEntryAssembly().FullName, args,
+                        Path.Combine(SpaceEngineersInstallAlias, SpaceEngineersBinaries));
+                    return;
                 }
+
+                RunClient();
 #if DEBUG
             }
             finally
@@ -77,7 +83,8 @@ namespace Torch.Client
 
             // TODO look at Steam/config/Config.VDF?  Has alternate directories.
             var steamDir =
-                Microsoft.Win32.Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Valve\\Steam", "SteamPath", null) as string;
+                Microsoft.Win32.Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Valve\\Steam", "SteamPath",
+                    null) as string;
             if (steamDir != null)
             {
                 spaceEngineersDirectory = Path.Combine(steamDir, _steamSpaceEngineersDirectory);
@@ -97,7 +104,8 @@ namespace Torch.Client
                 {
                     if (dialog.ShowDialog() != DialogResult.OK)
                     {
-                        var ex = new FileNotFoundException("Unable to find the Space Engineers install directory, aborting");
+                        var ex = new FileNotFoundException(
+                            "Unable to find the Space Engineers install directory, aborting");
                         _log.Fatal(ex);
                         LogManager.Flush();
                         throw ex;
@@ -109,11 +117,12 @@ namespace Torch.Client
                             $"Unable to find {0} in {1}.  Are you sure it's the Space Engineers install directory?",
                             "Invalid Space Engineers Directory", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                         break;
-                } while (true);  // Repeat until they confirm.
+                } while (true); // Repeat until they confirm.
             }
             if (!JunctionLink(SpaceEngineersInstallAlias, spaceEngineersDirectory))
             {
-                var ex = new IOException($"Failed to create junction link {SpaceEngineersInstallAlias} => {spaceEngineersDirectory}. Aborting.");
+                var ex = new IOException(
+                    $"Failed to create junction link {SpaceEngineersInstallAlias} => {spaceEngineersDirectory}. Aborting.");
                 _log.Fatal(ex);
                 LogManager.Flush();
                 throw ex;
@@ -121,7 +130,8 @@ namespace Torch.Client
             string junctionVerify = Path.Combine(SpaceEngineersInstallAlias, _spaceEngineersVerifyFile);
             if (!File.Exists(junctionVerify))
             {
-                var ex = new FileNotFoundException($"Junction link is not working.  File {junctionVerify} does not exist");
+                var ex = new FileNotFoundException(
+                    $"Junction link is not working.  File {junctionVerify} does not exist");
                 _log.Fatal(ex);
                 LogManager.Flush();
                 throw ex;
@@ -153,7 +163,7 @@ namespace Torch.Client
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            var ex = (Exception)e.ExceptionObject;
+            var ex = (Exception) e.ExceptionObject;
             _log.Error(ex);
             LogManager.Flush();
             MessageBox.Show(ex.StackTrace, ex.Message);
