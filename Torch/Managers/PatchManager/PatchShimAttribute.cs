@@ -11,10 +11,10 @@ namespace Torch.Managers.PatchManager
     /// Only works for core assemblies loaded by Torch (non-plugins).
     /// </summary>
     /// <remarks>
-    /// Event shims should be singleton, and have one method of signature <i>void Patch(PatchContext)</i>
+    /// Patch shims should be singleton, and have one method of signature <i>void Patch(PatchContext)</i>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class)]
-    internal class PatchShimAttribute : Attribute
+    public class PatchShimAttribute : Attribute
     {
     }
 }
