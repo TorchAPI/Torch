@@ -20,9 +20,9 @@ using VRage.Utils;
 namespace Torch.Patches
 {
     /// <summary>
-    /// A copy of <see cref="MyAsyncSaving"/> except with decent async support.
+    /// A copy of <see cref="MyAsyncSaving"/> except with C# async support.
     /// </summary>
-    public class TorchAsyncSaving
+    public static class TorchAsyncSaving
     {
         /// <summary>
         /// Saves the game asynchronously
@@ -34,6 +34,8 @@ namespace Torch.Patches
         public static Task<GameSaveResult> Save(ITorchBase torch, int timeoutMs = -1, string newSaveName = null)
         {
             Task<GameSaveResult> task = SaveInternal(torch, newSaveName);
+            if (timeoutMs == -1)
+                return task;
             return Task.Run(() =>
             {
                 // ReSharper disable once ConvertIfStatementToReturnStatement
