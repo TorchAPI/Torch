@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using SteamSDK;
 
 namespace Torch.Utils
 {
@@ -48,6 +50,12 @@ namespace Torch.Utils
             Array.Copy(buffer, 0, result, 0, result.Length);
             _streamBuffer.Value.SetTarget(buffer);
             return result;
+        }
+
+        public static IPAddress GetRemoteIP(this P2PSessionState state)
+        {
+            // What is endianness anyway?
+            return new IPAddress(BitConverter.GetBytes(state.RemoteIP).Reverse().ToArray());
         }
     }
 }

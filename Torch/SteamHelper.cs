@@ -21,7 +21,7 @@ namespace Torch
     {
         private static CancellationTokenSource _tokenSource = new CancellationTokenSource();
         private static CancellationToken _cancelToken;
-        private static Logger _log = LogManager.GetLogger(nameof(SteamHelper));
+        private static Logger _log = LogManager.GetCurrentClassLogger();
         public static string BasePath { get; private set; }
         private static string _libraryFolders;
 

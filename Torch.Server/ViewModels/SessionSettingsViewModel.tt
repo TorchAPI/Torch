@@ -1,5 +1,6 @@
 ﻿<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
+<#@ assembly name="System.ComponentModel.DataAnnotations" #>
 <#@ assembly name="$(SolutionDir)\GameBinaries\VRage.Game.dll" #>
 <#@ assembly name="$(SolutionDir)\GameBinaries\VRage.Library.dll" #>
 <#@ import namespace="System.Collections" #>
@@ -9,6 +10,7 @@
 <#@ import namespace="System.Reflection" #>
 <#@ import namespace="VRage.Game" #>
 <#@ import namespace="VRage.Serialization" #>
+<#@ import namespace="System.ComponentModel.DataAnnotations" #>
 <#@ output extension=".cs" #>
 // This file is generated automatically! Any changes will be overwritten.
 
@@ -20,6 +22,7 @@ using Torch.Collections;
 using VRage.Game;
 using VRage.Library.Utils;
 using VRage.Serialization;
+using System.ComponentModel.DataAnnotations;
 
 namespace Torch.Server.ViewModels
 {
@@ -32,9 +35,17 @@ namespace Torch.Server.ViewModels
 		PushIndent("        ");
 	    foreach (var field in typeFields)
 	    {
+			if (field.GetCustomAttribute<GameRelationAttribute>()?.RelatedTo == Game.MedievalEngineers)
+				continue;
+
+			var displayName = field.GetCustomAttribute<DisplayAttribute>()?.Name ?? field.Name;
+			if (string.IsNullOrEmpty(displayName))
+				continue;
+
 	        var getSet = "";
 			WriteLine(GetPropertySummary(field));
-	        if (field.FieldType.IsEnum)
+			WriteLine($"[Display(Name = \"{displayName}\")]");
+	        if (false)//field.FieldType.IsEnum)
 	        {
 				Write($"public string {field.Name} ");
 	            WriteLine($"{{ get => _settings.{field.Name}.ToString(); set {{ Enum.TryParse(value, true, out {field.FieldType} parsedVal); SetValue(ref _settings.{field.Name}, parsedVal); }} }}");
@@ -65,7 +76,7 @@ namespace Torch.Server.ViewModels
 
     string GetPropertySummary(FieldInfo info)
     {
-        return $"/// <inheritdoc cref=\"VRage.Game.MyObjectBuilder_SessionSettings.{info.Name}\" />";
+        return $"/// <see cref=\"VRage.Game.MyObjectBuilder_SessionSettings.{info.Name}\" />";
     }
 
     string GetPropertyName(FieldInfo info)

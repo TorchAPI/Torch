@@ -48,12 +48,29 @@ namespace Torch
                 }
         }
 
+
+        /// <summary>
+        /// Assign a value to the given field and raise PropertyChanged for the caller.
+        /// </summary>
         protected virtual void SetValue<T>(ref T backingField, T value, [CallerMemberName] string propName = "")
         {
             if (backingField != null && backingField.Equals(value))
                 return;
 
             backingField = value;
+            // ReSharper disable once ExplicitCallerInfoArgument
+            OnPropertyChanged(propName);
+        }
+
+        /// <summary>
+        /// Assign a value using the given setter and raise PropertyChanged for the caller.
+        /// </summary>
+        protected virtual void SetValue<T>(Action<T> setter, T value, [CallerMemberName] string propName = "")
+        {
+            if (setter == null)
+                throw new ArgumentNullException(nameof(setter));
+
+            setter.Invoke(value);
             // ReSharper disable once ExplicitCallerInfoArgument
             OnPropertyChanged(propName);
         }

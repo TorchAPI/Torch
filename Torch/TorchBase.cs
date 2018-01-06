@@ -79,6 +79,7 @@ namespace Torch
         /// Hack because *keen*.
         /// Use only if necessary, prefer dependency injection.
         /// </summary>
+        [Obsolete("This is a hack, don't use it.")]
         public static ITorchBase Instance { get; private set; }
 
         /// <inheritdoc />

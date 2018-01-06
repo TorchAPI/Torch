@@ -7,18 +7,41 @@
         xmlns:views="clr-namespace:Torch.Server.Views"
         xmlns:converters="clr-namespace:Torch.Server.Views.Converters"
         mc:Ignorable="d"
-        Title="Torch">
+        Title="Torch"
+        Name="MainWindow">
     <Window.Resources>
-        <converters:InverseBooleanConverter x:Key="InverseBool"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <converters:InverseBooleanConverter x:Key="InverseBool"/>
+        </ResourceDictionary>
     </Window.Resources>
+    <!--
+    <Window.DataContext>
+        <local:TorchServer/>
+    </Window.DataContext>
+    -->
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Margin="5,5,5,5" Orientation="Horizontal">
+        <Menu Grid.Row="0">
+            <MenuItem Header="File"/>
+            <MenuItem Header="Tools"/>
+        </Menu>
+        <StackPanel Grid.Row="1" Margin="5,5,5,5" Orientation="Horizontal">
             <Button x:Name="BtnStart" Content="Start" Height="24" Width="75" Margin="5,0,5,0"
-                    HorizontalAlignment="Left" Click="BtnStart_Click" IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}"/>
+                    HorizontalAlignment="Left" Click="BtnStart_Click">
+                <Button.IsEnabled>
+                    <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                        <Binding ElementName="MainWindow" Path="DataContext.IsRunning" Converter="{StaticResource InverseBool}"/>
+                        <Binding ElementName="ConfigControl" Path="ConfigValid"/>
+                    </MultiBinding>
+                </Button.IsEnabled>
+            </Button>
             <Button x:Name="BtnStop" Content="Stop" Height="24" Width="75" Margin="5,0,5,0" HorizontalAlignment="Left"
                     Click="BtnStop_Click" IsEnabled="{Binding IsRunning}" />
             <Label>
@@ -37,7 +60,7 @@
                 </Label.Content>
             </Label>
         </StackPanel>
-        <TabControl Grid.Row="1" Height="Auto" x:Name="TabControl" Margin="5,0,5,5">
+        <TabControl Grid.Row="2" Height="Auto" x:Name="TabControl" Margin="5,0,5,5">
             <TabItem Header="Configuration">
                 <Grid IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}">
                     <Grid.RowDefinitions>

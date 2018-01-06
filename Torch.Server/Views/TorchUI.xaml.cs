@@ -36,6 +36,8 @@ namespace Torch.Server
         {
             _config = (TorchConfig)server.Config;
             _server = server;
+            //TODO: data binding for whole server
+            DataContext = server;
             InitializeComponent();
 
             Left = _config.WindowPosition.X;
@@ -43,8 +45,6 @@ namespace Torch.Server
             Width = _config.WindowSize.X;
             Height = _config.WindowSize.Y;
 
-            //TODO: data binding for whole server
-            DataContext = server;
             Chat.BindServer(server);
             PlayerList.BindServer(server);
             Plugins.BindServer(server);
@@ -65,7 +65,6 @@ namespace Torch.Server
 
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
-            _server.GetManager<InstanceManager>().SaveConfig();
             _server.Start();
         }
 

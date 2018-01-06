@@ -1,33 +1,8 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Configuration.Install;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Threading;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using NLog;
-using Sandbox.Game.World;
-using Sandbox.ModAPI;
-using Torch;
-using Torch.API;
-using Torch.Server.Views;
-using VRage.Game.ModAPI;
-using System.IO.Compression;
-using System.Net;
-using System.Security.Policy;
-using Torch.Server.Managers;
 using Torch.Utils;
-using VRage.FileSystem;
-using VRageRender;
 
 namespace Torch.Server
 {

@@ -1,40 +1,20 @@
-﻿using Sandbox;
-using Sandbox.Engine.Utils;
-using Sandbox.Game;
+﻿using NLog;
+using Sandbox;
+using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Xml.Serialization.GeneratedAssembly;
-using NLog;
-using Sandbox.Engine.Analytics;
-using Sandbox.Game.Multiplayer;
-using Sandbox.ModAPI;
-using SteamSDK;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Session;
-using Torch.Managers;
 using Torch.Server.Managers;
 using Torch.Utils;
-using VRage.Dedicated;
-using VRage.FileSystem;
 using VRage.Game;
-using VRage.Game.ModAPI;
-using VRage.Game.ObjectBuilder;
-using VRage.Game.SessionComponents;
-using VRage.Library;
-using VRage.ObjectBuilders;
-using VRage.Plugins;
-using VRage.Utils;
 
 #pragma warning disable 618
 
@@ -131,7 +111,6 @@ namespace Torch.Server
             Sandbox.Engine.Platform.Game.IsDedicated = true;
 
             base.Init();
-
             Managers.GetManager<ITorchSessionManager>().SessionStateChanged += OnSessionStateChanged;
             GetManager<InstanceManager>().LoadInstance(Config.InstancePath);
         }

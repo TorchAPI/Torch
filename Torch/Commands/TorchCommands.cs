@@ -3,11 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using Sandbox.ModAPI;
+using SteamSDK;
 using Torch;
 using Torch.API;
 using Torch.API.Managers;
@@ -21,6 +23,18 @@ namespace Torch.Commands
 {
     public class TorchCommands : CommandModule
     {
+        [Command("whatsmyip")]
+        [Permission(MyPromoteLevel.None)]
+        public void GetIP(ulong steamId = 0)
+        {
+            var state = new P2PSessionState();
+            if (steamId == 0)
+                steamId = Context.Player.SteamUserId;
+            Peer2Peer.GetSessionState(steamId, ref state);
+            var ip = new IPAddress(BitConverter.GetBytes(state.RemoteIP).Reverse().ToArray());
+            Context.Respond($"Your IP is {ip}");
+        }
+
         [Command("help", "Displays help for a command")]
         [Permission(MyPromoteLevel.None)]
         public void Help()
@@ -164,7 +178,7 @@ namespace Torch.Commands
                 else
                 {
                     if (save)
-                        Context.Torch.Save(Context.Player?.IdentityId ?? 0).ContinueWith(x => Restart());
+                        Context.Torch.Save().ContinueWith(x => Restart());
                     else
                         Restart();
                         

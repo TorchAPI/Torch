@@ -24,7 +24,7 @@ namespace Torch.Managers
         private Timer _updatePollTimer;
         private GitHubClient _gitClient = new GitHubClient(new ProductHeaderValue("Torch"));
         private string _torchDir = new FileInfo(typeof(UpdateManager).Assembly.Location).DirectoryName;
-        private Logger _log = LogManager.GetLogger(nameof(UpdateManager));
+        private Logger _log = LogManager.GetCurrentClassLogger();
         [Dependency]
         private FilesystemManager _fsManager;
 

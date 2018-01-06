@@ -27,7 +27,7 @@ namespace Torch.Commands
         private readonly MethodInfo _method;
         private ParameterInfo[] _parameters;
         private int? _requiredParamCount;
-        private static readonly Logger Log = LogManager.GetLogger(nameof(Command));
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         public Command(ITorchPlugin plugin, MethodInfo commandMethod)
         {
@@ -80,7 +80,7 @@ namespace Torch.Commands
             }
 
             _requiredParamCount = _requiredParamCount ?? _parameters.Length;
-            LogManager.GetLogger(nameof(Command)).Debug($"Params: {_parameters.Length} ({_requiredParamCount} required)");
+            Log.Debug($"Params: {_parameters.Length} ({_requiredParamCount} required)");
             SyntaxHelp = sb.ToString();
         }
 

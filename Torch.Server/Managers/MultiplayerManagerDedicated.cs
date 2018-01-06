@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,11 +10,14 @@ using NLog.Fluent;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Engine.Networking;
+using Sandbox.Game.World;
+using SteamSDK;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Managers;
 using Torch.Utils;
 using Torch.ViewModels;
+using VRage.Game;
 using VRage.GameServices;
 using VRage.Network;
 using VRage.Steam;
@@ -34,6 +38,9 @@ namespace Torch.Server.Managers
         public IReadOnlyList<ulong> BannedPlayers => MySandboxGame.ConfigDedicated.Banned;
 
         private Dictionary<ulong, ulong> _gameOwnerIds = new Dictionary<ulong, ulong>();
+
+        [Dependency]
+        private InstanceManager _instanceManager;
 
         /// <inheritdoc />
         public MultiplayerManagerDedicated(ITorchBase torch) : base(torch)
@@ -135,22 +142,34 @@ namespace Torch.Server.Managers
         }
 
         //Largely copied from SE
-        private void ValidateAuthTicketResponse(ulong steamID, JoinResult response, ulong steamOwner)
+        private void ValidateAuthTicketResponse(ulong steamId, JoinResult response, ulong steamOwner)
         {
-            _log.Debug($"ValidateAuthTicketResponse(user={steamID}, response={response}, owner={steamOwner}");
-            if (MySandboxGame.ConfigDedicated.GroupID == 0uL)
-                RunEvent(new ValidateAuthTicketEvent(steamID, steamOwner, response, 0, true, false));
+            var state = new P2PSessionState();
+            Peer2Peer.GetSessionState(steamId, ref state);
+            var ip = state.GetRemoteIP();
+
+            _log.Debug($"ValidateAuthTicketResponse(user={steamId}, response={response}, owner={steamOwner})");
+
+            _log.Info($"Connection attempt by {steamId} from {ip}");
+            // TODO implement IP bans
+            if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE && !Torch.CurrentSession.KeenSession.IsUserAdmin(steamId))
+            {
+                _log.Warn($"Rejecting user {steamId}, world is set to offline and user is not admin.");
+                UserRejected(steamId, JoinResult.TicketCanceled);
+            }
+            else if (MySandboxGame.ConfigDedicated.GroupID == 0uL)
+                RunEvent(new ValidateAuthTicketEvent(steamId, steamOwner, response, 0, true, false));
             else if (_getServerAccountType(MySandboxGame.ConfigDedicated.GroupID) != MyGameServiceAccountType.Clan)
-                UserRejected(steamID, JoinResult.GroupIdInvalid);
-            else if (MyGameService.GameServer.RequestGroupStatus(steamID, MySandboxGame.ConfigDedicated.GroupID))
+                UserRejected(steamId, JoinResult.GroupIdInvalid);
+            else if (MyGameService.GameServer.RequestGroupStatus(steamId, MySandboxGame.ConfigDedicated.GroupID))
                 lock (_waitingForGroupLocal)
                 {
                     if (_waitingForGroupLocal.Count >= _waitListSize)
                         _waitingForGroupLocal.RemoveAt(0);
-                    _waitingForGroupLocal.Add(new WaitingForGroup(steamID, response, steamOwner));
+                    _waitingForGroupLocal.Add(new WaitingForGroup(steamId, response, steamOwner));
                 }
             else
-                UserRejected(steamID, JoinResult.SteamServersOffline);
+                UserRejected(steamId, JoinResult.SteamServersOffline);
         }
 
         private void RunEvent(ValidateAuthTicketEvent info)

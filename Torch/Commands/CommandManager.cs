@@ -21,7 +21,7 @@ namespace Torch.Commands
         public char Prefix { get; set; }
 
         public CommandTree Commands { get; set; } = new CommandTree();
-        private Logger _log = LogManager.GetLogger(nameof(CommandManager));
+        private Logger _log = LogManager.GetCurrentClassLogger();
         [Dependency]
         private IChatManagerServer _chatManager;
 
