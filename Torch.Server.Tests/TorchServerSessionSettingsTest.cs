@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Torch.Server.ViewModels;
 using VRage.Game;
 using Xunit;
+using System.ComponentModel.DataAnnotations;
 
 namespace Torch.Server.Tests
 {
@@ -19,6 +20,13 @@ namespace Torch.Server.Tests
         [MemberData(nameof(ModelFields))]
         public void MissingPropertyTest(FieldInfo modelField)
         {
+            // Ignore fields that aren't applicable to SE
+            if (modelField.GetCustomAttribute<GameRelationAttribute>()?.RelatedTo == Game.MedievalEngineers)
+                return;
+
+            if (string.IsNullOrEmpty(modelField.GetCustomAttribute<DisplayAttribute>()?.Name))
+                return;
+
             var match = ViewModelProperties.FirstOrDefault(p => p.Name.Equals(modelField.Name, StringComparison.InvariantCultureIgnoreCase));
             Assert.NotNull(match);
         }
