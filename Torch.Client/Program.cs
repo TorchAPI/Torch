@@ -92,7 +92,10 @@ namespace Torch.Client
                 if (File.Exists(Path.Combine(spaceEngineersDirectory, _spaceEngineersVerifyFile)))
                     _log.Debug("Found Space Engineers in {0}", spaceEngineersDirectory);
                 else
+                {
                     _log.Debug("Couldn't find Space Engineers in {0}", spaceEngineersDirectory);
+                    spaceEngineersDirectory = null;
+                }
             }
             if (spaceEngineersDirectory == null)
             {
