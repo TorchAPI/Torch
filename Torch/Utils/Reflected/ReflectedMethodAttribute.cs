@@ -34,7 +34,7 @@ namespace Torch.Utils
         public string[] OverrideTypeNames
         {
             get => OverrideTypes.Select(x => x.AssemblyQualifiedName).ToArray();
-            set => OverrideTypes = value?.Select(x => x == null ? null : Type.GetType(x)).ToArray();
+            set => OverrideTypes = value?.Select(x => x == null ? null : Type.GetType(x, true)).ToArray();
         }
     }
 }
