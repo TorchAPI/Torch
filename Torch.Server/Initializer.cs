@@ -91,8 +91,6 @@ quit";
                 _server.Init();
                 if (!_config.NoGui)
                 {
-                    _server.Init();
-
                     if (_config.Autostart)
                         Task.Run(() => _server.Start());
 
