@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using NLog;
+using NLog.Targets;
 using Torch.Utils;
 
 namespace Torch.Server
@@ -85,23 +86,26 @@ quit";
         public void Run()
         {
             _server = new TorchServer(_config);
-
             try
             {
-                _server.Init();
+                var init = Task.Run(() => _server.Init());
                 if (!_config.NoGui)
                 {
                     if (_config.Autostart)
-                        Task.Run(() => _server.Start());
+                        init.ContinueWith(x => _server.Start());
 
+                    Log.Info("Showing UI");
+                    Console.SetOut(TextWriter.Null);
+                    NativeMethods.FreeConsole();
                     new TorchUI(_server).ShowDialog();
                 }
                 else
                 {
+                    init.Wait();
                     _server.Start();
                 }
             }
-            finally
+            catch
             {
                 if (_server.IsRunning)
                     _server.Stop();

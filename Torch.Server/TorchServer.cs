@@ -75,6 +75,8 @@ namespace Torch.Server
 
         private bool _hasRun;
 
+        public event Action<ITorchServer> Initialized;
+
         /// <inheritdoc />
         public InstanceManager DedicatedInstance { get; }
 
@@ -112,13 +114,15 @@ namespace Torch.Server
         /// <inheritdoc />
         public override void Init()
         {
+            Log.Info("Initializing server");
             Sandbox.Engine.Platform.Game.IsDedicated = true;
             base.Init();
-            Log.Info($"Init server '{Config.InstanceName}' at '{Config.InstancePath}'");
 
             Managers.GetManager<ITorchSessionManager>().SessionStateChanged += OnSessionStateChanged;
             GetManager<InstanceManager>().LoadInstance(Config.InstancePath);
             CanRun = true;
+            Initialized?.Invoke(this);
+            Log.Info($"Initialized server '{Config.InstanceName}' at '{Config.InstancePath}'");
         }
 
         private void OnSessionStateChanged(ITorchSession session, TorchSessionState newState)
@@ -216,7 +220,8 @@ namespace Torch.Server
         public override void Update()
         {
             base.Update();
-            SimulationRatio = Sync.ServerSimulationRatio;
+            // Stops 1.00-1.02 flicker.
+            SimulationRatio = Math.Min(Sync.ServerSimulationRatio, 1);
             var elapsed = TimeSpan.FromSeconds(Math.Floor(_uptime.Elapsed.TotalSeconds));
             ElapsedPlayTime = elapsed;
 

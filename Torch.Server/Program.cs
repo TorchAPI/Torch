@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.ServiceProcess;
+using NLog.Targets;
 using Torch.Utils;
 
 namespace Torch.Server
@@ -14,6 +15,7 @@ namespace Torch.Server
         [STAThread]
         public static void Main(string[] args)
         {
+            Target.Register<FlowDocumentTarget>("FlowDocument");
             //Ensures that all the files are downloaded in the Torch directory.
             var workingDir = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
             var binDir = Path.Combine(workingDir, "DedicatedServer64");

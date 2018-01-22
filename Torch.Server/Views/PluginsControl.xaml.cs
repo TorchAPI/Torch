@@ -38,9 +38,18 @@ namespace Torch.Server.Views
         public void BindServer(ITorchServer server)
         {
             _server = server;
-            _plugins = _server.Managers.GetManager<PluginManager>();
-            var pluginManager = new PluginManagerViewModel(_plugins);
-            DataContext = pluginManager;
+            _server.Initialized += Server_Initialized;
+        }
+
+        private void Server_Initialized(ITorchServer obj)
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                _plugins = _server.Managers.GetManager<PluginManager>();
+                var pluginManager = new PluginManagerViewModel(_plugins);
+                DataContext = pluginManager;
+            });
+
         }
 
         private void OpenFolder_OnClick(object sender, RoutedEventArgs e)

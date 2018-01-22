@@ -8,10 +8,12 @@ using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using NLog;
 using Sandbox;
 using Torch.API;
 using Torch.Server.Managers;
@@ -36,6 +38,8 @@ namespace Torch.Server
             DataContext = server;
             InitializeComponent();
 
+            AttachConsole();
+
             Left = _config.WindowPosition.X;
             Top = _config.WindowPosition.Y;
             Width = _config.WindowSize.X;
@@ -45,13 +49,13 @@ namespace Torch.Server
             PlayerList.BindServer(server);
             Plugins.BindServer(server);
             LoadConfig((TorchConfig)server.Config);
-
-            AttachConsole();
         }
 
         private void AttachConsole()
         {
-            Console.SetOut(new MultiTextWriter(new RichTextBoxWriter(ConsoleText), Console.Out));
+            var doc = LogManager.Configuration.FindTargetByName<FlowDocumentTarget>("wpf")?.Document;
+            ConsoleText.Document = doc ?? new FlowDocument(new Paragraph(new Run("No target!")));
+            ConsoleText.TextChanged += (sender, args) => ConsoleText.ScrollToEnd();
         }
 
         public void LoadConfig(TorchConfig config)
