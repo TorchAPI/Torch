@@ -227,6 +227,8 @@
     </Compile>
     <Compile Include="Views\Converters\BooleanAndConverter.cs" />
     <Compile Include="Views\Converters\ListConverter.cs" />
+    <Compile Include="MultiTextWriter.cs" />
+    <Compile Include="RichTextBoxWriter.cs" />
     <Compile Include="Views\ValidationRules\ListConverterValidationRule.cs" />
     <Compile Include="Views\Entities\EntityControlHost.xaml.cs">
       <DependentUpon>EntityControlHost.xaml</DependentUpon>

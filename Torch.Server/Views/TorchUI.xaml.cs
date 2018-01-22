@@ -1,25 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Sandbox;
 using Torch.API;
 using Torch.Server.Managers;
+using MessageBoxResult = System.Windows.MessageBoxResult;
 using Timer = System.Timers.Timer;
 
 namespace Torch.Server
@@ -49,6 +45,13 @@ namespace Torch.Server
             PlayerList.BindServer(server);
             Plugins.BindServer(server);
             LoadConfig((TorchConfig)server.Config);
+
+            AttachConsole();
+        }
+
+        private void AttachConsole()
+        {
+            Console.SetOut(new MultiTextWriter(new RichTextBoxWriter(ConsoleText), Console.Out));
         }
 
         public void LoadConfig(TorchConfig config)
@@ -65,12 +68,15 @@ namespace Torch.Server
 
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
-            _server.Start();
+            Task.Run(() => _server.Start());
         }
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
         {
-            _server.Stop();
+            var result = MessageBox.Show("Are you sure you want to stop the server?", "Stop Server", MessageBoxButton.YesNo);
+
+            if (result == MessageBoxResult.Yes)
+                _server.Invoke(() => _server.Stop());
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -82,6 +88,8 @@ namespace Torch.Server
 
             if (_server?.State == ServerState.Running)
                 _server.Stop();
+
+            Environment.Exit(0);
         }
 
         private void BtnRestart_Click(object sender, RoutedEventArgs e)

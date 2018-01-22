@@ -70,6 +70,11 @@ namespace Torch.Server
             }
         }
 
+        private bool _canRun;
+        public bool CanRun { get => _canRun; set => SetValue(ref _canRun, value); }
+
+        private bool _hasRun;
+
         /// <inheritdoc />
         public InstanceManager DedicatedInstance { get; }
 
@@ -107,12 +112,13 @@ namespace Torch.Server
         /// <inheritdoc />
         public override void Init()
         {
-            Log.Info($"Init server '{Config.InstanceName}' at '{Config.InstancePath}'");
             Sandbox.Engine.Platform.Game.IsDedicated = true;
-
             base.Init();
+            Log.Info($"Init server '{Config.InstanceName}' at '{Config.InstancePath}'");
+
             Managers.GetManager<ITorchSessionManager>().SessionStateChanged += OnSessionStateChanged;
             GetManager<InstanceManager>().LoadInstance(Config.InstancePath);
+            CanRun = true;
         }
 
         private void OnSessionStateChanged(ITorchSession session, TorchSessionState newState)
@@ -129,8 +135,17 @@ namespace Torch.Server
         {
             if (State != ServerState.Stopped)
                 return;
+
+            if (_hasRun)
+            {
+                Restart();
+                return;
+            }
+
             State = ServerState.Starting;
             IsRunning = true;
+            CanRun = false;
+            _hasRun = true;
             Log.Info("Starting server.");
             MySandboxGame.ConfigDedicated = DedicatedInstance.DedicatedConfig.Model;
 
@@ -150,6 +165,7 @@ namespace Torch.Server
 
             State = ServerState.Stopped;
             IsRunning = false;
+            CanRun = true;
         }
 
         /// <summary>
@@ -157,12 +173,17 @@ namespace Torch.Server
         /// </summary>
         public override void Restart()
         {
-            Save().ContinueWith((task, torchO) =>
+            if (IsRunning)
+                Save().ContinueWith(DoRestart, this, TaskContinuationOptions.RunContinuationsAsynchronously);
+            else
+                DoRestart(null, this);
+
+            void DoRestart(Task<GameSaveResult> task, object torch0)
             {
-                var torch = (TorchServer) torchO;
+                var torch = (TorchServer)torch0;
                 torch.Stop();
                 // TODO clone this
-                var config = (TorchConfig) torch.Config;
+                var config = (TorchConfig)torch.Config;
                 LogManager.Flush();
 
                 string exe = Assembly.GetExecutingAssembly().Location;
@@ -172,7 +193,7 @@ namespace Torch.Server
                 Process.Start(exe, config.ToString());
 
                 Process.GetCurrentProcess().Kill();
-            }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
+            }
         }
 
         /// <inheritdoc />

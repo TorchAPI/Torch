@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 using NLog;
 using Torch.Utils;
@@ -84,27 +85,21 @@ quit";
         public void Run()
         {
             _server = new TorchServer(_config);
+
             try
             {
-
-                var initTask = Task.Run(() => { _server.Init(); });
+                _server.Init();
                 if (!_config.NoGui)
                 {
                     _server.Init();
 
-                    if (!_config.NoGui)
-                    {
-                        var ui = new TorchUI(_server);
-                        if (_config.Autostart)
-                            _server.Start();
-                        ui.ShowDialog();
-                    }
-                    else
-                        _server.Start();
+                    if (_config.Autostart)
+                        Task.Run(() => _server.Start());
+
+                    new TorchUI(_server).ShowDialog();
                 }
                 else
                 {
-                    initTask.Wait();
                     _server.Start();
                 }
             }
@@ -116,101 +111,105 @@ quit";
             }
         }
 
-            private TorchConfig InitConfig()
+        private TorchConfig InitConfig()
+        {
+            var configName = "Torch.cfg";
+            var configPath = Path.Combine(Directory.GetCurrentDirectory(), configName);
+            if (File.Exists(configName))
             {
-                var configName = "Torch.cfg";
-                var configPath = Path.Combine(Directory.GetCurrentDirectory(), configName);
-                if (File.Exists(configName))
-                {
-                    Log.Info($"Loading config {configPath}");
-                    return TorchConfig.LoadFrom(configPath);
-                }
-                else
-                {
-                    Log.Info($"Generating default config at {configPath}");
-                    var config = new TorchConfig {InstancePath = Path.GetFullPath("Instance")};
-                    config.Save(configPath);
-                    return config;
-                }
+                Log.Info($"Loading config {configPath}");
+                return TorchConfig.LoadFrom(configPath);
             }
-
-            private static void RunSteamCmd()
+            else
             {
-                var log = LogManager.GetLogger("SteamCMD");
-
-                if (!Directory.Exists(STEAMCMD_DIR))
-                {
-                    Directory.CreateDirectory(STEAMCMD_DIR);
-                }
-
-                if (!File.Exists(RUNSCRIPT_PATH))
-                    File.WriteAllText(RUNSCRIPT_PATH, RUNSCRIPT);
-
-                if (!File.Exists(STEAMCMD_PATH))
-                {
-                    try
-                    {
-                        log.Info("Downloading SteamCMD.");
-                        using (var client = new WebClient())
-                            client.DownloadFile("https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip", STEAMCMD_ZIP);
-
-                        ZipFile.ExtractToDirectory(STEAMCMD_ZIP, STEAMCMD_DIR);
-                        File.Delete(STEAMCMD_ZIP);
-                        log.Info("SteamCMD downloaded successfully!");
-                    }
-                    catch
-                    {
-                        log.Error("Failed to download SteamCMD, unable to update the DS.");
-                        return;
-                    }
-                }
-
-                log.Info("Checking for DS updates.");
-                var steamCmdProc = new ProcessStartInfo(STEAMCMD_PATH, "+runscript runscript.txt")
-                {
-                    WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), STEAMCMD_DIR),
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    StandardOutputEncoding = Encoding.ASCII
-                };
-                var cmd = Process.Start(steamCmdProc);
-
-                // ReSharper disable once PossibleNullReferenceException
-                while (!cmd.HasExited)
-                {
-                    log.Info(cmd.StandardOutput.ReadLine());
-                    Thread.Sleep(100);
-                }
-            }
-
-            private void LogException(Exception ex)
-            {
-                if (ex.InnerException != null)
-                {
-                    LogException(ex.InnerException);
-                }
-
-                Log.Fatal(ex);
-                if (ex is ReflectionTypeLoadException exti)
-                    foreach (Exception exl in exti.LoaderExceptions)
-                        LogException(exl);
-            }
-
-            private void HandleException(object sender, UnhandledExceptionEventArgs e)
-            {
-                var ex = (Exception)e.ExceptionObject;
-                LogException(ex);
-                Console.WriteLine("Exiting in 5 seconds.");
-                Thread.Sleep(5000);
-                LogManager.Flush();
-                if (_config.RestartOnCrash)
-                {
-                    var exe = typeof(Program).Assembly.Location;
-                    _config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
-                    Process.Start(exe, _config.ToString());
-                }
-
-                Process.GetCurrentProcess().Kill();
+                Log.Info($"Generating default config at {configPath}");
+                var config = new TorchConfig {InstancePath = Path.GetFullPath("Instance")};
+                config.Save(configPath);
+                return config;
             }
         }
+
+        private static void RunSteamCmd()
+        {
+            var log = LogManager.GetLogger("SteamCMD");
+
+            if (!Directory.Exists(STEAMCMD_DIR))
+            {
+                Directory.CreateDirectory(STEAMCMD_DIR);
+            }
+
+            if (!File.Exists(RUNSCRIPT_PATH))
+                File.WriteAllText(RUNSCRIPT_PATH, RUNSCRIPT);
+
+            if (!File.Exists(STEAMCMD_PATH))
+            {
+                try
+                {
+                    log.Info("Downloading SteamCMD.");
+                    using (var client = new WebClient())
+                        client.DownloadFile("https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip", STEAMCMD_ZIP);
+
+                    ZipFile.ExtractToDirectory(STEAMCMD_ZIP, STEAMCMD_DIR);
+                    File.Delete(STEAMCMD_ZIP);
+                    log.Info("SteamCMD downloaded successfully!");
+                }
+                catch
+                {
+                    log.Error("Failed to download SteamCMD, unable to update the DS.");
+                    return;
+                }
+            }
+
+            log.Info("Checking for DS updates.");
+            var steamCmdProc = new ProcessStartInfo(STEAMCMD_PATH, "+runscript runscript.txt")
+            {
+                WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), STEAMCMD_DIR),
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                StandardOutputEncoding = Encoding.ASCII
+            };
+            var cmd = Process.Start(steamCmdProc);
+
+            // ReSharper disable once PossibleNullReferenceException
+            while (!cmd.HasExited)
+            {
+                log.Info(cmd.StandardOutput.ReadLine());
+                Thread.Sleep(100);
+            }
+        }
+
+        private void LogException(Exception ex)
+        {
+            if (ex.InnerException != null)
+            {
+                LogException(ex.InnerException);
+            }
+
+            Log.Fatal(ex);
+            if (ex is ReflectionTypeLoadException exti)
+                foreach (Exception exl in exti.LoaderExceptions)
+                    LogException(exl);
+        }
+
+        private void HandleException(object sender, UnhandledExceptionEventArgs e)
+        {
+            var ex = (Exception)e.ExceptionObject;
+            LogException(ex);
+            LogManager.Flush();
+            if (_config.RestartOnCrash)
+            {
+                Console.WriteLine("Restarting in 5 seconds.");
+                Thread.Sleep(5000);
+                var exe = typeof(Program).Assembly.Location;
+                _config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
+                Process.Start(exe, _config.ToString());
+            }
+            else
+            {
+                MessageBox.Show("Torch encountered a fatal error and needs to close. Please check the logs for details.");
+            }
+
+            Process.GetCurrentProcess().Kill();
+        }
     }
+}

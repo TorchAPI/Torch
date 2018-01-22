@@ -10,13 +10,18 @@ using Havok;
 using NLog;
 using Sandbox.Engine.Networking;
 using Sandbox.Engine.Utils;
+using Sandbox.Game;
+using Sandbox.Game.Gui;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Managers;
 using Torch.Server.ViewModels;
+using VRage;
 using VRage.FileSystem;
 using VRage.Game;
+using VRage.Game.ObjectBuilder;
 using VRage.ObjectBuilders;
+using VRage.Plugins;
 
 namespace Torch.Server.Managers
 {
@@ -37,6 +42,8 @@ namespace Torch.Server.Managers
         
         public void LoadInstance(string path, bool validate = true)
         {
+            Log.Info($"Loading instance {path}");
+
             if (validate)
                 ValidateInstance(path);
 
@@ -56,6 +63,7 @@ namespace Torch.Server.Managers
             config.Load(configPath);
 
             DedicatedConfig = new ConfigDedicatedViewModel(config);
+
             var worldFolders = Directory.EnumerateDirectories(Path.Combine(Torch.Config.InstancePath, "Saves"));
 
             foreach (var f in worldFolders)
