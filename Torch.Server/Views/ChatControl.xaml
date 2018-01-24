@@ -10,7 +10,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <ScrollViewer x:Name="ChatScroller"  Grid.Row="0"  Margin="5,5,5,5" HorizontalScrollBarVisibility="Disabled">
-            <TextBlock x:Name="ChatItems" />
+            <TextBlock x:Name="ChatItems" TextWrapping="Wrap" />
         </ScrollViewer>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
