@@ -1,20 +1,31 @@
-﻿using NLog;
-using Sandbox;
-using Sandbox.Game.Multiplayer;
-using Sandbox.Game.World;
+﻿#region
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using NLog;
+using Sandbox;
+using Sandbox.Engine.Networking;
+using Sandbox.Game.Multiplayer;
+using Sandbox.Game.World;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Session;
 using Torch.Server.Managers;
 using Torch.Utils;
-using VRage.Game;
+using VRage;
+using VRage.Dedicated;
+using VRage.GameServices;
+using VRage.Steam;
+using Timer = System.Threading.Timer;
+
+#endregion
 
 #pragma warning disable 618
 
@@ -22,76 +33,14 @@ namespace Torch.Server
 {
     public class TorchServer : TorchBase, ITorchServer
     {
-        //public MyConfigDedicated<MyObjectBuilder_SessionSettings> DedicatedConfig { get; set; }
-        /// <inheritdoc />
-        public float SimulationRatio
-        {
-            get => _simRatio;
-            set
-            {
-                _simRatio = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <inheritdoc />
-        public TimeSpan ElapsedPlayTime
-        {
-            get => _elapsedPlayTime;
-            set
-            {
-                _elapsedPlayTime = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <inheritdoc />
-        public Thread GameThread { get; private set; }
-
-        /// <inheritdoc />
-        public ServerState State
-        {
-            get => _state;
-            private set
-            {
-                _state = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <inheritdoc />
-        public bool IsRunning
-        {
-            get => _isRunning;
-            set
-            {
-                _isRunning = value;
-                OnPropertyChanged();
-            }
-        }
-
         private bool _canRun;
-        public bool CanRun { get => _canRun; set => SetValue(ref _canRun, value); }
-
-        private bool _hasRun;
-
-        public event Action<ITorchServer> Initialized;
-
-        /// <inheritdoc />
-        public InstanceManager DedicatedInstance { get; }
-
-        /// <inheritdoc />
-        public string InstanceName => Config?.InstanceName;
-
-        /// <inheritdoc />
-        public string InstancePath => Config?.InstancePath;
-
-        private bool _isRunning;
-        private ServerState _state;
         private TimeSpan _elapsedPlayTime;
+        private bool _hasRun;
+        private bool _isRunning;
         private float _simRatio;
-        private Timer _watchdog;
+        private ServerState _state;
         private Stopwatch _uptime;
+        private Timer _watchdog;
 
         /// <inheritdoc />
         public TorchServer(TorchConfig config = null)
@@ -102,36 +51,55 @@ namespace Torch.Server
             Config = config ?? new TorchConfig();
 
             var sessionManager = Managers.GetManager<ITorchSessionManager>();
-            sessionManager.AddFactory((x) => new MultiplayerManagerDedicated(this));
+            sessionManager.AddFactory(x => new MultiplayerManagerDedicated(this));
         }
 
-        /// <inheritdoc/>
+        //public MyConfigDedicated<MyObjectBuilder_SessionSettings> DedicatedConfig { get; set; }
+        /// <inheritdoc />
+        public float SimulationRatio { get => _simRatio; set => SetValue(ref _simRatio, value); }
+
+        /// <inheritdoc />
+        public TimeSpan ElapsedPlayTime { get => _elapsedPlayTime; set => SetValue(ref _elapsedPlayTime, value); }
+
+        /// <inheritdoc />
+        public Thread GameThread { get; private set; }
+
+        /// <inheritdoc />
+        public bool IsRunning { get => _isRunning; set => SetValue(ref _isRunning, value); }
+
+        public bool CanRun { get => _canRun; set => SetValue(ref _canRun, value); }
+
+        /// <inheritdoc />
+        public InstanceManager DedicatedInstance { get; }
+
+        /// <inheritdoc />
+        public string InstanceName => Config?.InstanceName;
+
+        /// <inheritdoc />
         protected override uint SteamAppId => 244850;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override string SteamAppName => "SpaceEngineersDedicated";
+
+        /// <inheritdoc />
+        public ServerState State { get => _state; private set => SetValue(ref _state, value); }
+
+        public event Action<ITorchServer> Initialized;
+
+        /// <inheritdoc />
+        public string InstancePath => Config?.InstancePath;
 
         /// <inheritdoc />
         public override void Init()
         {
             Log.Info("Initializing server");
-            Sandbox.Engine.Platform.Game.IsDedicated = true;
+            MySandboxGame.IsDedicated = true;
             base.Init();
-
             Managers.GetManager<ITorchSessionManager>().SessionStateChanged += OnSessionStateChanged;
             GetManager<InstanceManager>().LoadInstance(Config.InstancePath);
             CanRun = true;
             Initialized?.Invoke(this);
             Log.Info($"Initialized server '{Config.InstanceName}' at '{Config.InstancePath}'");
-        }
-
-        private void OnSessionStateChanged(ITorchSession session, TorchSessionState newState)
-        {
-            if (newState == TorchSessionState.Unloading || newState == TorchSessionState.Unloaded)
-            {
-                _watchdog?.Dispose();
-                _watchdog = null;
-            }
         }
 
         /// <inheritdoc />
@@ -173,7 +141,7 @@ namespace Torch.Server
         }
 
         /// <summary>
-        /// Restart the program.
+        ///     Restart the program.
         /// </summary>
         public override void Restart()
         {
@@ -200,20 +168,24 @@ namespace Torch.Server
             }
         }
 
+        private void OnSessionStateChanged(ITorchSession session, TorchSessionState newState)
+        {
+            if (newState == TorchSessionState.Unloading || newState == TorchSessionState.Unloaded)
+            {
+                _watchdog?.Dispose();
+                _watchdog = null;
+            }
+        }
+
         /// <inheritdoc />
         public override void Init(object gameInstance)
         {
             base.Init(gameInstance);
             var game = gameInstance as MySandboxGame;
             if (game != null && MySession.Static != null)
-            {
                 State = ServerState.Running;
-//                SteamServerAPI.Instance.GameServer.SetKeyValue("SM", "Torch");
-            }
             else
-            {
                 State = ServerState.Stopped;
-            }
         }
 
         /// <inheritdoc />
@@ -238,7 +210,7 @@ namespace Torch.Server
         private static void CheckServerResponding(object state)
         {
             var mre = new ManualResetEvent(false);
-            ((TorchServer) state).Invoke(() => mre.Set());
+            ((TorchServer)state).Invoke(() => mre.Set());
             if (!mre.WaitOne(TimeSpan.FromSeconds(Instance.Config.TickTimeout)))
             {
 #if DEBUG
@@ -250,10 +222,8 @@ namespace Torch.Server
                 throw new TimeoutException($"Server watchdog detected that the server was frozen for at least {((TorchServer)state).Config.TickTimeout} seconds.");
 #endif
             }
-            else
-            {
-                Log.Debug("Server watchdog responded");
-            }
+
+            Log.Debug("Server watchdog responded");
         }
 
         private static string DumpFrozenThread(Thread thread, int traces = 3, int pause = 5000)
@@ -267,6 +237,7 @@ namespace Torch.Server
                 stacks.Add(dump);
                 Thread.Sleep(pause);
             }
+
             string commonPrefix = StringUtils.CommonSuffix(stacks);
             // Advance prefix to include the line terminator.
             commonPrefix = commonPrefix.Substring(commonPrefix.IndexOf('\n') + 1);
@@ -280,6 +251,7 @@ namespace Torch.Server
                     result.AppendLine($"Suffix {i}");
                     result.AppendLine(stacks[i].Substring(0, stacks[i].Length - commonPrefix.Length));
                 }
+
             return result.ToString();
         }
 
@@ -293,6 +265,7 @@ namespace Torch.Server
             {
                 // ignored
             }
+
             var stack = new StackTrace(thread, true);
             try
             {
@@ -302,6 +275,7 @@ namespace Torch.Server
             {
                 // ignored
             }
+
             return stack;
         }
 

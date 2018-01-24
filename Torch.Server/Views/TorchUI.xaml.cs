@@ -16,9 +16,9 @@ using System.Windows.Shapes;
 using NLog;
 using Sandbox;
 using Torch.API;
+using Torch.API.Managers;
 using Torch.Server.Managers;
 using MessageBoxResult = System.Windows.MessageBoxResult;
-using Timer = System.Timers.Timer;
 
 namespace Torch.Server
 {
@@ -93,7 +93,7 @@ namespace Torch.Server
             if (_server?.State == ServerState.Running)
                 _server.Stop();
 
-            Environment.Exit(0);
+            Process.GetCurrentProcess().Kill();
         }
 
         private void BtnRestart_Click(object sender, RoutedEventArgs e)
@@ -109,7 +109,7 @@ namespace Torch.Server
                 return;
 
             _config.InstancePath = name;
-            _server.GetManager<InstanceManager>().LoadInstance(_config.InstancePath);
+            _server.Managers.GetManager<InstanceManager>().LoadInstance(_config.InstancePath);
         }
     }
 }

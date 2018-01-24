@@ -10,6 +10,9 @@ using NLog.Targets;
 
 namespace Torch.Server
 {
+    /// <summary>
+    /// NLog target that writes to a <see cref="FlowDocument"/>.
+    /// </summary>
     [Target("flowDocument")]
     public sealed class FlowDocumentTarget : TargetWithLayout
     {

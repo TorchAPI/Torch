@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -15,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using VRage.Game;
+using VRage.Serialization;
 
 namespace Torch.Views
 {
@@ -52,8 +54,8 @@ namespace Torch.Views
             var properties = t.GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
             var grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition());
-            grid.ColumnDefinitions.Add(new ColumnDefinition());
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
             var curRow = 0;
             foreach (var property in properties.OrderBy(x => x.Name))
@@ -64,6 +66,7 @@ namespace Torch.Views
                 grid.RowDefinitions.Add(new RowDefinition());
 
                 var displayName = property.GetCustomAttribute<DisplayAttribute>()?.Name;
+                var propertyType = property.PropertyType;
 
                 var text = new TextBlock
                 {
@@ -86,18 +89,40 @@ namespace Torch.Views
                     };
                     valueControl.SetBinding(TextBlock.TextProperty, binding);
                 }
-                else if (property.PropertyType == typeof(bool) || property.PropertyType == typeof(bool?))
+                else if (propertyType == typeof(bool) || propertyType == typeof(bool?))
                 {
                     valueControl = new CheckBox();
                     valueControl.SetBinding(CheckBox.IsCheckedProperty, property.Name);
                 }
-                else if (property.PropertyType.IsEnum)
+                else if (propertyType.IsEnum)
                 {
                     valueControl = new ComboBox
                     {
                         ItemsSource = Enum.GetValues(property.PropertyType)
                     };
                     valueControl.SetBinding(ComboBox.SelectedItemProperty, property.Name);
+                }
+                else if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+                {
+                    var button = new Button
+                    {
+                        Content = "Edit Collection"
+                    };
+                    button.SetBinding(Button.DataContextProperty, property.Name);
+                    button.Click += (sender, args) => EditDictionary(((Button)sender).DataContext);
+
+                    valueControl = button;
+                }
+                else if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(SerializableDictionary<,>))
+                {
+                    var button = new Button
+                    {
+                        Content = "Edit Collection"
+                    };
+                    button.SetBinding(Button.DataContextProperty, $"{property.Name}.Dictionary");
+                    button.Click += (sender, args) => EditDictionary(((Button)sender).DataContext);
+
+                    valueControl = button;
                 }
                 else
                 {
@@ -116,6 +141,12 @@ namespace Torch.Views
 
             _viewCache.Add(t, grid);
             return grid;
+        }
+
+        private void EditDictionary(object dict)
+        {
+            var dic = (IDictionary)dict;
+            new DictionaryEditorDialog().Edit(dic);
         }
 
         private void UpdateFilter(object sender, TextChangedEventArgs e)

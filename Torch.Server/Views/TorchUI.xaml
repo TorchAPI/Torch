@@ -55,13 +55,18 @@
                     <TextBlock Text="{Binding ElapsedPlayTime, StringFormat=Uptime: {0:g}}"/>
                 </Label.Content>
             </Label>
+            <Label x:Name="LabelPlayers">
+                <Label.Content>
+                    <TextBlock ></TextBlock>
+                </Label.Content>
+            </Label>
         </StackPanel>
         <TabControl Grid.Row="2" Height="Auto" x:Name="TabControl" Margin="5,10,5,5">
             <TabItem Header="Log">
                 <RichTextBox x:Name="ConsoleText" VerticalScrollBarVisibility="Visible" FontFamily="Consolas"/>
             </TabItem>
             <TabItem Header="Configuration">
-                <Grid IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}">
+                <Grid IsEnabled="{Binding CanRun}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition/>
@@ -72,7 +77,7 @@
                             <ColumnDefinition/>
                         </Grid.ColumnDefinitions>
                     </Grid>
-                    <views:ConfigControl Grid.Row="1" x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom" IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}"/>
+                    <views:ConfigControl Grid.Row="1" x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom" IsEnabled="{Binding CanRun}"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Chat/Players">

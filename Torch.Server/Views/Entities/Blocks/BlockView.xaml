@@ -14,8 +14,8 @@
     <Grid Margin="3">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*" />
             <RowDefinition/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0">
             <Label Content="{Binding FullName}" FontSize="16" />
@@ -25,7 +25,7 @@
             </StackPanel>
             <Label Content="Properties"/>
         </StackPanel>
-        <Expander Grid.Row="1" Header="Block Properties">
+        <Expander Grid.Row="1" Header="Block Properties" IsExpanded="true">
             <ListView ItemsSource="{Binding Properties}" Margin="3" IsEnabled="True">
                 <ListView.ItemTemplate>
                     <DataTemplate>

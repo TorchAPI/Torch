@@ -86,30 +86,21 @@ quit";
         public void Run()
         {
             _server = new TorchServer(_config);
-            try
+            var init = Task.Run(() => _server.Init());
+            if (!_config.NoGui)
             {
-                var init = Task.Run(() => _server.Init());
-                if (!_config.NoGui)
-                {
-                    if (_config.Autostart)
-                        init.ContinueWith(x => _server.Start());
+                if (_config.Autostart)
+                    init.ContinueWith(x => _server.Start());
 
-                    Log.Info("Showing UI");
-                    Console.SetOut(TextWriter.Null);
-                    NativeMethods.FreeConsole();
-                    new TorchUI(_server).ShowDialog();
-                }
-                else
-                {
-                    init.Wait();
-                    _server.Start();
-                }
+                Log.Info("Showing UI");
+                Console.SetOut(TextWriter.Null);
+                NativeMethods.FreeConsole();
+                new TorchUI(_server).ShowDialog();
             }
-            catch
+            else
             {
-                if (_server.IsRunning)
-                    _server.Stop();
-                _server.Destroy();
+                init.Wait();
+                _server.Start();
             }
         }
 
