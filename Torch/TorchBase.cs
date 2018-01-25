@@ -334,7 +334,7 @@ namespace Torch
 
             Managers.GetManager<PluginManager>().LoadPlugins();
             Game = new VRageGame(this, TweakGameSettings, SteamAppName, SteamAppId, Config.InstancePath, RunArgs);
-            if (!Game.WaitFor(VRageGame.GameState.Stopped, TimeSpan.FromMinutes(5)))
+            if (!Game.WaitFor(VRageGame.GameState.Stopped))
                 Log.Warn("Failed to wait for game to be initialized");
             Managers.Attach();
             _init = true;
@@ -357,7 +357,7 @@ namespace Torch
         {
             Managers.Detach();
             Game.SignalDestroy();
-            if (!Game.WaitFor(VRageGame.GameState.Destroyed, _gameStateChangeTimeout))
+            if (!Game.WaitFor(VRageGame.GameState.Destroyed))
                 Log.Warn("Failed to wait for the game to be destroyed");
             Game = null;
         }
@@ -407,7 +407,7 @@ namespace Torch
         public virtual void Start()
         {
             Game.SignalStart();
-            if (!Game.WaitFor(VRageGame.GameState.Running, _gameStateChangeTimeout))
+            if (!Game.WaitFor(VRageGame.GameState.Running))
                 Log.Warn("Failed to wait for the game to be started");
         }
 
@@ -416,7 +416,7 @@ namespace Torch
         {
             LogManager.Flush();
             Game.SignalStop();
-            if (!Game.WaitFor(VRageGame.GameState.Stopped, _gameStateChangeTimeout))
+            if (!Game.WaitFor(VRageGame.GameState.Stopped))
                 Log.Warn("Failed to wait for the game to be stopped");
         }
 

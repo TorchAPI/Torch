@@ -382,7 +382,7 @@ namespace Torch
         /// <param name="state">State to transition to</param>
         /// <param name="timeout">Timeout</param>
         /// <returns></returns>
-        public bool WaitFor(GameState state, TimeSpan? timeout)
+        public bool WaitFor(GameState state, TimeSpan? timeout = null)
         {
             // Kinda icky, but we can't block the update and expect the state to change.
             if (Thread.CurrentThread == _updateThread)
