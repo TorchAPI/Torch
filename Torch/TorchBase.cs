@@ -353,10 +353,10 @@ namespace Torch
             Log.Info($"Executing assembly: {Assembly.GetEntryAssembly().FullName}");
             Log.Info($"Executing directory: {AppDomain.CurrentDomain.BaseDirectory}");
 
+            Managers.GetManager<PluginManager>().LoadPlugins();
             Game = new VRageGame(this, TweakGameSettings, SteamAppName, SteamAppId, Config.InstancePath, RunArgs);
             if (!Game.WaitFor(VRageGame.GameState.Stopped, TimeSpan.FromMinutes(5)))
                 Log.Warn("Failed to wait for game to be initialized");
-            Managers.GetManager<PluginManager>().LoadPlugins();
             Managers.Attach();
             _init = true;
 

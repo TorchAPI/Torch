@@ -99,14 +99,6 @@ namespace Torch.Managers.PatchManager
         public const string RESULT_PARAMETER = "__result";
         public const string PREFIX_SKIPPED_PARAMETER = "__prefixSkipped";
 
-#pragma warning disable 649
-        [ReflectedStaticMethod(Type = typeof(RuntimeHelpers), Name = "_CompileMethod", OverrideTypeNames = new[] { "System.IRuntimeMethodInfo" })]
-        private static Action<object> _compileDynamicMethod;
-        [ReflectedMethod(Name = "GetMethodInfo")]
-        private static Func<RuntimeMethodHandle, object> _getMethodInfo;
-        [ReflectedMethod(Name = "GetMethodDescriptor")]
-        private static Func<DynamicMethod, RuntimeMethodHandle> _getMethodHandle;
-#pragma warning restore 649
 
         public DynamicMethod ComposePatchedMethod()
         {
@@ -124,10 +116,7 @@ namespace Torch.Managers.PatchManager
 
             try
             {
-                // Force it to compile
-                RuntimeMethodHandle handle = _getMethodHandle.Invoke(method);
-                object runtimeMethodInfo = _getMethodInfo.Invoke(handle);
-                _compileDynamicMethod.Invoke(runtimeMethodInfo);
+                PatchUtilities.Compile(method);
             }
             catch
             {
