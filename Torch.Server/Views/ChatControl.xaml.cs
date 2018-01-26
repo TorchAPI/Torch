@@ -34,7 +34,7 @@ namespace Torch.Server
     /// </summary>
     public partial class ChatControl : UserControl
     {
-        private TorchBase _server;
+        private ITorchServer _server;
 
         public ChatControl()
         {
@@ -43,13 +43,19 @@ namespace Torch.Server
 
         public void BindServer(ITorchServer server)
         {
-            _server = (TorchBase)server;
+            _server = server;
+
+            server.Initialized += Server_Initialized            ;
+        }
+
+        private void Server_Initialized(ITorchServer obj)
+        {
             Dispatcher.InvokeAsync(() =>
             {
                 ChatItems.Inlines.Clear();
             });
 
-            var sessionManager = server.Managers.GetManager<ITorchSessionManager>();
+            var sessionManager = _server.Managers.GetManager<ITorchSessionManager>();
             if (sessionManager != null)
                 sessionManager.SessionStateChanged += SessionStateChanged;
         }

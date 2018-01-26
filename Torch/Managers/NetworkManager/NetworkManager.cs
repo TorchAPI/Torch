@@ -18,7 +18,7 @@ namespace Torch.Managers
 {
     public class NetworkManager : Manager, INetworkManager
     {
-        private static Logger _log = LogManager.GetLogger(nameof(NetworkManager));
+        private static Logger _log = LogManager.GetCurrentClassLogger();
 
         private const string _myTransportLayerField = "TransportLayer";
         private const string _transportHandlersField = "m_handlers";

@@ -25,7 +25,7 @@ namespace Torch.Managers
     public class PluginManager : Manager, IPluginManager
     {
         private GitHubClient _gitClient = new GitHubClient(new ProductHeaderValue("Torch"));
-        private static Logger _log = LogManager.GetLogger(nameof(PluginManager));
+        private static Logger _log = LogManager.GetCurrentClassLogger();
         private const string MANIFEST_NAME = "manifest.xml";
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
         private readonly MtObservableSortedDictionary<Guid, ITorchPlugin> _plugins = new MtObservableSortedDictionary<Guid, ITorchPlugin>();
@@ -132,6 +132,10 @@ namespace Torch.Managers
 
         private void DownloadPluginUpdates()
         {
+            //TODO
+            _log.Warn("Automatic plugin updates are disabled in this build of Torch while the system is reworked.");
+            return;
+
             _log.Info("Checking for plugin updates...");
             var count = 0;
             var pluginItems = Directory.EnumerateFiles(PluginDir, "*.zip").Union(Directory.EnumerateDirectories(PluginDir));
@@ -168,10 +172,14 @@ namespace Torch.Managers
                     await UpdatePluginAsync(path, latest.Item2).ConfigureAwait(false);
                     count++;
                 }
+                catch (NotFoundException)
+                {
+                    _log.Warn($"GitHub repository not found for {manifest.Name}");
+                }
                 catch (Exception e)
                 {
-                    _log.Error($"An error occurred updating the plugin {manifest.Name}.");
-                    _log.Error(e);
+                    _log.Warn($"An error occurred updating the plugin {manifest.Name}.");
+                    _log.Warn(e);
                 }
             });
 

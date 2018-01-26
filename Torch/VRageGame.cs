@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +27,7 @@ using VRage;
 using VRage.Audio;
 using VRage.FileSystem;
 using VRage.Game;
+using VRage.Game.ObjectBuilder;
 using VRage.Game.SessionComponents;
 using VRage.GameServices;
 using VRage.Network;
@@ -200,10 +202,16 @@ namespace Torch
                 MyRenderProxy.GetRenderProfiler().InitMemoryHack("MainEntryPoint");
             }
 
-//            var layers = _layerSettings();
-//            layers[layers.Length - 1].Radius *= 4;
-
-            _game = new SpaceEngineersGame(_runArgs);
+            // Loads object builder serializers. Intuitive, right?
+            _log.Info("Setting up serializers");
+            MyPlugins.RegisterGameAssemblyFile(MyPerGameSettings.GameModAssembly);
+            if (MyPerGameSettings.GameModBaseObjBuildersAssembly != null)
+                MyPlugins.RegisterBaseGameObjectBuildersAssemblyFile(MyPerGameSettings.GameModBaseObjBuildersAssembly);
+            MyPlugins.RegisterGameObjectBuildersAssemblyFile(MyPerGameSettings.GameModObjBuildersAssembly);
+            MyPlugins.RegisterSandboxAssemblyFile(MyPerGameSettings.SandboxAssembly);
+            MyPlugins.RegisterSandboxGameAssemblyFile(MyPerGameSettings.SandboxGameAssembly);
+            //typeof(MySandboxGame).GetMethod("Preallocate", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
+            MyGlobalTypeMetadata.Static.Init(false);
         }
 
         private void Destroy()
@@ -220,6 +228,8 @@ namespace Torch
 
         private void DoStart()
         {
+            _game = new SpaceEngineersGame(_runArgs);
+
             if (MySandboxGame.FatalErrorDuringInit)
             {
                 _log.Warn("Failed to start sandbox game: fatal error during init");
@@ -372,7 +382,7 @@ namespace Torch
         /// <param name="state">State to transition to</param>
         /// <param name="timeout">Timeout</param>
         /// <returns></returns>
-        public bool WaitFor(GameState state, TimeSpan? timeout)
+        public bool WaitFor(GameState state, TimeSpan? timeout = null)
         {
             // Kinda icky, but we can't block the update and expect the state to change.
             if (Thread.CurrentThread == _updateThread)

@@ -34,7 +34,7 @@ namespace Torch.Managers
 {
     public class EntityManager : Manager
     {
-        private static readonly Logger Log = LogManager.GetLogger(nameof(EntityManager));
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         public EntityManager(ITorchBase torch) : base(torch)
         {

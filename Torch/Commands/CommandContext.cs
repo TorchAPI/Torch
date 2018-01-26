@@ -55,7 +55,7 @@ namespace Torch.Commands
             Args = args ?? new List<string>();
         }
 
-        public void Respond(string message, string sender = "Server", string font = MyFontEnum.Blue)
+        public virtual void Respond(string message, string sender = "Server", string font = MyFontEnum.Blue)
         {
             Torch.CurrentSession.Managers.GetManager<IChatManagerServer>()
                 ?.SendMessageAsOther(sender, message, font, _steamIdSender);

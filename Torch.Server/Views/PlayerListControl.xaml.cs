@@ -47,8 +47,12 @@ namespace Torch.Server
         public void BindServer(ITorchServer server)
         {
             _server = server;
+            _server.Initialized += Server_Initialized            ;
+        }
 
-            var sessionManager = server.Managers.GetManager<ITorchSessionManager>();
+        private void Server_Initialized(ITorchServer obj)
+        {
+            var sessionManager = _server.Managers.GetManager<ITorchSessionManager>();
             sessionManager.SessionStateChanged += SessionStateChanged;
         }
 

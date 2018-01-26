@@ -3,11 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using Sandbox.ModAPI;
+using SteamSDK;
 using Torch;
 using Torch.API;
 using Torch.API.Managers;
@@ -21,6 +23,18 @@ namespace Torch.Commands
 {
     public class TorchCommands : CommandModule
     {
+        [Command("whatsmyip")]
+        [Permission(MyPromoteLevel.None)]
+        public void GetIP(ulong steamId = 0)
+        {
+            var state = new P2PSessionState();
+            if (steamId == 0)
+                steamId = Context.Player.SteamUserId;
+            Peer2Peer.GetSessionState(steamId, ref state);
+            var ip = new IPAddress(BitConverter.GetBytes(state.RemoteIP).Reverse().ToArray());
+            Context.Respond($"Your IP is {ip}");
+        }
+
         [Command("help", "Displays help for a command")]
         [Permission(MyPromoteLevel.None)]
         public void Help()
@@ -136,7 +150,7 @@ namespace Torch.Commands
         {
             Task.Run(() =>
             {
-                var countdown = RestartCountdown(countdownSeconds).GetEnumerator();
+                var countdown = RestartCountdown(countdownSeconds, save).GetEnumerator();
                 while (countdown.MoveNext())
                 {
                     Thread.Sleep(1000);
@@ -144,7 +158,7 @@ namespace Torch.Commands
             });
         }
 
-        private IEnumerable RestartCountdown(int countdown)
+        private IEnumerable RestartCountdown(int countdown, bool save)
         {
             for (var i = countdown; i >= 0; i--)
             {
@@ -163,10 +177,16 @@ namespace Torch.Commands
                 }
                 else
                 {
-                    Context.Torch.Restart();
+                    if (save)
+                        Context.Torch.Save().ContinueWith(x => Restart());
+                    else
+                        Restart();
+                        
                     yield break;
                 }
             }
+
+            void Restart() => Context.Torch.Invoke(() => Context.Torch.Restart());
         }
 
         private string Pluralize(int num)

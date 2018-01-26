@@ -48,13 +48,28 @@ namespace Torch
                 }
         }
 
-        protected virtual void SetValue<T>(ref T backingField, T value, [CallerMemberName] string propName = "")
+
+        /// <summary>
+        /// Assign a value to the given field and raise PropertyChanged for the caller.
+        /// </summary>
+        protected virtual void SetValue<T>(ref T field, T value, [CallerMemberName] string propName = "")
         {
-            if (backingField.Equals(value))
+            if (EqualityComparer<T>.Default.Equals(field, value))
                 return;
 
-            backingField = value;
-            // ReSharper disable once ExplicitCallerInfoArgument
+            field = value;
+            OnPropertyChanged(propName);
+        }
+
+        /// <summary>
+        /// Assign a value using the given setter and raise PropertyChanged for the caller.
+        /// </summary>
+        protected virtual void SetValue<T>(Action<T> setter, T value, [CallerMemberName] string propName = "")
+        {
+            if (setter == null)
+                throw new ArgumentNullException(nameof(setter));
+
+            setter.Invoke(value);
             OnPropertyChanged(propName);
         }
 
@@ -63,9 +78,8 @@ namespace Torch
         /// </summary>
         public void RefreshModel()
         {
-            foreach (var propName in GetType().GetProperties().Select(x => x.Name))
-                // ReSharper disable once ExplicitCallerInfoArgument
-                OnPropertyChanged(propName);
+            foreach (var property in GetType().GetProperties())
+                OnPropertyChanged(property.Name);
         }
     }
 }

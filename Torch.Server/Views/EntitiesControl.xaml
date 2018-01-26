@@ -3,11 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:Torch.Server.Views"
-             xmlns:viewModels="clr-namespace:Torch.Server.ViewModels"
              xmlns:entities="clr-namespace:Torch.Server.ViewModels.Entities"
              xmlns:blocks="clr-namespace:Torch.Server.ViewModels.Blocks"
              xmlns:converters="clr-namespace:Torch.Server.Views.Converters"
+             xmlns:viewModels="clr-namespace:Torch.Server.ViewModels"
              mc:Ignorable="d">
     <UserControl.DataContext>
         <viewModels:EntityTreeViewModel />
@@ -17,8 +16,8 @@
     </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition />
-            <ColumnDefinition MinWidth="300" Width="Auto" />
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="5*" />
         </Grid.ColumnDefinitions>
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
@@ -93,5 +92,6 @@
             </StackPanel>
         </Grid>
         <Frame Grid.Column="1" x:Name="EditorFrame" Margin="3" NavigationUIVisibility="Hidden" />
+        <GridSplitter Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" ShowsPreview="True" Width="2" Background="Gray"/>
     </Grid>
 </UserControl>

@@ -82,6 +82,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
@@ -256,6 +257,12 @@
     <Compile Include="Views\CollectionEditor.xaml.cs">
       <DependentUpon>CollectionEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\DictionaryEditor.xaml.cs">
+      <DependentUpon>DictionaryEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\PropertyGrid.xaml.cs">
+      <DependentUpon>PropertyGrid.xaml</DependentUpon>
+    </Compile>
     <Compile Include="VRageGame.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -270,6 +277,14 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="Views\CollectionEditor.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\DictionaryEditor.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\PropertyGrid.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

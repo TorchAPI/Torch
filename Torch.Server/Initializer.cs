@@ -9,8 +9,10 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 using NLog;
+using NLog.Targets;
 using Torch.Utils;
 
 namespace Torch.Server
@@ -23,6 +25,7 @@ namespace Torch.Server
         private const string STEAMCMD_ZIP = "temp.zip";
         private static readonly string STEAMCMD_PATH = $"{STEAMCMD_DIR}\\steamcmd.exe";
         private static readonly string RUNSCRIPT_PATH = $"{STEAMCMD_DIR}\\runscript.txt";
+
         private const string RUNSCRIPT = @"force_install_dir ../
 login anonymous
 app_update 298740
@@ -69,7 +72,6 @@ quit";
                         Console.Write(".");
                         Thread.Sleep(1000);
                     }
-
                 }
                 catch
                 {
@@ -84,25 +86,21 @@ quit";
         public void Run()
         {
             _server = new TorchServer(_config);
-            try
+            var init = Task.Run(() => _server.Init());
+            if (!_config.NoGui)
             {
-                _server.Init();
+                if (_config.Autostart)
+                    init.ContinueWith(x => _server.Start());
 
-                if (!_config.NoGui)
-                {
-                    var ui = new TorchUI(_server);
-                    if (_config.Autostart)
-                        _server.Start();
-                    ui.ShowDialog();
-                }
-                else
-                    _server.Start();
+                Log.Info("Showing UI");
+                Console.SetOut(TextWriter.Null);
+                NativeMethods.FreeConsole();
+                new TorchUI(_server).ShowDialog();
             }
-            finally
+            else
             {
-                if (_server.IsRunning)
-                    _server.Stop();
-                _server.Destroy();
+                init.Wait();
+                _server.Start();
             }
         }
 
@@ -118,7 +116,7 @@ quit";
             else
             {
                 Log.Info($"Generating default config at {configPath}");
-                var config = new TorchConfig { InstancePath = Path.GetFullPath("Instance") };
+                var config = new TorchConfig {InstancePath = Path.GetFullPath("Instance")};
                 config.Save(configPath);
                 return config;
             }
@@ -179,26 +177,31 @@ quit";
             {
                 LogException(ex.InnerException);
             }
+
             Log.Fatal(ex);
             if (ex is ReflectionTypeLoadException exti)
                 foreach (Exception exl in exti.LoaderExceptions)
                     LogException(exl);
-            
         }
 
         private void HandleException(object sender, UnhandledExceptionEventArgs e)
         {
             var ex = (Exception)e.ExceptionObject;
             LogException(ex);
-            Console.WriteLine("Exiting in 5 seconds.");
-            Thread.Sleep(5000);
             LogManager.Flush();
             if (_config.RestartOnCrash)
             {
+                Console.WriteLine("Restarting in 5 seconds.");
+                Thread.Sleep(5000);
                 var exe = typeof(Program).Assembly.Location;
                 _config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
                 Process.Start(exe, _config.ToString());
             }
+            else
+            {
+                MessageBox.Show("Torch encountered a fatal error and needs to close. Please check the logs for details.");
+            }
+
             Process.GetCurrentProcess().Kill();
         }
     }

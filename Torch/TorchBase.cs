@@ -79,18 +79,14 @@ namespace Torch
         /// Hack because *keen*.
         /// Use only if necessary, prefer dependency injection.
         /// </summary>
+        [Obsolete("This is a hack, don't use it.")]
         public static ITorchBase Instance { get; private set; }
 
         /// <inheritdoc />
         public ITorchConfig Config { get; protected set; }
 
         /// <inheritdoc />
-        public Version TorchVersion { get; }
-
-        /// <summary>
-        /// The version of Torch used, with extra data.
-        /// </summary>
-        public string TorchVersionVerbose { get; }
+        public InformationalVersion TorchVersion { get; }
 
         /// <inheritdoc />
         public Version GameVersion { get; private set; }
@@ -139,10 +135,15 @@ namespace Torch
 
             Instance = this;
 
-            TorchVersion = Assembly.GetExecutingAssembly().GetName().Version;
-            TorchVersionVerbose = Assembly.GetEntryAssembly()
+            var versionString = Assembly.GetEntryAssembly()
                                       .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                                      ?.InformationalVersion ?? TorchVersion.ToString();
+                                      .InformationalVersion;
+            
+            if (!InformationalVersion.TryParse(versionString, out InformationalVersion version))
+                throw new TypeLoadException("Unable to parse the Torch version from the assembly.");
+
+            TorchVersion = version;
+
             RunArgs = new string[0];
 
             Managers = new DependencyManager();
@@ -309,10 +310,9 @@ namespace Torch
             SpaceEngineersGame.SetupPerGameSettings();
             ObjectFactoryInitPatch.ForceRegisterAssemblies();
 
-            Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null,
-                "MyPerGameSettings.BasicGameInfo.GameVersion != null");
-            GameVersion = new Version(new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value).FormattedText
-                .ToString().Replace("_", "."));
+            Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
+            GameVersion = new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value);
+
             try
             {
                 Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}";
@@ -327,14 +327,14 @@ namespace Torch
 #else
             Log.Info("RELEASE");
 #endif
-            Log.Info($"Torch Version: {TorchVersionVerbose}");
+            Log.Info($"Torch Version: {TorchVersion}");
             Log.Info($"Game Version: {GameVersion}");
             Log.Info($"Executing assembly: {Assembly.GetEntryAssembly().FullName}");
             Log.Info($"Executing directory: {AppDomain.CurrentDomain.BaseDirectory}");
 
             Managers.GetManager<PluginManager>().LoadPlugins();
             Game = new VRageGame(this, TweakGameSettings, SteamAppName, SteamAppId, Config.InstancePath, RunArgs);
-            if (!Game.WaitFor(VRageGame.GameState.Stopped, TimeSpan.FromMinutes(5)))
+            if (!Game.WaitFor(VRageGame.GameState.Stopped))
                 Log.Warn("Failed to wait for game to be initialized");
             Managers.Attach();
             _init = true;
@@ -357,7 +357,7 @@ namespace Torch
         {
             Managers.Detach();
             Game.SignalDestroy();
-            if (!Game.WaitFor(VRageGame.GameState.Destroyed, _gameStateChangeTimeout))
+            if (!Game.WaitFor(VRageGame.GameState.Destroyed))
                 Log.Warn("Failed to wait for the game to be destroyed");
             Game = null;
         }
@@ -407,7 +407,7 @@ namespace Torch
         public virtual void Start()
         {
             Game.SignalStart();
-            if (!Game.WaitFor(VRageGame.GameState.Running, _gameStateChangeTimeout))
+            if (!Game.WaitFor(VRageGame.GameState.Running))
                 Log.Warn("Failed to wait for the game to be started");
         }
 
@@ -416,7 +416,7 @@ namespace Torch
         {
             LogManager.Flush();
             Game.SignalStop();
-            if (!Game.WaitFor(VRageGame.GameState.Stopped, _gameStateChangeTimeout))
+            if (!Game.WaitFor(VRageGame.GameState.Stopped))
                 Log.Warn("Failed to wait for the game to be stopped");
         }
 

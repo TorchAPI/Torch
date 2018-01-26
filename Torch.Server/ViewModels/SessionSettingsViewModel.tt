@@ -1,0 +1,103 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ assembly name="System.ComponentModel.DataAnnotations" #>
+<#@ assembly name="$(SolutionDir)\GameBinaries\VRage.Game.dll" #>
+<#@ assembly name="$(SolutionDir)\GameBinaries\VRage.Library.dll" #>
+<#@ import namespace="System.Collections" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Reflection" #>
+<#@ import namespace="VRage.Game" #>
+<#@ import namespace="VRage.Serialization" #>
+<#@ import namespace="System.ComponentModel.DataAnnotations" #>
+<#@ output extension=".cs" #>
+// This file is generated automatically! Any changes will be overwritten.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Torch;
+using Torch.Collections;
+using VRage.Game;
+using VRage.Library.Utils;
+using VRage.Serialization;
+using System.ComponentModel.DataAnnotations;
+
+namespace Torch.Server.ViewModels
+{
+	public class SessionSettingsViewModel : ViewModel
+	{
+		private MyObjectBuilder_SessionSettings _settings;
+	<#
+	    var typeFields = typeof(MyObjectBuilder_SessionSettings).GetFields(BindingFlags.Instance | BindingFlags.Public);
+	
+		PushIndent("        ");
+	    foreach (var field in typeFields)
+	    {
+			if (field.GetCustomAttribute<GameRelationAttribute>()?.RelatedTo == Game.MedievalEngineers)
+				continue;
+
+			var displayName = field.GetCustomAttribute<DisplayAttribute>()?.Name ?? field.Name;
+			if (string.IsNullOrEmpty(displayName))
+				continue;
+
+	        var getSet = "";
+			WriteLine(GetPropertySummary(field));
+			WriteLine($"[Display(Name = \"{displayName}\")]");
+	        if (false)//field.FieldType.IsEnum)
+	        {
+				Write($"public string {field.Name} ");
+	            WriteLine($"{{ get => _settings.{field.Name}.ToString(); set {{ Enum.TryParse(value, true, out {field.FieldType} parsedVal); SetValue(ref _settings.{field.Name}, parsedVal); }} }}");
+				WriteLine($"public List<string> {field.Name}Values {{ get; }} = new List<string> {{{string.Join(", ", Enum.GetNames(field.FieldType).Select(x => $"\"{x}\""))}}};");
+	        }
+			else
+				WriteLine($"public {GetSyntaxName(field.FieldType)} {field.Name} {{ get => _settings.{field.Name}; set => SetValue(ref _settings.{field.Name}, value); }}");
+
+			WriteLine("");
+	    }
+		ClearIndent();
+	
+		string GetSyntaxName(Type t)
+	    {
+	        if (!t.IsGenericType)
+	            return t.FullName;
+	
+	        var endIndex = t.FullName.IndexOf("`");
+	        var baseName = t.FullName.Substring(0, endIndex);
+	
+	        return $"{baseName}{GetGenericSuffix(t)}";
+	    }
+
+    string GetGenericSuffix(Type t)
+    {
+        return $"<{string.Join(", ", t.GenericTypeArguments.Select(GetSyntaxName))}>";
+    }
+
+    string GetPropertySummary(FieldInfo info)
+    {
+        return $"/// <see cref=\"VRage.Game.MyObjectBuilder_SessionSettings.{info.Name}\" />";
+    }
+
+    string GetPropertyName(FieldInfo info)
+    {
+        return $"public {GetSyntaxName(info.FieldType)} {info.Name}";
+    }
+
+    string GetSimplePropertyBody(FieldInfo info)
+    {
+        return $"{{ get => _settings.{info.Name}; set => SetValue(ref _settings.{info.Name}, value); }}";
+    }
+	#>
+
+		public SessionSettingsViewModel(MyObjectBuilder_SessionSettings settings)
+		{
+			_settings = settings;
+		}
+
+		public static implicit operator MyObjectBuilder_SessionSettings(SessionSettingsViewModel viewModel)
+		{
+			return viewModel._settings;
+		}
+	}
+}

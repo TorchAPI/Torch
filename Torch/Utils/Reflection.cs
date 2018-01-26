@@ -11,7 +11,7 @@ namespace Torch.Utils
 {
     public static class Reflection
     {
-        private static readonly Logger Log = LogManager.GetLogger("Reflection");
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         public static bool HasMethod(Type type, string methodName, Type[] argTypes = null)
         {

@@ -160,6 +160,7 @@
       <Link>Properties\AssemblyVersion.cs</Link>
     </Compile>
     <Compile Include="ConnectionState.cs" />
+    <Compile Include="InformationalVersion.cs" />
     <Compile Include="ITorchConfig.cs" />
     <Compile Include="Managers\DependencyManagerExtensions.cs" />
     <Compile Include="Managers\DependencyProviderExtensions.cs" />

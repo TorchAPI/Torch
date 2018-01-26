@@ -1,388 +1,297 @@
-﻿using System;
+﻿// This file is generated automatically! Any changes will be overwritten.
+
+using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SharpDX.Toolkit.Collections;
+using Torch;
 using Torch.Collections;
 using VRage.Game;
 using VRage.Library.Utils;
+using VRage.Serialization;
+using System.ComponentModel.DataAnnotations;
 
 namespace Torch.Server.ViewModels
 {
-    /// <summary>
-    /// View model for <see cref="MyObjectBuilder_SessionSettings"/>
-    /// </summary>
-    public class SessionSettingsViewModel : ViewModel
-    {
-        private MyObjectBuilder_SessionSettings _settings;
+	public class SessionSettingsViewModel : ViewModel
+	{
+		private MyObjectBuilder_SessionSettings _settings;
+	/// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.GameMode" />
+        [Display(Name = "Game mode")]
+        public VRage.Library.Utils.MyGameModeEnum GameMode { get => _settings.GameMode; set => SetValue(ref _settings.GameMode, value); }
 
-        /// <summary>
-        /// Creates a new view model with a new <see cref="MyObjectBuilder_SessionSettings"/> object.
-        /// </summary>
-        public SessionSettingsViewModel() : this(new MyObjectBuilder_SessionSettings())
-        {
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.InventorySizeMultiplier" />
+        [Display(Name = "Inventory size multiplier")]
+        public System.Single InventorySizeMultiplier { get => _settings.InventorySizeMultiplier; set => SetValue(ref _settings.InventorySizeMultiplier, value); }
 
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.AssemblerSpeedMultiplier" />
+        [Display(Name = "Assembler speed multiplier")]
+        public System.Single AssemblerSpeedMultiplier { get => _settings.AssemblerSpeedMultiplier; set => SetValue(ref _settings.AssemblerSpeedMultiplier, value); }
 
-        /// <summary>
-        /// Creates a view model using an existing <see cref="MyObjectBuilder_SessionSettings"/> object.
-        /// </summary>
-        public SessionSettingsViewModel(MyObjectBuilder_SessionSettings settings)
-        {
-            _settings = settings;
-            foreach (var limit in settings.BlockTypeLimits.Dictionary)
-                BlockLimits.Add(new BlockLimitViewModel(this, limit.Key, limit.Value));
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.AssemblerEfficiencyMultiplier" />
+        [Display(Name = "Assembler efficiency multiplier")]
+        public System.Single AssemblerEfficiencyMultiplier { get => _settings.AssemblerEfficiencyMultiplier; set => SetValue(ref _settings.AssemblerEfficiencyMultiplier, value); }
 
-        public MtObservableList<BlockLimitViewModel> BlockLimits { get; } = new MtObservableList<BlockLimitViewModel>();
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.RefinerySpeedMultiplier" />
+        [Display(Name = "Refinery speed multiplier")]
+        public System.Single RefinerySpeedMultiplier { get => _settings.RefinerySpeedMultiplier; set => SetValue(ref _settings.RefinerySpeedMultiplier, value); }
 
-        #region Multipliers
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.OnlineMode" />
+        [Display(Name = "OnlineMode")]
+        public VRage.Game.MyOnlineModeEnum OnlineMode { get => _settings.OnlineMode; set => SetValue(ref _settings.OnlineMode, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.InventorySizeMultiplier"/>
-        public float InventorySizeMultiplier
-        {
-            get => _settings.InventorySizeMultiplier; set { _settings.InventorySizeMultiplier = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MaxPlayers" />
+        [Display(Name = "Max players")]
+        public System.Int16 MaxPlayers { get => _settings.MaxPlayers; set => SetValue(ref _settings.MaxPlayers, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.RefinerySpeedMultiplier"/>
-        public float RefinerySpeedMultiplier
-        {
-            get => _settings.RefinerySpeedMultiplier; set { _settings.RefinerySpeedMultiplier = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MaxFloatingObjects" />
+        [Display(Name = "Max floating objects")]
+        public System.Int16 MaxFloatingObjects { get => _settings.MaxFloatingObjects; set => SetValue(ref _settings.MaxFloatingObjects, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.AssemblerEfficiencyMultiplier"/>
-        public float AssemblerEfficiencyMultiplier
-        {
-            get => _settings.AssemblerEfficiencyMultiplier; set { _settings.AssemblerEfficiencyMultiplier = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MaxBackupSaves" />
+        [Display(Name = "Max Backup Saves")]
+        public System.Int16 MaxBackupSaves { get => _settings.MaxBackupSaves; set => SetValue(ref _settings.MaxBackupSaves, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.AssemblerSpeedMultiplier"/>
-        public float AssemblerSpeedMultiplier
-        {
-            get => _settings.AssemblerSpeedMultiplier; set { _settings.AssemblerSpeedMultiplier = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MaxGridSize" />
+        [Display(Name = "Max grid size")]
+        public System.Int32 MaxGridSize { get => _settings.MaxGridSize; set => SetValue(ref _settings.MaxGridSize, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.GrinderSpeedMultiplier"/>
-        public float GrinderSpeedMultiplier
-        {
-            get => _settings.GrinderSpeedMultiplier; set { _settings.GrinderSpeedMultiplier = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MaxBlocksPerPlayer" />
+        [Display(Name = "Max blocks per player")]
+        public System.Int32 MaxBlocksPerPlayer { get => _settings.MaxBlocksPerPlayer; set => SetValue(ref _settings.MaxBlocksPerPlayer, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.HackSpeedMultiplier"/>
-        public float HackSpeedMultiplier
-        {
-            get => _settings.HackSpeedMultiplier; set { _settings.HackSpeedMultiplier = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableBlockLimits" />
+        [Display(Name = "Enable block limits")]
+        public System.Boolean EnableBlockLimits { get => _settings.EnableBlockLimits; set => SetValue(ref _settings.EnableBlockLimits, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.WelderSpeedMultiplier"/>
-        public float WelderSpeedMultiplier
-        {
-            get => _settings.WelderSpeedMultiplier; set { _settings.WelderSpeedMultiplier = value; OnPropertyChanged(); }
-        }
-        #endregion
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableRemoteBlockRemoval" />
+        [Display(Name = "Enable remote removal of owned blocks")]
+        public System.Boolean EnableRemoteBlockRemoval { get => _settings.EnableRemoteBlockRemoval; set => SetValue(ref _settings.EnableRemoteBlockRemoval, value); }
 
-        #region NPCs
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnvironmentHostility" />
+        [Display(Name = "Environment hostility")]
+        public VRage.Game.MyEnvironmentHostilityEnum EnvironmentHostility { get => _settings.EnvironmentHostility; set => SetValue(ref _settings.EnvironmentHostility, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableDrones"/>
-        public bool EnableDrones
-        {
-            get => _settings.EnableDrones; set { _settings.EnableDrones = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.AutoHealing" />
+        [Display(Name = "Auto healing")]
+        public System.Boolean AutoHealing { get => _settings.AutoHealing; set => SetValue(ref _settings.AutoHealing, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableEncounters"/>
-        public bool EnableEncounters
-        {
-            get => _settings.EnableEncounters; set { _settings.EnableEncounters = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableCopyPaste" />
+        [Display(Name = "Enable Copy&Paste")]
+        public System.Boolean EnableCopyPaste { get => _settings.EnableCopyPaste; set => SetValue(ref _settings.EnableCopyPaste, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableSpiders"/>
-        public bool EnableSpiders
-        {
-            get => _settings.EnableSpiders; set { _settings.EnableSpiders = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.WeaponsEnabled" />
+        [Display(Name = "Weapons enabled")]
+        public System.Boolean WeaponsEnabled { get => _settings.WeaponsEnabled; set => SetValue(ref _settings.WeaponsEnabled, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableWolfs"/>
-        public bool EnableWolves
-        {
-            get => _settings.EnableWolfs; set { _settings.EnableWolfs = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.ShowPlayerNamesOnHud" />
+        [Display(Name = "Show player names on HUD")]
+        public System.Boolean ShowPlayerNamesOnHud { get => _settings.ShowPlayerNamesOnHud; set => SetValue(ref _settings.ShowPlayerNamesOnHud, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.CargoShipsEnabled"/>
-        public bool EnableCargoShips
-        {
-            get => _settings.CargoShipsEnabled; set { _settings.CargoShipsEnabled = value; OnPropertyChanged(); }
-        }
-        #endregion
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.ThrusterDamage" />
+        [Display(Name = "Thruster damage")]
+        public System.Boolean ThrusterDamage { get => _settings.ThrusterDamage; set => SetValue(ref _settings.ThrusterDamage, value); }
 
-        #region Environment
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.CargoShipsEnabled" />
+        [Display(Name = "Cargo ships enabled")]
+        public System.Boolean CargoShipsEnabled { get => _settings.CargoShipsEnabled; set => SetValue(ref _settings.CargoShipsEnabled, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableSunRotation"/>
-        public bool EnableSunRotation
-        {
-            get => _settings.EnableSunRotation; set { _settings.EnableSunRotation = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableSpectator" />
+        [Display(Name = "Enable spectator")]
+        public System.Boolean EnableSpectator { get => _settings.EnableSpectator; set => SetValue(ref _settings.EnableSpectator, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableOxygenPressurization"/>
-        public bool EnableAirtightness
-        {
-            get => _settings.EnableOxygenPressurization; set { _settings.EnableOxygenPressurization = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.WorldSizeKm" />
+        [Display(Name = "World size in Km")]
+        public System.Int32 WorldSizeKm { get => _settings.WorldSizeKm; set => SetValue(ref _settings.WorldSizeKm, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableOxygen"/>
-        public bool EnableOxygen
-        {
-            get => _settings.EnableOxygen; set { _settings.EnableOxygen = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.RespawnShipDelete" />
+        [Display(Name = "Respawn ship delete")]
+        public System.Boolean RespawnShipDelete { get => _settings.RespawnShipDelete; set => SetValue(ref _settings.RespawnShipDelete, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.DestructibleBlocks"/>
-        public bool EnableDestructibleBlocks
-        {
-            get => _settings.DestructibleBlocks; set { _settings.DestructibleBlocks = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.ResetOwnership" />
+        [Display(Name = "Reset ownership")]
+        public System.Boolean ResetOwnership { get => _settings.ResetOwnership; set => SetValue(ref _settings.ResetOwnership, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableToolShake"/>
-        public bool EnableToolShake
-        {
-            get => _settings.EnableToolShake; set { _settings.EnableToolShake = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.WelderSpeedMultiplier" />
+        [Display(Name = "Welder speed multiplier")]
+        public System.Single WelderSpeedMultiplier { get => _settings.WelderSpeedMultiplier; set => SetValue(ref _settings.WelderSpeedMultiplier, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableVoxelDestruction"/>
-        public bool EnableVoxelDestruction
-        {
-            get => _settings.EnableVoxelDestruction; set { _settings.EnableVoxelDestruction = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.GrinderSpeedMultiplier" />
+        [Display(Name = "Grinder speed multiplier")]
+        public System.Single GrinderSpeedMultiplier { get => _settings.GrinderSpeedMultiplier; set => SetValue(ref _settings.GrinderSpeedMultiplier, value); }
 
-        /// <summary>
-        /// List used to populate the environment hostility combo box.
-        /// </summary>
-        public List<string> EnvironmentHostilityValues { get; } = Enum.GetNames(typeof(MyEnvironmentHostilityEnum)).ToList();
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.RealisticSound" />
+        [Display(Name = "Realistic sound")]
+        public System.Boolean RealisticSound { get => _settings.RealisticSound; set => SetValue(ref _settings.RealisticSound, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnvironmentHostility"/>
-        public string EnvironmentHostility
-        {
-            get => _settings.EnvironmentHostility.ToString(); set { Enum.TryParse(value, true, out _settings.EnvironmentHostility); OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.HackSpeedMultiplier" />
+        [Display(Name = "Hack speed multiplier")]
+        public System.Single HackSpeedMultiplier { get => _settings.HackSpeedMultiplier; set => SetValue(ref _settings.HackSpeedMultiplier, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableFlora"/>
-        public bool EnableFlora
-        {
-            get => _settings.EnableFlora; set { _settings.EnableFlora = value; OnPropertyChanged(); }
-        }
-        #endregion
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.PermanentDeath" />
+        [Display(Name = "Permanent death")]
+        public System.Nullable<System.Boolean> PermanentDeath { get => _settings.PermanentDeath; set => SetValue(ref _settings.PermanentDeath, value); }
 
-        /// <summary>
-        /// List used to populate the game mode combobox.
-        /// </summary>
-        public List<string> GameModeValues { get; } = Enum.GetNames(typeof(MyGameModeEnum)).ToList();
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.AutoSaveInMinutes" />
+        [Display(Name = "AutoSave in minutes")]
+        public System.UInt32 AutoSaveInMinutes { get => _settings.AutoSaveInMinutes; set => SetValue(ref _settings.AutoSaveInMinutes, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.GameMode"/>
-        public string GameMode
-        {
-            get => _settings.GameMode.ToString(); set { Enum.TryParse(value, true, out _settings.GameMode); OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableSaving" />
+        [Display(Name = "Enable saving from menu")]
+        public System.Boolean EnableSaving { get => _settings.EnableSaving; set => SetValue(ref _settings.EnableSaving, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.AutoHealing"/>
-        public bool EnableAutoHealing
-        {
-            get => _settings.AutoHealing; set { _settings.AutoHealing = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableRespawnScreen" />
+        [Display(Name = "Enable respawn screen in the game")]
+        public System.Boolean EnableRespawnScreen { get => _settings.EnableRespawnScreen; set => SetValue(ref _settings.EnableRespawnScreen, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableCopyPaste"/>
-        public bool EnableCopyPaste
-        {
-            get => _settings.EnableCopyPaste; set { _settings.EnableCopyPaste = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.InfiniteAmmo" />
+        [Display(Name = "Enable infinite ammunition in survival")]
+        public System.Boolean InfiniteAmmo { get => _settings.InfiniteAmmo; set => SetValue(ref _settings.InfiniteAmmo, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.ShowPlayerNamesOnHud"/>
-        public bool ShowPlayerNamesOnHud
-        {
-            get => _settings.ShowPlayerNamesOnHud; set { _settings.ShowPlayerNamesOnHud = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableContainerDrops" />
+        [Display(Name = "Enable drop containers")]
+        public System.Boolean EnableContainerDrops { get => _settings.EnableContainerDrops; set => SetValue(ref _settings.EnableContainerDrops, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.Enable3rdPersonView"/>
-        public bool EnableThirdPerson
-        {
-            get => _settings.Enable3rdPersonView; set { _settings.Enable3rdPersonView = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.SpawnShipTimeMultiplier" />
+        [Display(Name = "Spawnship time multiplier")]
+        public System.Single SpawnShipTimeMultiplier { get => _settings.SpawnShipTimeMultiplier; set => SetValue(ref _settings.SpawnShipTimeMultiplier, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableSpectator"/>
-        public bool EnableSpectator
-        {
-            get => _settings.EnableSpectator; set { _settings.EnableSpectator = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.ProceduralDensity" />
+        [Display(Name = "Procedural density")]
+        public System.Single ProceduralDensity { get => _settings.ProceduralDensity; set => SetValue(ref _settings.ProceduralDensity, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.SpawnWithTools"/>
-        public bool SpawnWithTools
-        {
-            get => _settings.SpawnWithTools; set { _settings.SpawnWithTools = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.ProceduralSeed" />
+        [Display(Name = "Procedural seed")]
+        public System.Int32 ProceduralSeed { get => _settings.ProceduralSeed; set => SetValue(ref _settings.ProceduralSeed, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableConvertToStation"/>
-        public bool EnableConvertToStation
-        {
-            get => _settings.EnableConvertToStation; set { _settings.EnableConvertToStation = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.DestructibleBlocks" />
+        [Display(Name = "Destructible blocks")]
+        public System.Boolean DestructibleBlocks { get => _settings.DestructibleBlocks; set => SetValue(ref _settings.DestructibleBlocks, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableJetpack"/>
-        public bool EnableJetpack
-        {
-            get => _settings.EnableJetpack; set { _settings.EnableJetpack = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableIngameScripts" />
+        [Display(Name = "Enable ingame scripts")]
+        public System.Boolean EnableIngameScripts { get => _settings.EnableIngameScripts; set => SetValue(ref _settings.EnableIngameScripts, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableRemoteBlockRemoval"/>
-        public bool EnableRemoteOwnerRemoval
-        {
-            get => _settings.EnableRemoteBlockRemoval; set { _settings.EnableRemoteBlockRemoval = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.ViewDistance" />
+        [Display(Name = "View distance")]
+        public System.Int32 ViewDistance { get => _settings.ViewDistance; set => SetValue(ref _settings.ViewDistance, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableRespawnShips"/>
-        public bool EnableRespawnShips
-        {
-            get => _settings.EnableRespawnShips; set { _settings.EnableRespawnShips = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.FloraDensity" />
+        [Display(Name = "Flora density")]
+        public System.Int32 FloraDensity { get => _settings.FloraDensity; set => SetValue(ref _settings.FloraDensity, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableScripterRole"/>
-        public bool EnableScripterRole
-        {
-            get => _settings.EnableScripterRole; set { _settings.EnableScripterRole = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableToolShake" />
+        [Display(Name = "Enable tool shake")]
+        public System.Boolean EnableToolShake { get => _settings.EnableToolShake; set => SetValue(ref _settings.EnableToolShake, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.RealisticSound"/>
-        public bool EnableRealisticSound
-        {
-            get => _settings.RealisticSound; set { _settings.RealisticSound = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.VoxelGeneratorVersion" />
+        [Display(Name = "Voxel generator version")]
+        public System.Int32 VoxelGeneratorVersion { get => _settings.VoxelGeneratorVersion; set => SetValue(ref _settings.VoxelGeneratorVersion, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.ResetOwnership"/>
-        public bool ResetOwnership
-        {
-            get => _settings.ResetOwnership; set { _settings.ResetOwnership = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableOxygen" />
+        [Display(Name = "Enable oxygen")]
+        public System.Boolean EnableOxygen { get => _settings.EnableOxygen; set => SetValue(ref _settings.EnableOxygen, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.RespawnShipDelete"/>
-        public bool DeleteRespawnShips
-        {
-            get => _settings.RespawnShipDelete; set { _settings.RespawnShipDelete = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableOxygenPressurization" />
+        [Display(Name = "Enable airtightness")]
+        public System.Boolean EnableOxygenPressurization { get => _settings.EnableOxygenPressurization; set => SetValue(ref _settings.EnableOxygenPressurization, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.ThrusterDamage"/>
-        public bool EnableThrusterDamage
-        {
-            get => _settings.ThrusterDamage; set { _settings.ThrusterDamage = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.Enable3rdPersonView" />
+        [Display(Name = "Enable 3rd person view")]
+        public System.Boolean Enable3rdPersonView { get => _settings.Enable3rdPersonView; set => SetValue(ref _settings.Enable3rdPersonView, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.WeaponsEnabled"/>
-        public bool EnableWeapons
-        {
-            get => _settings.WeaponsEnabled; set { _settings.WeaponsEnabled = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableEncounters" />
+        [Display(Name = "Enable encounters")]
+        public System.Boolean EnableEncounters { get => _settings.EnableEncounters; set => SetValue(ref _settings.EnableEncounters, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.EnableIngameScripts"/>
-        public bool EnableIngameScripts
-        {
-            get => _settings.EnableIngameScripts; set { _settings.EnableIngameScripts = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableFlora" />
+        [Display(Name = "Enable flora")]
+        public System.Boolean EnableFlora { get => _settings.EnableFlora; set => SetValue(ref _settings.EnableFlora, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.AutoSaveInMinutes"/>
-        public uint AutosaveInterval
-        {
-            get => _settings.AutoSaveInMinutes; set { _settings.AutoSaveInMinutes = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableConvertToStation" />
+        [Display(Name = "Enable convert to station")]
+        public System.Boolean EnableConvertToStation { get => _settings.EnableConvertToStation; set => SetValue(ref _settings.EnableConvertToStation, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.FloraDensity"/>
-        public int FloraDensity
-        {
-            get => _settings.FloraDensity; set { _settings.FloraDensity = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.StationVoxelSupport" />
+        [Display(Name = "Enable station grid with voxel")]
+        public System.Boolean StationVoxelSupport { get => _settings.StationVoxelSupport; set => SetValue(ref _settings.StationVoxelSupport, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.FloraDensityMultiplier"/>
-        public float FloraDensityMultiplier
-        {
-            get => _settings.FloraDensityMultiplier; set { _settings.FloraDensityMultiplier = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableSunRotation" />
+        [Display(Name = "Enable sun rotation")]
+        public System.Boolean EnableSunRotation { get => _settings.EnableSunRotation; set => SetValue(ref _settings.EnableSunRotation, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.MaxBackupSaves"/>
-        public short MaxBackupSaves
-        {
-            get => _settings.MaxBackupSaves; set { _settings.MaxBackupSaves = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableRespawnShips" />
+        [Display(Name = "Enable respawn ships / carts")]
+        public System.Boolean EnableRespawnShips { get => _settings.EnableRespawnShips; set => SetValue(ref _settings.EnableRespawnShips, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.MaxBlocksPerPlayer"/>
-        public int MaxBlocksPerPlayer
-        {
-            get => _settings.MaxBlocksPerPlayer; set { _settings.MaxBlocksPerPlayer = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.PhysicsIterations" />
+        [Display(Name = "PhysicsIterations")]
+        public System.Int32 PhysicsIterations { get => _settings.PhysicsIterations; set => SetValue(ref _settings.PhysicsIterations, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.MaxFloatingObjects"/>
-        public short MaxFloatingObjects
-        {
-            get => _settings.MaxFloatingObjects; set { _settings.MaxFloatingObjects = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.SunRotationIntervalMinutes" />
+        [Display(Name = "Sun rotation interval")]
+        public System.Single SunRotationIntervalMinutes { get => _settings.SunRotationIntervalMinutes; set => SetValue(ref _settings.SunRotationIntervalMinutes, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.MaxGridSize"/>
-        public int MaxGridSize
-        {
-            get => _settings.MaxGridSize; set { _settings.MaxGridSize = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableJetpack" />
+        [Display(Name = "Enable jetpack")]
+        public System.Boolean EnableJetpack { get => _settings.EnableJetpack; set => SetValue(ref _settings.EnableJetpack, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.MaxPlayers"/>
-        public short MaxPlayers
-        {
-            get => _settings.MaxPlayers; set { _settings.MaxPlayers = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.SpawnWithTools" />
+        [Display(Name = "Spawn with tools")]
+        public System.Boolean SpawnWithTools { get => _settings.SpawnWithTools; set => SetValue(ref _settings.SpawnWithTools, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.PhysicsIterations"/>
-        public int PhysicsIterations
-        {
-            get => _settings.PhysicsIterations; set { _settings.PhysicsIterations = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableVoxelDestruction" />
+        [Display(Name = "Enable voxel destruction")]
+        public System.Boolean EnableVoxelDestruction { get => _settings.EnableVoxelDestruction; set => SetValue(ref _settings.EnableVoxelDestruction, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.SpawnShipTimeMultiplier"/>
-        public float SpawnTimeMultiplier
-        {
-            get => _settings.SpawnShipTimeMultiplier; set { _settings.SpawnShipTimeMultiplier = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableDrones" />
+        [Display(Name = "Enable drones")]
+        public System.Boolean EnableDrones { get => _settings.EnableDrones; set => SetValue(ref _settings.EnableDrones, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.SunRotationIntervalMinutes"/>
-        public float SunRotationInterval
-        {
-            get => _settings.SunRotationIntervalMinutes; set { _settings.SunRotationIntervalMinutes = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableWolfs" />
+        [Display(Name = "Enable wolfs")]
+        public System.Boolean EnableWolfs { get => _settings.EnableWolfs; set => SetValue(ref _settings.EnableWolfs, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.ViewDistance"/>
-        public int ViewDistance
-        {
-            get => _settings.ViewDistance; set { _settings.ViewDistance = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableSpiders" />
+        [Display(Name = "Enable spiders")]
+        public System.Boolean EnableSpiders { get => _settings.EnableSpiders; set => SetValue(ref _settings.EnableSpiders, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.WorldSizeKm"/>
-        public int WorldSize
-        {
-            get => _settings.WorldSizeKm; set { _settings.WorldSizeKm = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.FloraDensityMultiplier" />
+        [Display(Name = "Flora density multiplier")]
+        public System.Single FloraDensityMultiplier { get => _settings.FloraDensityMultiplier; set => SetValue(ref _settings.FloraDensityMultiplier, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.ProceduralDensity"/>
-        public float ProceduralDensity
-        {
-            get => _settings.ProceduralDensity; set { _settings.ProceduralDensity = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.BlockTypeLimits" />
+        [Display(Name = "Block type limits")]
+        public VRage.Serialization.SerializableDictionary<System.String, System.Int16> BlockTypeLimits { get => _settings.BlockTypeLimits; set => SetValue(ref _settings.BlockTypeLimits, value); }
 
-        /// <inheritdoc cref="MyObjectBuilder_SessionSettings.ProceduralSeed"/>
-        public int ProceduralSeed
-        {
-            get => _settings.ProceduralSeed;
-            set { _settings.ProceduralSeed = value; OnPropertyChanged(); }
-        }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableScripterRole" />
+        [Display(Name = "Enable Scripter role")]
+        public System.Boolean EnableScripterRole { get => _settings.EnableScripterRole; set => SetValue(ref _settings.EnableScripterRole, value); }
 
-        /// <summary />
-        public static implicit operator MyObjectBuilder_SessionSettings(SessionSettingsViewModel viewModel)
-        {
-            viewModel._settings.BlockTypeLimits.Dictionary.Clear();
-            foreach (var limit in viewModel.BlockLimits)
-                viewModel._settings.BlockTypeLimits.Dictionary.Add(limit.BlockType, limit.Limit);
-            return viewModel._settings;
-        }
-    }
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MinDropContainerRespawnTime" />
+        [Display(Name = "Min Drop Container Respawn Time")]
+        public System.Int32 MinDropContainerRespawnTime { get => _settings.MinDropContainerRespawnTime; set => SetValue(ref _settings.MinDropContainerRespawnTime, value); }
+
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MaxDropContainerRespawnTime" />
+        [Display(Name = "Max Drop Container Respawn Time")]
+        public System.Int32 MaxDropContainerRespawnTime { get => _settings.MaxDropContainerRespawnTime; set => SetValue(ref _settings.MaxDropContainerRespawnTime, value); }
+
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableTurretsFriendlyFire" />
+        [Display(Name = "Enable Turrets Friendly Fire")]
+        public System.Boolean EnableTurretsFriendlyFire { get => _settings.EnableTurretsFriendlyFire; set => SetValue(ref _settings.EnableTurretsFriendlyFire, value); }
+
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableSubgridDamage" />
+        [Display(Name = "Enable Sub-Grid damage")]
+        public System.Boolean EnableSubgridDamage { get => _settings.EnableSubgridDamage; set => SetValue(ref _settings.EnableSubgridDamage, value); }
+
+
+		public SessionSettingsViewModel(MyObjectBuilder_SessionSettings settings)
+		{
+			_settings = settings;
+		}
+
+		public static implicit operator MyObjectBuilder_SessionSettings(SessionSettingsViewModel viewModel)
+		{
+			return viewModel._settings;
+		}
+	}
 }
