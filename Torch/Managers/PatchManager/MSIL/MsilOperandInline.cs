@@ -426,16 +426,16 @@ namespace Torch.Managers.PatchManager.MSIL
                 {
                     case OperandType.InlineTok:
                         Debug.Assert(Value is MethodBase || Value is Type || Value is FieldInfo,
-                            $"Value {Value?.GetType()} doesn't match operand type");
+                            $"Value {Value?.GetType()} doesn't match operand type for {Instruction.OpCode}");
                         break;
                     case OperandType.InlineType:
-                        Debug.Assert(Value is Type, $"Value {Value?.GetType()} doesn't match operand type");
+                        Debug.Assert(Value is Type, $"Value {Value?.GetType()} doesn't match operand type for {Instruction.OpCode}");
                         break;
                     case OperandType.InlineMethod:
-                        Debug.Assert(Value is MethodBase, $"Value {Value?.GetType()} doesn't match operand type");
+                        Debug.Assert(Value is MethodBase, $"Value {Value?.GetType()} doesn't match operand type for {Instruction.OpCode}");
                         break;
                     case OperandType.InlineField:
-                        Debug.Assert(Value is FieldInfo, $"Value {Value?.GetType()} doesn't match operand type");
+                        Debug.Assert(Value is FieldInfo, $"Value {Value?.GetType()} doesn't match operand type for {Instruction.OpCode}");
                         break;
                     default:
                         throw new InvalidBranchException(

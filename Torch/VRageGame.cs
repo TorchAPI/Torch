@@ -28,6 +28,7 @@ using VRage.FileSystem;
 using VRage.Game;
 using VRage.Game.SessionComponents;
 using VRage.GameServices;
+using VRage.Network;
 using VRage.Plugins;
 using VRage.Steam;
 using VRage.Utils;
@@ -53,6 +54,10 @@ namespace Torch
 
         [ReflectedMethod(Name = "Unload", TypeName = "Sandbox.Game.Audio.MyMusicController, Sandbox.Game")]
         private static readonly Action<object> _musicControllerUnload;
+
+//        [ReflectedGetter(Name = "UpdateLayerDescriptors", Type = typeof(MyReplicationServer))]
+//        private static readonly Func<MyReplicationServer.UpdateLayerDesc[]> _layerSettings;
+
 #pragma warning restore 649
 
         private readonly TorchBase _torch;
@@ -194,6 +199,9 @@ namespace Torch
                 MyRenderProxy.GetRenderProfiler().SetAutocommit(false);
                 MyRenderProxy.GetRenderProfiler().InitMemoryHack("MainEntryPoint");
             }
+
+//            var layers = _layerSettings();
+//            layers[layers.Length - 1].Radius *= 4;
 
             _game = new SpaceEngineersGame(_runArgs);
         }

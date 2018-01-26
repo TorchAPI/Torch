@@ -5,12 +5,15 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using NLog;
 using Sandbox.Engine.Multiplayer;
 using Torch.API;
+using Torch.Managers.PatchManager;
 using Torch.Utils.Reflected;
+using PropertyAttributes = System.Reflection.PropertyAttributes;
 
 namespace Torch.Utils
 {
@@ -53,14 +56,16 @@ namespace Torch.Utils
                     {
 #if DEBUG
                         if (Process(field))
-                            _log?.Trace($"Field {field.DeclaringType?.FullName}#{field.Name} = {field.GetValue(null) ?? "null"}");
+                            _log?.Trace(
+                                $"Field {field.DeclaringType?.FullName}#{field.Name} = {field.GetValue(null) ?? "null"}");
 #else
                         Process(field);
 #endif
                     }
                     catch (Exception e)
                     {
-                        _log?.Error(e.InnerException ?? e, $"Unable to fill {field.DeclaringType?.FullName}#{field.Name}. {(e.InnerException ?? e).Message}");
+                        _log?.Error(e.InnerException ?? e,
+                            $"Unable to fill {field.DeclaringType?.FullName}#{field.Name}. {(e.InnerException ?? e).Message}");
                     }
                 }
             }
@@ -121,6 +126,7 @@ namespace Torch.Utils
                     new Func<ReflectedEventReplacer>(() => new ReflectedEventReplacer(reflectedEventReplacer)));
                 return true;
             }
+
             return false;
         }
 
@@ -142,8 +148,8 @@ namespace Torch.Utils
                     break;
                 case ReflectedPropertyInfoAttribute rpia:
                     info = GetFieldPropRecursive(rpia.Type, rpia.Name,
-                            BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public,
-                            (type, name, bindingFlags) => type.GetProperty(name, bindingFlags));
+                        BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public,
+                        (type, name, bindingFlags) => type.GetProperty(name, bindingFlags));
                     if (info == null)
                         throw new ArgumentException($"Unable to find property {rpia.Type.FullName}#{rpia.Name}");
                     break;
@@ -151,8 +157,8 @@ namespace Torch.Utils
                     if (rmia.Parameters != null)
                     {
                         info = rmia.Type.GetMethod(rmia.Name,
-                             BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                             null, CallingConventions.Any, rmia.Parameters, null);
+                            BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                            null, CallingConventions.Any, rmia.Parameters, null);
                         if (info == null)
                             throw new ArgumentException(
                                 $"Unable to find method {rmia.Type.FullName}#{rmia.Name}({string.Join(", ", rmia.Parameters.Select(x => x.FullName))})");
@@ -160,17 +166,21 @@ namespace Torch.Utils
                     else
                     {
                         info = rmia.Type.GetMethod(rmia.Name,
-                             BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                            BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                         if (info == null)
                             throw new ArgumentException(
                                 $"Unable to find method {rmia.Type.FullName}#{rmia.Name}");
                     }
-                    if (rmia.ReturnType != null && !rmia.ReturnType.IsAssignableFrom(((MethodInfo)info).ReturnType))
-                        throw new ArgumentException($"Method {rmia.Type.FullName}#{rmia.Name} has return type {((MethodInfo)info).ReturnType.FullName}, expected {rmia.ReturnType.FullName}");
+
+                    if (rmia.ReturnType != null && !rmia.ReturnType.IsAssignableFrom(((MethodInfo) info).ReturnType))
+                        throw new ArgumentException(
+                            $"Method {rmia.Type.FullName}#{rmia.Name} has return type {((MethodInfo) info).ReturnType.FullName}, expected {rmia.ReturnType.FullName}");
                     break;
             }
+
             if (info == null)
-                throw new ArgumentException($"Unable to find member info for {attr.GetType().Name}[{attr.Type.FullName}#{attr.Name}");
+                throw new ArgumentException(
+                    $"Unable to find member info for {attr.GetType().Name}[{attr.Type.FullName}#{attr.Name}");
             field.SetValue(null, info);
         }
 
@@ -222,7 +232,7 @@ namespace Torch.Utils
                             argExp[i] = paramExp[i];
                     field.SetValue(null,
                         Expression.Lambda(Expression.Call(methodInstance, argExp), paramExp)
-                                  .Compile());
+                            .Compile());
                 }
                 else
                     field.SetValue(null, Delegate.CreateDelegate(field.FieldType, methodInstance));
@@ -243,12 +253,14 @@ namespace Torch.Utils
                     : (Expression) paramExp[0];
                 field.SetValue(null,
                     Expression.Lambda(Expression.Call(instanceExp, methodInstance, argExp), paramExp)
-                              .Compile());
-                _log.Trace($"Reflecting field {field.DeclaringType?.FullName}#{field.Name} with {methodInstance.DeclaringType?.FullName}#{methodInstance.Name}");
+                        .Compile());
+                _log.Trace(
+                    $"Reflecting field {field.DeclaringType?.FullName}#{field.Name} with {methodInstance.DeclaringType?.FullName}#{methodInstance.Name}");
             }
         }
 
-        internal static T GetFieldPropRecursive<T>(Type baseType, string name, BindingFlags flags, Func<Type, string, BindingFlags, T> getter) where T : class
+        internal static T GetFieldPropRecursive<T>(Type baseType, string name, BindingFlags flags,
+            Func<Type, string, BindingFlags, T> getter) where T : class
         {
             while (baseType != null)
             {
@@ -296,7 +308,8 @@ namespace Torch.Utils
                     trueType = parameters[0].ParameterType;
             }
             else
-                throw new ArgumentException($"Field attribute type {attr.GetType().FullName} is invalid", nameof(field));
+                throw new ArgumentException($"Field attribute type {attr.GetType().FullName} is invalid",
+                    nameof(field));
 
             BindingFlags bindingFlags = (isStatic ? BindingFlags.Static : BindingFlags.Instance) |
                                         BindingFlags.NonPublic |
@@ -307,35 +320,77 @@ namespace Torch.Utils
                 GetFieldPropRecursive(trueType, trueName, bindingFlags, (a, b, c) => a.GetProperty(b, c));
             if (sourceField == null && sourceProperty == null)
                 throw new ArgumentException(
-                    $"Unable to find field or property for {trueName} in {trueType.FullName} or its base types", nameof(field));
+                    $"Unable to find field or property for {trueName} in {trueType.FullName} or its base types",
+                    nameof(field));
+            var sourceType = sourceField?.FieldType ?? sourceProperty.PropertyType;
+            bool isSetter = attr is ReflectedSetterAttribute;
+            if (sourceProperty != null && isSetter && !sourceProperty.CanWrite)
+                throw new InvalidOperationException(
+                    $"Can't create setter for readonly property {trueName} in {trueType.FullName}");
 
-            ParameterExpression[] paramExp = parameters.Select(x => Expression.Parameter(x.ParameterType)).ToArray();
-            Expression instanceExpr = null;
+            if (sourceProperty != null && !isSetter && !sourceProperty.CanRead)
+                throw new InvalidOperationException(
+                    $"Can't create getter for writeonly property {trueName} in {trueType.FullName}");
+
+            var dynMethod = new DynamicMethod((isSetter ? "set" : "get") + "_" + trueType.FullName + "." + trueName,
+                delegateMethod.ReturnType, parameters.Select(x => x.ParameterType).ToArray(),
+                typeof(ReflectedManager).Module, true);
+            ILGenerator il = dynMethod.GetILGenerator();
+
             if (!isStatic)
-            {
-                instanceExpr = trueType == paramExp[0].Type ? (Expression)paramExp[0] : Expression.Convert(paramExp[0], trueType);
-            }
+                EmitThis(il, parameters[0].ParameterType, trueType);
 
-            MemberExpression fieldExp = sourceField != null
-                                            ? Expression.Field(instanceExpr, sourceField)
-                                            : Expression.Property(instanceExpr, sourceProperty);
-            Expression impl;
-            if (attr is ReflectedSetterAttribute)
+            if (isSetter)
             {
-                var valParam = paramExp[isStatic ? 0 : 1];
-                var valExpr = (Expression)valParam;
-                var setType = sourceField?.FieldType ?? sourceProperty.PropertyType;
-                if (valParam.Type != setType)
-                    valExpr = Expression.Convert(valExpr, setType);
-                impl = Expression.Block(Expression.Assign(fieldExp, valExpr), Expression.Default(typeof(void)));
+                int val = isStatic ? 0 : 1;
+                il.Emit(OpCodes.Ldarg, val);
+                EmitCast(il, parameters[val].ParameterType, sourceType);
+                if (sourceProperty != null)
+                    il.Emit(sourceProperty.SetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt,
+                        sourceProperty.SetMethod);
+                else
+                    il.Emit(isStatic ? OpCodes.Stsfld : OpCodes.Stfld, sourceField);
             }
             else
             {
-                impl = fieldExp;
+                if (sourceProperty != null)
+                    il.Emit(sourceProperty.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt,
+                        sourceProperty.GetMethod);
+                else
+                    il.Emit(isStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, sourceField);
+                EmitCast(il, sourceType, delegateMethod.ReturnType);
             }
 
-            field.SetValue(null, Expression.Lambda(impl, paramExp).Compile());
-            _log.Trace($"Reflecting field {field.DeclaringType?.FullName}#{field.Name} with {field.DeclaringType?.FullName}#{field.Name}");
+            il.Emit(OpCodes.Ret);
+
+            field.SetValue(null, dynMethod.CreateDelegate(field.FieldType));
+            _log.Trace(
+                $"Reflecting field {field.DeclaringType?.FullName}#{field.Name} with {field.DeclaringType?.FullName}#{field.Name}");
         }
+
+        #region IL Utils
+
+        private static void EmitThis(ILGenerator il, Type argType, Type privateType)
+        {
+            il.Emit(OpCodes.Ldarg_0);
+            // pointers?
+            EmitCast(il, argType, privateType);
+        }
+
+        private static void EmitCast(ILGenerator il, Type from, Type to)
+        {
+            if (from.IsValueType && !to.IsValueType)
+                il.Emit(OpCodes.Box, from);
+            else if (!from.IsValueType && to.IsValueType)
+            {
+                il.Emit(OpCodes.Unbox, to);
+                return;
+            }
+
+            if (from != to && (from.IsAssignableFrom(to) || to.IsAssignableFrom(from)))
+                il.Emit(OpCodes.Castclass, to);
+        }
+
+        #endregion
     }
 }

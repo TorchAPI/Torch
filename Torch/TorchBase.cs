@@ -231,6 +231,14 @@ namespace Torch
         [MethodImpl(MethodImplOptions.NoInlining)]
         public void InvokeBlocking(Action action, int timeoutMs = -1, [CallerMemberName] string caller = "")
         {
+            if (Thread.CurrentThread == MySandboxGame.Static.UpdateThread)
+            {
+                Debug.Assert(false, $"{nameof(InvokeBlocking)} should not be called on the game thread.");
+                // ReSharper disable once HeuristicUnreachableCode
+                action.Invoke();
+                return;
+            }
+
             // ReSharper disable once ExplicitCallerInfoArgument
             Task task = InvokeAsync(action, caller);
             if (!task.Wait(timeoutMs))
@@ -243,19 +251,6 @@ namespace Torch
         [MethodImpl(MethodImplOptions.NoInlining)]
         public Task<T> InvokeAsync<T>(Func<T> action, [CallerMemberName] string caller = "")
         {
-            if (Thread.CurrentThread == MySandboxGame.Static.UpdateThread)
-            {
-                Debug.Assert(false, $"{nameof(InvokeAsync)} should not be called on the game thread.");
-                // ReSharper disable once HeuristicUnreachableCode
-                try
-                {
-                    return Task.FromResult(action.Invoke());
-                }
-                catch (Exception e)
-                {
-                    return Task.FromException<T>(e);
-                }
-            }
             var ctx = new TaskCompletionSource<T>();
             MySandboxGame.Static.Invoke(() =>
             {
@@ -273,28 +268,12 @@ namespace Torch
                 }
             }, caller);
             return ctx.Task;
-
         }
-
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.NoInlining)]
         public Task InvokeAsync(Action action, [CallerMemberName] string caller = "")
         {
-            if (Thread.CurrentThread == MySandboxGame.Static.UpdateThread)
-            {
-                Debug.Assert(false, $"{nameof(InvokeAsync)} should not be called on the game thread.");
-                // ReSharper disable once HeuristicUnreachableCode
-                try
-                {
-                    action.Invoke();
-                    return Task.CompletedTask;
-                }
-                catch (Exception e)
-                {
-                    return Task.FromException(e);
-                }
-            }
             var ctx = new TaskCompletionSource<bool>();
             MySandboxGame.Static.Invoke(() =>
             {
@@ -353,10 +332,10 @@ namespace Torch
             Log.Info($"Executing assembly: {Assembly.GetEntryAssembly().FullName}");
             Log.Info($"Executing directory: {AppDomain.CurrentDomain.BaseDirectory}");
 
+            Managers.GetManager<PluginManager>().LoadPlugins();
             Game = new VRageGame(this, TweakGameSettings, SteamAppName, SteamAppId, Config.InstancePath, RunArgs);
             if (!Game.WaitFor(VRageGame.GameState.Stopped, TimeSpan.FromMinutes(5)))
                 Log.Warn("Failed to wait for game to be initialized");
-            Managers.GetManager<PluginManager>().LoadPlugins();
             Managers.Attach();
             _init = true;
 

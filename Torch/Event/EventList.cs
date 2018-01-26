@@ -75,11 +75,6 @@ namespace Torch.Event
                         removeCount++;
                         i--;
                     }
-                if (removeCount > 0)
-                {
-                    _dispatchersDirty = true;
-                    _dispatchers.RemoveRange(_dispatchers.Count - removeCount, removeCount);
-                }
                 return removeCount;
             }
             finally
