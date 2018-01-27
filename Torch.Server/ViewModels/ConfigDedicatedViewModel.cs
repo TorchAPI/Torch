@@ -15,7 +15,7 @@ namespace Torch.Server.ViewModels
 {
     public class ConfigDedicatedViewModel : ViewModel
     {
-        private static readonly Logger Log = LogManager.GetLogger("Config");
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         private MyConfigDedicated<MyObjectBuilder_SessionSettings> _config;
         public MyConfigDedicated<MyObjectBuilder_SessionSettings> Model => _config;
 
@@ -33,9 +33,28 @@ namespace Torch.Server.ViewModels
 
         public void Save(string path = null)
         {
+            Validate();
+
             // Never ever
             _config.IgnoreLastSession = true;
             _config.Save(path);
+        }
+
+        public bool Validate()
+        {
+            if (SelectedWorld == null)
+            {
+                Log.Warn($"{nameof(SelectedWorld)} == null");
+                return false;
+            }
+
+            if (LoadWorld == null)
+            {
+                Log.Warn($"{nameof(LoadWorld)} == null");
+                return false;
+            }
+
+            return true;
         }
 
         private SessionSettingsViewModel _sessionSettings;
@@ -49,7 +68,7 @@ namespace Torch.Server.ViewModels
             set
             {
                 SetValue(ref _selectedWorld, value);
-                LoadWorld = _selectedWorld.WorldPath;
+                LoadWorld = _selectedWorld?.WorldPath;
             }
         }
 

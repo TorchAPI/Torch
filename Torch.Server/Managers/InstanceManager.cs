@@ -67,7 +67,10 @@ namespace Torch.Server.Managers
             var worldFolders = Directory.EnumerateDirectories(Path.Combine(Torch.Config.InstancePath, "Saves"));
 
             foreach (var f in worldFolders)
-                DedicatedConfig.Worlds.Add(new WorldViewModel(f));
+            {
+                if (!string.IsNullOrEmpty(f) && File.Exists(Path.Combine(f, "Sandbox.sbc")))
+                    DedicatedConfig.Worlds.Add(new WorldViewModel(f));
+            }
 
             if (DedicatedConfig.Worlds.Count == 0)
             {
@@ -196,6 +199,8 @@ namespace Torch.Server.Managers
 
     public class WorldViewModel : ViewModel
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
         public string FolderName { get; set; }
         public string WorldPath { get; }
         public long WorldSizeKB { get; }
@@ -224,6 +229,7 @@ namespace Torch.Server.Managers
         {
             Task.Run(() =>
             {
+                Log.Info($"Preloading checkpoint {_checkpointPath}");
                 MyObjectBuilderSerializer.DeserializeXML(_checkpointPath, out MyObjectBuilder_Checkpoint checkpoint);
                 Checkpoint = new CheckpointViewModel(checkpoint);
                 OnPropertyChanged(nameof(Checkpoint));
