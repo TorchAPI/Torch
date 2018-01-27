@@ -48,6 +48,8 @@ namespace Torch.Server.Views
                     EditorFrame.Content = new BlockView {DataContext = bvm};
                 if (e.NewValue is VoxelMapViewModel vvm)
                     EditorFrame.Content = new VoxelMapView {DataContext = vvm};
+                if (e.NewValue is CharacterViewModel cvm)
+                    EditorFrame.Content = new CharacterView {DataContext = cvm};
             }
             else
             {

@@ -54,7 +54,7 @@
                         <TextBlock Text="{Binding Grids.Count, StringFormat=Grids ({0})}" />
                     </TreeViewItem.Header>
                 </TreeViewItem>
-                <TreeViewItem ItemsSource="{Binding Characters}">
+                <TreeViewItem ItemsSource="{Binding Characters.Values}">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding Characters.Count, StringFormat=Characters ({0})}" />
                     </TreeViewItem.Header>

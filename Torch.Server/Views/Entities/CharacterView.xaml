@@ -1,0 +1,30 @@
+﻿<UserControl x:Class="Torch.Server.Views.Entities.CharacterView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:entities="clr-namespace:Torch.Server.ViewModels.Entities"
+             xmlns:local="clr-namespace:Torch.Server.Views.Entities"
+             mc:Ignorable="d">
+    <UserControl.DataContext>
+        <entities:CharacterViewModel />
+    </UserControl.DataContext>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Label Content="Name" Width="100"/>
+            <TextBox Text="{Binding Name}" Margin="3"/>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Orientation="Horizontal">
+            <Label Content="Position" Width="100"/>
+            <TextBox Text="{Binding Position}" Margin="3" />
+        </StackPanel>
+        <ScrollViewer Grid.Row="2" Margin="3" VerticalScrollBarVisibility="Auto">
+            <local:EntityControlsView DataContext="{Binding}"/>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

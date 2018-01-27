@@ -245,6 +245,9 @@
     <Compile Include="Views\Converters\ListConverter.cs" />
     <Compile Include="MultiTextWriter.cs" />
     <Compile Include="RichTextBoxWriter.cs" />
+    <Compile Include="Views\Entities\CharacterView.xaml.cs">
+      <DependentUpon>CharacterView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ValidationRules\ListConverterValidationRule.cs" />
     <Compile Include="Views\Entities\EntityControlHost.xaml.cs">
       <DependentUpon>EntityControlHost.xaml</DependentUpon>
@@ -377,6 +380,10 @@
     <Page Include="Views\EntitiesControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Entities\CharacterView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\Entities\GridView.xaml">
       <SubType>Designer</SubType>

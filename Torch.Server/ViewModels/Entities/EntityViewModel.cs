@@ -1,7 +1,9 @@
 ﻿using System.Windows.Controls;
+using Sandbox.Game.World;
 using Torch.API.Managers;
 using Torch.Collections;
 using Torch.Server.Managers;
+using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
@@ -32,10 +34,11 @@ namespace Torch.Server.ViewModels.Entities
 
         public virtual string Name
         {
-            get => Entity?.DisplayName;
+            get => Entity?.DisplayName ?? (Entity != null ? $"eid:{Entity.EntityId}" : "nil");
             set
             {
-                TorchBase.Instance.InvokeBlocking(() => Entity.DisplayName = value);
+                if (Entity!=null)
+                    TorchBase.Instance.InvokeBlocking(() => Entity.DisplayName = value);
                 OnPropertyChanged();
             }
         }
@@ -48,7 +51,8 @@ namespace Torch.Server.ViewModels.Entities
                 if (!Vector3D.TryParse(value, out Vector3D v))
                     return;
 
-                TorchBase.Instance.InvokeBlocking(() => Entity.SetPosition(v));
+                if (Entity != null)
+                    TorchBase.Instance.InvokeBlocking(() => Entity.SetPosition(v));
                 OnPropertyChanged();
             }
         }
