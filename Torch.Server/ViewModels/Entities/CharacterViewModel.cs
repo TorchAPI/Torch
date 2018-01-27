@@ -6,7 +6,12 @@ namespace Torch.Server.ViewModels.Entities
     {
         public CharacterViewModel(MyCharacter character, EntityTreeViewModel tree) : base(character, tree)
         {
-            
+            character.ControllerInfo.ControlAcquired += (x) => { OnPropertyChanged(nameof(Name)); };
+            character.ControllerInfo.ControlReleased += (x) => { OnPropertyChanged(nameof(Name)); };
+        }
+
+        public CharacterViewModel()
+        {
         }
     }
 }
