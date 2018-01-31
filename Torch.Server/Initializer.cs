@@ -86,7 +86,15 @@ quit";
         public void Run()
         {
             _server = new TorchServer(_config);
-            var init = Task.Run(() => _server.Init());
+            var init = Task.Run(() => _server.Init()).ContinueWith(x =>
+            {
+                if (!x.IsFaulted)
+                    return;
+
+                Log.Error("Error initializing server.");
+                foreach (var e in x.Exception.InnerExceptions)
+                    Log.Error(e.InnerException ?? e);
+            });
             if (!_config.NoGui)
             {
                 if (_config.Autostart)

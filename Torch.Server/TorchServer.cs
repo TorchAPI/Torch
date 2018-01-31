@@ -17,6 +17,8 @@ using Sandbox.Game.World;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Session;
+using Torch.Commands;
+using Torch.Server.Commands;
 using Torch.Server.Managers;
 using Torch.Utils;
 using VRage;
@@ -135,6 +137,7 @@ namespace Torch.Server
             base.Stop();
             Log.Info("Server stopped.");
 
+            Config.Save();
             State = ServerState.Stopped;
             IsRunning = false;
             CanRun = true;
@@ -175,6 +178,9 @@ namespace Torch.Server
                 _watchdog?.Dispose();
                 _watchdog = null;
             }
+
+            if (newState == TorchSessionState.Loaded)
+                CurrentSession.Managers.GetManager<CommandManager>().RegisterCommandModule(typeof(WhitelistCommands));
         }
 
         /// <inheritdoc />

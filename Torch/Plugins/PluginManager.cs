@@ -125,7 +125,10 @@ namespace Torch.Managers
                     LoadPluginFromFolder(path);
             }
 
-            _plugins.ForEach(x => x.Value.Init(Torch));
+            foreach (var plugin in _plugins.Values)
+            {
+                plugin.Init(Torch);
+            }
             _log.Info($"Loaded {_plugins.Count} plugins.");
             PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
         }

@@ -152,7 +152,13 @@ namespace Torch.Server.Managers
 
             _log.Info($"Connection attempt by {steamId} from {ip}");
             // TODO implement IP bans
-            if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE && !Torch.CurrentSession.KeenSession.IsUserAdmin(steamId))
+            var config = (TorchConfig)Torch.Config;
+            if (config.EnableWhitelist && !config.Whitelist.Contains(steamId))
+            {
+                _log.Warn($"Rejecting user {steamId} because they are not whitelisted in Torch.cfg.");
+                UserRejected(steamId, JoinResult.NotInGroup);
+            }
+            else if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE && !Torch.CurrentSession.KeenSession.IsUserAdmin(steamId))
             {
                 _log.Warn($"Rejecting user {steamId}, world is set to offline and user is not admin.");
                 UserRejected(steamId, JoinResult.TicketCanceled);
