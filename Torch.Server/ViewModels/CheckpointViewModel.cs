@@ -57,7 +57,7 @@ namespace Torch.Server.ViewModels
 
         public MyObjectBuilder_Toolbar CharacterToolbar { get => _checkpoint.CharacterToolbar; set => SetValue(ref _checkpoint.CharacterToolbar, value); }
 
-        public SerializableDictionaryCompat<long, MyObjectBuilder_Checkpoint.PlayerId, ulong> ControlledEntities { get => _checkpoint.ControlledEntities; set => SetValue(ref _checkpoint.ControlledEntities, value); }
+        public SerializableDictionary<long, MyObjectBuilder_Checkpoint.PlayerId> ControlledEntities { get => _checkpoint.ControlledEntities; set => SetValue(ref _checkpoint.ControlledEntities, value); }
 
         public SessionSettingsViewModel Settings
         {
