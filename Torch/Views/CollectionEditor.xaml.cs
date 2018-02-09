@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,9 +22,31 @@ namespace Torch.Views
     /// </summary>
     public partial class CollectionEditor : Window
     {
+        private static readonly Dictionary<Type, MethodInfo> MethodCache = new Dictionary<Type, MethodInfo>();
+        private static readonly MethodInfo EditMethod;
+
         public CollectionEditor()
         {
             InitializeComponent();
+        }
+
+        static CollectionEditor()
+        {
+            var m = typeof(CollectionEditor).GetMethods();
+            EditMethod = m.First(mt => mt.Name == "Edit" && mt.GetGenericArguments().Length == 1);
+        }
+
+        public void Edit(ICollection collection, string name)
+        {
+            var gt = collection.GetType().GenericTypeArguments[0];
+            MethodInfo gm;
+            if (!MethodCache.TryGetValue(gt, out gm))
+            {
+                gm = EditMethod.MakeGenericMethod(gt);
+                MethodCache.Add(gt, gm);
+            }
+
+            gm.Invoke(this, new object[] {collection, name});
         }
 
         public void Edit<T>(ICollection<T> collection, string name)

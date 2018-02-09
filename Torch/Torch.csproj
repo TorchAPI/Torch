@@ -260,6 +260,9 @@
     <Compile Include="Views\DictionaryEditor.xaml.cs">
       <DependentUpon>DictionaryEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\ObjectCollectionEditor.xaml.cs">
+      <DependentUpon>ObjectCollectionEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\PropertyGrid.xaml.cs">
       <DependentUpon>PropertyGrid.xaml</DependentUpon>
     </Compile>
@@ -283,6 +286,10 @@
     <Page Include="Views\DictionaryEditor.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\ObjectCollectionEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\PropertyGrid.xaml">
       <Generator>MSBuild:Compile</Generator>
