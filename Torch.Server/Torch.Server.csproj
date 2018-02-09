@@ -236,12 +236,8 @@
     <Compile Include="ViewModels\Entities\CharacterViewModel.cs" />
     <Compile Include="ViewModels\ConfigDedicatedViewModel.cs" />
     <Compile Include="ViewModels\Entities\EntityControlViewModel.cs" />
+    <Compile Include="ViewModels\SessionSettingsViewModel.cs" />
     <Compile Include="Views\Converters\DefinitionToIdConverter.cs" />
-    <Compile Include="ViewModels\SessionSettingsViewModel.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>SessionSettingsViewModel.tt</DependentUpon>
-    </Compile>
     <Compile Include="Views\Converters\BooleanAndConverter.cs" />
     <Compile Include="Views\Converters\ListConverter.cs" />
     <Compile Include="MultiTextWriter.cs" />
@@ -428,12 +424,6 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ViewModels\SessionSettingsViewModel.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>SessionSettingsViewModel.cs</LastGenOutput>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">

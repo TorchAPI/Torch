@@ -1,6 +1,4 @@
-﻿// This file is generated automatically! Any changes will be overwritten.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Torch;
@@ -282,6 +280,10 @@ namespace Torch.Server.ViewModels
         /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableSubgridDamage" />
         [Display(Name = "Enable Sub-Grid damage")]
         public System.Boolean EnableSubgridDamage { get => _settings.EnableSubgridDamage; set => SetValue(ref _settings.EnableSubgridDamage, value); }
+
+        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.SyncDistance" />
+        [Display(Name = "Replication distance")]
+        public int SyncDistance { get => _settings.SyncDistance; set => SetValue(ref _settings.SyncDistance, value); }
 
 
 		public SessionSettingsViewModel(MyObjectBuilder_SessionSettings settings)
