@@ -15,6 +15,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using NLog;
+using NLog.Fluent;
 using VRage.Game;
 using VRage.Serialization;
 
@@ -124,6 +126,28 @@ namespace Torch.Views
 
                     valueControl = button;
                 }
+                else if (propertyType.IsGenericType && typeof(ICollection).IsAssignableFrom(propertyType.GetGenericTypeDefinition()))
+                {
+                        var button = new Button
+                                     {
+                                         Content = "Edit Collection"
+                                     };
+                        button.SetBinding(Button.DataContextProperty, $"{property.Name}");
+
+                    var gt = propertyType.GetGenericArguments()[0];
+                    
+                    //TODO: Is this the best option? Probably not
+                    if (gt.IsPrimitive || gt == typeof(string))
+                    {
+                        button.Click += (sender, args) => EditPrimitiveCollection(((Button)sender).DataContext);
+                    }
+                    else
+                    {
+                        button.Click += (sender, args) => EditObjectCollection(((Button)sender).DataContext);
+                    }
+
+                    valueControl = button;
+                }
                 else
                 {
                     valueControl = new TextBox();
@@ -147,6 +171,18 @@ namespace Torch.Views
         {
             var dic = (IDictionary)dict;
             new DictionaryEditorDialog().Edit(dic);
+        }
+
+        private void EditPrimitiveCollection(object collection, string title = "Collection Editor")
+        {
+            var c = (ICollection)collection;
+            new CollectionEditor().Edit(c, title);
+        }
+
+        private void EditObjectCollection(object collection, string title = "Collection Editor")
+        {
+            var c = (ICollection)collection;
+            new ObjectCollectionEditor().Edit(c, title);
         }
 
         private void UpdateFilter(object sender, TextChangedEventArgs e)
