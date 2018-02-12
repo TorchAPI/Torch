@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
@@ -28,6 +29,14 @@ namespace Torch.Views
     public partial class PropertyGrid : UserControl
     {
         private Dictionary<Type, Grid> _viewCache = new Dictionary<Type, Grid>();
+
+        public static readonly DependencyProperty IgnoreDisplayProperty = DependencyProperty.Register("IgnoreDisplay", typeof(bool), typeof(PropertyGrid));
+
+        public bool IgnoreDisplay
+        {
+            get => (bool)base.GetValue(IgnoreDisplayProperty);
+            set => base.SetValue(IgnoreDisplayProperty, value);
+        }
 
         public PropertyGrid()
         {
@@ -59,112 +68,169 @@ namespace Torch.Views
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-            var curRow = 0;
-            foreach (var property in properties.OrderBy(x => x.Name))
+            var categories = new Dictionary<string, List<PropertyInfo>>();
+            var descriptors = new Dictionary<PropertyInfo, DisplayAttribute>(properties.Length);
+
+            foreach (var property in properties)
             {
-                if (property.GetGetMethod() == null)
-                    continue;
+                var a = property.GetCustomAttribute<DisplayAttribute>();
+                if (IgnoreDisplay)
+                    a = null;
+                descriptors[property] = a;
+                string category = a?.GroupName ?? "Misc";
 
+                if (!categories.TryGetValue(category, out List<PropertyInfo> l))
+                {
+                    l = new List<PropertyInfo>();
+                    categories[category] = l;
+                }
+                l.Add(property);
+            }
+
+            var curRow = 0;
+            foreach (var c in categories.OrderBy(x => x.Key))
+            {
                 grid.RowDefinitions.Add(new RowDefinition());
+                var cl = new TextBlock
+                         {
+                             Text = c.Key,
+                             VerticalAlignment = VerticalAlignment.Center
+                         };
+                cl.SetValue(Grid.ColumnProperty, 0);
+                cl.SetValue(Grid.ColumnSpanProperty, 2);
+                cl.SetValue(Grid.RowProperty, curRow);
+                cl.Margin = new Thickness(3);
+                cl.FontWeight = FontWeights.Bold;
+                grid.Children.Add(cl);
+                curRow++;
 
-                var displayName = property.GetCustomAttribute<DisplayAttribute>()?.Name;
-                var propertyType = property.PropertyType;
+                c.Value.Sort((a,b)=> string.Compare((descriptors[a]?.Name ?? a.Name), descriptors[b]?.Name ?? b.Name, StringComparison.Ordinal));
 
-                var text = new TextBlock
+                foreach (var property in c.Value)
                 {
-                    Text = property.Name,
-                    ToolTip = displayName,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-                text.SetValue(Grid.ColumnProperty, 0);
-                text.SetValue(Grid.RowProperty, curRow);
-                text.Margin = new Thickness(3);
-                grid.Children.Add(text);
+                    if (property.GetGetMethod() == null)
+                        continue;
 
-                FrameworkElement valueControl;
-                if (property.GetSetMethod() == null)
-                {
-                    valueControl = new TextBlock();
-                    var binding = new Binding(property.Name)
+                    grid.RowDefinitions.Add(new RowDefinition());
+
+                    var descriptor = descriptors[property];
+                    var displayName = descriptor?.Name;
+                    var propertyType = property.PropertyType;
+
+                    var text = new TextBlock
+                               {
+                                   Text = displayName ?? property.Name,
+                                   ToolTip = displayName,
+                                   VerticalAlignment = VerticalAlignment.Center
+                               };
+                    text.SetValue(Grid.ColumnProperty, 0);
+                    text.SetValue(Grid.RowProperty, curRow);
+                    text.Margin = new Thickness(3);
+                    text.Tag = $"{text.Text}: {descriptor?.Description}";
+                    text.IsMouseDirectlyOverChanged += Text_IsMouseDirectlyOverChanged;
+                    grid.Children.Add(text);
+
+                    FrameworkElement valueControl;
+                    if (property.GetSetMethod() == null)
                     {
-                        Mode = BindingMode.OneWay
-                    };
-                    valueControl.SetBinding(TextBlock.TextProperty, binding);
-                }
-                else if (propertyType == typeof(bool) || propertyType == typeof(bool?))
-                {
-                    valueControl = new CheckBox();
-                    valueControl.SetBinding(CheckBox.IsCheckedProperty, property.Name);
-                }
-                else if (propertyType.IsEnum)
-                {
-                    valueControl = new ComboBox
+                        valueControl = new TextBlock();
+                        var binding = new Binding(property.Name)
+                                      {
+                                          Mode = BindingMode.OneWay
+                                      };
+                        valueControl.SetBinding(TextBlock.TextProperty, binding);
+                    }
+                    else if (propertyType == typeof(bool) || propertyType == typeof(bool?))
                     {
-                        ItemsSource = Enum.GetValues(property.PropertyType)
-                    };
-                    valueControl.SetBinding(ComboBox.SelectedItemProperty, property.Name);
-                }
-                else if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
-                {
-                    var button = new Button
+                        valueControl = new CheckBox();
+                        valueControl.SetBinding(CheckBox.IsCheckedProperty, property.Name);
+                    }
+                    else if (propertyType.IsEnum)
                     {
-                        Content = "Edit Collection"
-                    };
-                    button.SetBinding(Button.DataContextProperty, property.Name);
-                    button.Click += (sender, args) => EditDictionary(((Button)sender).DataContext);
-
-                    valueControl = button;
-                }
-                else if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(SerializableDictionary<,>))
-                {
-                    var button = new Button
+                        valueControl = new ComboBox
+                                       {
+                                           ItemsSource = Enum.GetValues(property.PropertyType)
+                                       };
+                        valueControl.SetBinding(ComboBox.SelectedItemProperty, property.Name);
+                    }
+                    else if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
                     {
-                        Content = "Edit Collection"
-                    };
-                    button.SetBinding(Button.DataContextProperty, $"{property.Name}.Dictionary");
-                    button.Click += (sender, args) => EditDictionary(((Button)sender).DataContext);
-
-                    valueControl = button;
-                }
-                else if (propertyType.IsGenericType && typeof(ICollection).IsAssignableFrom(propertyType.GetGenericTypeDefinition()))
-                {
                         var button = new Button
                                      {
                                          Content = "Edit Collection"
                                      };
-                        button.SetBinding(Button.DataContextProperty, $"{property.Name}");
+                        button.SetBinding(Button.DataContextProperty, property.Name);
+                        button.Click += (sender, args) => EditDictionary(((Button)sender).DataContext);
 
-                    var gt = propertyType.GetGenericArguments()[0];
-                    
-                    //TODO: Is this the best option? Probably not
-                    if (gt.IsPrimitive || gt == typeof(string))
+                        valueControl = button;
+                    }
+                    else if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(SerializableDictionary<,>))
                     {
-                        button.Click += (sender, args) => EditPrimitiveCollection(((Button)sender).DataContext);
+                        var button = new Button
+                                     {
+                                         Content = "Edit Collection"
+                                     };
+                        button.SetBinding(Button.DataContextProperty, $"{property.Name}.Dictionary");
+                        button.Click += (sender, args) => EditDictionary(((Button)sender).DataContext);
+
+                        valueControl = button;
+                    }
+                    else if (propertyType.IsGenericType && typeof(ICollection).IsAssignableFrom(propertyType.GetGenericTypeDefinition()))
+                    {
+                        var button = new Button
+                                     {
+                                         Content = "Edit Collection"
+                                     };
+                        button.SetBinding(Button.DataContextProperty, property.Name);
+
+                        var gt = propertyType.GetGenericArguments()[0];
+
+                        //TODO: Is this the best option? Probably not
+                        if (gt.IsPrimitive || gt == typeof(string))
+                        {
+                            button.Click += (sender, args) => EditPrimitiveCollection(((Button)sender).DataContext);
+                        }
+                        else
+                        {
+                            button.Click += (sender, args) => EditObjectCollection(((Button)sender).DataContext);
+                        }
+
+                        valueControl = button;
+                    }
+                    else if (propertyType.IsPrimitive || propertyType == typeof(string))
+                    {
+                        valueControl = new TextBox();
+                        valueControl.SetBinding(TextBox.TextProperty, property.Name);
                     }
                     else
                     {
-                        button.Click += (sender, args) => EditObjectCollection(((Button)sender).DataContext);
+                        var button = new Button
+                                     {
+                                         Content = "Edit Object"
+                                     };
+                        button.SetBinding(Button.DataContextProperty, property.Name);
+                        button.Click += (sender, args) => EditObject(((Button)sender).DataContext);
+                        valueControl = button;
                     }
 
-                    valueControl = button;
-                }
-                else
-                {
-                    valueControl = new TextBox();
-                    valueControl.SetBinding(TextBox.TextProperty, property.Name);
-                }
+                    valueControl.Margin = new Thickness(3);
+                    valueControl.VerticalAlignment = VerticalAlignment.Center;
+                    valueControl.SetValue(Grid.ColumnProperty, 1);
+                    valueControl.SetValue(Grid.RowProperty, curRow);
+                    valueControl.IsMouseDirectlyOverChanged += Text_IsMouseDirectlyOverChanged;
+                    grid.Children.Add(valueControl);
 
-                valueControl.Margin = new Thickness(3);
-                valueControl.VerticalAlignment = VerticalAlignment.Center;
-                valueControl.SetValue(Grid.ColumnProperty, 1);
-                valueControl.SetValue(Grid.RowProperty, curRow);
-                grid.Children.Add(valueControl);
-
-                curRow++;
+                    curRow++;
+                }
             }
 
             _viewCache.Add(t, grid);
             return grid;
+        }
+
+        private void Text_IsMouseDirectlyOverChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            TbDescription.Text = (sender as FrameworkElement)?.Tag?.ToString() ?? string.Empty;
         }
 
         private void EditDictionary(object dict)
@@ -183,6 +249,11 @@ namespace Torch.Views
         {
             var c = (ICollection)collection;
             new ObjectCollectionEditor().Edit(c, title);
+        }
+
+        private void EditObject(object o, string title = "Edit Object")
+        {
+            new ObjectEditor().Edit(o, title);
         }
 
         private void UpdateFilter(object sender, TextChangedEventArgs e)
