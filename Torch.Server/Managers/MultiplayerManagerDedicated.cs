@@ -29,7 +29,9 @@ namespace Torch.Server.Managers
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
 #pragma warning disable 649
-        [ReflectedGetter(Name = "m_members")] private static Func<MyDedicatedServerBase, List<ulong>> _members;
+        [ReflectedGetter(Name = "m_members")]
+        private static Func<MyDedicatedServerBase, List<ulong>> _members;
+
         [ReflectedGetter(Name = "m_waitingForGroup")]
         private static Func<MyDedicatedServerBase, HashSet<ulong>> _waitingForGroup;
 #pragma warning restore 649
@@ -112,13 +114,17 @@ namespace Torch.Server.Managers
         [ReflectedStaticMethod(Type = typeof(MyGameService), Name = "GetServerAccountType")]
         private static Func<ulong, MyGameServiceAccountType> _getServerAccountType;
 
-        [ReflectedMethod(Name = "UserAccepted")] private static Action<MyDedicatedServerBase, ulong> _userAcceptedImpl;
+        [ReflectedMethod(Name = "UserAccepted")]
+        private static Action<MyDedicatedServerBase, ulong> _userAcceptedImpl;
 
         [ReflectedMethod(Name = "UserRejected")]
         private static Action<MyDedicatedServerBase, ulong, JoinResult> _userRejected;
 
-        [ReflectedMethod(Name = "IsClientBanned")] private static Func<MyMultiplayerBase, ulong, bool> _isClientBanned;
-        [ReflectedMethod(Name = "IsClientKicked")] private static Func<MyMultiplayerBase, ulong, bool> _isClientKicked;
+        [ReflectedMethod(Name = "IsClientBanned")]
+        private static Func<MyMultiplayerBase, ulong, bool> _isClientBanned;
+
+        [ReflectedMethod(Name = "IsClientKicked")]
+        private static Func<MyMultiplayerBase, ulong, bool> _isClientKicked;
 
         [ReflectedMethod(Name = "RaiseClientKicked")]
         private static Action<MyMultiplayerBase, ulong> _raiseClientKicked;
@@ -152,13 +158,14 @@ namespace Torch.Server.Managers
 
             _log.Info($"Connection attempt by {steamId} from {ip}");
             // TODO implement IP bans
-            var config = (TorchConfig)Torch.Config;
+            var config = (TorchConfig) Torch.Config;
             if (config.EnableWhitelist && !config.Whitelist.Contains(steamId))
             {
                 _log.Warn($"Rejecting user {steamId} because they are not whitelisted in Torch.cfg.");
                 UserRejected(steamId, JoinResult.NotInGroup);
             }
-            else if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE && !Torch.CurrentSession.KeenSession.IsUserAdmin(steamId))
+            else if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE &&
+                     !Torch.CurrentSession.KeenSession.IsUserAdmin(steamId))
             {
                 _log.Warn($"Rejecting user {steamId}, world is set to offline and user is not admin.");
                 UserRejected(steamId, JoinResult.TicketCanceled);
@@ -191,14 +198,14 @@ namespace Torch.Server.Managers
                     CommitVerdict(info.SteamID, JoinResult.KickedRecently);
                 else if (info.SteamResponse != JoinResult.OK)
                     CommitVerdict(info.SteamID, info.SteamResponse);
-                else if (MySandboxGame.ConfigDedicated.GroupID == 0uL ||
-                         MySandboxGame.ConfigDedicated.Administrators.Contains(info.SteamID.ToString()) ||
+                else if (MySandboxGame.ConfigDedicated.Administrators.Contains(info.SteamID.ToString()) ||
                          MySandboxGame.ConfigDedicated.Administrators.Contains(_convertSteamIDFrom64(info.SteamID)))
                     CommitVerdict(info.SteamID, JoinResult.OK);
                 else if (MyMultiplayer.Static.MemberLimit > 0 &&
                          MyMultiplayer.Static.MemberCount + 1 > MyMultiplayer.Static.MemberLimit)
                     CommitVerdict(info.SteamID, JoinResult.ServerFull);
-                else if (MySandboxGame.ConfigDedicated.GroupID == info.Group && (info.Member || info.Officer))
+                else if (MySandboxGame.ConfigDedicated.GroupID == 0uL ||
+                         MySandboxGame.ConfigDedicated.GroupID == info.Group && (info.Member || info.Officer))
                     CommitVerdict(info.SteamID, JoinResult.OK);
                 else
                     CommitVerdict(info.SteamID, JoinResult.NotInGroup);
@@ -215,6 +222,7 @@ namespace Torch.Server.Managers
                 }
                 else
                     verdict = task.Result;
+
                 Torch.Invoke(() => { CommitVerdict(info.SteamID, verdict); });
             });
         }
