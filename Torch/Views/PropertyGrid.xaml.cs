@@ -181,7 +181,7 @@ namespace Torch.Views
                                      {
                                          Content = "Edit Collection"
                                      };
-                        button.SetBinding(Button.DataContextProperty, $"{property.Name}");
+                        button.SetBinding(Button.DataContextProperty, property.Name);
 
                         var gt = propertyType.GetGenericArguments()[0];
 
@@ -197,10 +197,20 @@ namespace Torch.Views
 
                         valueControl = button;
                     }
-                    else
+                    else if (propertyType.IsPrimitive || propertyType == typeof(string))
                     {
                         valueControl = new TextBox();
                         valueControl.SetBinding(TextBox.TextProperty, property.Name);
+                    }
+                    else
+                    {
+                        var button = new Button
+                                     {
+                                         Content = "Edit Object"
+                                     };
+                        button.SetBinding(Button.DataContextProperty, property.Name);
+                        button.Click += (sender, args) => EditObject(((Button)sender).DataContext);
+                        valueControl = button;
                     }
 
                     valueControl.Margin = new Thickness(3);
@@ -239,6 +249,11 @@ namespace Torch.Views
         {
             var c = (ICollection)collection;
             new ObjectCollectionEditor().Edit(c, title);
+        }
+
+        private void EditObject(object o, string title = "Edit Object")
+        {
+            new ObjectEditor().Edit(o, title);
         }
 
         private void UpdateFilter(object sender, TextChangedEventArgs e)
