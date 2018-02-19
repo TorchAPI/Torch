@@ -196,19 +196,29 @@ namespace Torch.Server.Managers
                 else if (_isClientKicked(MyMultiplayer.Static, info.SteamID) ||
                          _isClientKicked(MyMultiplayer.Static, info.SteamOwner))
                     CommitVerdict(info.SteamID, JoinResult.KickedRecently);
-                else if (info.SteamResponse != JoinResult.OK)
-                    CommitVerdict(info.SteamID, info.SteamResponse);
-                else if (MySandboxGame.ConfigDedicated.Administrators.Contains(info.SteamID.ToString()) ||
-                         MySandboxGame.ConfigDedicated.Administrators.Contains(_convertSteamIDFrom64(info.SteamID)))
-                    CommitVerdict(info.SteamID, JoinResult.OK);
-                else if (MyMultiplayer.Static.MemberLimit > 0 &&
-                         MyMultiplayer.Static.MemberCount + 1 > MyMultiplayer.Static.MemberLimit)
-                    CommitVerdict(info.SteamID, JoinResult.ServerFull);
-                else if (MySandboxGame.ConfigDedicated.GroupID == 0uL ||
-                         MySandboxGame.ConfigDedicated.GroupID == info.Group && (info.Member || info.Officer))
-                    CommitVerdict(info.SteamID, JoinResult.OK);
+                else if (info.SteamResponse == JoinResult.OK)
+                {
+                    //Admins can bypass member limit
+                    if (MySandboxGame.ConfigDedicated.Administrators.Contains(info.SteamID.ToString()) ||
+                        MySandboxGame.ConfigDedicated.Administrators.Contains(_convertSteamIDFrom64(info.SteamID)))
+                        CommitVerdict(info.SteamID, JoinResult.OK);
+                    //Server counts as a client, so subtract 1 from MemberCount
+                    else if (MyMultiplayer.Static.MemberLimit > 0 &&
+                             MyMultiplayer.Static.MemberCount - 1 >= MyMultiplayer.Static.MemberLimit)
+                        CommitVerdict(info.SteamID, JoinResult.ServerFull);
+                    else if (MySandboxGame.ConfigDedicated.GroupID == 0uL)
+                        CommitVerdict(info.SteamID, JoinResult.OK);
+                    else
+                    {
+                        if (MySandboxGame.ConfigDedicated.GroupID == info.Group && (info.Member || info.Officer))
+                            CommitVerdict(info.SteamID, JoinResult.OK);
+                        else
+                            CommitVerdict(info.SteamID, JoinResult.NotInGroup);
+                    }
+                }
                 else
-                    CommitVerdict(info.SteamID, JoinResult.NotInGroup);
+                    CommitVerdict(info.SteamID, info.SteamResponse);
+                
                 return;
             }
 
