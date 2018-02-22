@@ -54,7 +54,8 @@ namespace Torch.Server.Views
 
         private void OpenFolder_OnClick(object sender, RoutedEventArgs e)
         {
-            Process.Start("explorer.exe", _plugins.PluginDir);
+            if (_plugins?.PluginDir != null)
+                Process.Start(_plugins.PluginDir);
         }
     }
 }

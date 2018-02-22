@@ -27,7 +27,7 @@
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0">
             <Label Content="World:" DockPanel.Dock="Left" />
-            <Button Content="New World" Margin="3" DockPanel.Dock="Right" Click="NewWorld_OnClick" />
+            <Button Content="New World" Margin="3" DockPanel.Dock="Right" Click="NewWorld_OnClick" IsEnabled="false" ToolTip="Feature is not yet complete"/>
             <ComboBox ItemsSource="{Binding Worlds}" SelectedItem="{Binding SelectedWorld}" Margin="3"
                       SelectionChanged="Selector_OnSelectionChanged">
                 <ComboBox.ItemTemplate>
