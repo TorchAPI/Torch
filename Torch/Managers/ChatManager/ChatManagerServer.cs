@@ -26,6 +26,7 @@ namespace Torch.Managers.ChatManager
         private INetworkManager _networkManager;
 
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+        private static readonly Logger _chatLog = LogManager.GetLogger("Chat");
 
         private readonly ChatIntercept _chatIntercept;
 
@@ -93,6 +94,7 @@ namespace Torch.Managers.ChatManager
                 Font = font,
                 Target = Sync.Players.TryGetIdentityId(targetSteamId)
             };
+            _chatLog.Info($"{author} (to {GetMemberName(targetSteamId)}): {message}");
             MyMultiplayerBase.SendScriptedChatMessage(ref scripted);
         }
 
@@ -156,10 +158,16 @@ namespace Torch.Managers.ChatManager
 
         internal void RaiseMessageRecieved(ChatMsg message, ref bool consumed)
         {
-            var torchMsg =
-                new TorchChatMessage(MyMultiplayer.Static?.GetMemberName(message.Author) ?? $"user_{message.Author}",
-                    message.Author, message.Text);
+            var torchMsg = new TorchChatMessage(GetMemberName(message.Author), message.Author, message.Text);
             MessageProcessing?.Invoke(torchMsg, ref consumed);
+
+            if (!consumed)
+                _chatLog.Info($"{torchMsg.Author}: {torchMsg.Message}");
+        }
+
+        public static string GetMemberName(ulong steamId)
+        {
+            return MyMultiplayer.Static?.GetMemberName(steamId) ?? $"user_{steamId}";
         }
 
         internal class ChatIntercept : NetworkHandlerBase, INetworkHandler

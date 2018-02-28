@@ -17,7 +17,6 @@ using Torch.API.Session;
 using Torch.Commands.Permissions;
 using Torch.Managers;
 using VRage.Game.ModAPI;
-using Log = NLog.Fluent.Log;
 
 namespace Torch.Commands
 {
@@ -68,11 +67,12 @@ namespace Torch.Commands
             else
             {
                 Context.Respond(
-                    $"Use the {commandManager.Prefix}longhelp command and check your Comms menu for a full list of commands.");
+                    $"Command not found. Use the {commandManager.Prefix}longhelp command and check your Comms menu for a full list of commands.");
             }
         }
 
         [Command("longhelp", "Get verbose help. Will send a long message, check the Comms tab.")]
+        [Permission(MyPromoteLevel.None)]
         public void LongHelp()
         {
             var commandManager = Context.Torch.CurrentSession?.Managers.GetManager<CommandManager>();
