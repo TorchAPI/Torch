@@ -250,7 +250,6 @@ namespace Torch.Managers
                 using (var stream = File.OpenRead(file))
                 {
                     var data = stream.ReadToEnd();
-#if DEBUG
                     byte[] symbol = null;
                     var symbolPath = Path.Combine(Path.GetDirectoryName(file) ?? ".",
                         Path.GetFileNameWithoutExtension(file) + ".pdb");
@@ -265,9 +264,6 @@ namespace Torch.Managers
                             _log.Warn(e, $"Failed to read debugging symbols from {symbolPath}");
                         }
                     assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
-#else
-                    assemblies.Add(Assembly.Load(data));
-#endif
                 }
             }
 
