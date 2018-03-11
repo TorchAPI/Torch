@@ -293,7 +293,6 @@ namespace Torch.Managers
                     using (var stream = entry.Open())
                     {
                         var data = stream.ReadToEnd((int)entry.Length);
-#if DEBUG
                         byte[] symbol = null;
                         var symbolEntryName = entry.FullName.Substring(0, entry.FullName.Length - "dll".Length) + "pdb";
                         var symbolEntry = zipFile.GetEntry(symbolEntryName);
@@ -308,9 +307,6 @@ namespace Torch.Managers
                                 _log.Warn(e, $"Failed to read debugging symbols from {path}:{symbolEntryName}");
                             }
                         assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
-#else
-                        assemblies.Add(Assembly.Load(data));
-#endif
                     }
                 }
             }
