@@ -8,8 +8,7 @@
              xmlns:system="clr-namespace:System;assembly=mscorlib"
              xmlns:validationRules="clr-namespace:Torch.Server.Views.ValidationRules"
              xmlns:views="clr-namespace:Torch.Views;assembly=Torch"
-             mc:Ignorable="d"
-             Background="White">
+             mc:Ignorable="d">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

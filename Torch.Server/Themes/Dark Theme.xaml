@@ -3,7 +3,7 @@
                     xmlns:local="clr-namespace:Torch.Server.Themes">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/Themes/MetroDark/MetroDark.MSControls.Core.Implicit.xaml" />
-        <ResourceDictionary Source="/Themes/MetroDark/MetroDark.MSControls.Toolkit.Implicit.xaml" />
+
     </ResourceDictionary.MergedDictionaries>
+
 </ResourceDictionary>

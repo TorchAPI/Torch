@@ -20,6 +20,8 @@ namespace Torch.Server.Views
     /// </summary>
     public partial class ThemeControl : UserControl, INotifyPropertyChanged
     {
+        public TorchUI uiSource;
+
         public List<string> Themes
         {
             get => _themes.Keys.ToList();
@@ -36,6 +38,10 @@ namespace Torch.Server.Views
 
             _themes["Dark theme"] = new ResourceDictionary() { Source = new Uri(@"/Themes/Dark Theme.xaml", UriKind.Relative) };
             _themes["Light theme"] = new ResourceDictionary() { Source = new Uri(@"/Themes/Light Theme.xaml", UriKind.Relative) };
+            if (null == System.Windows.Application.Current)
+            {
+                new System.Windows.Application();
+            }
         }
 
         public void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -48,9 +54,8 @@ namespace Torch.Server.Views
 
         public void ChangeTheme(Uri uri)
         {
-
-            Application.Current.Resources.MergedDictionaries.Clear();
-            Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary() { Source = uri });
+            uiSource.Resources.MergedDictionaries.Clear();
+            uiSource.Resources.MergedDictionaries.Add(new ResourceDictionary() { Source = uri });
         }
     }
 }
