@@ -48,6 +48,9 @@ namespace Torch.Server
             Chat.BindServer(server);
             PlayerList.BindServer(server);
             Plugins.BindServer(server);
+
+            Themes.uiSource = this;
+
             LoadConfig((TorchConfig)server.Config);
         }
 

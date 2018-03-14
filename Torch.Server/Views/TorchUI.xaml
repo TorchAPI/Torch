@@ -96,8 +96,8 @@
             <TabItem Header="Plugins">
                 <views:PluginsControl x:Name="Plugins" />
             </TabItem>
-            <TabItem Header="Theme">
-                <views:ThemeControl x:Name="Theme" />
+            <TabItem Header="Themes">
+                <views:ThemeControl x:Name="Themes" />
             </TabItem>
         </TabControl>
     </Grid>
