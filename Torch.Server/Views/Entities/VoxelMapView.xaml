@@ -9,14 +9,23 @@
     <UserControl.DataContext>
         <entities:VoxelMapViewModel/>
     </UserControl.DataContext>
-    <StackPanel>
-        <Label Content="Attached Grids"></Label>
-        <ListView ItemsSource="{Binding AttachedGrids}" Margin="3">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Name}"/>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-    </StackPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Expander Grid.Row="0" Header="Attached Grids">
+            <ListView ItemsSource="{Binding AttachedGrids}" Margin="3">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Expander>
+        
+        <ScrollViewer Grid.Row="1" Margin="3" VerticalScrollBarVisibility="Auto">
+            <local:EntityControlsView DataContext="{Binding}"/>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

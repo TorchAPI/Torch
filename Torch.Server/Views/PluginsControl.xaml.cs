@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using NLog;
 using Torch.API;
+using Torch.API.Managers;
+using Torch.Managers;
 using Torch.Server.ViewModels;
 
 namespace Torch.Server.Views
@@ -24,6 +27,9 @@ namespace Torch.Server.Views
     /// </summary>
     public partial class PluginsControl : UserControl
     {
+        private ITorchServer _server;
+        private PluginManager _plugins;
+
         public PluginsControl()
         {
             InitializeComponent();
@@ -31,8 +37,25 @@ namespace Torch.Server.Views
 
         public void BindServer(ITorchServer server)
         {
-            var pluginManager = new PluginManagerViewModel(server.Plugins);
-            DataContext = pluginManager;
+            _server = server;
+            _server.Initialized += Server_Initialized;
+        }
+
+        private void Server_Initialized(ITorchServer obj)
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                _plugins = _server.Managers.GetManager<PluginManager>();
+                var pluginManager = new PluginManagerViewModel(_plugins);
+                DataContext = pluginManager;
+            });
+
+        }
+
+        private void OpenFolder_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (_plugins?.PluginDir != null)
+                Process.Start(_plugins.PluginDir);
         }
     }
 }

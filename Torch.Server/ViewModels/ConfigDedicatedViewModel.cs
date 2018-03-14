@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using NLog;
 using Sandbox.Engine.Utils;
+using Torch.Collections;
+using Torch.Server.Managers;
 using VRage.Game;
 using VRage.Game.ModAPI;
 
@@ -13,7 +15,7 @@ namespace Torch.Server.ViewModels
 {
     public class ConfigDedicatedViewModel : ViewModel
     {
-        private static readonly Logger Log = LogManager.GetLogger("Config");
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         private MyConfigDedicated<MyObjectBuilder_SessionSettings> _config;
         public MyConfigDedicated<MyObjectBuilder_SessionSettings> Model => _config;
 
@@ -25,111 +27,75 @@ namespace Torch.Server.ViewModels
         public ConfigDedicatedViewModel(MyConfigDedicated<MyObjectBuilder_SessionSettings> configDedicated)
         {
             _config = configDedicated;
+            _config.IgnoreLastSession = true;
             SessionSettings = new SessionSettingsViewModel(_config.SessionSettings);
-            Administrators = string.Join(Environment.NewLine, _config.Administrators);
-            Banned = string.Join(Environment.NewLine, _config.Banned);
-            Mods = string.Join(Environment.NewLine, _config.Mods);
         }
 
         public void Save(string path = null)
         {
-            var newline = new [] {Environment.NewLine};
+            Validate();
 
-            _config.Administrators.Clear();
-            foreach (var admin in Administrators.Split(newline, StringSplitOptions.RemoveEmptyEntries))
-                _config.Administrators.Add(admin);
+            // Never ever
+            _config.IgnoreLastSession = true;
+            _config.Save(path);
+        }
 
-            _config.Banned.Clear();
-            foreach (var banned in Banned.Split(newline, StringSplitOptions.RemoveEmptyEntries))
-                _config.Banned.Add(ulong.Parse(banned));
-
-            _config.Mods.Clear();
-            foreach (var mod in Mods.Split(newline, StringSplitOptions.RemoveEmptyEntries))
+        public bool Validate()
+        {
+            if (SelectedWorld == null)
             {
-                if (ulong.TryParse(mod, out ulong modId))
-                    _config.Mods.Add(modId);
-                else
-                    Log.Warn($"'{mod}' is not a valid mod ID.");
+                Log.Warn($"{nameof(SelectedWorld)} == null");
+                return false;
             }
 
-            _config.Save(path);
+            if (LoadWorld == null)
+            {
+                Log.Warn($"{nameof(LoadWorld)} == null");
+                return false;
+            }
+
+            return true;
         }
 
         private SessionSettingsViewModel _sessionSettings;
         public SessionSettingsViewModel SessionSettings { get => _sessionSettings; set { _sessionSettings = value; OnPropertyChanged(); } }
 
-        public ObservableList<string> WorldPaths { get; } = new ObservableList<string>();
-        private string _administrators;
-        public string Administrators { get => _administrators; set { _administrators = value; OnPropertyChanged(); } }
-        private string _banned;
-        public string Banned { get => _banned; set { _banned = value; OnPropertyChanged(); } }
-        private string _mods;
-        public string Mods { get => _mods; set { _mods = value; OnPropertyChanged(); } }
-
-        public int AsteroidAmount
+        public MtObservableList<WorldViewModel> Worlds { get; } = new MtObservableList<WorldViewModel>();
+        private WorldViewModel _selectedWorld;
+        public WorldViewModel SelectedWorld
         {
-            get { return _config.AsteroidAmount; }
-            set { _config.AsteroidAmount = value; OnPropertyChanged(); }
+            get => _selectedWorld;
+            set
+            {
+                SetValue(ref _selectedWorld, value);
+                LoadWorld = _selectedWorld?.WorldPath;
+            }
         }
 
-        public ulong GroupId
-        {
-            get { return _config.GroupID; }
-            set { _config.GroupID = value; OnPropertyChanged(); }
-        }
+        public List<string> Administrators { get => _config.Administrators; set => SetValue(x => _config.Administrators = x, value); }
 
-        public bool IgnoreLastSession
-        {
-            get { return _config.IgnoreLastSession; }
-            set { _config.IgnoreLastSession = value; OnPropertyChanged(); }
-        }
+        public List<ulong> Banned { get => _config.Banned; set => SetValue(x => _config.Banned = x, value); }
 
-        public string IP
-        {
-            get { return _config.IP; }
-            set { _config.IP = value; OnPropertyChanged(); }
-        }
+        public List<ulong> Mods { get => _config.Mods; set => SetValue(x => _config.Mods = x, value); }
 
-        public int Port
-        {
-            get { return _config.ServerPort; }
-            set { _config.ServerPort = value; OnPropertyChanged(); }
-        }
+        public int AsteroidAmount { get => _config.AsteroidAmount; set => SetValue(x => _config.AsteroidAmount = x, value); }
 
-        public string ServerName
-        {
-            get { return _config.ServerName; }
-            set { _config.ServerName = value; OnPropertyChanged(); }
-        }
+        public ulong GroupId { get => _config.GroupID; set => SetValue(x => _config.GroupID = x, value); }
 
-        public bool PauseGameWhenEmpty
-        {
-            get { return _config.PauseGameWhenEmpty; }
-            set { _config.PauseGameWhenEmpty = value; OnPropertyChanged(); }
-        }
+        public string IP { get => _config.IP; set => SetValue(x => _config.IP = x, value); }
 
-        public string PremadeCheckpointPath
-        {
-            get { return _config.PremadeCheckpointPath; }
-            set { _config.PremadeCheckpointPath = value; OnPropertyChanged(); }
-        }
+        public int Port { get => _config.ServerPort; set => SetValue(x => _config.ServerPort = x, value); }
 
-        public string LoadWorld
-        {
-            get { return _config.LoadWorld; }
-            set { _config.LoadWorld = value; OnPropertyChanged(); }
-        }
+        public string ServerName { get => _config.ServerName; set => SetValue(x => _config.ServerName = x, value); }
 
-        public int SteamPort
-        {
-            get { return _config.SteamPort; }
-            set { _config.SteamPort = value; OnPropertyChanged(); }
-        }
+        public bool PauseGameWhenEmpty { get => _config.PauseGameWhenEmpty; set => SetValue(x => _config.PauseGameWhenEmpty = x, value); }
 
-        public string WorldName
-        {
-            get { return _config.WorldName; }
-            set { _config.WorldName = value; OnPropertyChanged(); }
-        }
+        public string PremadeCheckpointPath { get => _config.PremadeCheckpointPath; set => SetValue(x => _config.PremadeCheckpointPath = x, value); }
+
+        public string LoadWorld { get => _config.LoadWorld; set => SetValue(x => _config.LoadWorld = x, value); }
+
+        public int SteamPort { get => _config.SteamPort; set => SetValue(x => _config.SteamPort = x, value); }
+
+        public string WorldName { get => _config.WorldName; set => SetValue(x => _config.WorldName = x, value); }
     }
 }

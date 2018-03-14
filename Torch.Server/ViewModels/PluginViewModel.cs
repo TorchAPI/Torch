@@ -11,23 +11,17 @@ namespace Torch.Server.ViewModels
 {
     public class PluginViewModel
     {
-        public UserControl Control
-        {
-            get
-            {
-                if (Plugin is IWpfPlugin p)
-                    return p.GetControl();
-
-                return null;
-            }
-        }
-
+        public UserControl Control { get; }
         public string Name { get; }
         public ITorchPlugin Plugin { get; }
 
         public PluginViewModel(ITorchPlugin plugin)
         {
             Plugin = plugin;
+
+            if (Plugin is IWpfPlugin p)
+                Control = p.GetControl();
+
             Name = $"{plugin.Name} ({plugin.Version})";
         }
     }

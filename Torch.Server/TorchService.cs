@@ -14,13 +14,15 @@ namespace Torch.Server
     {
         public const string Name = "Torch (SEDS)";
         private TorchServer _server;
-        private static Logger _log = LogManager.GetLogger("Torch");
+        private Initializer _initializer;
 
         public TorchService()
         {
-            ServiceName = Name;
+            var workingDir = new FileInfo(typeof(TorchService).Assembly.Location).Directory.ToString();
+            Directory.SetCurrentDirectory(workingDir);
+            _initializer = new Initializer(workingDir);
 
-            CanHandlePowerEvent = true;
+            ServiceName = Name;
             CanHandleSessionChangeEvent = false;
             CanPauseAndContinue = false;
             CanStop = true;
@@ -31,17 +33,8 @@ namespace Torch.Server
         {
             base.OnStart(args);
 
-            string configName = args.Length > 0 ? args[0] : "TorchConfig.xml";
-            var options = new TorchConfig("Torch");
-            if (File.Exists(configName))
-                options = TorchConfig.LoadFrom(configName);
-            else
-                options.Save(configName);
-
-            _server = new TorchServer(options);
-            _server.Init();
-            _server.RunArgs = args;
-            Task.Run(() => _server.Start());
+            _initializer.Initialize(args);
+            _initializer.Run();
         }
 
         /// <inheritdoc />
@@ -49,18 +42,6 @@ namespace Torch.Server
         {
             _server.Stop();
             base.OnStop();
-        }
-
-        /// <inheritdoc />
-        protected override void OnShutdown()
-        {
-            base.OnShutdown();
-        }
-
-        /// <inheritdoc />
-        protected override bool OnPowerEvent(PowerBroadcastStatus powerStatus)
-        {
-            return base.OnPowerEvent(powerStatus);
         }
     }
 }

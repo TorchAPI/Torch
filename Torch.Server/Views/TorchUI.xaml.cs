@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -13,14 +10,15 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using NLog;
 using Sandbox;
 using Torch.API;
+using Torch.API.Managers;
 using Torch.Server.Managers;
-using Timer = System.Timers.Timer;
+using MessageBoxResult = System.Windows.MessageBoxResult;
 
 namespace Torch.Server
 {
@@ -36,19 +34,28 @@ namespace Torch.Server
         {
             _config = (TorchConfig)server.Config;
             _server = server;
+            //TODO: data binding for whole server
+            DataContext = server;
             InitializeComponent();
+
+            AttachConsole();
 
             Left = _config.WindowPosition.X;
             Top = _config.WindowPosition.Y;
             Width = _config.WindowSize.X;
             Height = _config.WindowSize.Y;
 
-            //TODO: data binding for whole server
-            DataContext = server;
             Chat.BindServer(server);
             PlayerList.BindServer(server);
             Plugins.BindServer(server);
             LoadConfig((TorchConfig)server.Config);
+        }
+
+        private void AttachConsole()
+        {
+            var doc = LogManager.Configuration.FindTargetByName<FlowDocumentTarget>("wpf")?.Document;
+            ConsoleText.Document = doc ?? new FlowDocument(new Paragraph(new Run("No target!")));
+            ConsoleText.TextChanged += (sender, args) => ConsoleText.ScrollToEnd();
         }
 
         public void LoadConfig(TorchConfig config)
@@ -59,19 +66,21 @@ namespace Torch.Server
             _config = config;
             Dispatcher.Invoke(() =>
             {
-                InstancePathBox.Text = config.InstancePath;
+                //InstancePathBox.Text = config.InstancePath;
             });
         }
 
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
-            _config.Save();
-            new Thread(_server.Start).Start();
+            Task.Run(() => _server.Start());
         }
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
         {
-            _server.Stop();
+            var result = MessageBox.Show("Are you sure you want to stop the server?", "Stop Server", MessageBoxButton.YesNo);
+
+            if (result == MessageBoxResult.Yes)
+                _server.Invoke(() => _server.Stop());
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -80,10 +89,11 @@ namespace Torch.Server
             _config.WindowSize = newSize;
             var newPos = new Point((int)Left, (int)Top);
             _config.WindowPosition = newPos;
-            _config.Save();
 
             if (_server?.State == ServerState.Running)
                 _server.Stop();
+
+            Process.GetCurrentProcess().Kill();
         }
 
         private void BtnRestart_Click(object sender, RoutedEventArgs e)
@@ -99,7 +109,7 @@ namespace Torch.Server
                 return;
 
             _config.InstancePath = name;
-            _server.GetManager<InstanceManager>().LoadInstance(_config.InstancePath);
+            _server.Managers.GetManager<InstanceManager>().LoadInstance(_config.InstancePath);
         }
     }
 }

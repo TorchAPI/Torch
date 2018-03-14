@@ -1,77 +1,123 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Threading;
+using Torch.Utils;
 
-namespace Torch
+namespace Torch.Collections
 {
-    [Obsolete("Use ObservableList<T>.")]
-    public class MTObservableCollection<T> : ObservableCollection<T>
+    /// <summary>
+    /// Multithread safe, observable collection
+    /// </summary>
+    /// <typeparam name="TC">Collection type</typeparam>
+    /// <typeparam name="TV">Value type</typeparam>
+    public abstract class MtObservableCollection<TC, TV> : MtObservableCollectionBase<TV> where TC : class, ICollection<TV>
     {
-        public override event NotifyCollectionChangedEventHandler CollectionChanged;
+        protected readonly TC Backing;
+        protected override ReaderWriterLockSlim Lock { get; }
 
-        protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        protected MtObservableCollection(TC backing)
         {
-            NotifyCollectionChangedEventHandler collectionChanged = CollectionChanged;
-            if (collectionChanged != null)
-                foreach (var del in collectionChanged.GetInvocationList())
+            // recursion so the events can read snapshots.
+            Lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+            Backing = backing;
+        }
+        #region ICollection
+
+        /// <inheritdoc/>
+        public override void Add(TV item)
+        {
+            using (Lock.WriteUsing())
+            {
+                Backing.Add(item);
+                MarkSnapshotsDirty();
+                OnPropertyChanged(nameof(Count));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item,
+                    Backing.Count - 1));
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void Clear()
+        {
+            using (Lock.WriteUsing())
+            {
+                Backing.Clear();
+                MarkSnapshotsDirty();
+                OnPropertyChanged(nameof(Count));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            }
+        }
+
+        /// <inheritdoc/>
+        public override bool Contains(TV item)
+        {
+            using (Lock.ReadUsing())
+                return Backing.Contains(item);
+        }
+
+        /// <inheritdoc/>
+        public override void CopyTo(TV[] array, int arrayIndex)
+        {
+            using (Lock.ReadUsing())
+                Backing.CopyTo(array, arrayIndex);
+        }
+
+        /// <inheritdoc/>
+        public override bool Remove(TV item)
+        {
+            using (Lock.UpgradableReadUsing())
+            {
+                int? oldIndex = (Backing as IList<TV>)?.IndexOf(item);
+                if (oldIndex == -1)
+                    return false;
+                using (Lock.WriteUsing())
                 {
-                    var nh = (NotifyCollectionChangedEventHandler)del;
-                    var dispObj = nh.Target as DispatcherObject;
+                    if (!Backing.Remove(item))
+                        return false;
+                    MarkSnapshotsDirty();
 
-                    var dispatcher = dispObj?.Dispatcher;
-                    if (dispatcher != null && !dispatcher.CheckAccess())
-                    {
-                        dispatcher.BeginInvoke(
-                            (Action)(() => nh.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset))),
-                            DispatcherPriority.DataBind);
-                        continue;
-                    }
-
-                    nh.Invoke(this, e);
+                    OnPropertyChanged(nameof(Count));
+                    OnCollectionChanged(oldIndex.HasValue
+                        ? new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item,
+                            oldIndex.Value)
+                        : new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    return true;
                 }
-        }
-
-        public void Insert<TKey>(T item, Func<T, TKey> selector, IComparer<TKey> comparer)
-        {
-            var key = selector(item);
-            for (var i = 0; i < Count; i++)
-            {
-                var key2 = selector(Items[i]);
-                if (comparer.Compare(key, key2) < 1)
-                    continue;
-
-                Insert(i + 1, item);
-                return;
-            }
-
-            Add(item);
-        }
-
-        public void Sort<TKey>(Func<T, TKey> selector, IComparer<TKey> comparer = null)
-        {
-            List<T> sortedItems;
-            if (comparer != null)
-                sortedItems = Items.OrderBy(selector, comparer).ToList();
-            else
-                sortedItems = Items.OrderBy(selector).ToList();
-
-            Items.Clear();
-            foreach (var item in sortedItems)
-                Add(item);
-        }
-
-        public void RemoveWhere(Func<T, bool> condition)
-        {
-            for (var i = Items.Count - 1; i > 0; i--)
-            {
-                if (condition(Items[i]))
-                    RemoveAt(i);
             }
         }
+
+        /// <inheritdoc/>
+        public override int Count
+        {
+            get
+            {
+                using (Lock.ReadUsing())
+                    return Backing.Count;
+            }
+        }
+
+        /// <inheritdoc/>
+        public override bool IsReadOnly => Backing.IsReadOnly;
+
+        /// <inheritdoc/>
+        public override void CopyTo(Array array, int index)
+        {
+            using (Lock.ReadUsing())
+            {
+                foreach (TV k in Backing)
+                {
+                    array.SetValue(k, index);
+                    index++;
+                }
+            }
+        }
+        #endregion
     }
 }

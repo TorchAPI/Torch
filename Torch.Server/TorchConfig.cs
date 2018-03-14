@@ -8,6 +8,7 @@ using NLog;
 
 namespace Torch.Server
 {
+    // TODO: redesign this gerbage
     public class TorchConfig : CommandLine, ITorchConfig
     {
         private static Logger _log = LogManager.GetLogger("Config");
@@ -58,6 +59,9 @@ namespace Torch.Server
 
         /// <inheritdoc />
         public List<string> Plugins { get; set; } = new List<string>();
+
+        public bool EnableWhitelist { get; set; } = false;
+        public HashSet<ulong> Whitelist { get; set; } = new HashSet<ulong>();
 
         internal Point WindowSize { get; set; } = new Point(800, 600);
         internal Point WindowPosition { get; set; } = new Point();

@@ -27,7 +27,7 @@ namespace Torch.Commands
         private readonly MethodInfo _method;
         private ParameterInfo[] _parameters;
         private int? _requiredParamCount;
-        private static readonly Logger Log = LogManager.GetLogger(nameof(Command));
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         public Command(ITorchPlugin plugin, MethodInfo commandMethod)
         {
@@ -62,7 +62,7 @@ namespace Torch.Commands
             _parameters = commandMethod.GetParameters();
 
             var sb = new StringBuilder();
-            sb.Append($"/{string.Join(" ", Path)} ");
+            sb.Append($"!{string.Join(" ", Path)} ");
             for (var i = 0; i < _parameters.Length; i++)
             {
                 var param = _parameters[i];
@@ -80,7 +80,7 @@ namespace Torch.Commands
             }
 
             _requiredParamCount = _requiredParamCount ?? _parameters.Length;
-            LogManager.GetLogger(nameof(Command)).Debug($"Params: {_parameters.Length} ({_requiredParamCount} required)");
+            Log.Debug($"Params: {_parameters.Length} ({_requiredParamCount} required)");
             SyntaxHelp = sb.ToString();
         }
 
@@ -117,7 +117,7 @@ namespace Torch.Commands
             catch (Exception e)
             {
                 context.Respond(e.Message, "Error", MyFontEnum.Red);
-                Log.Error($"Command '{SyntaxHelp}' from '{Plugin.Name ?? "Torch"}' threw an exception. Args: {string.Join(", ", context.Args)}");
+                Log.Error($"Command '{SyntaxHelp}' from '{Plugin?.Name ?? "Torch"}' threw an exception. Args: {string.Join(", ", context.Args)}");
                 Log.Error(e);
                 return true;
             }

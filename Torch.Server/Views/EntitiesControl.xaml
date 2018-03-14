@@ -3,39 +3,58 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:Torch.Server.Views"
-             xmlns:viewModels="clr-namespace:Torch.Server.ViewModels"
              xmlns:entities="clr-namespace:Torch.Server.ViewModels.Entities"
              xmlns:blocks="clr-namespace:Torch.Server.ViewModels.Blocks"
+             xmlns:converters="clr-namespace:Torch.Server.Views.Converters"
+             xmlns:viewModels="clr-namespace:Torch.Server.ViewModels"
              mc:Ignorable="d">
+    <UserControl.DataContext>
+        <viewModels:EntityTreeViewModel />
+    </UserControl.DataContext>
+    <UserControl.Resources>
+        <converters:DefinitionToIdConverter x:Key="DefinitionConverter" />
+    </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition MinWidth="300" Width="Auto"/>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="5*" />
         </Grid.ColumnDefinitions>
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <TreeView Grid.Row="0" Margin="3" DockPanel.Dock="Top" SelectedItemChanged="TreeView_OnSelectedItemChanged" TreeViewItem.Expanded="TreeViewItem_OnExpanded">
+            <TreeView Grid.Row="0" Margin="3" DockPanel.Dock="Top" SelectedItemChanged="TreeView_OnSelectedItemChanged"
+                      TreeViewItem.Expanded="TreeViewItem_OnExpanded">
                 <TreeView.Resources>
-                    <HierarchicalDataTemplate DataType="{x:Type entities:GridViewModel}" ItemsSource="{Binding Blocks}">
+                    <HierarchicalDataTemplate DataType="{x:Type entities:GridViewModel}"
+                                              ItemsSource="{Binding Path=Blocks}">
                         <TextBlock Text="{Binding DescriptiveName}" />
+                        <HierarchicalDataTemplate.ItemTemplate>
+                            <HierarchicalDataTemplate ItemsSource="{Binding Value.Values}">
+                                <TextBlock>
+                                    <Run Text="{Binding Path=Key, Converter={StaticResource DefinitionConverter}, Mode=OneWay}" />
+                                    <Run Text="{Binding Path=Value.Count, StringFormat=' ({0} blocks)', Mode=OneWay}" />
+                                </TextBlock>
+                                <HierarchicalDataTemplate.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type blocks:BlockViewModel}">
+                                        <TextBlock Text="{Binding Path=Name}" />
+                                    </DataTemplate>
+                                </HierarchicalDataTemplate.ItemTemplate>
+                            </HierarchicalDataTemplate>
+                        </HierarchicalDataTemplate.ItemTemplate>
                     </HierarchicalDataTemplate>
-                    <DataTemplate DataType="{x:Type blocks:BlockViewModel}">
-                        <TextBlock Text="{Binding Path=Name}" />
-                    </DataTemplate>
-                    <HierarchicalDataTemplate DataType="{x:Type entities:VoxelMapViewModel}" ItemsSource="{Binding AttachedGrids}">
-                        <TextBlock Text="{Binding Name}"/>
+                    <HierarchicalDataTemplate DataType="{x:Type entities:VoxelMapViewModel}"
+                                              ItemsSource="{Binding AttachedGrids}">
+                        <TextBlock Text="{Binding Name}" />
                     </HierarchicalDataTemplate>
                 </TreeView.Resources>
-                <TreeViewItem ItemsSource="{Binding Grids}">
+                <TreeViewItem ItemsSource="{Binding Path=Grids.Values}">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding Grids.Count, StringFormat=Grids ({0})}" />
                     </TreeViewItem.Header>
                 </TreeViewItem>
-                <TreeViewItem ItemsSource="{Binding Characters}">
+                <TreeViewItem ItemsSource="{Binding Characters.Values}">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding Characters.Count, StringFormat=Characters ({0})}" />
                     </TreeViewItem.Header>
@@ -45,7 +64,7 @@
                         </DataTemplate>
                     </TreeViewItem.ItemTemplate>
                 </TreeViewItem>
-                <TreeViewItem ItemsSource="{Binding VoxelMaps}">
+                <TreeViewItem ItemsSource="{Binding VoxelMaps.Values}">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding VoxelMaps.Count, StringFormat=Voxel Maps ({0})}" />
                     </TreeViewItem.Header>
@@ -55,7 +74,7 @@
                         </DataTemplate>
                     </TreeViewItem.ItemTemplate>
                 </TreeViewItem>
-                <TreeViewItem ItemsSource="{Binding FloatingObjects}">
+                <TreeViewItem ItemsSource="{Binding FloatingObjects.Values}">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding FloatingObjects.Count, StringFormat=Floating Objects ({0})}" />
                     </TreeViewItem.Header>
@@ -73,5 +92,6 @@
             </StackPanel>
         </Grid>
         <Frame Grid.Column="1" x:Name="EditorFrame" Margin="3" NavigationUIVisibility="Hidden" />
+        <GridSplitter Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" ShowsPreview="True" Width="2" Background="Gray"/>
     </Grid>
 </UserControl>

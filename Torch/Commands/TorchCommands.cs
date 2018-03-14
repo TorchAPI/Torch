@@ -1,10 +1,19 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using Sandbox.ModAPI;
+using SteamSDK;
 using Torch;
+using Torch.API;
+using Torch.API.Managers;
+using Torch.API.Session;
 using Torch.Commands.Permissions;
 using Torch.Managers;
 using VRage.Game.ModAPI;
@@ -13,11 +22,28 @@ namespace Torch.Commands
 {
     public class TorchCommands : CommandModule
     {
+        [Command("whatsmyip")]
+        [Permission(MyPromoteLevel.None)]
+        public void GetIP(ulong steamId = 0)
+        {
+            var state = new P2PSessionState();
+            if (steamId == 0)
+                steamId = Context.Player.SteamUserId;
+            Peer2Peer.GetSessionState(steamId, ref state);
+            var ip = new IPAddress(BitConverter.GetBytes(state.RemoteIP).Reverse().ToArray());
+            Context.Respond($"Your IP is {ip}");
+        }
+
         [Command("help", "Displays help for a command")]
         [Permission(MyPromoteLevel.None)]
         public void Help()
         {
-            var commandManager = ((TorchBase)Context.Torch).Commands;
+            var commandManager = Context.Torch.CurrentSession?.Managers.GetManager<CommandManager>();
+            if (commandManager == null)
+            {
+                Context.Respond("Must have an attached session to list commands");
+                return;
+            }
             commandManager.Commands.GetNode(Context.Args, out CommandTree.CommandNode node);
 
             if (node != null)
@@ -40,14 +66,21 @@ namespace Torch.Commands
             }
             else
             {
-                Context.Respond($"Use the {commandManager.Prefix}longhelp command and check your Comms menu for a full list of commands.");
+                Context.Respond(
+                    $"Command not found. Use the {commandManager.Prefix}longhelp command and check your Comms menu for a full list of commands.");
             }
         }
 
         [Command("longhelp", "Get verbose help. Will send a long message, check the Comms tab.")]
+        [Permission(MyPromoteLevel.None)]
         public void LongHelp()
         {
-            var commandManager = Context.Torch.GetManager<CommandManager>();
+            var commandManager = Context.Torch.CurrentSession?.Managers.GetManager<CommandManager>();
+            if (commandManager == null)
+            {
+                Context.Respond("Must have an attached session to list commands");
+                return;
+            }
             commandManager.Commands.GetNode(Context.Args, out CommandTree.CommandNode node);
 
             if (node != null)
@@ -92,7 +125,8 @@ namespace Torch.Commands
         [Permission(MyPromoteLevel.None)]
         public void Plugins()
         {
-            var plugins = Context.Torch.Plugins.Select(p => p.Name);
+            var plugins = Context.Torch.Managers.GetManager<PluginManager>()?.Plugins.Select(p => p.Value.Name) ??
+                          Enumerable.Empty<string>();
             Context.Respond($"Loaded plugins: {string.Join(", ", plugins)}");
         }
 
@@ -101,19 +135,65 @@ namespace Torch.Commands
         {
             Context.Respond("Stopping server.");
             if (save)
-                Context.Torch.Save(Context.Player?.IdentityId ?? 0).Wait();
-            Context.Torch.Stop();
+                DoSave()?.ContinueWith((a, mod) =>
+                {
+                    ITorchBase torch = (mod as CommandModule)?.Context?.Torch;
+                    Debug.Assert(torch != null);
+                    torch.Stop();
+                }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
+            else
+                Context.Torch.Stop();
         }
 
         [Command("restart", "Restarts the server.")]
-        public void Restart(bool save = true)
+        public void Restart(int countdownSeconds = 10, bool save = true)
         {
-            Context.Respond("Restarting server.");
-            if (save)
-                Context.Torch.Save(Context.Player?.IdentityId ?? 0).Wait();
-            Context.Torch.Restart();
+            Task.Run(() =>
+            {
+                var countdown = RestartCountdown(countdownSeconds, save).GetEnumerator();
+                while (countdown.MoveNext())
+                {
+                    Thread.Sleep(1000);
+                }
+            });
         }
-        
+
+        private IEnumerable RestartCountdown(int countdown, bool save)
+        {
+            for (var i = countdown; i >= 0; i--)
+            {
+                if (i >= 60 && i % 60 == 0)
+                {
+                    Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                        .SendMessageAsSelf($"Restarting server in {i / 60} minute{Pluralize(i / 60)}.");
+                    yield return null;
+                }
+                else if (i > 0)
+                {
+                    if (i < 11)
+                        Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                            .SendMessageAsSelf($"Restarting server in {i} second{Pluralize(i)}.");
+                    yield return null;
+                }
+                else
+                {
+                    if (save)
+                        Context.Torch.Save().ContinueWith(x => Restart());
+                    else
+                        Restart();
+                        
+                    yield break;
+                }
+            }
+
+            void Restart() => Context.Torch.Invoke(() => Context.Torch.Restart());
+        }
+
+        private string Pluralize(int num)
+        {
+            return num == 1 ? "" : "s";
+        }
+
         /// <summary>
         /// Initializes a save of the game.
         /// Caller id defaults to 0 in the case of triggering the chat command from server.
@@ -122,7 +202,45 @@ namespace Torch.Commands
         public void Save()
         {
             Context.Respond("Saving game.");
-            Context.Torch.Save(Context.Player?.IdentityId ?? 0);
+            DoSave();
+        }
+
+        private Task DoSave()
+        {
+            Task<GameSaveResult> task = Context.Torch.Save(60 * 1000, true);
+            if (task == null)
+            {
+                Context.Respond("Save failed, a save is already in progress");
+                return null;
+            }
+            return task.ContinueWith((taskCapture, state) =>
+            {
+                CommandContext context = (state as CommandModule)?.Context;
+                Debug.Assert(context != null);
+                switch (taskCapture.Result)
+                {
+                    case GameSaveResult.Success:
+                        context.Respond("Saved game.");
+                        break;
+                    case GameSaveResult.GameNotReady:
+                        context.Respond("Save failed: Game was not ready.");
+                        break;
+                    case GameSaveResult.TimedOut:
+                        context.Respond("Save failed: Save timed out.");
+                        break;
+                    case GameSaveResult.FailedToTakeSnapshot:
+                        context.Respond("Save failed: unable to take snapshot");
+                        break;
+                    case GameSaveResult.FailedToSaveToDisk:
+                        context.Respond("Save failed: unable to save to disk");
+                        break;
+                    case GameSaveResult.UnknownError:
+                        context.Respond("Save failed: unknown reason");
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
         }
     }
 }

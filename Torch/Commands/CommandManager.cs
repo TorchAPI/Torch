@@ -4,11 +4,13 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using NLog;
+using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
 using Torch.Managers;
+using VRage.Game;
 using VRage.Game.ModAPI;
 using VRage.Network;
 
@@ -19,17 +21,19 @@ namespace Torch.Commands
         public char Prefix { get; set; }
 
         public CommandTree Commands { get; set; } = new CommandTree();
-        private Logger _log = LogManager.GetLogger(nameof(CommandManager));
+        private Logger _log = LogManager.GetCurrentClassLogger();
+        [Dependency]
+        private IChatManagerServer _chatManager;
 
         public CommandManager(ITorchBase torch, char prefix = '!') : base(torch)
         {
             Prefix = prefix;
         }
 
-        public override void Init()
+        public override void Attach()
         {
             RegisterCommandModule(typeof(TorchCommands));
-            Torch.GetManager<ChatManager>().MessageRecieved += HandleCommand;
+            _chatManager.MessageProcessing += HandleCommand;
         }
 
         public bool HasPermission(ulong steamId, Command command)
@@ -63,6 +67,11 @@ namespace Torch.Commands
             }
         }
 
+        public void UnregisterPluginCommands(ITorchPlugin plugin)
+        {
+            // TODO
+        }
+
         public void RegisterPluginCommands(ITorchPlugin plugin)
         {
             var assembly = plugin.GetType().Assembly;
@@ -72,39 +81,39 @@ namespace Torch.Commands
             }
         }
 
-        public string HandleCommandFromServer(string message)
+        public bool HandleCommandFromServer(string message)
         {
             var cmdText = new string(message.Skip(1).ToArray());
             var command = Commands.GetCommand(cmdText, out string argText);
             if (command == null)
-                return null;
+                return false;
             var cmdPath = string.Join(".", command.Path);
 
             var splitArgs = Regex.Matches(argText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
             _log.Trace($"Invoking {cmdPath} for server.");
-            var context = new CommandContext(Torch, command.Plugin, null, argText, splitArgs);
+            var context = new CommandContext(Torch, command.Plugin, Sync.MyId, argText, splitArgs);
             if (command.TryInvoke(context))
                 _log.Info($"Server ran command '{message}'");
             else
                 context.Respond($"Invalid Syntax: {command.SyntaxHelp}");
-
-            return context.Response;
+            return true;
         }
 
-        public void HandleCommand(ChatMsg msg, ref bool sendToOthers)
+        public void HandleCommand(TorchChatMessage msg, ref bool consumed)
         {
-            HandleCommand(msg.Text, msg.Author, ref sendToOthers);
+            if (msg.AuthorSteamId.HasValue)
+                HandleCommand(msg.Message, msg.AuthorSteamId.Value, ref consumed);
         }
 
-        public void HandleCommand(string message, ulong steamId, ref bool sendToOthers, bool serverConsole = false)
+        public void HandleCommand(string message, ulong steamId, ref bool consumed, bool serverConsole = false)
         {
 
             if (message.Length < 1 || message[0] != Prefix)
                 return;
 
-            sendToOthers = false;
+            consumed = true;
 
-            var player = Torch.Multiplayer.GetPlayerBySteamId(steamId);
+            var player = Torch.CurrentSession.Managers.GetManager<IMultiplayerManagerBase>().GetPlayerBySteamId(steamId);
             if (player == null)
             {
                 _log.Error($"Command {message} invoked by nonexistant player");
@@ -121,13 +130,13 @@ namespace Torch.Commands
                 if (!HasPermission(steamId, command))
                 {
                     _log.Info($"{player.DisplayName} tried to use command {cmdPath} without permission");
-                    Torch.Multiplayer.SendMessage($"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", playerId: player.IdentityId);
+                    _chatManager.SendMessageAsOther("Server", $"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", MyFontEnum.Red, steamId);
                     return;
                 }
 
                 var splitArgs = Regex.Matches(argText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
                 _log.Trace($"Invoking {cmdPath} for player {player.DisplayName}");
-                var context = new CommandContext(Torch, command.Plugin, player, argText, splitArgs);
+                var context = new CommandContext(Torch, command.Plugin, steamId, argText, splitArgs);
                 Torch.Invoke(() =>
                 {
                     if (command.TryInvoke(context))

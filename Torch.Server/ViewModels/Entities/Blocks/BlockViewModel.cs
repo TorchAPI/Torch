@@ -8,16 +8,17 @@ using System.Threading.Tasks;
 using Sandbox.Game.Entities.Cube;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces;
+using Torch.Collections;
 using Torch.Server.ViewModels.Entities;
 
 namespace Torch.Server.ViewModels.Blocks
 {
     public class BlockViewModel : EntityViewModel
     {
-        public IMyTerminalBlock Block { get; }
-        public ObservableList<PropertyViewModel> Properties { get; } = new ObservableList<PropertyViewModel>();
+        public IMyTerminalBlock Block => (IMyTerminalBlock) Entity;
+        public MtObservableList<PropertyViewModel> Properties { get; } = new MtObservableList<PropertyViewModel>();
 
-        public string FullName => $"{Block.CubeGrid.CustomName} - {Block.CustomName}";
+        public string FullName => $"{Block?.CubeGrid.CustomName} - {Block?.CustomName}";
 
         public override string Name
         {
@@ -37,7 +38,7 @@ namespace Torch.Server.ViewModels.Blocks
 
         public long BuiltBy
         {
-            get => ((MySlimBlock)Block.SlimBlock).BuiltBy;
+            get => ((MySlimBlock)Block?.SlimBlock)?.BuiltBy ?? 0;
             set
             {
                 TorchBase.Instance.Invoke(() =>
@@ -58,7 +59,6 @@ namespace Torch.Server.ViewModels.Blocks
 
         public BlockViewModel(IMyTerminalBlock block, EntityTreeViewModel tree) : base(block, tree)
         {
-            Block = block;
             if (Block == null)
                 return;
 

@@ -6,6 +6,7 @@ using System.IO.Packaging;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
@@ -18,12 +19,13 @@ namespace Torch.Managers
     /// <summary>
     /// Handles updating of the DS and Torch plugins.
     /// </summary>
-    public class UpdateManager : Manager, IDisposable
+    public class UpdateManager : Manager
     {
         private Timer _updatePollTimer;
         private GitHubClient _gitClient = new GitHubClient(new ProductHeaderValue("Torch"));
         private string _torchDir = new FileInfo(typeof(UpdateManager).Assembly.Location).DirectoryName;
-        private Logger _log = LogManager.GetLogger(nameof(UpdateManager));
+        private Logger _log = LogManager.GetCurrentClassLogger();
+        [Dependency]
         private FilesystemManager _fsManager;
 
         public UpdateManager(ITorchBase torchInstance) : base(torchInstance)
@@ -32,9 +34,8 @@ namespace Torch.Managers
         }
 
         /// <inheritdoc />
-        public override void Init()
+        public override void Attach()
         {
-            _fsManager = Torch.GetManager<FilesystemManager>();
             CheckAndUpdateTorch();
         }
 
@@ -43,7 +44,7 @@ namespace Torch.Managers
             CheckAndUpdateTorch();
         }
 
-        private async Task<Tuple<Version, string>> GetLatestRelease(string owner, string name)
+        private async Task<Tuple<Version, string>> TryGetLatestArchiveUrl(string owner, string name)
         {
             try
             {
@@ -52,61 +53,31 @@ namespace Torch.Managers
                     return new Tuple<Version, string>(new Version(), null);
 
                 var zip = latest.Assets.FirstOrDefault(x => x.Name.Contains(".zip"));
-                return new Tuple<Version, string>(new Version(latest.TagName ?? "0"), zip?.BrowserDownloadUrl);
+                if (zip == null)
+                    _log.Error($"Latest release of {owner}/{name} does not contain a zip archive.");
+                if (!latest.TagName.TryExtractVersion(out Version version))
+                    _log.Error($"Unable to parse version tag for {owner}/{name}");
+                return new Tuple<Version, string>(version, zip?.BrowserDownloadUrl);
             }
             catch (Exception e)
             {
                 _log.Error($"An error occurred getting release information for '{owner}/{name}'");
                 _log.Error(e);
-                return new Tuple<Version, string>(new Version(), null);
-            }
-        }
-
-        public async Task CheckAndUpdatePlugin(PluginManifest manifest)
-        {
-            if (!Torch.Config.GetPluginUpdates)
-                return;
-
-            try
-            {
-                var name = manifest.Repository.Split('/');
-                if (name.Length != 2)
-                {
-                    _log.Error($"'{manifest.Repository}' is not a valid GitHub repository.");
-                    return;
-                }
-
-                var currentVersion = new Version(manifest.Version);
-                var releaseInfo = await GetLatestRelease(name[0], name[1]).ConfigureAwait(false);
-                if (releaseInfo.Item1 > currentVersion)
-                {
-                    _log.Warn($"Updating {manifest.Repository} from version {currentVersion} to version {releaseInfo.Item1}");
-                    var updateName = Path.Combine(_fsManager.TempDirectory, $"{name[0]}_{name[1]}.zip");
-                    var updatePath = Path.Combine(_torchDir, "Plugins");
-                    await new WebClient().DownloadFileTaskAsync(new Uri(releaseInfo.Item2), updateName).ConfigureAwait(false);
-                    UpdateFromZip(updateName, updatePath);
-                    File.Delete(updateName);
-                }
-                else
-                {
-                    _log.Info($"{manifest.Repository} is up to date. ({currentVersion})");
-                }
-            }
-            catch (Exception e)
-            {
-                _log.Error($"An error occured downloading the plugin update for {manifest.Repository}.");
-                _log.Error(e);
+                return default(Tuple<Version, string>);
             }
         }
 
         private async void CheckAndUpdateTorch()
         {
+            // Doesn't work properly or reliably, TODO update when Jenkins is fully configured
+            return;
+
             if (!Torch.Config.GetTorchUpdates)
                 return;
 
             try
             {
-                var releaseInfo = await GetLatestRelease("TorchAPI", "Torch").ConfigureAwait(false);
+                var releaseInfo = await TryGetLatestArchiveUrl("TorchAPI", "Torch").ConfigureAwait(false);
                 if (releaseInfo.Item1 > Torch.TorchVersion)
                 {
                     _log.Warn($"Updating Torch from version {Torch.TorchVersion} to version {releaseInfo.Item1}");
@@ -114,6 +85,7 @@ namespace Torch.Managers
                     new WebClient().DownloadFile(new Uri(releaseInfo.Item2), updateName);
                     UpdateFromZip(updateName, _torchDir);
                     File.Delete(updateName);
+                    _log.Warn($"Torch version {releaseInfo.Item1} has been installed, please restart Torch to finish the process.");
                 }
                 else
                 {
@@ -143,7 +115,7 @@ namespace Torch.Managers
         }
 
         /// <inheritdoc />
-        public void Dispose()
+        public override void Detach()
         {
             _updatePollTimer?.Dispose();
         }

@@ -2,8 +2,6 @@
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{CA50886B-7B22-4CD8-93A0-C06F38D4F77D}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -15,10 +13,27 @@
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
+    <OutputPath>$(SolutionDir)\bin\x64\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -27,7 +42,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\x64\Release\</OutputPath>
+    <OutputPath>$(SolutionDir)\bin\x64\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -35,7 +50,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
-    <DocumentationFile>bin\x64\Release\Torch.Server.xml</DocumentationFile>
+    <DocumentationFile>$(SolutionDir)\bin\x64\Release\Torch.Server.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>Torch.Server.Program</StartupObject>
@@ -63,7 +78,8 @@
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.4.11\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Sandbox.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -101,6 +117,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -124,6 +141,7 @@
     <Reference Include="VRage.Audio, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Audio.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Dedicated, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -180,20 +198,29 @@
       <HintPath>..\GameBinaries\VRage.Scripting.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="VRage.Steam">
+      <HintPath>..\GameBinaries\VRage.Steam.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Managers\InstanceManager.cs" />
-    <Compile Include="NativeMethods.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AssemblyInfo.tt</DependentUpon>
+    <Compile Include="..\Versioning\AssemblyVersion.cs">
+      <Link>Properties\AssemblyVersion.cs</Link>
     </Compile>
-    <Compile Include="Properties\AssemblyInfo1.cs" />
-    <Compile Include="ServerStatistics.cs" />
+    <Compile Include="Commands\WhitelistCommands.cs" />
+    <Compile Include="FlowDocumentTarget.cs" />
+    <Compile Include="ListBoxExtensions.cs" />
+    <Compile Include="Managers\EntityControlManager.cs" />
+    <Compile Include="Managers\MultiplayerManagerDedicated.cs" />
+    <Compile Include="Managers\InstanceManager.cs" />
+    <Compile Include="Managers\MultiplayerManagerDedicatedEventShim.cs" />
+    <Compile Include="NativeMethods.cs" />
+    <Compile Include="Initializer.cs" />
+    <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TorchConfig.cs" />
     <Compile Include="TorchService.cs">
       <SubType>Component</SubType>
@@ -202,11 +229,29 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ViewModels\BlockLimitViewModel.cs" />
+    <Compile Include="ViewModels\CheckpointViewModel.cs" />
     <Compile Include="ViewModels\Entities\Blocks\BlockViewModel.cs" />
     <Compile Include="ViewModels\Entities\Blocks\BlockViewModelGenerator.cs" />
     <Compile Include="ViewModels\Entities\Blocks\PropertyViewModel.cs" />
     <Compile Include="ViewModels\Entities\CharacterViewModel.cs" />
     <Compile Include="ViewModels\ConfigDedicatedViewModel.cs" />
+    <Compile Include="ViewModels\Entities\EntityControlViewModel.cs" />
+    <Compile Include="ViewModels\SessionSettingsViewModel.cs" />
+    <Compile Include="Views\Converters\DefinitionToIdConverter.cs" />
+    <Compile Include="Views\Converters\BooleanAndConverter.cs" />
+    <Compile Include="Views\Converters\ListConverter.cs" />
+    <Compile Include="MultiTextWriter.cs" />
+    <Compile Include="RichTextBoxWriter.cs" />
+    <Compile Include="Views\Entities\CharacterView.xaml.cs">
+      <DependentUpon>CharacterView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ValidationRules\ListConverterValidationRule.cs" />
+    <Compile Include="Views\Entities\EntityControlHost.xaml.cs">
+      <DependentUpon>EntityControlHost.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Entities\EntityControlsView.xaml.cs">
+      <DependentUpon>EntityControlsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\EntityTreeViewModel.cs" />
     <Compile Include="ViewModels\Entities\EntityViewModel.cs" />
     <Compile Include="ViewModels\Entities\FloatingObjectViewModel.cs" />
@@ -214,7 +259,6 @@
     <Compile Include="ViewModels\ILazyLoad.cs" />
     <Compile Include="ViewModels\PluginManagerViewModel.cs" />
     <Compile Include="ViewModels\PluginViewModel.cs" />
-    <Compile Include="ViewModels\SessionSettingsViewModel.cs" />
     <Compile Include="ViewModels\Entities\VoxelMapViewModel.cs" />
     <Compile Include="ViewModels\SteamUserViewModel.cs" />
     <Compile Include="Views\AddWorkshopItemsDialog.xaml.cs">
@@ -245,14 +289,14 @@
     <Compile Include="Views\Entities\VoxelMapView.xaml.cs">
       <DependentUpon>VoxelMapView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\FirstTimeSetup.xaml.cs">
-      <DependentUpon>FirstTimeSetup.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\ModsControl.xaml.cs">
       <DependentUpon>ModsControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\PluginsControl.xaml.cs">
       <DependentUpon>PluginsControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SessionSettingsView.xaml.cs">
+      <DependentUpon>SessionSettingsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\TorchUI.xaml.cs">
       <DependentUpon>TorchUI.xaml</DependentUpon>
@@ -262,6 +306,10 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="TorchServer.cs" />
+    <Compile Include="Views\ValidationRules\NumberValidationRule.cs" />
+    <Compile Include="Views\WorldGeneratorDialog.xaml.cs">
+      <DependentUpon>WorldGeneratorDialog.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\Resources.Designer.cs">
@@ -289,15 +337,23 @@
     <ProjectReference Include="..\Torch.API\Torch.API.csproj">
       <Project>{fba5d932-6254-4a1e-baf4-e229fa94e3c2}</Project>
       <Name>Torch.API</Name>
-      <Private>True</Private>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\Torch\Torch.csproj">
       <Project>{7e01635c-3b67-472e-bcd6-c5539564f214}</Project>
       <Name>Torch</Name>
-      <Private>True</Private>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Views\Entities\EntityControlHost.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Entities\EntityControlsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\AddWorkshopItemsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -322,7 +378,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\Entities\CharacterView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\Entities\GridView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\PluginsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -330,15 +394,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\FirstTimeSetup.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\ModsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\PluginsControl.xaml">
+    <Page Include="Views\Resources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SessionSettingsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -350,6 +414,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\WorldGeneratorDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="torchicon.ico" />
@@ -358,23 +426,20 @@
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Properties\AssemblyInfo.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>AssemblyInfo.cs</LastGenOutput>
-    </Content>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6.1 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\TransformOnBuild.targets" />
   <PropertyGroup>
-    <PostBuildEvent>cd "$(TargetDir)"
-copy "$(SolutionDir)NLog.config" "$(TargetDir)"
-"Torch Server Release.bat"</PostBuildEvent>
+    <PostBuildEvent>copy "$(SolutionDir)NLog.config" "$(TargetDir)"</PostBuildEvent>
   </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

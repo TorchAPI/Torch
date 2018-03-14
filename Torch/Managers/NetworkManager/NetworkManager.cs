@@ -9,6 +9,7 @@ using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
 using Torch.API;
 using Torch.API.Managers;
+using Torch.Utils;
 using VRage;
 using VRage.Library.Collections;
 using VRage.Network;
@@ -17,14 +18,17 @@ namespace Torch.Managers
 {
     public class NetworkManager : Manager, INetworkManager
     {
-        private static Logger _log = LogManager.GetLogger(nameof(NetworkManager));
+        private static Logger _log = LogManager.GetCurrentClassLogger();
 
-        private const string MyTransportLayerField = "TransportLayer";
-        private const string TypeTableField = "m_typeTable";
-        private const string TransportHandlersField = "m_handlers";
-        private MyTypeTable m_typeTable = new MyTypeTable();
-        private HashSet<INetworkHandler> _networkHandlers = new HashSet<INetworkHandler>();
+        private const string _myTransportLayerField = "TransportLayer";
+        private const string _transportHandlersField = "m_handlers";
+        private readonly HashSet<INetworkHandler> _networkHandlers = new HashSet<INetworkHandler>();
         private bool _init;
+
+        [ReflectedGetter(Name = "m_typeTable")]
+        private static Func<MyReplicationLayerBase, MyTypeTable> _typeTableGetter;
+        [ReflectedGetter(Name = "m_methodInfoLookup")]
+        private static Func<MyEventTable, Dictionary<MethodInfo, CallSite>> _methodInfoLookupGetter;
 
         public NetworkManager(ITorchBase torchInstance) : base(torchInstance)
         {
@@ -36,18 +40,14 @@ namespace Torch.Managers
             try
             {
                 var syncLayerType = typeof(MySyncLayer);
-                var transportLayerField = syncLayerType.GetField(MyTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance);
+                var transportLayerField = syncLayerType.GetField(_myTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if (transportLayerField == null)
                     throw new TypeLoadException("Could not find internal type for TransportLayer");
 
                 var transportLayerType = transportLayerField.FieldType;
 
-                var replicationLayerType = typeof(MyReplicationLayerBase);
-                if (!Reflection.HasField(replicationLayerType, TypeTableField))
-                    throw new TypeLoadException("Could not find TypeTable field");
-
-                if (!Reflection.HasField(transportLayerType, TransportHandlersField))
+                if (!Reflection.HasField(transportLayerType, _transportHandlersField))
                     throw new TypeLoadException("Could not find Handlers field");
 
                 return true;
@@ -60,15 +60,9 @@ namespace Torch.Managers
                 throw;
             }
         }
-        /// <summary>
-        /// Loads the network intercept system
-        /// </summary>
-        public override void Init()
-        {
-            Torch.SessionLoaded += OnSessionLoaded;
-        }
-
-        private void OnSessionLoaded()
+        
+        /// <inheritdoc/>
+        public override void Attach()
         {
             if (_init)
                 return;
@@ -78,11 +72,10 @@ namespace Torch.Managers
             if (!ReflectionUnitTest())
                 throw new InvalidOperationException("Reflection unit test failed.");
 
-            m_typeTable = typeof(MyReplicationLayerBase).GetField(TypeTableField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(MyMultiplayer.ReplicationLayer) as MyTypeTable;
             //don't bother with nullchecks here, it was all handled in ReflectionUnitTest
-            var transportType = typeof(MySyncLayer).GetField(MyTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance).FieldType;
-            var transportInstance = typeof(MySyncLayer).GetField(MyTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(MyMultiplayer.Static.SyncLayer);
-            var handlers = (IDictionary)transportType.GetField(TransportHandlersField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(transportInstance);
+            var transportType = typeof(MySyncLayer).GetField(_myTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance).FieldType;
+            var transportInstance = typeof(MySyncLayer).GetField(_myTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(MyMultiplayer.Static.SyncLayer);
+            var handlers = (IDictionary)transportType.GetField(_transportHandlersField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(transportInstance);
             var handlerTypeField = handlers.GetType().GenericTypeArguments[0].GetField("messageId"); //Should be MyTransportLayer.HandlerId
             object id = null;
             foreach (var key in handlers.Keys)
@@ -106,8 +99,14 @@ namespace Torch.Managers
             _log.Debug("Initialized network intercept");
         }
 
+        /// <inheritdoc/>
+        public override void Detach()
+        {
+            // TODO reverse what was done in Attach
+        }
+
         #region Network Intercept
-        
+
         /// <summary>
         /// This is the main body of the network intercept system. When messages come in from clients, they are processed here
         /// before being passed on to the game server.
@@ -132,7 +131,7 @@ namespace Torch.Managers
                 }
                 return;
             }
-            
+
             var stream = new BitStream();
             stream.ResetRead(packet);
 
@@ -146,7 +145,7 @@ namespace Torch.Managers
             object obj;
             if (networkId.IsInvalid) // Static event
             {
-                site = m_typeTable.StaticEventTable.Get(eventId);
+                site = _typeTableGetter.Invoke(MyMultiplayer.ReplicationLayer).StaticEventTable.Get(eventId);
                 obj = null;
             }
             else // Instance event
@@ -156,7 +155,7 @@ namespace Torch.Managers
                 {
                     return;
                 }
-                var typeInfo = m_typeTable.Get(sendAs.GetType());
+                var typeInfo = _typeTableGetter.Invoke(MyMultiplayer.ReplicationLayer).Get(sendAs.GetType());
                 var eventCount = typeInfo.EventTable.Count;
                 if (eventId < eventCount) // Directly
                 {
@@ -166,7 +165,7 @@ namespace Torch.Managers
                 else // Through proxy
                 {
                     obj = ((IMyProxyTarget)sendAs).Target;
-                    typeInfo = m_typeTable.Get(obj.GetType());
+                    typeInfo = _typeTableGetter.Invoke(MyMultiplayer.ReplicationLayer).Get(obj.GetType());
                     site = typeInfo.EventTable.Get(eventId - (uint)eventCount); // Subtract max id of Proxy
                 }
             }
@@ -206,6 +205,8 @@ namespace Torch.Managers
             }
         }
 
+
+        /// <inheritdoc />
         public void RegisterNetworkHandler(INetworkHandler handler)
         {
             var handlerType = handler.GetType().FullName;
@@ -226,6 +227,12 @@ namespace Torch.Managers
             _networkHandlers.Add(handler);
         }
 
+        /// <inheritdoc />
+        public bool UnregisterNetworkHandler(INetworkHandler handler)
+        {
+            return _networkHandlers.Remove(handler);
+        }
+
         public void RegisterNetworkHandlers(params INetworkHandler[] handlers)
         {
             foreach (var handler in handlers)
@@ -236,18 +243,18 @@ namespace Torch.Managers
 
         #region Network Injection
 
-        
+
         /// <summary>
         /// Broadcasts an event to all connected clients
         /// </summary>
         /// <param name="method"></param>
         /// <param name="obj"></param>
         /// <param name="args"></param>
-	    public void RaiseEvent(MethodInfo method, object obj, params object[] args)
+        public void RaiseEvent(MethodInfo method, object obj, params object[] args)
         {
             //default(EndpointId) tells the network to broadcast the message
             RaiseEvent(method, obj, default(EndpointId), args);
-	    }
+        }
 
         /// <summary>
         /// Sends an event to one client by SteamId
@@ -257,9 +264,9 @@ namespace Torch.Managers
         /// <param name="steamId"></param>
         /// <param name="args"></param>
 	    public void RaiseEvent(MethodInfo method, object obj, ulong steamId, params object[] args)
-	    {
-	        RaiseEvent(method, obj, new EndpointId(steamId), args);
-	    }
+        {
+            RaiseEvent(method, obj, new EndpointId(steamId), args);
+        }
 
         /// <summary>
         /// Sends an event to one client
@@ -280,7 +287,7 @@ namespace Torch.Managers
             if (obj != null && owner == null)
                 throw new InvalidCastException("Provided event target is not of type IMyEventOwner!");
 
-            if(!method.HasAttribute<EventAttribute>())
+            if (!method.HasAttribute<EventAttribute>())
                 throw new CustomAttributeFormatException("Provided event target does not have the Event attribute! Replication will not succeed!");
 
             //array to hold arguments to pass into DispatchEvent
@@ -327,10 +334,10 @@ namespace Torch.Managers
         /// <param name="method"></param>
         /// <param name="args"></param>
 	    public void RaiseStaticEvent(MethodInfo method, params object[] args)
-	    {
+        {
             //default(EndpointId) tells the network to broadcast the message
             RaiseStaticEvent(method, default(EndpointId), args);
-	    }
+        }
 
         /// <summary>
         /// Sends a static event to one client by SteamId
@@ -339,9 +346,9 @@ namespace Torch.Managers
         /// <param name="steamId"></param>
         /// <param name="args"></param>
 	    public void RaiseStaticEvent(MethodInfo method, ulong steamId, params object[] args)
-	    {
-	        RaiseEvent(method, null, new EndpointId(steamId), args);
-	    }
+        {
+            RaiseEvent(method, null, new EndpointId(steamId), args);
+        }
 
         /// <summary>
         /// Sends a static event to one client
@@ -355,18 +362,17 @@ namespace Torch.Managers
         }
 
         private CallSite TryGetStaticCallSite(MethodInfo method)
-	    {
-            var methodLookup = (Dictionary<MethodInfo, CallSite>)typeof(MyEventTable).GetField("m_methodInfoLookup", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(m_typeTable.StaticEventTable);
-            if (!methodLookup.TryGetValue(method, out CallSite result))
+        {
+            MyTypeTable typeTable = _typeTableGetter.Invoke(MyMultiplayer.ReplicationLayer);
+            if (!_methodInfoLookupGetter.Invoke(typeTable.StaticEventTable).TryGetValue(method, out CallSite result))
                 throw new MissingMemberException("Provided event target not found!");
             return result;
-	    }
+        }
 
-	    private CallSite TryGetCallSite(MethodInfo method, object arg)
-	    {
-	        var typeInfo = m_typeTable.Get(arg.GetType());
-            var methodLookup = (Dictionary<MethodInfo, CallSite>)typeof(MyEventTable).GetField("m_methodInfoLookup", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(typeInfo.EventTable);
-            if (!methodLookup.TryGetValue(method, out CallSite result))
+        private CallSite TryGetCallSite(MethodInfo method, object arg)
+        {
+            MySynchronizedTypeInfo typeInfo = _typeTableGetter.Invoke(MyMultiplayer.ReplicationLayer).Get(arg.GetType());
+            if (!_methodInfoLookupGetter.Invoke(typeInfo.EventTable).TryGetValue(method, out CallSite result))
                 throw new MissingMemberException("Provided event target not found!");
             return result;
         }
