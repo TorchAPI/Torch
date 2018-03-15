@@ -50,6 +50,7 @@ namespace Torch.Server
             Plugins.BindServer(server);
 
             Themes.uiSource = this;
+            Themes.SetConfig(_config);
 
             LoadConfig((TorchConfig)server.Config);
         }
