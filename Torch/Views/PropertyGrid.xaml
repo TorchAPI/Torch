@@ -20,6 +20,6 @@
             <TextBox Grid.Column="1" Margin="3" TextChanged="UpdateFilter"/>
         </Grid>
         <ScrollViewer Grid.Row="1" x:Name="ScrollViewer"/>
-        <TextBlock x:Name="TbDescription" Grid.Row="2" MinHeight="18" Background="#FFBBB9B9"/>
+        <TextBlock x:Name="TbDescription" Grid.Row="2" MinHeight="18"/>
     </Grid>
 </UserControl>
