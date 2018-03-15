@@ -38,6 +38,7 @@ namespace Torch.Server.Views
 
             _themes["Dark theme"] = new ResourceDictionary() { Source = new Uri(@"/Themes/Dark Theme.xaml", UriKind.Relative) };
             _themes["Light theme"] = new ResourceDictionary() { Source = new Uri(@"/Themes/Light Theme.xaml", UriKind.Relative) };
+            _themes["Animated Dark theme"] = new ResourceDictionary() { Source = new Uri(@"/Themes/Dark Theme Animated.xaml", UriKind.Relative) };
             if (null == System.Windows.Application.Current)
             {
                 new System.Windows.Application();

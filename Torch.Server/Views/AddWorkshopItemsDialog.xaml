@@ -5,9 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Add Workshop Item" Height="200" Width="400">
-    <DockPanel Background="LightGray">
+    <DockPanel>
         <Label DockPanel.Dock="Top" Content="Add each workshop URL or ID on its own line." HorizontalAlignment="Center"/>
         <Button DockPanel.Dock="Bottom" Content="Done" Margin="5,0,5,5" Click="Done_Clicked"/>
-        <TextBox x:Name="urlBlock" Margin="5,0,5,5" Background="White" AcceptsReturn="True"/>
+        <TextBox x:Name="urlBlock" Margin="5,0,5,5" AcceptsReturn="True"/>
     </DockPanel>
 </Window>

@@ -30,7 +30,7 @@
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="1" Margin="5,5,5,5" Orientation="Horizontal">
             <Button x:Name="BtnStart" Content="Start" Height="24" Width="75" Margin="5,0,5,0"
-                    HorizontalAlignment="Left" Click="BtnStart_Click" Background="LightGreen">
+                    HorizontalAlignment="Left" Click="BtnStart_Click">
                 <Button.IsEnabled>
                     <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                         <Binding ElementName="MainWindow" Path="DataContext.CanRun"/>
@@ -39,7 +39,7 @@
                 </Button.IsEnabled>
             </Button>
             <Button x:Name="BtnStop" Content="Stop" Height="24" Width="75" Margin="5,0,5,0" HorizontalAlignment="Left"
-                    Click="BtnStop_Click" IsEnabled="{Binding IsRunning}" Background="IndianRed"/>
+                    Click="BtnStop_Click" IsEnabled="{Binding IsRunning}"/>
             <Label>
                 <Label.Content>
                     <TextBlock Text="{Binding State, StringFormat=Status: {0}}"></TextBlock>
