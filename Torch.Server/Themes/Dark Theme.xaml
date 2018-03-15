@@ -79,4 +79,8 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style TargetType="Hyperlink" x:Name="LegalshtuffLink">
+        <Setter Property="NavigateUri" Value="https://github.com/MahApps/MahApps.Metro/blob/develop/LICENSE" />
+    </Style>
 </ResourceDictionary>

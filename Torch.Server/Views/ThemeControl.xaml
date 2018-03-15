@@ -21,5 +21,11 @@
                       SelectionChanged="Selector_OnSelectionChanged">
             </ComboBox>
         </DockPanel>
+
+        <TextBlock Width="Auto" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Name="LegalshtuffBlock">
+            <Hyperlink  Name="LegalshtuffLink" RequestNavigate="Hyperlink_RequestNavigate">
+                Theme License
+            </Hyperlink>
+        </TextBlock>
     </Grid>
 </UserControl>

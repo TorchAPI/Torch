@@ -65,6 +65,9 @@ namespace Torch.Server
 
         internal Point WindowSize { get; set; } = new Point(800, 600);
         internal Point WindowPosition { get; set; } = new Point();
+
+        public string LastUsedTheme { get; set; } = "Torch Theme";
+
         [XmlIgnore]
         private string _path;
 
