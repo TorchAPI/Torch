@@ -26,7 +26,7 @@
         </StackPanel>
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <Label Content="EntityID" Width="100"/>
-            <TextBox Text="{Binding Id}" Margin="3" />
+            <TextBox Text="{Binding Id, Mode=OneWay}" Margin="3" />
         </StackPanel>
         <ScrollViewer Grid.Row="3" Margin="3" VerticalScrollBarVisibility="Auto">
             <local:EntityControlsView DataContext="{Binding}"/>
