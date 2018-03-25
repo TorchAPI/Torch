@@ -49,10 +49,10 @@ namespace Torch.Server
             PlayerList.BindServer(server);
             Plugins.BindServer(server);
 
+            LoadConfig((TorchConfig)server.Config);
+
             Themes.uiSource = this;
             Themes.SetConfig(_config);
-
-            LoadConfig((TorchConfig)server.Config);
         }
 
         private void AttachConsole()
