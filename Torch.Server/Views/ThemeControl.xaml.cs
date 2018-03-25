@@ -46,11 +46,6 @@ namespace Torch.Server.Views
             _themes["Light theme animated"] = new ResourceDictionary() { Source = new Uri(@"/Themes/Light Theme Animated.xaml", UriKind.Relative) };
 
             _themes["Torch Theme"] = new ResourceDictionary() { Source = new Uri(@"/Views/Resources.xaml", UriKind.Relative) };
-
-            if (null == System.Windows.Application.Current)
-            {
-                new System.Windows.Application();
-            }
         }
 
         public void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -61,7 +56,11 @@ namespace Torch.Server.Views
             ChangeTheme(_themes[boxText].Source);
 
             if (_torchConfig != null)
+            {
                 _torchConfig.LastUsedTheme = boxText;
+                _torchConfig.Save();
+            }
+               
         }
 
         public void ChangeTheme(Uri uri)
