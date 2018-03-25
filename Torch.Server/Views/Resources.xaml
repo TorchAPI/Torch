@@ -16,12 +16,7 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-
-    <Style TargetType="TextBlock" x:Name="LegalshtuffBlock">
-        <Setter Property="Visibility" Value="Hidden"/>
-    </Style>
- 
     <converters:ListConverter x:Key="ListConverterString" Type="system:String"/>
     <converters:ListConverter x:Key="ListConverterUInt64" Type="system:UInt64"/>
     <converters:BooleanAndConverter x:Key="BooleanAndConverter"/>
-</ResourceDictionary> 
+</ResourceDictionary>
