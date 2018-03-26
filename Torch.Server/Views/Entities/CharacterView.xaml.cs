@@ -23,6 +23,15 @@ namespace Torch.Server.Views.Entities
         public CharacterView()
         {
             InitializeComponent();
+
+            ThemeControl.UpdateWeirdViews += UpdateResourceDict;
+            UpdateResourceDict(ThemeControl.currentTheme);
+        }
+
+        public void UpdateResourceDict(ResourceDictionary dictionary)
+        {
+            this.Resources.MergedDictionaries.Clear();
+            this.Resources.MergedDictionaries.Add(dictionary);
         }
     }
 }

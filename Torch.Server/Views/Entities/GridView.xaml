@@ -6,6 +6,7 @@
              xmlns:entities="clr-namespace:Torch.Server.ViewModels.Entities"
              xmlns:local="clr-namespace:Torch.Server.Views.Entities"
              mc:Ignorable="d">
+
     <UserControl.DataContext>
         <entities:GridViewModel />
     </UserControl.DataContext>
