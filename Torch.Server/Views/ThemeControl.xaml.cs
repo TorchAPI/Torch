@@ -22,6 +22,9 @@ namespace Torch.Server.Views
     /// </summary>
     public partial class ThemeControl : UserControl, INotifyPropertyChanged
     {
+        public static Action<ResourceDictionary> UpdateWeirdViews;
+        public static ResourceDictionary currentTheme;
+
         public TorchUI uiSource;
         private TorchConfig _torchConfig;
 
@@ -66,7 +69,10 @@ namespace Torch.Server.Views
         public void ChangeTheme(Uri uri)
         {
             uiSource.Resources.MergedDictionaries.Clear();
-            uiSource.Resources.MergedDictionaries.Add(new ResourceDictionary() { Source = uri });
+            var resource = new ResourceDictionary() { Source = uri };
+            uiSource.Resources.MergedDictionaries.Add(resource);
+            UpdateWeirdViews?.Invoke(resource);
+            currentTheme = resource;
         }
 
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)

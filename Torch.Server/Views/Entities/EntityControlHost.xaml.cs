@@ -17,6 +17,15 @@ namespace Torch.Server.Views.Entities
         {
             InitializeComponent();
             DataContextChanged += OnDataContextChanged;
+
+            ThemeControl.UpdateWeirdViews += UpdateResourceDict;
+            UpdateResourceDict(ThemeControl.currentTheme);
+        }
+
+        public void UpdateResourceDict(ResourceDictionary dictionary)
+        {
+            this.Resources.MergedDictionaries.Clear();
+            this.Resources.MergedDictionaries.Add(dictionary);
         }
 
         private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)

@@ -28,6 +28,15 @@ namespace Torch.Server.Views.Blocks
         public BlockView()
         {
             InitializeComponent();
+
+            ThemeControl.UpdateWeirdViews += UpdateResourceDict;
+            UpdateResourceDict(ThemeControl.currentTheme);
+        }
+
+        public void UpdateResourceDict(ResourceDictionary dictionary)
+        {
+            this.Resources.MergedDictionaries.Clear();
+            this.Resources.MergedDictionaries.Add(dictionary);
         }
 
         /*
