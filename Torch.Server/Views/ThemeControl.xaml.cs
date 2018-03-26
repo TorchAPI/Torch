@@ -22,9 +22,12 @@ namespace Torch.Server.Views
     /// </summary>
     public partial class ThemeControl : UserControl, INotifyPropertyChanged
     {
+        // Action other views can subscribe to to update their views if they dont inherit the style from the window for some reason.
         public static Action<ResourceDictionary> UpdateWeirdViews;
-        public static ResourceDictionary currentTheme;
+        // Current theme other views can set their theme to when they first spawn
+        public static ResourceDictionary currentTheme = new ResourceDictionary() { Source = new Uri(@"/Views/Resources.xaml", UriKind.Relative) };
 
+        // The current torch window and config.
         public TorchUI uiSource;
         private TorchConfig _torchConfig;
 
