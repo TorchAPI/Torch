@@ -121,8 +121,7 @@ namespace Torch.Server
             _hasRun = true;
             Log.Info("Starting server.");
             MySandboxGame.ConfigDedicated = DedicatedInstance.DedicatedConfig.Model;
-
-            DedicatedInstance.SaveConfig();
+            
             _uptime = Stopwatch.StartNew();
             base.Start();
         }
@@ -136,7 +135,6 @@ namespace Torch.Server
             base.Stop();
             Log.Info("Server stopped.");
 
-            Config.Save();
             State = ServerState.Stopped;
             IsRunning = false;
             CanRun = true;

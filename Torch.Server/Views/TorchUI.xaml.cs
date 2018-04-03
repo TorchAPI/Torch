@@ -72,6 +72,7 @@ namespace Torch.Server
 
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
+            _server.DedicatedInstance.SaveConfig();
             Task.Run(() => _server.Start());
         }
 

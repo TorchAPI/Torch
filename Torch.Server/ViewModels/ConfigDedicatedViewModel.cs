@@ -35,6 +35,7 @@ namespace Torch.Server.ViewModels
         {
             Validate();
 
+            _config.SessionSettings = _sessionSettings;
             // Never ever
             _config.IgnoreLastSession = true;
             _config.Save(path);
