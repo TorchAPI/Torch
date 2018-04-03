@@ -56,7 +56,6 @@ namespace Torch.Server
             sessionManager.AddFactory(x => new MultiplayerManagerDedicated(this));
         }
 
-        //public MyConfigDedicated<MyObjectBuilder_SessionSettings> DedicatedConfig { get; set; }
         /// <inheritdoc />
         public float SimulationRatio { get => _simRatio; set => SetValue(ref _simRatio, value); }
 

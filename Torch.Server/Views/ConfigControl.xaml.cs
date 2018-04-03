@@ -93,9 +93,9 @@ namespace Torch.Server.Views
             _instanceManager.SaveConfig();
         }
 
-        private void NewWorld_OnClick(object sender, RoutedEventArgs e)
+        private void ImportConfig_OnClick(object sender, RoutedEventArgs e)
         {
-            new WorldGeneratorDialog(_instanceManager).ShowDialog();
+            _instanceManager.ImportSelectedWorldConfig();
         }
 
         private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

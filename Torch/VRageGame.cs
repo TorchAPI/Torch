@@ -232,8 +232,7 @@ namespace Torch
 
             if (MySandboxGame.FatalErrorDuringInit)
             {
-                _log.Warn("Failed to start sandbox game: fatal error during init");
-                return;
+                throw new InvalidOperationException("Failed to start sandbox game: fatal error during init");
             }
             try
             {

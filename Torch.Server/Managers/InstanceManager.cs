@@ -86,15 +86,18 @@ namespace Torch.Server.Managers
         public void SelectWorld(string worldPath, bool modsOnly = true)
         {
             DedicatedConfig.LoadWorld = worldPath;
-            DedicatedConfig.SelectedWorld = DedicatedConfig.Worlds.FirstOrDefault(x => x.WorldPath == worldPath);
-            ImportWorldConfig(modsOnly);
+            DedicatedConfig.SelectedWorld = DedicatedConfig.Worlds.First(x => x.WorldPath == worldPath);
         }
 
         public void SelectWorld(WorldViewModel world, bool modsOnly = true)
         {
             DedicatedConfig.LoadWorld = world.WorldPath;
             DedicatedConfig.SelectedWorld = world;
-            ImportWorldConfig(world, modsOnly);
+        }
+
+        public void ImportSelectedWorldConfig()
+        {
+            ImportWorldConfig(DedicatedConfig.SelectedWorld, false);
         }
 
         private void ImportWorldConfig(WorldViewModel world, bool modsOnly = true)
@@ -103,7 +106,7 @@ namespace Torch.Server.Managers
             foreach (var mod in world.Checkpoint.Mods)
                 sb.AppendLine(mod.PublishedFileId.ToString());
 
-            DedicatedConfig.Mods = world.Checkpoint.Mods.Select(x => x.PublishedFileId).ToList(); //sb.ToString();
+            DedicatedConfig.Mods = world.Checkpoint.Mods.Select(x => x.PublishedFileId).ToList();
 
             Log.Debug("Loaded mod list from world");
 
