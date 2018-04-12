@@ -133,10 +133,6 @@ namespace Torch.Server.Managers
                     return;
                 }
 
-                var sb = new StringBuilder();
-                foreach (var mod in checkpoint.Mods)
-                    sb.AppendLine(mod.PublishedFileId.ToString());
-
                 DedicatedConfig.Mods = checkpoint.Mods.Select(x => x.PublishedFileId).ToList();
 
                 Log.Debug("Loaded mod list from world");

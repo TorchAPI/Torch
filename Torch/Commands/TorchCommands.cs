@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using Sandbox.Game.Multiplayer;
 using Sandbox.ModAPI;
 using SteamSDK;
 using Torch;
@@ -22,6 +23,9 @@ namespace Torch.Commands
 {
     public class TorchCommands : CommandModule
     {
+        private static bool _restartPending = false;
+        private static bool _cancelRestart = false;
+        
         [Command("whatsmyip")]
         [Permission(MyPromoteLevel.None)]
         public void GetIP(ulong steamId = 0)
@@ -148,6 +152,7 @@ namespace Torch.Commands
         [Command("restart", "Restarts the server.")]
         public void Restart(int countdownSeconds = 10, bool save = true)
         {
+            _restartPending = true;
             Task.Run(() =>
             {
                 var countdown = RestartCountdown(countdownSeconds, save).GetEnumerator();
@@ -158,10 +163,29 @@ namespace Torch.Commands
             });
         }
 
+        [Command("restart cancel", "Cancel a pending restart.")]
+        public void CancelRestart()
+        {
+            if (_restartPending)
+                _cancelRestart = true;
+            else
+                Context.Respond("A restart is not pending.");
+        }
+
         private IEnumerable RestartCountdown(int countdown, bool save)
         {
             for (var i = countdown; i >= 0; i--)
             {
+                if (_cancelRestart)
+                {
+                    Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                           .SendMessageAsSelf($"Restart cancelled.");
+
+                    _restartPending = false;
+                    _cancelRestart = false;
+                    yield break;
+                }
+                    
                 if (i >= 60 && i % 60 == 0)
                 {
                     Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()

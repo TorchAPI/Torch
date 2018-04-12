@@ -18,6 +18,7 @@ namespace Torch.Server
     {
         private FlowDocument _document = new FlowDocument { Background = new SolidColorBrush(Colors.Black) };
         private readonly Paragraph _paragraph = new Paragraph();
+        private readonly int _maxLines = 500;
 
         public FlowDocument Document => _document;
 
@@ -33,6 +34,10 @@ namespace Torch.Server
             {
                 var message = $"{Layout.Render(logEvent)}\n";
                 _paragraph.Inlines.Add(new Run(message) {Foreground = LogLevelColors[logEvent.Level]});
+
+                // A massive paragraph slows the UI down
+                if (_paragraph.Inlines.Count > _maxLines)
+                    _paragraph.Inlines.Remove(_paragraph.Inlines.FirstInline);
             });
         }
 
