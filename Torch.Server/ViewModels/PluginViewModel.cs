@@ -32,6 +32,9 @@ namespace Torch.Server.ViewModels
 
         public void UpdateResourceDict(ResourceDictionary dictionary)
         {
+            if (this.Control == null)
+                return;
+
             this.Control.Resources.MergedDictionaries.Clear();
             this.Control.Resources.MergedDictionaries.Add(dictionary);
         }
