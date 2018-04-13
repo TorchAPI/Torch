@@ -152,6 +152,12 @@ namespace Torch.Commands
         [Command("restart", "Restarts the server.")]
         public void Restart(int countdownSeconds = 10, bool save = true)
         {
+            if (_restartPending)
+            {
+                Context.Respond("A restart is already pending.").
+                return;
+            }
+        
             _restartPending = true;
             Task.Run(() =>
             {
