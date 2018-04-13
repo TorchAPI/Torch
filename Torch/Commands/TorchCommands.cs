@@ -154,7 +154,7 @@ namespace Torch.Commands
         {
             if (_restartPending)
             {
-                Context.Respond("A restart is already pending.").
+                Context.Respond("A restart is already pending.");
                 return;
             }
         
