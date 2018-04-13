@@ -26,7 +26,7 @@ namespace Torch.Server.Views.Entities
             InitializeComponent();
             DataContextChanged += VoxelMapView_DataContextChanged;
 
-            ThemeControl.UpdateWeirdViews += UpdateResourceDict;
+            ThemeControl.UpdateDynamicControls += UpdateResourceDict;
             UpdateResourceDict(ThemeControl.currentTheme);
         }
 

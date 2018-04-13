@@ -11,6 +11,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Torch.API.Managers;
+using Torch.API.Plugins;
 using Torch.Server.Annotations;
 using Torch.Server.Managers;
 using Torch.Server.ViewModels;
@@ -25,7 +26,7 @@ namespace Torch.Server.Views
         /// <summary>
         /// Action other views can subscribe to to update their views if they dont inherit the style from the window for some reason.
         /// </summary>
-        public static Action<ResourceDictionary> UpdateWeirdViews;
+        public static Action<ResourceDictionary> UpdateDynamicControls;
 
         /// <summary>
         /// Current theme other views can set their theme to when they first spawn
@@ -47,6 +48,7 @@ namespace Torch.Server.Views
         }
 
         private Dictionary<string, ResourceDictionary> _themes = new Dictionary<string, ResourceDictionary>();
+        private HashSet<ITorchPlugin> plugins;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -84,7 +86,7 @@ namespace Torch.Server.Views
             uiSource.Resources.MergedDictionaries.Clear();
             var resource = new ResourceDictionary() { Source = uri };
             uiSource.Resources.MergedDictionaries.Add(resource);
-            UpdateWeirdViews?.Invoke(resource);
+            UpdateDynamicControls?.Invoke(resource);
             currentTheme = resource;
         }
 

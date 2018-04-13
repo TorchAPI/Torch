@@ -24,7 +24,7 @@ namespace Torch.Server.Views.Entities
         {
             InitializeComponent();
 
-            ThemeControl.UpdateWeirdViews += UpdateResourceDict;
+            ThemeControl.UpdateDynamicControls += UpdateResourceDict;
             UpdateResourceDict(ThemeControl.currentTheme);
         }
 
