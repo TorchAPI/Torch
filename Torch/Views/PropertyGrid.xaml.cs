@@ -73,9 +73,13 @@ namespace Torch.Views
 
             foreach (var property in properties)
             {
+                //Attempt to load our custom DisplayAttribute
                 var a = property.GetCustomAttribute<DisplayAttribute>();
-                if (IgnoreDisplay)
-                    a = null;
+                //If not found and IgnoreDisplay is not set, fall back to system DisplayAttribute
+                if (a == null && !IgnoreDisplay)
+                    a = property.GetCustomAttribute<System.ComponentModel.DataAnnotations.DisplayAttribute>();
+                if (a?.Visible == false)
+                    continue;
                 descriptors[property] = a;
                 string category = a?.GroupName ?? "Misc";
 
@@ -104,7 +108,13 @@ namespace Torch.Views
                 grid.Children.Add(cl);
                 curRow++;
 
-                c.Value.Sort((a,b)=> string.Compare((descriptors[a]?.Name ?? a.Name), descriptors[b]?.Name ?? b.Name, StringComparison.Ordinal));
+                c.Value.Sort((a, b) =>
+                             {
+                                 var c1 = descriptors[a]?.Order?.CompareTo(descriptors[b]?.Order);
+                                 if (c1.HasValue && c1.Value != 0)
+                                     return c1.Value;
+                                 return string.Compare((descriptors[a]?.Name ?? a.Name), descriptors[b]?.Name ?? b.Name, StringComparison.Ordinal);
+                             });
 
                 foreach (var property in c.Value)
                 {
@@ -120,7 +130,7 @@ namespace Torch.Views
                     var text = new TextBlock
                                {
                                    Text = displayName ?? property.Name,
-                                   ToolTip = displayName,
+                                   ToolTip = descriptor?.ToolTip ?? displayName,
                                    VerticalAlignment = VerticalAlignment.Center
                                };
                     text.SetValue(Grid.ColumnProperty, 0);
@@ -128,10 +138,12 @@ namespace Torch.Views
                     text.Margin = new Thickness(3);
                     text.Tag = $"{text.Text}: {descriptor?.Description}";
                     text.IsMouseDirectlyOverChanged += Text_IsMouseDirectlyOverChanged;
+                    if (descriptor?.Enabled == false)
+                        text.IsEnabled = false;
                     grid.Children.Add(text);
 
                     FrameworkElement valueControl;
-                    if (property.GetSetMethod() == null)
+                    if (property.GetSetMethod() == null || descriptor?.ReadOnly == true)
                     {
                         valueControl = new TextBlock();
                         var binding = new Binding(property.Name)
@@ -218,6 +230,8 @@ namespace Torch.Views
                     valueControl.SetValue(Grid.ColumnProperty, 1);
                     valueControl.SetValue(Grid.RowProperty, curRow);
                     valueControl.IsMouseDirectlyOverChanged += Text_IsMouseDirectlyOverChanged;
+                    if (descriptor?.Enabled == false)
+                        valueControl.IsEnabled = false;
                     grid.Children.Add(valueControl);
 
                     curRow++;

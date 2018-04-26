@@ -271,6 +271,7 @@
     <Compile Include="Views\DictionaryEditor.xaml.cs">
       <DependentUpon>DictionaryEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\DisplayAttribute.cs" />
     <Compile Include="Views\ObjectCollectionEditor.xaml.cs">
       <DependentUpon>ObjectCollectionEditor.xaml</DependentUpon>
     </Compile>
