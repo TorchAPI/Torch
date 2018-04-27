@@ -110,7 +110,7 @@ namespace Torch.Views
 
                 c.Value.Sort((a, b) =>
                              {
-                                 var c1 = descriptors[a]?.Order?.CompareTo(descriptors[b]?.Order);
+                                 var c1 = descriptors[a]?.Order.CompareTo(descriptors[b]?.Order);
                                  if (c1.HasValue && c1.Value != 0)
                                      return c1.Value;
                                  return string.Compare((descriptors[a]?.Name ?? a.Name), descriptors[b]?.Name ?? b.Name, StringComparison.Ordinal);
@@ -138,8 +138,8 @@ namespace Torch.Views
                     text.Margin = new Thickness(3);
                     text.Tag = $"{text.Text}: {descriptor?.Description}";
                     text.IsMouseDirectlyOverChanged += Text_IsMouseDirectlyOverChanged;
-                    if (descriptor?.Enabled == false)
-                        text.IsEnabled = false;
+                    //if (descriptor?.Enabled == false)
+                    //    text.IsEnabled = false;
                     grid.Children.Add(text);
 
                     FrameworkElement valueControl;

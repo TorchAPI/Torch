@@ -12,22 +12,25 @@ namespace Torch.Views
         public string Description;
         public string ToolTip;
         public string GroupName;
-        public int? Order;
-        public bool? Enabled;
-        public bool? Visible;
-        public bool? ReadOnly;
+        public int Order;
+        public bool Enabled = true;
+        public bool Visible = true;
+        public bool ReadOnly = false;
 
         public DisplayAttribute()
         { }
 
         public static implicit operator DisplayAttribute(System.ComponentModel.DataAnnotations.DisplayAttribute da)
         {
+            if (da == null)
+                return null;
+
             return new DisplayAttribute()
                    {
                        Name = da.GetName(),
                        Description = da.GetDescription(),
                        GroupName = da.GetGroupName(),
-                       Order = da.GetOrder()
+                       Order = da.GetOrder() ?? 0
                    };
         }
     }
