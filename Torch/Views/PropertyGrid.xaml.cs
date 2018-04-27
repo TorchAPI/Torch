@@ -49,12 +49,14 @@ namespace Torch.Views
             if (e.NewValue == null)
             {
                 ScrollViewer.Content = null;
+                TbFilter.IsEnabled = false;
                 return;
             }
 
             var content = GenerateForType(e.NewValue.GetType());
             content.DataContext = e.NewValue;
             ScrollViewer.Content = content;
+            TbFilter.IsEnabled = true;
         }
 
         public Grid GenerateForType(Type t)
@@ -274,6 +276,8 @@ namespace Torch.Views
         {
             var filterText = ((TextBox)sender).Text;
             var grid = (Grid)ScrollViewer.Content;
+            if (grid == null)
+                return;
             foreach (var child in grid.Children)
             {
                 if (!(child is TextBlock block))
