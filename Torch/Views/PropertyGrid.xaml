@@ -17,7 +17,7 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="Filter: " Margin="3"/>
-            <TextBox Grid.Column="1" Margin="3" TextChanged="UpdateFilter"/>
+            <TextBox Name="TbFilter" Grid.Column="1" Margin="3" TextChanged="UpdateFilter" IsEnabled="False"/>
         </Grid>
         <ScrollViewer Grid.Row="1" x:Name="ScrollViewer"/>
         <TextBlock x:Name="TbDescription" Grid.Row="2" MinHeight="18"/>
