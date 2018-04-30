@@ -92,8 +92,7 @@ quit";
                     return;
 
                 Log.Error("Error initializing server.");
-                foreach (var e in x.Exception.InnerExceptions)
-                    Log.Error(e.InnerException ?? e);
+                LogException(x.Exception);
             });
             if (!_config.NoGui)
             {
@@ -180,16 +179,21 @@ quit";
         }
 
         private void LogException(Exception ex)
-        {
+        {         
             if (ex.InnerException != null)
             {
                 LogException(ex.InnerException);
             }
 
             Log.Fatal(ex);
+            
             if (ex is ReflectionTypeLoadException exti)
                 foreach (Exception exl in exti.LoaderExceptions)
                     LogException(exl);
+            
+            if (ex is AggregateException ag)
+                foreach (Exception e in ag.InnerExceptions)
+                    LogException(e);
         }
 
         private void HandleException(object sender, UnhandledExceptionEventArgs e)
