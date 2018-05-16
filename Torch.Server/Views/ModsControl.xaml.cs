@@ -15,7 +15,6 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Sandbox.Engine.Networking;
-using SteamSDK;
 using VRage.Game;
 
 namespace Torch.Server
@@ -45,16 +44,16 @@ namespace Torch.Server
                 mods = dialog.Result;
             }
 
-            foreach (var id in mods)
-            {
-                var details = SteamHelper.GetItemDetails(id);
-                if (details.FileType != WorkshopFileType.Community)
-                    continue;
+            //foreach (var id in mods)
+            //{
+            //    var details = SteamHelper.GetItemDetails(id);
+            //    if (details.FileType != WorkshopFileType.Community)
+            //        continue;
 
-                var item = SteamHelper.GetModItem(details);
-                var desc = details.Description.Length < 500 ? details.Description : details.Description.Substring(0, 500);
-                ModList.Items.Add(new ModViewModel(item, desc));
-            }
+            //    var item = SteamHelper.GetModItem(details);
+            //    var desc = details.Description.Length < 500 ? details.Description : details.Description.Substring(0, 500);
+            //    ModList.Items.Add(new ModViewModel(item, desc));
+            //}
         }
 
         private void modList_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)

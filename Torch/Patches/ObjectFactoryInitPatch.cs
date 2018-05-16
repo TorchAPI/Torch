@@ -31,6 +31,7 @@ namespace Torch.Patches
 
         internal static void ForceRegisterAssemblies()
         {
+            var userAssemblies = MyPlugins.UserAssemblies;
             // static MyEntities() called by MySandboxGame.ForceStaticCtor
             RuntimeHelpers.RunClassConstructor(typeof(MyEntities).TypeHandle);
             {
@@ -38,7 +39,14 @@ namespace Torch.Patches
                 ObjectFactory_RegisterFromAssemblySafe(factory, typeof(MySandboxGame).Assembly); // calling assembly
                 ObjectFactory_RegisterFromAssemblySafe(factory, MyPlugins.GameAssembly);
                 ObjectFactory_RegisterFromAssemblySafe(factory, MyPlugins.SandboxAssembly);
-                ObjectFactory_RegisterFromAssemblySafe(factory, MyPlugins.UserAssembly);
+                //ObjectFactory_RegisterFromAssemblySafe(factory, MyPlugins.UserAssembly);
+                if (userAssemblies != null)
+                {
+                    foreach (var assembly in userAssemblies)
+                    {
+                        ObjectFactory_RegisterFromAssemblySafe(factory, assembly);
+                    }
+                }
             }
 
             // static MyGuiManager():
@@ -51,7 +59,14 @@ namespace Torch.Patches
                 ComponentTypeFactory_RegisterFromAssemblySafe(MyPlugins.SandboxAssembly);
                 ComponentTypeFactory_RegisterFromAssemblySafe(MyPlugins.GameAssembly);
                 ComponentTypeFactory_RegisterFromAssemblySafe(MyPlugins.SandboxGameAssembly);
-                ComponentTypeFactory_RegisterFromAssemblySafe(MyPlugins.UserAssembly);
+                //ComponentTypeFactory_RegisterFromAssemblySafe(MyPlugins.UserAssembly);
+                if (userAssemblies != null)
+                {
+                    foreach (var assembly in userAssemblies)
+                    {
+                        ComponentTypeFactory_RegisterFromAssemblySafe(assembly);
+                    }
+                }
             }
 
             // static MyObjectPoolManager()

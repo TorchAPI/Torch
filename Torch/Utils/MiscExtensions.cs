@@ -6,7 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using SteamSDK;
+using Steamworks;
 
 namespace Torch.Utils
 {
@@ -52,10 +52,10 @@ namespace Torch.Utils
             return result;
         }
 
-        public static IPAddress GetRemoteIP(this P2PSessionState state)
+        public static IPAddress GetRemoteIP(this P2PSessionState_t state)
         {
             // What is endianness anyway?
-            return new IPAddress(BitConverter.GetBytes(state.RemoteIP).Reverse().ToArray());
+            return new IPAddress(BitConverter.GetBytes(state.m_nRemoteIP).Reverse().ToArray());
         }
     }
 }

@@ -21,7 +21,6 @@ using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
-using SteamSDK;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Collections;

@@ -35,6 +35,7 @@ using VRage.Plugins;
 using VRage.Steam;
 using VRage.Utils;
 using VRageRender;
+using MyRenderProfiler = VRage.Profiler.MyRenderProfiler;
 
 namespace Torch
 {
@@ -198,8 +199,8 @@ namespace Torch
                     MySandboxGame.Config.GraphicsRenderer = graphicsRenderer;
                 }
                 MyRenderProxy.Initialize(renderer);
-                MyRenderProxy.GetRenderProfiler().SetAutocommit(false);
-                MyRenderProxy.GetRenderProfiler().InitMemoryHack("MainEntryPoint");
+                MyRenderProfiler.SetAutocommit(false);
+                MyRenderProfiler.InitMemoryHack("MainEntryPoint");
             }
 
             // Loads object builder serializers. Intuitive, right?
@@ -276,7 +277,7 @@ namespace Torch
             MyObjectBuilder_Checkpoint checkpoint = MyLocalCache.LoadCheckpoint(sessionPath, out checkpointSize);
             if (MySession.IsCompatibleVersion(checkpoint))
             {
-                if (MySteamWorkshop.DownloadWorldModsBlocking(checkpoint.Mods).Success)
+                if (MyWorkshop.DownloadWorldModsBlocking(checkpoint.Mods).Success)
                 {
                     // MySpaceAnalytics.Instance.SetEntry(MyGameEntryEnum.Load);
                     MySession.Load(sessionPath, checkpoint, checkpointSize);

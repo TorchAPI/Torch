@@ -106,7 +106,8 @@ namespace Torch.Server.Managers
             foreach (var mod in world.Checkpoint.Mods)
                 sb.AppendLine(mod.PublishedFileId.ToString());
 
-            DedicatedConfig.Mods = world.Checkpoint.Mods.Select(x => x.PublishedFileId).ToList();
+            //TODO
+            //DedicatedConfig.Mods = world.Checkpoint.Mods.Select(x => x.PublishedFileId).ToList();
 
             Log.Debug("Loaded mod list from world");
 
@@ -133,7 +134,8 @@ namespace Torch.Server.Managers
                     return;
                 }
 
-                DedicatedConfig.Mods = checkpoint.Mods.Select(x => x.PublishedFileId).ToList();
+                //TODO
+                //DedicatedConfig.Mods = checkpoint.Mods.Select(x => x.PublishedFileId).ToList();
 
                 Log.Debug("Loaded mod list from world");
 
@@ -165,8 +167,10 @@ namespace Torch.Server.Managers
                 checkpoint.SessionName = DedicatedConfig.WorldName;
                 checkpoint.Settings = DedicatedConfig.SessionSettings;
                 checkpoint.Mods.Clear();
-                foreach (var modId in DedicatedConfig.Model.Mods)
-                    checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(modId));
+
+                //TODO: FIXIT
+                //foreach (var modId in DedicatedConfig.Model.SessionSettings..Mods)
+                //    checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(modId));
 
                 MyObjectBuilderSerializer.SerializeXML(sandboxPath, false, checkpoint);
 

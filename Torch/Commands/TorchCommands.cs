@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using Sandbox.Game.Multiplayer;
 using Sandbox.ModAPI;
-using SteamSDK;
+using Steamworks;
 using Torch;
 using Torch.API;
 using Torch.API.Managers;
@@ -30,11 +30,11 @@ namespace Torch.Commands
         [Permission(MyPromoteLevel.None)]
         public void GetIP(ulong steamId = 0)
         {
-            var state = new P2PSessionState();
             if (steamId == 0)
                 steamId = Context.Player.SteamUserId;
-            Peer2Peer.GetSessionState(steamId, ref state);
-            var ip = new IPAddress(BitConverter.GetBytes(state.RemoteIP).Reverse().ToArray());
+            
+            SteamNetworking.GetP2PSessionState(new CSteamID(steamId), out P2PSessionState_t state);
+            var ip = new IPAddress(BitConverter.GetBytes(state.m_nRemoteIP).Reverse().ToArray());
             Context.Respond($"Your IP is {ip}");
         }
 

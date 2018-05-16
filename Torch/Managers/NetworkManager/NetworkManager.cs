@@ -133,7 +133,7 @@ namespace Torch.Managers
             }
 
             var stream = new BitStream();
-            stream.ResetRead(packet);
+            stream.ResetRead(packet.BitStream);
 
             var networkId = stream.ReadNetworkId();
             //this value is unused, but removing this line corrupts the rest of the stream

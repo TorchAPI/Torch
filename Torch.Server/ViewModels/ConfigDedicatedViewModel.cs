@@ -77,7 +77,8 @@ namespace Torch.Server.ViewModels
 
         public List<ulong> Banned { get => _config.Banned; set => SetValue(x => _config.Banned = x, value); }
 
-        public List<ulong> Mods { get => _config.Mods; set => SetValue(x => _config.Mods = x, value); }
+        //TODO: FIX
+        //public List<ulong> Mods { get => _config.Mods; set => SetValue(x => _config.Mods = x, value); }
 
         public int AsteroidAmount { get => _config.AsteroidAmount; set => SetValue(x => _config.AsteroidAmount = x, value); }
 

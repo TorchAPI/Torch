@@ -84,9 +84,8 @@
       <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.XmlSerializers.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="SteamSDK">
-      <HintPath>..\GameBinaries\SteamSDK.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Steamworks.NET">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\DedicatedServer64\Steamworks.NET.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -259,7 +258,6 @@
     <Compile Include="Utils\TorchLauncher.cs" />
     <Compile Include="ViewModels\ModViewModel.cs" />
     <Compile Include="Extensions\MyPlayerCollectionExtensions.cs" />
-    <Compile Include="SteamHelper.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="ViewModels\PlayerViewModel.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />

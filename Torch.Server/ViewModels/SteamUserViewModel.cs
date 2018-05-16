@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SteamSDK;
+using Steamworks;
 
 namespace Torch.Server.ViewModels
 {
@@ -15,7 +15,7 @@ namespace Torch.Server.ViewModels
         public SteamUserViewModel(ulong id)
         {
             SteamId = id;
-            Name = SteamAPI.Instance.Friends.GetPersonaName(id);
+            Name = SteamFriends.GetFriendPersonaName(new CSteamID(id));
         }
 
         public SteamUserViewModel() : this(0) { }

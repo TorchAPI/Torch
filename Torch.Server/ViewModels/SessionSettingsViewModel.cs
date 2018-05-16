@@ -59,7 +59,7 @@ namespace Torch.Server.ViewModels
 
         /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableBlockLimits" />
         [Display(Name = "Enable block limits")]
-        public System.Boolean EnableBlockLimits { get => _settings.EnableBlockLimits; set => SetValue(ref _settings.EnableBlockLimits, value); }
+        public MyBlockLimitsEnabledEnum EnableBlockLimits { get => _settings.BlockLimitsEnabled; set => SetValue(ref _settings.BlockLimitsEnabled, value); }
 
         /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableRemoteBlockRemoval" />
         [Display(Name = "Enable remote removal of owned blocks")]

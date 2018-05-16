@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using Octokit;
-using SteamSDK;
 using Torch.API;
 
 namespace Torch.Managers
