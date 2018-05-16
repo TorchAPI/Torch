@@ -252,7 +252,6 @@
     <Compile Include="Utils\Reflected\ReflectedManager.cs" />
     <Compile Include="Session\TorchSessionManager.cs" />
     <Compile Include="TorchBase.cs" />
-    <Compile Include="SteamService.cs" />
     <Compile Include="TorchPluginBase.cs" />
     <Compile Include="Session\TorchSession.cs" />
     <Compile Include="Utils\TorchLauncher.cs" />
