@@ -17,6 +17,8 @@ using Torch.API.Managers;
 using Torch.API.Session;
 using Torch.Commands.Permissions;
 using Torch.Managers;
+using Torch.Mod;
+using Torch.Mod.Messages;
 using VRage.Game.ModAPI;
 
 namespace Torch.Commands
@@ -75,7 +77,7 @@ namespace Torch.Commands
             }
         }
 
-        [Command("longhelp", "Get verbose help. Will send a long message, check the Comms tab.")]
+        [Command("longhelp", "Get verbose help. Will send a long message in a dialog window.")]
         [Permission(MyPromoteLevel.None)]
         public void LongHelp()
         {
@@ -107,13 +109,20 @@ namespace Torch.Commands
             }
             else
             {
-                var sb = new StringBuilder("Available commands:\n");
+                var sb = new StringBuilder();
                 foreach (var command in commandManager.Commands.WalkTree())
                 {
                     if (command.IsCommand)
                         sb.AppendLine($"{command.Command.SyntaxHelp}\n    {command.Command.HelpText}");
                 }
-                Context.Respond(sb.ToString());
+
+                if (!Context.SentBySelf)
+                {
+                    var m = new DialogMessage("Torch Help", subtitle: "Available commands:", content: sb.ToString());
+                    ModCommunication.SendMessageTo(m, Context.Player.SteamUserId);
+                }
+                else
+                    Context.Respond($"Available commands: {sb}");
             }
         }
 
@@ -167,6 +176,13 @@ namespace Torch.Commands
                     Thread.Sleep(1000);
                 }
             });
+        }
+
+        [Command("notify", "Shows a message as a notification in the middle of all players' screens.")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void Notify(string message, int disappearTimeMs = 2000, string font = "White")
+        {
+            ModCommunication.SendMessageToClients(new NotificationMessage(message, disappearTimeMs, font));
         }
 
         [Command("restart cancel", "Cancel a pending restart.")]
