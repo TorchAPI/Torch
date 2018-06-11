@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -18,7 +18,19 @@ namespace Torch
     public sealed class Persistent<T> : IDisposable where T : new()
     {
         public string Path { get; set; }
-        public T Data { get; private set; }
+        private T _data;
+        public T Data
+        {
+            get => _data;
+            private set
+            {
+                if (_data is INotifyPropertyChanged npc1)
+                    npc1.PropertyChanged -= OnPropertyChanged;
+                _data = value;
+                if (_data is INotifyPropertyChanged npc2)
+                    npc2.PropertyChanged += OnPropertyChanged;
+            }
+        }
 
         ~Persistent()
         {
@@ -29,13 +41,23 @@ namespace Torch
         {
             Path = path;
             Data = data;
-            if (Data is INotifyPropertyChanged npc)
-                npc.PropertyChanged += OnPropertyChanged;
+        }
+        
+        private Timer _saveConfigTimer;
+
+        private void SaveAsync()
+        {
+            if (_saveConfigTimer == null)
+            {
+                _saveConfigTimer = new Timer((x) => Save());
+            }
+
+            _saveConfigTimer.Change(1000, -1);
         }
 
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            Save();
+            SaveAsync();
         }
 
         public void Save(string path = null)
@@ -52,20 +74,20 @@ namespace Torch
 
         public static Persistent<T> Load(string path, bool saveIfNew = true)
         {
-            var config = new Persistent<T>(path, new T());
+            Persistent<T> config = null;
 
             if (File.Exists(path))
             {
                 var ser = new XmlSerializer(typeof(T));
                 using (var f = File.OpenText(path))
                 {
-                    config.Data = (T)ser.Deserialize(f);
+                    config = new Persistent<T>(path, (T)ser.Deserialize(f));
                 }
             }
-            else if (saveIfNew)
-            {
-                config.Save(path);
-            }
+            if (config == null)
+                config = new Persistent<T>(path, new T());
+            if (!File.Exists(path) && saveIfNew)
+                config.Save();
 
             return config;
         }
@@ -76,6 +98,7 @@ namespace Torch
             {
                 if (Data is INotifyPropertyChanged npc)
                     npc.PropertyChanged -= OnPropertyChanged;
+                _saveConfigTimer?.Dispose();
                 Save();
             }
             catch
