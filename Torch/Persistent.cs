@@ -18,7 +18,19 @@ namespace Torch
     public sealed class Persistent<T> : IDisposable where T : new()
     {
         public string Path { get; set; }
-        public T Data { get; private set; }
+        private T _data;
+        public T Data
+        {
+            get => _data;
+            private set
+            {
+                if (_data is INotifyPropertyChanged npc)
+                    npc.PropertyChanged -= OnPropertyChanged;
+                _data = value;
+                if (_data is INotifyPropertyChanged npc)
+                    npc.PropertyChanged += OnPropertyChanged;
+            }
+        }
 
         ~Persistent()
         {
@@ -29,8 +41,6 @@ namespace Torch
         {
             Path = path;
             Data = data;
-            if (Data is INotifyPropertyChanged npc)
-                npc.PropertyChanged += OnPropertyChanged;
         }
 
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
