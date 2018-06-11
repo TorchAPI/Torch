@@ -45,11 +45,11 @@ namespace Torch
         
         private Timer _saveConfigTimer;
 
-        private void SaveConfigAsync()
+        private void SaveAsync()
         {
             if (_saveConfigTimer == null)
             {
-                _saveConfigTimer = new Timer((x) => SaveConfig());
+                _saveConfigTimer = new Timer((x) => Save());
             }
 
             _saveConfigTimer.Change(1000, -1);
@@ -57,7 +57,7 @@ namespace Torch
 
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            SaveConfigAsync();
+            SaveAsync();
         }
 
         public void Save(string path = null)
