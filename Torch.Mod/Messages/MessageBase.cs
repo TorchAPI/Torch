@@ -10,6 +10,7 @@ namespace Torch.Mod.Messages
     #region Includes
     [ProtoInclude(1, typeof(DialogMessage))]
     [ProtoInclude(2, typeof(NotificationMessage))]
+    [ProtoInclude(3, typeof(VoxelResetMessage))]
     #endregion
 
     [ProtoContract]

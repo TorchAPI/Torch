@@ -12,6 +12,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Messages\NotificationMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Messages\DialogMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Messages\MessageBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Messages\VoxelResetMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModCommunication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TorchModCore.cs" />
   </ItemGroup>

@@ -19,6 +19,7 @@ using Torch.Commands.Permissions;
 using Torch.Managers;
 using Torch.Mod;
 using Torch.Mod.Messages;
+using VRage.Game;
 using VRage.Game.ModAPI;
 
 namespace Torch.Commands
