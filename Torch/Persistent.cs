@@ -74,20 +74,20 @@ namespace Torch
 
         public static Persistent<T> Load(string path, bool saveIfNew = true)
         {
-            var config = new Persistent<T>(path, new T());
+            Persistent<T> config = null;
 
             if (File.Exists(path))
             {
                 var ser = new XmlSerializer(typeof(T));
                 using (var f = File.OpenText(path))
                 {
-                    config.Data = (T)ser.Deserialize(f);
+                    config = new Persistent<T>(path, (T)ser.Deserialize(f));
                 }
             }
-            else if (saveIfNew)
-            {
-                config.Save(path);
-            }
+            if (config == null)
+                config = new Persistent<T>(path, new T());
+            if (!File.Exists(path) && saveIfNew)
+                config.Save();
 
             return config;
         }
