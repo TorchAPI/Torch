@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -24,11 +24,11 @@ namespace Torch
             get => _data;
             private set
             {
-                if (_data is INotifyPropertyChanged npc)
-                    npc.PropertyChanged -= OnPropertyChanged;
+                if (_data is INotifyPropertyChanged npc1)
+                    npc1.PropertyChanged -= OnPropertyChanged;
                 _data = value;
-                if (_data is INotifyPropertyChanged npc)
-                    npc.PropertyChanged += OnPropertyChanged;
+                if (_data is INotifyPropertyChanged npc2)
+                    npc2.PropertyChanged += OnPropertyChanged;
             }
         }
 
@@ -42,10 +42,22 @@ namespace Torch
             Path = path;
             Data = data;
         }
+        
+        private Timer _saveConfigTimer;
+
+        private void SaveConfigAsync()
+        {
+            if (_saveConfigTimer == null)
+            {
+                _saveConfigTimer = new Timer((x) => SaveConfig());
+            }
+
+            _saveConfigTimer.Change(1000, -1);
+        }
 
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            Save();
+            SaveConfigAsync();
         }
 
         public void Save(string path = null)
@@ -86,6 +98,7 @@ namespace Torch
             {
                 if (Data is INotifyPropertyChanged npc)
                     npc.PropertyChanged -= OnPropertyChanged;
+                _saveConfigTimer?.Dispose();
                 Save();
             }
             catch
