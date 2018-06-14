@@ -42,10 +42,10 @@ namespace Torch.Mod
         public static void Unregister()
         {
             MyLog.Default.WriteLineAndConsole("TORCH MOD: Unregistering mod communication.");
-            MyAPIGateway.Multiplayer.UnregisterMessageHandler(NET_ID, MessageHandler);
-            _closing = true;
+            MyAPIGateway.Multiplayer?.UnregisterMessageHandler(NET_ID, MessageHandler);
             ReleaseLock();
-            _task.Wait();
+            _closing = true;
+            //_task.Wait();
         }
 
         private static void MessageHandler(byte[] bytes)
@@ -183,6 +183,8 @@ namespace Torch.Mod
 
         private static void ReleaseLock()
         {
+            if(_lock==null)
+                return;
             while(!_lock.TryAcquireExclusive())
                 _lock.ReleaseExclusive();
             _lock.ReleaseExclusive();
@@ -190,6 +192,8 @@ namespace Torch.Mod
 
         private static void AcquireLock()
         {
+            if (_lock == null)
+                return;
             ReleaseLock();
             _lock.AcquireExclusive();
             _lock.AcquireExclusive();
