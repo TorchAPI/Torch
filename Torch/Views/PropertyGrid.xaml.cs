@@ -145,6 +145,11 @@ namespace Torch.Views
                     grid.Children.Add(text);
 
                     FrameworkElement valueControl;
+                    if (descriptor?.EditorType != null)
+                    {
+                        valueControl = (FrameworkElement)Activator.CreateInstance(descriptor.EditorType);
+                        valueControl.SetBinding(FrameworkElement.DataContextProperty, property.Name);
+                    }
                     if (property.GetSetMethod() == null || descriptor?.ReadOnly == true)
                     {
                         valueControl = new TextBlock();
@@ -211,10 +216,20 @@ namespace Torch.Views
 
                         valueControl = button;
                     }
-                    else if (propertyType.IsPrimitive || propertyType == typeof(string))
+                    else if (propertyType.IsPrimitive)
                     {
                         valueControl = new TextBox();
                         valueControl.SetBinding(TextBox.TextProperty, property.Name);
+                    }
+                    else if (propertyType == typeof(string))
+                    {
+                        var tb  = new TextBox();
+                        tb.TextWrapping = TextWrapping.Wrap;
+                        tb.AcceptsReturn = true;
+                        tb.AcceptsTab = true;
+                        tb.SpellCheck.IsEnabled = true;
+                        tb.SetBinding(TextBox.TextProperty, property.Name);
+                        valueControl = tb;
                     }
                     else
                     {
