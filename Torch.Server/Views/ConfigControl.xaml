@@ -26,8 +26,8 @@
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0">
             <Label Content="World:" DockPanel.Dock="Left" />
-            <Button Content="Import World Config" Margin="3" DockPanel.Dock="Right" Click="ImportConfig_OnClick" ToolTip="Override the DS config with the one from the selected world."/>
-            <ComboBox ItemsSource="{Binding Worlds}" SelectedItem="{Binding SelectedWorld}" Margin="3"
+            <Button Content="Import World Config" Margin="3" DockPanel.Dock="Right" Click="ImportConfig_OnClick" ToolTip="Override the DS config with the one from the selected world." IsEnabled="{Binding ElementName=WorldList, Path=Items.Count, Mode=OneWay}"/>
+            <ComboBox x:Name="WorldList" ItemsSource="{Binding Worlds}" SelectedItem="{Binding SelectedWorld}" Margin="3"
                       SelectionChanged="Selector_OnSelectionChanged">
                 <ComboBox.ItemTemplate>
                     <DataTemplate DataType="managers:WorldViewModel">
