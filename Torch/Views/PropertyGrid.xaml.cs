@@ -67,8 +67,8 @@ namespace Torch.Views
             var properties = t.GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
             var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
             var categories = new Dictionary<string, List<PropertyInfo>>();
             var descriptors = new Dictionary<PropertyInfo, DisplayAttribute>(properties.Length);
@@ -150,7 +150,7 @@ namespace Torch.Views
                         valueControl = (FrameworkElement)Activator.CreateInstance(descriptor.EditorType);
                         valueControl.SetBinding(FrameworkElement.DataContextProperty, property.Name);
                     }
-                    if (property.GetSetMethod() == null || descriptor?.ReadOnly == true)
+                    else if (property.GetSetMethod() == null || descriptor?.ReadOnly == true)
                     {
                         valueControl = new TextBlock();
                         var binding = new Binding(property.Name)
