@@ -48,7 +48,7 @@ node {
 	stage('Archive') {
 		archiveArtifacts artifacts: "bin/x64/${buildMode}/Torch*", caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
 
-		packageAndArchive(buildMode, "torch-server", "Torch.Client*")
+		/*packageAndArchive(buildMode, "torch-server", "Torch.Client*")*/
 
 		packageAndArchive(buildMode, "torch-client", "Torch.Server*")
 	}
