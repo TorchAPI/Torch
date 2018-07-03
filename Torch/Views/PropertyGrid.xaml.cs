@@ -150,7 +150,7 @@ namespace Torch.Views
                         valueControl = (FrameworkElement)Activator.CreateInstance(descriptor.EditorType);
                         valueControl.SetBinding(FrameworkElement.DataContextProperty, property.Name);
                     }
-                    else if (property.GetSetMethod() == null || descriptor?.ReadOnly == true)
+                    else if (property.GetSetMethod() == null && !(propertyType.IsGenericType && typeof(ICollection).IsAssignableFrom(propertyType.GetGenericTypeDefinition()))|| descriptor?.ReadOnly == true)
                     {
                         valueControl = new TextBlock();
                         var binding = new Binding(property.Name)
