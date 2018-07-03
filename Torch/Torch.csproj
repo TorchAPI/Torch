@@ -273,6 +273,9 @@
       <DependentUpon>DictionaryEditor.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\DisplayAttribute.cs" />
+    <Compile Include="Views\EmbeddedCollectionEditor.xaml.cs">
+      <DependentUpon>EmbeddedCollectionEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ObjectCollectionEditor.xaml.cs">
       <DependentUpon>ObjectCollectionEditor.xaml</DependentUpon>
     </Compile>
@@ -302,6 +305,10 @@
     <Page Include="Views\DictionaryEditor.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\EmbeddedCollectionEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\ObjectCollectionEditor.xaml">
       <SubType>Designer</SubType>
