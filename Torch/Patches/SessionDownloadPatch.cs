@@ -12,7 +12,7 @@ using VRage.Game;
 namespace Torch.Patches
 {
     [PatchShim]
-    internal class SessionDownloadPatch
+    internal static class SessionDownloadPatch
     {
         internal static void Patch(PatchContext context)
         {
