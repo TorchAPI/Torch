@@ -377,6 +377,7 @@ namespace Torch.Managers
         private void InstantiatePlugin(PluginManifest manifest, IEnumerable<Assembly> assemblies)
         {
             Type pluginType = null;
+            bool mult = false;
             foreach (var asm in assemblies)
             {
                 foreach (var type in asm.GetExportedTypes())
@@ -384,14 +385,24 @@ namespace Torch.Managers
                     if (!type.GetInterfaces().Contains(typeof(ITorchPlugin)))
                         continue;
 
+                    _log.Info($"Loading plugin at {type.FullName}");
+
                     if (pluginType != null)
                     {
-                        _log.Error($"The plugin '{manifest.Name}' has multiple implementations of {nameof(ITorchPlugin)}, not loading.");
-                        return;
+                        //_log.Error($"The plugin '{manifest.Name}' has multiple implementations of {nameof(ITorchPlugin)}, not loading.");
+                        //return;
+                        mult = true;
+                        continue;
                     }
 
                     pluginType = type;
                 }
+            }
+
+            if (mult)
+            {
+                _log.Error($"The plugin '{manifest.Name}' has multiple implementations of {nameof(ITorchPlugin)}, not loading.");
+                return;
             }
 
             if (pluginType == null)

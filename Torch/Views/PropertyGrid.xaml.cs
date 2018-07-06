@@ -67,8 +67,8 @@ namespace Torch.Views
             var properties = t.GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
             var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
             var categories = new Dictionary<string, List<PropertyInfo>>();
             var descriptors = new Dictionary<PropertyInfo, DisplayAttribute>(properties.Length);
@@ -145,7 +145,12 @@ namespace Torch.Views
                     grid.Children.Add(text);
 
                     FrameworkElement valueControl;
-                    if (property.GetSetMethod() == null || descriptor?.ReadOnly == true)
+                    if (descriptor?.EditorType != null)
+                    {
+                        valueControl = (FrameworkElement)Activator.CreateInstance(descriptor.EditorType);
+                        valueControl.SetBinding(FrameworkElement.DataContextProperty, property.Name);
+                    }
+                    else if (property.GetSetMethod() == null && !(propertyType.IsGenericType && typeof(ICollection).IsAssignableFrom(propertyType.GetGenericTypeDefinition()))|| descriptor?.ReadOnly == true)
                     {
                         valueControl = new TextBlock();
                         var binding = new Binding(property.Name)
@@ -211,10 +216,20 @@ namespace Torch.Views
 
                         valueControl = button;
                     }
-                    else if (propertyType.IsPrimitive || propertyType == typeof(string))
+                    else if (propertyType.IsPrimitive)
                     {
                         valueControl = new TextBox();
                         valueControl.SetBinding(TextBox.TextProperty, property.Name);
+                    }
+                    else if (propertyType == typeof(string))
+                    {
+                        var tb  = new TextBox();
+                        tb.TextWrapping = TextWrapping.Wrap;
+                        tb.AcceptsReturn = true;
+                        tb.AcceptsTab = true;
+                        tb.SpellCheck.IsEnabled = true;
+                        tb.SetBinding(TextBox.TextProperty, property.Name);
+                        valueControl = tb;
                     }
                     else
                     {
