@@ -24,7 +24,14 @@ namespace Torch.Mod
 
         protected override void UnloadData()
         {
-            ModCommunication.Unregister();
+            try
+            {
+                ModCommunication.Unregister();
+            }
+            catch
+            {
+                //session unloading, don't care
+            }
         }
     }
 }

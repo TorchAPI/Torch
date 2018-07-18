@@ -148,6 +148,10 @@ namespace Torch.Mod
         {
             if (!MyAPIGateway.Multiplayer.IsServer)
                 throw new Exception("Only server can send targeted messages");
+
+            if (_closing)
+                return;
+
             message.Target = target;
             message.TargetType = MessageTarget.Single;
             MyLog.Default.WriteLineAndConsole($"Sending message of type {message.GetType().FullName}");
@@ -159,6 +163,10 @@ namespace Torch.Mod
         {
             if (!MyAPIGateway.Multiplayer.IsServer)
                 throw new Exception("Only server can send targeted messages");
+
+            if (_closing)
+                return;
+
             message.TargetType = MessageTarget.AllClients;
             _outgoing.Enqueue(message);
             ReleaseLock();
@@ -166,8 +174,12 @@ namespace Torch.Mod
 
         public static void SendMessageExcept(MessageBase message, params ulong[] ignoredUsers)
         {
-            if (MyAPIGateway.Multiplayer.IsServer)
+            if (!MyAPIGateway.Multiplayer.IsServer)
                 throw new Exception("Only server can send targeted messages");
+
+            if (_closing)
+                return;
+
             message.TargetType = MessageTarget.AllExcept;
             message.Ignore = ignoredUsers;
             _outgoing.Enqueue(message);
@@ -176,6 +188,9 @@ namespace Torch.Mod
 
         public static void SendMessageToServer(MessageBase message)
         {
+            if (_closing)
+                return;
+
             message.TargetType = MessageTarget.Server;
             _outgoing.Enqueue(message);
             ReleaseLock();
@@ -183,20 +198,16 @@ namespace Torch.Mod
 
         private static void ReleaseLock()
         {
-            if(_lock==null)
-                return;
-            while(!_lock.TryAcquireExclusive())
-                _lock.ReleaseExclusive();
-            _lock.ReleaseExclusive();
+            while(_lock?.TryAcquireExclusive() == false)
+                _lock?.ReleaseExclusive();
+            _lock?.ReleaseExclusive();
         }
 
         private static void AcquireLock()
         {
-            if (_lock == null)
-                return;
             ReleaseLock();
-            _lock.AcquireExclusive();
-            _lock.AcquireExclusive();
+            _lock?.AcquireExclusive();
+            _lock?.AcquireExclusive();
         }
     }
 }
