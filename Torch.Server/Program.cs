@@ -1,7 +1,13 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
+using System.Net;
 using System.Reflection;
 using System.ServiceProcess;
+using System.Text;
+using System.Threading;
+using NLog;
 using NLog.Targets;
 using Torch.Utils;
 
@@ -23,7 +29,7 @@ namespace Torch.Server
 
             if (!TorchLauncher.IsTorchWrapped())
             {
-                TorchLauncher.Launch(Assembly.GetEntryAssembly().FullName,args,  binDir);
+                TorchLauncher.Launch(Assembly.GetEntryAssembly().FullName, args, binDir);
                 return;
             }
 

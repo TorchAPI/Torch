@@ -52,9 +52,17 @@ quit";
             AppDomain.CurrentDomain.UnhandledException += HandleException;
 #endif
 
-            if (!args.Contains("-noupdate"))
+            // This is what happens when Keen is bad and puts extensions into the System namespace.
+            if (!Enumerable.Contains(args, "-noupdate"))
                 RunSteamCmd();
 
+            var basePath = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
+            var apiSource = Path.Combine(basePath, "DedicatedServer64", "steam_api64.dll");
+            var apiTarget = Path.Combine(basePath, "steam_api64.dll");
+            
+            if (!File.Exists(apiTarget))
+                File.Copy(apiSource, apiTarget);
+            
             _config = InitConfig();
             if (!_config.Parse(args))
                 return false;
@@ -129,7 +137,7 @@ quit";
             }
         }
 
-        private static void RunSteamCmd()
+        public static void RunSteamCmd()
         {
             var log = LogManager.GetLogger("SteamCMD");
 
