@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -51,7 +52,7 @@ namespace Torch.Managers
 
 #pragma warning disable 649
         [ReflectedGetter(Name = "m_players")]
-        private static Func<MyPlayerCollection, Dictionary<MyPlayer.PlayerId, MyPlayer>> _onlinePlayers;
+        private static Func<MyPlayerCollection, ConcurrentDictionary<MyPlayer.PlayerId, MyPlayer>> _onlinePlayers;
 #pragma warning restore 649
 
         protected MultiplayerManagerBase(ITorchBase torch) : base(torch)
