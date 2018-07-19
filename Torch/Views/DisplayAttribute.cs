@@ -16,6 +16,7 @@ namespace Torch.Views
         public bool Enabled = true;
         public bool Visible = true;
         public bool ReadOnly = false;
+        public Type EditorType = null;
 
         public DisplayAttribute()
         { }

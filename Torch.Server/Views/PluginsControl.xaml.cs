@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,7 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.Managers;
 using Torch.Server.ViewModels;
+using Torch.Views;
 
 namespace Torch.Server.Views
 {
@@ -35,6 +37,17 @@ namespace Torch.Server.Views
             InitializeComponent();
         }
 
+        private void PluginManagerOnPropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+        {
+            if (propertyChangedEventArgs.PropertyName == nameof(PluginManagerViewModel.SelectedPlugin))
+            {
+                if (((PluginManagerViewModel)DataContext).SelectedPlugin.Control is PropertyGrid)
+                    PScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+                else
+                    PScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+            }
+        }
+        
         public void BindServer(ITorchServer server)
         {
             _server = server;
@@ -48,6 +61,7 @@ namespace Torch.Server.Views
                 _plugins = _server.Managers.GetManager<PluginManager>();
                 var pluginManager = new PluginManagerViewModel(_plugins);
                 DataContext = pluginManager;
+                pluginManager.PropertyChanged += PluginManagerOnPropertyChanged;
             });
 
         }
