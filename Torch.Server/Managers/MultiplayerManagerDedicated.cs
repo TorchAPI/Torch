@@ -150,8 +150,8 @@ namespace Torch.Server.Managers
         //Largely copied from SE
         private void ValidateAuthTicketResponse(ulong steamId, JoinResult response, ulong steamOwner)
         {
-            SteamNetworking.GetP2PSessionState(new CSteamID(steamId), out P2PSessionState_t state);
-            var ip = state.GetRemoteIP();
+            //SteamNetworking.GetP2PSessionState(new CSteamID(steamId), out P2PSessionState_t state);
+            var ip = "0"; //state.GetRemoteIP();
 
             _log.Debug($"ValidateAuthTicketResponse(user={steamId}, response={response}, owner={steamOwner})");
 

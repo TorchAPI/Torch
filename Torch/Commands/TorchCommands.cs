@@ -30,6 +30,9 @@ namespace Torch.Commands
         [Permission(MyPromoteLevel.None)]
         public void GetIP(ulong steamId = 0)
         {
+            Context.Respond("Cannot obtain client IP.");
+            return;
+
             if (steamId == 0)
                 steamId = Context.Player.SteamUserId;
             
