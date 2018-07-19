@@ -18,6 +18,7 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Session;
 using Torch.Commands;
+using Torch.Mod;
 using Torch.Server.Commands;
 using Torch.Server.Managers;
 using Torch.Utils;
@@ -45,7 +46,7 @@ namespace Torch.Server
         private Timer _watchdog;
 
         /// <inheritdoc />
-        public TorchServer(TorchConfig config = null)
+       public TorchServer(TorchConfig config = null)
         {
             DedicatedInstance = new InstanceManager(this);
             AddManager(DedicatedInstance);
@@ -174,10 +175,14 @@ namespace Torch.Server
             {
                 _watchdog?.Dispose();
                 _watchdog = null;
+                ModCommunication.Unregister();
             }
 
             if (newState == TorchSessionState.Loaded)
+            {
                 CurrentSession.Managers.GetManager<CommandManager>().RegisterCommandModule(typeof(WhitelistCommands));
+                ModCommunication.Register();
+            }
         }
 
         /// <inheritdoc />

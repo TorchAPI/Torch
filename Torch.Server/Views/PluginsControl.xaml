@@ -28,7 +28,7 @@
             </ListView>
             <Button Grid.Row="1" Content="Open Folder" Margin="3" DockPanel.Dock="Bottom" Click="OpenFolder_OnClick"/>
         </Grid>
-        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Margin="3">
+        <ScrollViewer Name="PScroll" Grid.Column="1" Margin="3">
             <Frame NavigationUIVisibility="Hidden" Content="{Binding SelectedPlugin.Control}"/>
         </ScrollViewer>
     </Grid>
