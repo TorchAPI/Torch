@@ -105,8 +105,9 @@ namespace Torch.Server.Managers
             var sb = new StringBuilder();
             foreach (var mod in world.Checkpoint.Mods)
                 sb.AppendLine(mod.PublishedFileId.ToString());
-
+            
             DedicatedConfig.Mods = world.Checkpoint.Mods.Select(x => x.PublishedFileId).ToList();
+
 
             Log.Debug("Loaded mod list from world");
 
@@ -165,7 +166,8 @@ namespace Torch.Server.Managers
                 checkpoint.SessionName = DedicatedConfig.WorldName;
                 checkpoint.Settings = DedicatedConfig.SessionSettings;
                 checkpoint.Mods.Clear();
-                foreach (var modId in DedicatedConfig.Model.Mods)
+                
+                foreach (var modId in DedicatedConfig.Mods)
                     checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(modId));
 
                 MyObjectBuilderSerializer.SerializeXML(sandboxPath, false, checkpoint);

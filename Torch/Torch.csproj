@@ -84,9 +84,8 @@
       <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.XmlSerializers.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="SteamSDK">
-      <HintPath>..\GameBinaries\SteamSDK.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Steamworks.NET">
+      <HintPath>..\GameBinaries\Steamworks.NET.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -254,13 +253,11 @@
     <Compile Include="Utils\Reflected\ReflectedManager.cs" />
     <Compile Include="Session\TorchSessionManager.cs" />
     <Compile Include="TorchBase.cs" />
-    <Compile Include="SteamService.cs" />
     <Compile Include="TorchPluginBase.cs" />
     <Compile Include="Session\TorchSession.cs" />
     <Compile Include="Utils\TorchLauncher.cs" />
     <Compile Include="ViewModels\ModViewModel.cs" />
     <Compile Include="Extensions\MyPlayerCollectionExtensions.cs" />
-    <Compile Include="SteamHelper.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="ViewModels\PlayerViewModel.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />

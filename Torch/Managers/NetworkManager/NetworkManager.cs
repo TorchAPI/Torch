@@ -29,6 +29,8 @@ namespace Torch.Managers
         private static Func<MyReplicationLayerBase, MyTypeTable> _typeTableGetter;
         [ReflectedGetter(Name = "m_methodInfoLookup")]
         private static Func<MyEventTable, Dictionary<MethodInfo, CallSite>> _methodInfoLookupGetter;
+        [ReflectedMethod(Type = typeof(MyReplicationLayer), Name = "GetObjectByNetworkId")]
+        private static Func<MyReplicationLayer, NetworkId, IMyNetObject> _getObjectByNetworkId;
 
         public NetworkManager(ITorchBase torchInstance) : base(torchInstance)
         {
@@ -133,7 +135,7 @@ namespace Torch.Managers
             }
 
             var stream = new BitStream();
-            stream.ResetRead(packet);
+            stream.ResetRead(packet.BitStream);
 
             var networkId = stream.ReadNetworkId();
             //this value is unused, but removing this line corrupts the rest of the stream
@@ -150,7 +152,8 @@ namespace Torch.Managers
             }
             else // Instance event
             {
-                var sendAs = ((MyReplicationLayer)MyMultiplayer.ReplicationLayer).GetObjectByNetworkId(networkId);
+                //var sendAs = ((MyReplicationLayer)MyMultiplayer.ReplicationLayer).GetObjectByNetworkId(networkId);
+                var sendAs = _getObjectByNetworkId((MyReplicationLayer)MyMultiplayer.ReplicationLayer, networkId);
                 if (sendAs == null)
                 {
                     return;

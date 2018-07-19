@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox.Engine.Multiplayer;
-using SteamSDK;
 using Torch.API;
 using VRage.Replication;
 

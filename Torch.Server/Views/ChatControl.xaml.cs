@@ -19,7 +19,6 @@ using Torch;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.World;
-using SteamSDK;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Session;

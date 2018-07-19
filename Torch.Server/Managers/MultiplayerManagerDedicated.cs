@@ -11,7 +11,7 @@ using Sandbox;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Engine.Networking;
 using Sandbox.Game.World;
-using SteamSDK;
+using Steamworks;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Managers;
@@ -150,9 +150,8 @@ namespace Torch.Server.Managers
         //Largely copied from SE
         private void ValidateAuthTicketResponse(ulong steamId, JoinResult response, ulong steamOwner)
         {
-            var state = new P2PSessionState();
-            Peer2Peer.GetSessionState(steamId, ref state);
-            var ip = state.GetRemoteIP();
+            //SteamNetworking.GetP2PSessionState(new CSteamID(steamId), out P2PSessionState_t state);
+            var ip = "0"; //state.GetRemoteIP();
 
             _log.Debug($"ValidateAuthTicketResponse(user={steamId}, response={response}, owner={steamOwner})");
 

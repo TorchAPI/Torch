@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using NLog;
-using SteamSDK;
 
 namespace Torch.Utils
 {
