@@ -87,12 +87,24 @@ namespace Torch.Server.Managers
         {
             DedicatedConfig.LoadWorld = worldPath;
             DedicatedConfig.SelectedWorld = DedicatedConfig.Worlds.FirstOrDefault(x => x.WorldPath == worldPath);
+            if (DedicatedConfig.SelectedWorld?.Checkpoint != null)
+            {
+                DedicatedConfig.Mods.Clear();
+                foreach (var m in DedicatedConfig.SelectedWorld.Checkpoint.Mods)
+                    DedicatedConfig.Mods.Add(m.PublishedFileId);
+            }
         }
 
         public void SelectWorld(WorldViewModel world, bool modsOnly = true)
         {
             DedicatedConfig.LoadWorld = world.WorldPath;
             DedicatedConfig.SelectedWorld = world;
+            if (DedicatedConfig.SelectedWorld?.Checkpoint != null)
+            {
+                DedicatedConfig.Mods.Clear();
+                foreach (var m in DedicatedConfig.SelectedWorld.Checkpoint.Mods)
+                    DedicatedConfig.Mods.Add(m.PublishedFileId);
+            }
         }
 
         public void ImportSelectedWorldConfig()
@@ -228,13 +240,13 @@ namespace Torch.Server.Managers
 
         private void BeginLoadCheckpoint()
         {
-            Task.Run(() =>
+            //Task.Run(() =>
             {
                 Log.Info($"Preloading checkpoint {_checkpointPath}");
                 MyObjectBuilderSerializer.DeserializeXML(_checkpointPath, out MyObjectBuilder_Checkpoint checkpoint);
                 Checkpoint = new CheckpointViewModel(checkpoint);
                 OnPropertyChanged(nameof(Checkpoint));
-            });
+            }//);
         }
     }
 }
