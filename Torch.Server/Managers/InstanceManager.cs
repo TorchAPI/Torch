@@ -15,6 +15,7 @@ using Sandbox.Game.Gui;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Managers;
+using Torch.Mod;
 using Torch.Server.ViewModels;
 using VRage;
 using VRage.FileSystem;
@@ -90,6 +91,8 @@ namespace Torch.Server.Managers
             if (DedicatedConfig.SelectedWorld?.Checkpoint != null)
             {
                 DedicatedConfig.Mods.Clear();
+                //remove the Torch mod to avoid running multiple copies of it
+                DedicatedConfig.SelectedWorld.Checkpoint.Mods.RemoveAll(m => m.PublishedFileId == TorchModCore.MOD_ID);
                 foreach (var m in DedicatedConfig.SelectedWorld.Checkpoint.Mods)
                     DedicatedConfig.Mods.Add(m.PublishedFileId);
             }
@@ -102,6 +105,8 @@ namespace Torch.Server.Managers
             if (DedicatedConfig.SelectedWorld?.Checkpoint != null)
             {
                 DedicatedConfig.Mods.Clear();
+                //remove the Torch mod to avoid running multiple copies of it
+                DedicatedConfig.SelectedWorld.Checkpoint.Mods.RemoveAll(m => m.PublishedFileId == TorchModCore.MOD_ID);
                 foreach (var m in DedicatedConfig.SelectedWorld.Checkpoint.Mods)
                     DedicatedConfig.Mods.Add(m.PublishedFileId);
             }
