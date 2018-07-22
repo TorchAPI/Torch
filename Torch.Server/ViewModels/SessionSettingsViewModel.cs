@@ -1,299 +1,265 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Torch;
 using Torch.Collections;
 using VRage.Game;
 using VRage.Library.Utils;
 using VRage.Serialization;
-using System.ComponentModel.DataAnnotations;
 
 namespace Torch.Server.ViewModels
 {
-	public class SessionSettingsViewModel : ViewModel
-	{
-		private MyObjectBuilder_SessionSettings _settings;
-	/// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.GameMode" />
-        [Display(Name = "Game mode")]
-        public VRage.Library.Utils.MyGameModeEnum GameMode { get => _settings.GameMode; set => SetValue(ref _settings.GameMode, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.InventorySizeMultiplier" />
-        [Display(Name = "Inventory size multiplier")]
-        public System.Single InventorySizeMultiplier { get => _settings.InventorySizeMultiplier; set => SetValue(ref _settings.InventorySizeMultiplier, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.AssemblerSpeedMultiplier" />
-        [Display(Name = "Assembler speed multiplier")]
-        public System.Single AssemblerSpeedMultiplier { get => _settings.AssemblerSpeedMultiplier; set => SetValue(ref _settings.AssemblerSpeedMultiplier, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.AssemblerEfficiencyMultiplier" />
-        [Display(Name = "Assembler efficiency multiplier")]
-        public System.Single AssemblerEfficiencyMultiplier { get => _settings.AssemblerEfficiencyMultiplier; set => SetValue(ref _settings.AssemblerEfficiencyMultiplier, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.RefinerySpeedMultiplier" />
-        [Display(Name = "Refinery speed multiplier")]
-        public System.Single RefinerySpeedMultiplier { get => _settings.RefinerySpeedMultiplier; set => SetValue(ref _settings.RefinerySpeedMultiplier, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.OnlineMode" />
-        [Display(Name = "OnlineMode")]
-        public VRage.Game.MyOnlineModeEnum OnlineMode { get => _settings.OnlineMode; set => SetValue(ref _settings.OnlineMode, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MaxPlayers" />
-        [Display(Name = "Max players")]
-        public System.Int16 MaxPlayers { get => _settings.MaxPlayers; set => SetValue(ref _settings.MaxPlayers, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MaxFloatingObjects" />
-        [Display(Name = "Max floating objects")]
-        public System.Int16 MaxFloatingObjects { get => _settings.MaxFloatingObjects; set => SetValue(ref _settings.MaxFloatingObjects, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MaxBackupSaves" />
-        [Display(Name = "Max Backup Saves")]
-        public System.Int16 MaxBackupSaves { get => _settings.MaxBackupSaves; set => SetValue(ref _settings.MaxBackupSaves, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MaxGridSize" />
-        [Display(Name = "Max grid size")]
-        public System.Int32 MaxGridSize { get => _settings.MaxGridSize; set => SetValue(ref _settings.MaxGridSize, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MaxBlocksPerPlayer" />
-        [Display(Name = "Max blocks per player")]
-        public System.Int32 MaxBlocksPerPlayer { get => _settings.MaxBlocksPerPlayer; set => SetValue(ref _settings.MaxBlocksPerPlayer, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableBlockLimits" />
-        [Display(Name = "Enable block limits")]
-        public MyBlockLimitsEnabledEnum EnableBlockLimits { get => _settings.BlockLimitsEnabled; set => SetValue(ref _settings.BlockLimitsEnabled, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableRemoteBlockRemoval" />
-        [Display(Name = "Enable remote removal of owned blocks")]
-        public System.Boolean EnableRemoteBlockRemoval { get => _settings.EnableRemoteBlockRemoval; set => SetValue(ref _settings.EnableRemoteBlockRemoval, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnvironmentHostility" />
-        [Display(Name = "Environment hostility")]
-        public VRage.Game.MyEnvironmentHostilityEnum EnvironmentHostility { get => _settings.EnvironmentHostility; set => SetValue(ref _settings.EnvironmentHostility, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.AutoHealing" />
-        [Display(Name = "Auto healing")]
-        public System.Boolean AutoHealing { get => _settings.AutoHealing; set => SetValue(ref _settings.AutoHealing, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableCopyPaste" />
-        [Display(Name = "Enable Copy&Paste")]
-        public System.Boolean EnableCopyPaste { get => _settings.EnableCopyPaste; set => SetValue(ref _settings.EnableCopyPaste, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.WeaponsEnabled" />
-        [Display(Name = "Weapons enabled")]
-        public System.Boolean WeaponsEnabled { get => _settings.WeaponsEnabled; set => SetValue(ref _settings.WeaponsEnabled, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.ShowPlayerNamesOnHud" />
-        [Display(Name = "Show player names on HUD")]
-        public System.Boolean ShowPlayerNamesOnHud { get => _settings.ShowPlayerNamesOnHud; set => SetValue(ref _settings.ShowPlayerNamesOnHud, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.ThrusterDamage" />
-        [Display(Name = "Thruster damage")]
-        public System.Boolean ThrusterDamage { get => _settings.ThrusterDamage; set => SetValue(ref _settings.ThrusterDamage, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.CargoShipsEnabled" />
-        [Display(Name = "Cargo ships enabled")]
-        public System.Boolean CargoShipsEnabled { get => _settings.CargoShipsEnabled; set => SetValue(ref _settings.CargoShipsEnabled, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableSpectator" />
-        [Display(Name = "Enable spectator")]
-        public System.Boolean EnableSpectator { get => _settings.EnableSpectator; set => SetValue(ref _settings.EnableSpectator, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.WorldSizeKm" />
-        [Display(Name = "World size in Km")]
-        public System.Int32 WorldSizeKm { get => _settings.WorldSizeKm; set => SetValue(ref _settings.WorldSizeKm, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.RespawnShipDelete" />
-        [Display(Name = "Respawn ship delete")]
-        public System.Boolean RespawnShipDelete { get => _settings.RespawnShipDelete; set => SetValue(ref _settings.RespawnShipDelete, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.ResetOwnership" />
-        [Display(Name = "Reset ownership")]
-        public System.Boolean ResetOwnership { get => _settings.ResetOwnership; set => SetValue(ref _settings.ResetOwnership, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.WelderSpeedMultiplier" />
-        [Display(Name = "Welder speed multiplier")]
-        public System.Single WelderSpeedMultiplier { get => _settings.WelderSpeedMultiplier; set => SetValue(ref _settings.WelderSpeedMultiplier, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.GrinderSpeedMultiplier" />
-        [Display(Name = "Grinder speed multiplier")]
-        public System.Single GrinderSpeedMultiplier { get => _settings.GrinderSpeedMultiplier; set => SetValue(ref _settings.GrinderSpeedMultiplier, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.RealisticSound" />
-        [Display(Name = "Realistic sound")]
-        public System.Boolean RealisticSound { get => _settings.RealisticSound; set => SetValue(ref _settings.RealisticSound, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.HackSpeedMultiplier" />
-        [Display(Name = "Hack speed multiplier")]
-        public System.Single HackSpeedMultiplier { get => _settings.HackSpeedMultiplier; set => SetValue(ref _settings.HackSpeedMultiplier, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.PermanentDeath" />
-        [Display(Name = "Permanent death")]
-        public System.Nullable<System.Boolean> PermanentDeath { get => _settings.PermanentDeath; set => SetValue(ref _settings.PermanentDeath, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.AutoSaveInMinutes" />
-        [Display(Name = "AutoSave in minutes")]
-        public System.UInt32 AutoSaveInMinutes { get => _settings.AutoSaveInMinutes; set => SetValue(ref _settings.AutoSaveInMinutes, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableSaving" />
-        [Display(Name = "Enable saving from menu")]
-        public System.Boolean EnableSaving { get => _settings.EnableSaving; set => SetValue(ref _settings.EnableSaving, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableRespawnScreen" />
-        [Display(Name = "Enable respawn screen in the game")]
-        public System.Boolean EnableRespawnScreen { get => _settings.EnableRespawnScreen; set => SetValue(ref _settings.EnableRespawnScreen, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.InfiniteAmmo" />
-        [Display(Name = "Enable infinite ammunition in survival")]
-        public System.Boolean InfiniteAmmo { get => _settings.InfiniteAmmo; set => SetValue(ref _settings.InfiniteAmmo, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableContainerDrops" />
-        [Display(Name = "Enable drop containers")]
-        public System.Boolean EnableContainerDrops { get => _settings.EnableContainerDrops; set => SetValue(ref _settings.EnableContainerDrops, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.SpawnShipTimeMultiplier" />
-        [Display(Name = "Spawnship time multiplier")]
-        public System.Single SpawnShipTimeMultiplier { get => _settings.SpawnShipTimeMultiplier; set => SetValue(ref _settings.SpawnShipTimeMultiplier, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.ProceduralDensity" />
-        [Display(Name = "Procedural density")]
-        public System.Single ProceduralDensity { get => _settings.ProceduralDensity; set => SetValue(ref _settings.ProceduralDensity, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.ProceduralSeed" />
-        [Display(Name = "Procedural seed")]
-        public System.Int32 ProceduralSeed { get => _settings.ProceduralSeed; set => SetValue(ref _settings.ProceduralSeed, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.DestructibleBlocks" />
-        [Display(Name = "Destructible blocks")]
-        public System.Boolean DestructibleBlocks { get => _settings.DestructibleBlocks; set => SetValue(ref _settings.DestructibleBlocks, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableIngameScripts" />
-        [Display(Name = "Enable ingame scripts")]
-        public System.Boolean EnableIngameScripts { get => _settings.EnableIngameScripts; set => SetValue(ref _settings.EnableIngameScripts, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.ViewDistance" />
-        [Display(Name = "View distance")]
-        public System.Int32 ViewDistance { get => _settings.ViewDistance; set => SetValue(ref _settings.ViewDistance, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.FloraDensity" />
-        [Display(Name = "Flora density")]
-        public System.Int32 FloraDensity { get => _settings.FloraDensity; set => SetValue(ref _settings.FloraDensity, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableToolShake" />
-        [Display(Name = "Enable tool shake")]
-        public System.Boolean EnableToolShake { get => _settings.EnableToolShake; set => SetValue(ref _settings.EnableToolShake, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.VoxelGeneratorVersion" />
-        [Display(Name = "Voxel generator version")]
-        public System.Int32 VoxelGeneratorVersion { get => _settings.VoxelGeneratorVersion; set => SetValue(ref _settings.VoxelGeneratorVersion, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableOxygen" />
-        [Display(Name = "Enable oxygen")]
-        public System.Boolean EnableOxygen { get => _settings.EnableOxygen; set => SetValue(ref _settings.EnableOxygen, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableOxygenPressurization" />
-        [Display(Name = "Enable airtightness")]
-        public System.Boolean EnableOxygenPressurization { get => _settings.EnableOxygenPressurization; set => SetValue(ref _settings.EnableOxygenPressurization, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.Enable3rdPersonView" />
-        [Display(Name = "Enable 3rd person view")]
-        public System.Boolean Enable3rdPersonView { get => _settings.Enable3rdPersonView; set => SetValue(ref _settings.Enable3rdPersonView, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableEncounters" />
-        [Display(Name = "Enable encounters")]
-        public System.Boolean EnableEncounters { get => _settings.EnableEncounters; set => SetValue(ref _settings.EnableEncounters, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableFlora" />
-        [Display(Name = "Enable flora")]
-        public System.Boolean EnableFlora { get => _settings.EnableFlora; set => SetValue(ref _settings.EnableFlora, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableConvertToStation" />
-        [Display(Name = "Enable convert to station")]
-        public System.Boolean EnableConvertToStation { get => _settings.EnableConvertToStation; set => SetValue(ref _settings.EnableConvertToStation, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.StationVoxelSupport" />
-        [Display(Name = "Enable station grid with voxel")]
-        public System.Boolean StationVoxelSupport { get => _settings.StationVoxelSupport; set => SetValue(ref _settings.StationVoxelSupport, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableSunRotation" />
-        [Display(Name = "Enable sun rotation")]
-        public System.Boolean EnableSunRotation { get => _settings.EnableSunRotation; set => SetValue(ref _settings.EnableSunRotation, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableRespawnShips" />
-        [Display(Name = "Enable respawn ships / carts")]
-        public System.Boolean EnableRespawnShips { get => _settings.EnableRespawnShips; set => SetValue(ref _settings.EnableRespawnShips, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.PhysicsIterations" />
-        [Display(Name = "PhysicsIterations")]
-        public System.Int32 PhysicsIterations { get => _settings.PhysicsIterations; set => SetValue(ref _settings.PhysicsIterations, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.SunRotationIntervalMinutes" />
-        [Display(Name = "Sun rotation interval")]
-        public System.Single SunRotationIntervalMinutes { get => _settings.SunRotationIntervalMinutes; set => SetValue(ref _settings.SunRotationIntervalMinutes, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableJetpack" />
-        [Display(Name = "Enable jetpack")]
-        public System.Boolean EnableJetpack { get => _settings.EnableJetpack; set => SetValue(ref _settings.EnableJetpack, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.SpawnWithTools" />
-        [Display(Name = "Spawn with tools")]
-        public System.Boolean SpawnWithTools { get => _settings.SpawnWithTools; set => SetValue(ref _settings.SpawnWithTools, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableVoxelDestruction" />
-        [Display(Name = "Enable voxel destruction")]
-        public System.Boolean EnableVoxelDestruction { get => _settings.EnableVoxelDestruction; set => SetValue(ref _settings.EnableVoxelDestruction, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableDrones" />
-        [Display(Name = "Enable drones")]
-        public System.Boolean EnableDrones { get => _settings.EnableDrones; set => SetValue(ref _settings.EnableDrones, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableWolfs" />
-        [Display(Name = "Enable wolfs")]
-        public System.Boolean EnableWolfs { get => _settings.EnableWolfs; set => SetValue(ref _settings.EnableWolfs, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableSpiders" />
-        [Display(Name = "Enable spiders")]
-        public System.Boolean EnableSpiders { get => _settings.EnableSpiders; set => SetValue(ref _settings.EnableSpiders, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.FloraDensityMultiplier" />
-        [Display(Name = "Flora density multiplier")]
-        public System.Single FloraDensityMultiplier { get => _settings.FloraDensityMultiplier; set => SetValue(ref _settings.FloraDensityMultiplier, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.BlockTypeLimits" />
-        [Display(Name = "Block type limits")]
-        public VRage.Serialization.SerializableDictionary<System.String, System.Int16> BlockTypeLimits { get => _settings.BlockTypeLimits; set => SetValue(ref _settings.BlockTypeLimits, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableScripterRole" />
-        [Display(Name = "Enable Scripter role")]
-        public System.Boolean EnableScripterRole { get => _settings.EnableScripterRole; set => SetValue(ref _settings.EnableScripterRole, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MinDropContainerRespawnTime" />
-        [Display(Name = "Min Drop Container Respawn Time")]
-        public System.Int32 MinDropContainerRespawnTime { get => _settings.MinDropContainerRespawnTime; set => SetValue(ref _settings.MinDropContainerRespawnTime, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.MaxDropContainerRespawnTime" />
-        [Display(Name = "Max Drop Container Respawn Time")]
-        public System.Int32 MaxDropContainerRespawnTime { get => _settings.MaxDropContainerRespawnTime; set => SetValue(ref _settings.MaxDropContainerRespawnTime, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableTurretsFriendlyFire" />
-        [Display(Name = "Enable Turrets Friendly Fire")]
-        public System.Boolean EnableTurretsFriendlyFire { get => _settings.EnableTurretsFriendlyFire; set => SetValue(ref _settings.EnableTurretsFriendlyFire, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.EnableSubgridDamage" />
-        [Display(Name = "Enable Sub-Grid damage")]
-        public System.Boolean EnableSubgridDamage { get => _settings.EnableSubgridDamage; set => SetValue(ref _settings.EnableSubgridDamage, value); }
-
-        /// <see cref="VRage.Game.MyObjectBuilder_SessionSettings.SyncDistance" />
-        [Display(Name = "Replication distance")]
+    public class SessionSettingsViewModel : ViewModel
+    {
+        private MyObjectBuilder_SessionSettings _settings;
+
+        [Torch.Views.Display(Description = "The type of the game mode.", Name = "Game Mode", GroupName = "Others")]
+        public MyGameModeEnum GameMode { get => _settings.GameMode; set => SetValue(ref _settings.GameMode, value); }
+
+        [Torch.Views.Display(Description = "The multiplier for inventory size.", Name = "Inventory Size", GroupName = "Multipliers")]
+        public float InventorySizeMultiplier { get => _settings.InventorySizeMultiplier; set => SetValue(ref _settings.InventorySizeMultiplier, value); }
+
+        [Torch.Views.Display(Description = "The multiplier for assembler speed.", Name = "Assembler Speed", GroupName = "Multipliers")]
+        public float AssemblerSpeedMultiplier { get => _settings.AssemblerSpeedMultiplier; set => SetValue(ref _settings.AssemblerSpeedMultiplier, value); }
+
+        [Torch.Views.Display(Description = "The multiplier for assembler efficiency.", Name = "Assembler Efficiency", GroupName = "Multipliers")]
+        public float AssemblerEfficiencyMultiplier { get => _settings.AssemblerEfficiencyMultiplier; set => SetValue(ref _settings.AssemblerEfficiencyMultiplier, value); }
+
+        [Torch.Views.Display(Description = "The multiplier for refinery speed.", Name = "Refinery Speed", GroupName = "Multipliers")]
+        public float RefinerySpeedMultiplier { get => _settings.RefinerySpeedMultiplier; set => SetValue(ref _settings.RefinerySpeedMultiplier, value); }
+
+        [Torch.Views.Display(Description = "The maximum number of connected players.", Name = "Max Players", GroupName = "Players")]
+        public short MaxPlayers { get => _settings.MaxPlayers; set => SetValue(ref _settings.MaxPlayers, value); }
+
+        [Torch.Views.Display(Description = "The maximum number of existing floating objects.", Name = "Max Floating Objects", GroupName = "Environment")]
+        public short MaxFloatingObjects { get => _settings.MaxFloatingObjects; set => SetValue(ref _settings.MaxFloatingObjects, value); }
+
+        [Torch.Views.Display(Description = "The maximum number of backup saves.", Name = "Max Backup Saves", GroupName = "Others")]
+        public short MaxBackupSaves { get => _settings.MaxBackupSaves; set => SetValue(ref _settings.MaxBackupSaves, value); }
+
+        [Torch.Views.Display(Description = "The maximum number of blocks in one grid.", Name = "Max Grid Blocks", GroupName = "Block Limits")]
+        public int MaxGridSize { get => _settings.MaxGridSize; set => SetValue(ref _settings.MaxGridSize, value); }
+
+        [Torch.Views.Display(Description = "The maximum number of blocks per player.", Name = "Max Blocks per Player", GroupName = "Block Limits")]
+        public int MaxBlocksPerPlayer { get => _settings.MaxBlocksPerPlayer; set => SetValue(ref _settings.MaxBlocksPerPlayer, value); }
+
+        [Torch.Views.Display(Description = "The total number of Performance Cost Units in the world.", Name = "World PCU", GroupName = "Block Limits")]
+        public int TotalPCU { get => _settings.TotalPCU; set => SetValue(ref _settings.TotalPCU, value); }
+
+        [Torch.Views.Display(Description = "The maximum number of existing factions in the world.", Name = "Max Factions Count", GroupName = "Block Limits")]
+        public int MaxFactionsCount { get => _settings.MaxFactionsCount; set => SetValue(ref _settings.MaxFactionsCount, value); }
+
+        [Torch.Views.Display(Description = "Defines block limits mode.", Name = "Block Limits Mode", GroupName = "Block Limits")]
+        public MyBlockLimitsEnabledEnum BlockLimitsEnabled { get => _settings.BlockLimitsEnabled; set => SetValue(ref _settings.BlockLimitsEnabled, value); }
+
+        [Torch.Views.Display(Description = "Enables possibility to remove grid remotely from the world by an author.", Name = "Enable Remote Grid Removal", GroupName = "Others")]
+        public bool EnableRemoteBlockRemoval { get => _settings.EnableRemoteBlockRemoval; set => SetValue(ref _settings.EnableRemoteBlockRemoval, value); }
+
+        [Torch.Views.Display(Description = "Defines hostility of the environment.", Name = "Environment Hostility", GroupName = "Environment")]
+        public MyEnvironmentHostilityEnum EnvironmentHostility { get => _settings.EnvironmentHostility; set => SetValue(ref _settings.EnvironmentHostility, value); }
+
+        [Torch.Views.Display(Description = "Enables auto healing of the character.", Name = "Auto Healing", GroupName = "Players")]
+        public bool AutoHealing { get => _settings.AutoHealing; set => SetValue(ref _settings.AutoHealing, value); }
+
+        [Torch.Views.Display(Description = "Enables copy and paste feature.", Name = "Enable Copy & Paste", GroupName = "Players")]
+        public bool EnableCopyPaste { get => _settings.EnableCopyPaste; set => SetValue(ref _settings.EnableCopyPaste, value); }
+
+        [Torch.Views.Display(Description = "Enables weapons.", Name = "Enable Weapons", GroupName = "Others")]
+        public bool WeaponsEnabled { get => _settings.WeaponsEnabled; set => SetValue(ref _settings.WeaponsEnabled, value); }
+
+        [Torch.Views.Display(Description = "", Name = "Show Player Names on HUD", GroupName = "Players")]
+        public bool ShowPlayerNamesOnHud { get => _settings.ShowPlayerNamesOnHud; set => SetValue(ref _settings.ShowPlayerNamesOnHud, value); }
+
+        [Torch.Views.Display(Description = "Enables thruster damage.", Name = "Enable Thruster Damage", GroupName = "Others")]
+        public bool ThrusterDamage { get => _settings.ThrusterDamage; set => SetValue(ref _settings.ThrusterDamage, value); }
+
+        [Torch.Views.Display(Description = "Enables spawning of cargo ships.", Name = "Enable Cargo Ships", GroupName = "NPCs")]
+        public bool CargoShipsEnabled { get => _settings.CargoShipsEnabled; set => SetValue(ref _settings.CargoShipsEnabled, value); }
+
+        [Torch.Views.Display(Description = "Enables spectator camera.", Name = "Enable Spectator Camera", GroupName = "Others")]
+        public bool EnableSpectator { get => _settings.EnableSpectator; set => SetValue(ref _settings.EnableSpectator, value); }
+
+        /// <summary>
+        /// Size of the edge of the world area cube.
+        /// Don't use directly, as it is error-prone (it's km instead of m and edge size instead of half-extent)
+        /// Rather use MyEntities.WorldHalfExtent()
+        /// </summary>
+        [Torch.Views.Display(Description = "Defines the size of the world.", Name = "World Size [km]", GroupName = "Environment")]
+        public int WorldSizeKm { get => _settings.WorldSizeKm; set => SetValue(ref _settings.WorldSizeKm, value); }
+
+        [Torch.Views.Display(Description = "When enabled respawn ship is removed after player logout.", Name = "Remove Respawn Ships on Logoff", GroupName = "Others")]
+        public bool RespawnShipDelete { get => _settings.RespawnShipDelete; set => SetValue(ref _settings.RespawnShipDelete, value); }
+
+        [Torch.Views.Display(Description = "", Name = "Reset Ownership", GroupName = "Players")]
+        public bool ResetOwnership { get => _settings.ResetOwnership; set => SetValue(ref _settings.ResetOwnership, value); }
+
+        [Torch.Views.Display(Description = "The multiplier for welder speed.", Name = "Welder Speed", GroupName = "Multipliers")]
+        public float WelderSpeedMultiplier { get => _settings.WelderSpeedMultiplier; set => SetValue(ref _settings.WelderSpeedMultiplier, value); }
+
+        [Torch.Views.Display(Description = "The multiplier for grinder speed.", Name = "Grinder Speed", GroupName = "Multipliers")]
+        public float GrinderSpeedMultiplier { get => _settings.GrinderSpeedMultiplier; set => SetValue(ref _settings.GrinderSpeedMultiplier, value); }
+
+        [Torch.Views.Display(Description = "Enables realistic sounds.", Name = "Enable Realistic Sound", GroupName = "Environment")]
+        public bool RealisticSound { get => _settings.RealisticSound; set => SetValue(ref _settings.RealisticSound, value); }
+
+        [Torch.Views.Display(Description = "The multiplier for hacking speed.", Name = "Hacking Speed", GroupName = "Multipliers")]
+        public float HackSpeedMultiplier { get => _settings.HackSpeedMultiplier; set => SetValue(ref _settings.HackSpeedMultiplier, value); }
+
+        [Torch.Views.Display(Description = "Enables permanent death.", Name = "Permanent Death", GroupName = "Players")]
+        public bool? PermanentDeath { get => _settings.PermanentDeath; set => SetValue(ref _settings.PermanentDeath, value); }
+
+        [Torch.Views.Display(Description = "Defines autosave interval.", Name = "Autosave Interval [mins]", GroupName = "Others")]
+        public uint AutoSaveInMinutes { get => _settings.AutoSaveInMinutes; set => SetValue(ref _settings.AutoSaveInMinutes, value); }
+
+        [Torch.Views.Display(Description = "Enables saving from the menu.", Name = "Enable Saving from Menu", GroupName = "Others")]
+        public bool EnableSaving { get => _settings.EnableSaving; set => SetValue(ref _settings.EnableSaving, value); }
+
+        [Torch.Views.Display(Description = "Enables respawn screen.", Name = "Enable Respawn Screen in the Game", GroupName = "Players")]
+        public bool EnableRespawnScreen { get => _settings.EnableRespawnScreen; set => SetValue(ref _settings.EnableRespawnScreen, value); }
+
+        [Torch.Views.Display(Description = "Enables infinite ammunition in survival game mode.", Name = "Enable Infinite Ammunition in Survival", GroupName = "Others")]
+        public bool InfiniteAmmo { get => _settings.InfiniteAmmo; set => SetValue(ref _settings.InfiniteAmmo, value); }
+
+        [Torch.Views.Display(Description = "Enables drop containers (unknown signals).", Name = "Enable Drop Containers", GroupName = "Others")]
+        public bool EnableContainerDrops { get => _settings.EnableContainerDrops; set => SetValue(ref _settings.EnableContainerDrops, value); }
+
+        [Torch.Views.Display(Description = "The multiplier for respawn ship timer.", Name = "Respawn Ship Time Multiplier", GroupName = "Players")]
+        public float SpawnShipTimeMultiplier { get => _settings.SpawnShipTimeMultiplier; set => SetValue(ref _settings.SpawnShipTimeMultiplier, value); }
+
+        [Torch.Views.Display(Description = "Defines density of the procedurally generated content.", Name = "Procedural Density", GroupName = "Environment")]
+        public float ProceduralDensity { get => _settings.ProceduralDensity; set => SetValue(ref _settings.ProceduralDensity, value); }
+
+        [Torch.Views.Display(Description = "Defines unique starting seed for the procedurally generated content.", Name = "Procedural Seed", GroupName = "Environment")]
+        public int ProceduralSeed { get => _settings.ProceduralSeed; set => SetValue(ref _settings.ProceduralSeed, value); }
+
+        [Torch.Views.Display(Description = "Enables destruction feature for the blocks.", Name = "Enable Destructible Blocks", GroupName = "Environment")]
+        public bool DestructibleBlocks { get => _settings.DestructibleBlocks; set => SetValue(ref _settings.DestructibleBlocks, value); }
+
+        [Torch.Views.Display(Description = "Enables in game scripts.", Name = "Enable Ingame Scripts", GroupName = "Others")]
+        public bool EnableIngameScripts { get => _settings.EnableIngameScripts; set => SetValue(ref _settings.EnableIngameScripts, value); }
+
+        [Torch.Views.Display(Description = "", Name = "Flora Density", GroupName = "Environment")]
+        public int FloraDensity { get => _settings.FloraDensity; set => SetValue(ref _settings.FloraDensity, value); }
+
+        [Torch.Views.Display(Description = "Enables tool shake feature.", Name = "Enable Tool Shake", GroupName = "Players")]
+        [DefaultValue(false)]
+        public bool EnableToolShake { get => _settings.EnableToolShake; set => SetValue(ref _settings.EnableToolShake, value); }
+
+        [Torch.Views.Display(Description = "", Name = "Voxel Generator Version", GroupName = "Environment")]
+        public int VoxelGeneratorVersion { get => _settings.VoxelGeneratorVersion; set => SetValue(ref _settings.VoxelGeneratorVersion, value); }
+
+        [Torch.Views.Display(Description = "Enables oxygen in the world.", Name = "Enable Oxygen", GroupName = "Environment")]
+        public bool EnableOxygen { get => _settings.EnableOxygen; set => SetValue(ref _settings.EnableOxygen, value); }
+
+        [Torch.Views.Display(Description = "Enables airtightness in the world.", Name = "Enable Airtightness", GroupName = "Environment")]
+        public bool EnableOxygenPressurization { get => _settings.EnableOxygenPressurization; set => SetValue(ref _settings.EnableOxygenPressurization, value); }
+
+        [Torch.Views.Display(Description = "Enables 3rd person camera.", Name = "Enable 3rd Person Camera", GroupName = "Players")]
+        public bool Enable3rdPersonView { get => _settings.Enable3rdPersonView; set => SetValue(ref _settings.Enable3rdPersonView, value); }
+
+        [Torch.Views.Display(Description = "Enables random encounters in the world.", Name = "Enable Encounters", GroupName = "NPCs")]
+        public bool EnableEncounters { get => _settings.EnableEncounters; set => SetValue(ref _settings.EnableEncounters, value); }
+
+        [Torch.Views.Display(Description = "", Name = "Enable Flora", GroupName = "Environment")]
+        public bool EnableFlora { get => _settings.EnableFlora; set => SetValue(ref _settings.EnableFlora, value); }
+
+        [Torch.Views.Display(Description = "Enables possibility of converting grid to station.", Name = "Enable Convert to Station", GroupName = "Others")]
+        public bool EnableConvertToStation { get => _settings.EnableConvertToStation; set => SetValue(ref _settings.EnableConvertToStation, value); }
+
+        [Torch.Views.Display(Description = "Enables possibility of station grid inside voxel.", Name = "Enable Station Grid with Voxel", GroupName = "Environment")]
+        public bool StationVoxelSupport { get => _settings.StationVoxelSupport; set => SetValue(ref _settings.StationVoxelSupport, value); }
+
+        [Torch.Views.Display(Description = "Enables sun rotation.", Name = "Enable Sun Rotation", GroupName = "Environment")]
+        public bool EnableSunRotation { get => _settings.EnableSunRotation; set => SetValue(ref _settings.EnableSunRotation, value); }
+
+        [Torch.Views.Display(Description = "Enables respawn ships.", Name = "Enable Respawn Ships", GroupName = "Others")]
+        public bool EnableRespawnShips { get => _settings.EnableRespawnShips; set => SetValue(ref _settings.EnableRespawnShips, value); }
+
+        [Torch.Views.Display(Description = "", Name = "Physics Iterations", GroupName = "Environment")]
+        public int PhysicsIterations { get => _settings.PhysicsIterations; set => SetValue(ref _settings.PhysicsIterations, value); }
+
+        [Torch.Views.Display(Description = "Defines interval of one rotation of the sun.", Name = "Sun Rotation Interval", GroupName = "Environment")]
+        public float SunRotationIntervalMinutes { get => _settings.SunRotationIntervalMinutes; set => SetValue(ref _settings.SunRotationIntervalMinutes, value); }
+
+        [Torch.Views.Display(Description = "Enables jetpack.", Name = "Enable Jetpack", GroupName = "Players")]
+        public bool EnableJetpack { get => _settings.EnableJetpack; set => SetValue(ref _settings.EnableJetpack, value); }
+
+        [Torch.Views.Display(Description = "Enables spawning with tools in the inventory.", Name = "Spawn with Tools", GroupName = "Players")]
+        public bool SpawnWithTools { get => _settings.SpawnWithTools; set => SetValue(ref _settings.SpawnWithTools, value); }
+
+        [Torch.Views.Display(Description = "Enables voxel destructions.", Name = "Enable Voxel Destruction", GroupName = "Environment")]
+        public bool EnableVoxelDestruction { get => _settings.EnableVoxelDestruction; set => SetValue(ref _settings.EnableVoxelDestruction, value); }
+
+        [Torch.Views.Display(Description = "Enables spawning of drones in the world.", Name = "Enable Drones", GroupName = "NPCs")]
+        public bool EnableDrones { get => _settings.EnableDrones; set => SetValue(ref _settings.EnableDrones, value); }
+
+        [Torch.Views.Display(Description = "Enables spawning of wolves in the world.", Name = "Enable Wolves", GroupName = "NPCs")]
+        public bool EnableWolfs { get => _settings.EnableWolfs; set => SetValue(ref _settings.EnableWolfs, value); }
+
+        [Torch.Views.Display(Description = "Enables spawning of spiders in the world.", Name = "Enable Spiders", GroupName = "NPCs")]
+        public bool EnableSpiders { get => _settings.EnableSpiders; set => SetValue(ref _settings.EnableSpiders, value); }
+
+        [Torch.Views.Display(Name = "Block Type World Limits", GroupName = "Block Limits")]
+        public SerializableDictionary<string, short> BlockTypeLimits;
+
+        [Torch.Views.Display(Description = "Enables scripter role for administration.", Name = "Enable Scripter Role", GroupName = "Others")]
+        public bool EnableScripterRole { get => _settings.EnableScripterRole; set => SetValue(ref _settings.EnableScripterRole, value); }
+
+        [Torch.Views.Display(Description = "Defines minimum respawn time for drop containers.", Name = "Min Drop Container Respawn Time", GroupName = "Others")]
+        public int MinDropContainerRespawnTime { get => _settings.MinDropContainerRespawnTime; set => SetValue(ref _settings.MinDropContainerRespawnTime, value); }
+
+        [Torch.Views.Display(Description = "Defines maximum respawn time for drop containers.", Name = "Max Drop Container Respawn Time", GroupName = "Others")]
+        public int MaxDropContainerRespawnTime { get => _settings.MaxDropContainerRespawnTime; set => SetValue(ref _settings.MaxDropContainerRespawnTime, value); }
+
+        [Torch.Views.Display(Description = "Enables friendly fire for turrets.", Name = "Enable Turrets Friendly Fire", GroupName = "Environment")]
+        public bool EnableTurretsFriendlyFire { get => _settings.EnableTurretsFriendlyFire; set => SetValue(ref _settings.EnableTurretsFriendlyFire, value); }
+
+        [Torch.Views.Display(Description = "Enables sub-grid damage.", Name = "Enable Sub-Grid Damage", GroupName = "Environment")]
+        public bool EnableSubgridDamage { get => _settings.EnableSubgridDamage; set => SetValue(ref _settings.EnableSubgridDamage, value); }
+
+        [Torch.Views.Display(Description = "Defines synchronization distance in multiplayer. High distance can slow down server drastically. Use with caution.", Name = "Sync Distance", GroupName = "Environment")]
         public int SyncDistance { get => _settings.SyncDistance; set => SetValue(ref _settings.SyncDistance, value); }
 
+        [Torch.Views.Display(Description = "Enables experimental mode.", Name = "Experimental Mode", GroupName = "Others")]
+        public bool ExperimentalMode { get => _settings.ExperimentalMode; set => SetValue(ref _settings.ExperimentalMode, value); }
 
-		public SessionSettingsViewModel(MyObjectBuilder_SessionSettings settings)
-		{
-			_settings = settings;
-		}
+        [Torch.Views.Display(Description = "Enables adaptive simulation quality system. This system is useful if you have a lot of voxel deformations in the world and low simulation speed.", Name = "Adaptive Simulation Quality", GroupName = "Others")]
+        public bool AdaptiveSimulationQuality { get => _settings.AdaptiveSimulationQuality; set => SetValue(ref _settings.AdaptiveSimulationQuality, value); }
 
-		public static implicit operator MyObjectBuilder_SessionSettings(SessionSettingsViewModel viewModel)
-		{
-			return viewModel._settings;
-		}
-	}
+        [Torch.Views.Display(Description = "Enables voxel hand.", Name = "Enable voxel hand", GroupName = "Others")]
+        public bool EnableVoxelHand { get => _settings.EnableVoxelHand; set => SetValue(ref _settings.EnableVoxelHand, value); }
+
+        [Torch.Views.Display(Description = "Enables trash removal system.", Name = "Trash Removal Enabled", GroupName = "Trash Removal")]
+        public bool TrashRemovalEnabled { get => _settings.TrashRemovalEnabled; set => SetValue(ref _settings.TrashRemovalEnabled, value); }
+
+        [Torch.Views.Display(Description = "Defines flags for trash removal system.", Name = "Trash Removal Flags", GroupName = "Trash Removal")]
+        public int TrashFlagsValue { get => _settings.TrashFlagsValue; set => SetValue(ref _settings.TrashFlagsValue, value); }
+
+        [Torch.Views.Display(Description = "Defines block count threshold for trash removal system.", Name = "Block Count Threshold", GroupName = "Trash Removal")]
+        public int BlockCountThreshold { get => _settings.BlockCountThreshold; set => SetValue(ref _settings.BlockCountThreshold, value); }
+
+        [Torch.Views.Display(Description = "Defines player distance threshold for trash removal system.", Name = "Player Distance Threshold [m]", GroupName = "Trash Removal")]
+        public float PlayerDistanceThreshold { get => _settings.PlayerDistanceThreshold; set => SetValue(ref _settings.PlayerDistanceThreshold, value); }
+
+        [Torch.Views.Display(Description = "By setting this, server will keep number of grids around this value. \n !WARNING! It ignores Powered and Fixed flags, Block Count and lowers Distance from player.\n Set to 0 to disable.", Name = "Optimal Grid Count", GroupName = "Trash Removal")]
+        public int OptimalGridCount { get => _settings.OptimalGridCount; set => SetValue(ref _settings.OptimalGridCount, value); }
+
+        [Torch.Views.Display(Description = "Defines player inactivity threshold for trash removal system. \n !WARNING! This will remove all grids of the player.\n Set to 0 to disable.", Name = "Player Inactivity Threshold [hours]", GroupName = "Trash Removal")]
+        public float PlayerInactivityThreshold { get => _settings.PlayerInactivityThreshold; set => SetValue(ref _settings.PlayerInactivityThreshold, value); }
+
+        [Torch.Views.Display(Description = "Defines character removal threshold for trash removal system. If player disconnects it will remove his character after this time.\n Set to 0 to disable.", Name = "Character Removal Threshold [mins]", GroupName = "Trash Removal")]
+        public int PlayerCharacterRemovalThreshold { get => _settings.PlayerCharacterRemovalThreshold; set => SetValue(ref _settings.PlayerCharacterRemovalThreshold, value); }
+
+        public SessionSettingsViewModel(MyObjectBuilder_SessionSettings settings)
+        {
+            _settings = settings;
+        }
+
+        public static implicit operator MyObjectBuilder_SessionSettings(SessionSettingsViewModel viewModel)
+        {
+            return viewModel._settings;
+        }
+    }
 }
