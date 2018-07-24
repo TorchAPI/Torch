@@ -26,7 +26,7 @@
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0">
             <Label Content="World:" DockPanel.Dock="Left" />
-            <Button Content="Import World Config" Margin="3" DockPanel.Dock="Right" Click="ImportConfig_OnClick" ToolTip="Override the DS config with the one from the selected world." IsEnabled="{Binding ElementName=WorldList, Path=Items.Count, Mode=OneWay}"/>
+            <Button Content="Import World Config" Margin="3" Padding="3" DockPanel.Dock="Right" Click="ImportConfig_OnClick" ToolTip="Override the DS config with the one from the selected world." IsEnabled="{Binding ElementName=WorldList, Path=Items.Count, Mode=OneWay}"/>
             <ComboBox x:Name="WorldList" ItemsSource="{Binding Worlds}" SelectedItem="{Binding SelectedWorld}" Margin="3"
                       SelectionChanged="Selector_OnSelectionChanged">
                 <ComboBox.ItemTemplate>
@@ -49,16 +49,20 @@
         </DockPanel>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="3*" />
-                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="7*" />
+                <ColumnDefinition Width="10*" />
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
                     <RowDefinition />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <StackPanel Orientation="Horizontal">
-                    <StackPanel Margin="3" DockPanel.Dock="Left">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="3" DockPanel.Dock="Left">
                         <Label Content="Server Name" />
                         <TextBox Text="{Binding ServerName}" Margin="3,0,3,3" Width="160" />
                         <Label Content="World Name" />
@@ -82,7 +86,7 @@
                         </StackPanel>
                         <CheckBox IsChecked="{Binding PauseGameWhenEmpty}" Content="Pause When Empty" Margin="3" />
                     </StackPanel>
-                    <StackPanel Margin="3">
+                    <StackPanel Grid.Column="1" Margin="3">
                         <Label Content="Mods" />
                         <TextBox Margin="3" Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"
                                  Style="{StaticResource ValidatedTextBox}">
@@ -114,7 +118,7 @@
                             </TextBox.Text>
                         </TextBox>
                     </StackPanel>
-                </StackPanel>
+                </Grid>
                 <Button Grid.Row="1" Content="Save Config" Margin="3" Click="Save_OnClick" />
             </Grid>
             <views:PropertyGrid Grid.Column="1" Margin="3" DataContext="{Binding SessionSettings}" IgnoreDisplay ="True" />

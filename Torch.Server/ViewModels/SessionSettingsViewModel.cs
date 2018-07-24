@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Torch;
 using Torch.Collections;
+using Torch.Views;
 using VRage.Game;
 using VRage.Library.Utils;
 using VRage.Serialization;
@@ -202,7 +203,7 @@ namespace Torch.Server.ViewModels
         public bool EnableSpiders { get => _settings.EnableSpiders; set => SetValue(ref _settings.EnableSpiders, value); }
 
         [Torch.Views.Display(Name = "Block Type World Limits", GroupName = "Block Limits")]
-        public SerializableDictionary<string, short> BlockTypeLimits;
+        public Dictionary<string, short> BlockTypeLimits { get => _settings.BlockTypeLimits.Dictionary; set => SetValue(x => _settings.BlockTypeLimits.Dictionary = x, value); }
 
         [Torch.Views.Display(Description = "Enables scripter role for administration.", Name = "Enable Scripter Role", GroupName = "Others")]
         public bool EnableScripterRole { get => _settings.EnableScripterRole; set => SetValue(ref _settings.EnableScripterRole, value); }
@@ -235,7 +236,7 @@ namespace Torch.Server.ViewModels
         public bool TrashRemovalEnabled { get => _settings.TrashRemovalEnabled; set => SetValue(ref _settings.TrashRemovalEnabled, value); }
 
         [Torch.Views.Display(Description = "Defines flags for trash removal system.", Name = "Trash Removal Flags", GroupName = "Trash Removal")]
-        public int TrashFlagsValue { get => _settings.TrashFlagsValue; set => SetValue(ref _settings.TrashFlagsValue, value); }
+        public MyTrashRemovalFlags TrashFlagsValue { get => (MyTrashRemovalFlags)_settings.TrashFlagsValue; set => SetValue(ref _settings.TrashFlagsValue, (int)value); }
 
         [Torch.Views.Display(Description = "Defines block count threshold for trash removal system.", Name = "Block Count Threshold", GroupName = "Trash Removal")]
         public int BlockCountThreshold { get => _settings.BlockCountThreshold; set => SetValue(ref _settings.BlockCountThreshold, value); }

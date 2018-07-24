@@ -67,6 +67,7 @@ namespace Torch.Views
             var properties = t.GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
             var grid = new Grid();
+            grid.MouseMove += Grid_MouseMove;
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
 
@@ -123,7 +124,8 @@ namespace Torch.Views
                     if (property.GetGetMethod() == null)
                         continue;
 
-                    grid.RowDefinitions.Add(new RowDefinition());
+                    var def = new RowDefinition();
+                    grid.RowDefinitions.Add(def);
 
                     var descriptor = descriptors[property];
                     var displayName = descriptor?.Name;
@@ -138,8 +140,7 @@ namespace Torch.Views
                     text.SetValue(Grid.ColumnProperty, 0);
                     text.SetValue(Grid.RowProperty, curRow);
                     text.Margin = new Thickness(3);
-                    text.Tag = $"{text.Text}: {descriptor?.Description}";
-                    text.IsMouseDirectlyOverChanged += Text_IsMouseDirectlyOverChanged;
+                    def.Tag = new Tuple<string, string>(text.Text, descriptor?.Description);
                     //if (descriptor?.Enabled == false)
                     //    text.IsEnabled = false;
                     grid.Children.Add(text);
@@ -166,11 +167,27 @@ namespace Torch.Views
                     }
                     else if (propertyType.IsEnum)
                     {
-                        valueControl = new ComboBox
-                                       {
-                                           ItemsSource = Enum.GetValues(property.PropertyType)
-                                       };
-                        valueControl.SetBinding(ComboBox.SelectedItemProperty, property.Name);
+                        var isFlags = propertyType.GetCustomAttribute<FlagsAttribute>() != null;
+
+                        if (isFlags)
+                        {
+                            var button = new Button
+                            {
+                                Content = "Edit Flags"
+                            };
+                            button.SetBinding(Button.DataContextProperty, property.Name);
+                            button.Click += EditFlags;
+
+                            valueControl = button;
+                        }
+                        else
+                        {
+                            valueControl = new ComboBox
+                            {
+                                ItemsSource = Enum.GetValues(property.PropertyType)
+                            };
+                            valueControl.SetBinding(ComboBox.SelectedItemProperty, property.Name);
+                        }
                     }
                     else if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
                     {
@@ -246,7 +263,6 @@ namespace Torch.Views
                     valueControl.VerticalAlignment = VerticalAlignment.Center;
                     valueControl.SetValue(Grid.ColumnProperty, 1);
                     valueControl.SetValue(Grid.RowProperty, curRow);
-                    valueControl.IsMouseDirectlyOverChanged += Text_IsMouseDirectlyOverChanged;
                     if (descriptor?.Enabled == false)
                         valueControl.IsEnabled = false;
                     grid.Children.Add(valueControl);
@@ -259,32 +275,82 @@ namespace Torch.Views
             return grid;
         }
 
-        private void Text_IsMouseDirectlyOverChanged(object sender, DependencyPropertyChangedEventArgs e)
+        private int _lastActiveRow;
+        private void Grid_MouseMove(object sender, MouseEventArgs e)
         {
-            TbDescription.Text = (sender as FrameworkElement)?.Tag?.ToString() ?? string.Empty;
+            var grid = (Grid)sender;
+            var mousePoint = e.GetPosition(grid);
+            var heightSum = grid.RowDefinitions[0].ActualHeight;
+            var activeRow = 0;
+            
+            while (heightSum < mousePoint.Y && activeRow < grid.RowDefinitions.Count)
+            {
+                heightSum += grid.RowDefinitions[activeRow].ActualHeight;
+                activeRow++;
+            }
+
+            if (activeRow > grid.RowDefinitions.Count - 1 || activeRow == _lastActiveRow)
+                return;
+
+            _lastActiveRow = activeRow;
+            var tag = (Tuple<string, string>)grid.RowDefinitions[activeRow].Tag;
+            
+            TbDescription.Inlines.Clear();
+            TbDescription.Inlines.Add(new Run(tag?.Item1 ?? "?") {FontWeight = FontWeights.Bold});
+            TbDescription.Inlines.Add(new Run($"{Environment.NewLine}{tag?.Item2 ?? "No description."}"));
         }
 
+        private void EditFlags(object sender, RoutedEventArgs e)
+        {
+            var btn = (Button)sender;
+            var obj = DataContext;
+            var propName = btn.GetBindingExpression(DataContextProperty).ParentBinding.Path.Path;
+            var propInfo = DataContext.GetType().GetProperty(propName);
+            
+            new FlagsEditorDialog
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterOwner, 
+                Owner = Window.GetWindow(this)
+            }.EditEnum(propInfo, obj);
+        }
+        
         private void EditDictionary(object dict)
         {
             var dic = (IDictionary)dict;
-            new DictionaryEditorDialog().Edit(dic);
+            new DictionaryEditorDialog
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterOwner, 
+                Owner = Window.GetWindow(this)
+            }.Edit(dic);
         }
 
         private void EditPrimitiveCollection(object collection, string title = "Collection Editor")
         {
             var c = (ICollection)collection;
-            new CollectionEditor().Edit(c, title);
+            new CollectionEditor
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterOwner, 
+                Owner = Window.GetWindow(this)
+            }.Edit(c, title);
         }
 
         private void EditObjectCollection(object collection, string title = "Collection Editor")
         {
             var c = (ICollection)collection;
-            new ObjectCollectionEditor().Edit(c, title);
+            new ObjectCollectionEditor
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterOwner, 
+                Owner = Window.GetWindow(this)
+            }.Edit(c, title);
         }
 
         private void EditObject(object o, string title = "Edit Object")
         {
-            new ObjectEditor().Edit(o, title);
+            new ObjectEditor
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterOwner, 
+                Owner = Window.GetWindow(this)
+            }.Edit(o, title);
         }
 
         private void UpdateFilter(object sender, TextChangedEventArgs e)
