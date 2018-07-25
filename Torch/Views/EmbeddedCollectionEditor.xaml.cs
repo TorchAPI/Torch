@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -79,15 +78,12 @@ namespace Torch.Views
         public void Edit<T>(ICollection<T> collection) where T : new()
         {
             var oc = collection as ObservableCollection<T> ?? new ObservableCollection<T>(collection);
-            bool not = typeof(INotifyPropertyChanged).IsAssignableFrom(typeof(T));
 
             AddButton.Click += (sender, args) =>
                                {
                                    var t = new T();
                                    oc.Add(t);
                                    ElementList.SelectedItem = t;
-                                   if (not)
-                                       ((INotifyPropertyChanged)t).PropertyChanged += (o, eventArgs) => RefreshList();
                                };
 
             RemoveButton.Click += RemoveButton_OnClick<T>;
@@ -95,11 +91,6 @@ namespace Torch.Views
 
             ElementList.ItemsSource = oc;
             oc.CollectionChanged += (sender, args) => RefreshList();
-            if (not)
-            {
-                foreach(var t in oc)
-                    ((INotifyPropertyChanged)t).PropertyChanged += (o, eventArgs) => RefreshList();
-            }
 
             if (!(collection is ObservableCollection<T>))
             {
@@ -129,34 +120,6 @@ namespace Torch.Views
         private void RefreshList()
         {
             ElementList.Items.Refresh();
-        }
-
-        private void TopButton_Click(object sender, RoutedEventArgs e)
-        {
-            var i = ElementList.SelectedItems[0];
-            ElementList.Items.Remove(i);
-            ElementList.Items.Insert(0, i);
-        }
-        private void BottomButton_Click(object sender, RoutedEventArgs e)
-        {
-            var i = ElementList.SelectedItems[0];
-            ElementList.Items.Remove(i);
-            ElementList.Items.Add(i);
-        }
-        private void UpButton_Click(object sender, RoutedEventArgs e)
-        {
-            var i = ElementList.SelectedItems[0];
-            var idx = ElementList.SelectedItems.IndexOf(i);
-            ElementList.Items.Remove(i);
-            ElementList.Items.Insert(Math.Max(0, idx), i);
-        }
-        private void DownButton_Click(object sender, RoutedEventArgs e)
-        {
-            var i = ElementList.SelectedItems[0];
-            var idx = ElementList.SelectedItems.IndexOf(i);
-            ElementList.Items.Remove(i);
-            var mx = ElementList.Items.Count - 1;
-            ElementList.Items.Insert(Math.Min(idx, mx), i);
         }
     }
 }
