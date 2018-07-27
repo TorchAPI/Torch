@@ -52,6 +52,7 @@ namespace Torch.Server
 
             Themes.uiSource = this;
             Themes.SetConfig(_config);
+            Title = $"{_config.InstanceName} - Torch {server.TorchVersion}, SE {server.GameVersion}";
         }
 
         private void AttachConsole()
