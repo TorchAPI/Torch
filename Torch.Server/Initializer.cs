@@ -13,7 +13,10 @@ using System.Windows;
 using System.Windows.Threading;
 using NLog;
 using NLog.Targets;
+using Sandbox.Engine.Utils;
 using Torch.Utils;
+using VRage.FileSystem;
+using VRage.Library.Exceptions;
 
 namespace Torch.Server
 {
@@ -208,6 +211,13 @@ quit";
         {
             var ex = (Exception)e.ExceptionObject;
             LogException(ex);
+            if (MyFakes.ENABLE_MINIDUMP_SENDING)
+            {
+                string path = Path.Combine(MyFileSystem.UserDataPath, "Minidump.dmp");
+                Log.Info($"Generating minidump at {path}");
+                MyMiniDump.Options options = MyMiniDump.Options.WithProcessThreadData | MyMiniDump.Options.WithThreadInfo;
+                MyMiniDump.Write(path, options, MyMiniDump.ExceptionInfo.Present);
+            }
             LogManager.Flush();
             if (_config.RestartOnCrash)
             {
