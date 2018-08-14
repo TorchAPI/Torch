@@ -325,6 +325,8 @@ namespace Torch.Managers
                     if (IsAssemblyCompatible(requiredAssemblyName, asm.GetName()))
                         return asm;
                 }
+                if (requiredAssemblyName.Name.EndsWith(".resources", StringComparison.OrdinalIgnoreCase))
+                    return null;
                 foreach (var asm in assemblies)
                     if (asm == args.RequestingAssembly)
                     {
