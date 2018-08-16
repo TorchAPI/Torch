@@ -325,21 +325,21 @@ namespace Torch.Managers
                     if (IsAssemblyCompatible(requiredAssemblyName, asm.GetName()))
                         return asm;
                 }
-                _log.Warn($"Could find dependent assembly! Requesting assembly: {args.RequestingAssembly}, dependent assembly: {requiredAssemblyName}");
+                if (requiredAssemblyName.Name.EndsWith(".resources", StringComparison.OrdinalIgnoreCase))
+                    return null;
+                foreach (var asm in assemblies)
+                    if (asm == args.RequestingAssembly)
+                    {
+                        _log.Warn($"Couldn't find dependency! {args.RequestingAssembly} depends on {requiredAssemblyName}.");
+                        break;
+                    }
                 return null;
             }
 
-            try
+            AppDomain.CurrentDomain.AssemblyResolve += ResolveDependentAssembly;
+            foreach (Assembly asm in assemblies)
             {
-                AppDomain.CurrentDomain.AssemblyResolve += ResolveDependentAssembly;
-                foreach (Assembly asm in assemblies)
-                {
-                    TorchBase.RegisterAuxAssembly(asm);
-                }
-            }
-            finally
-            {
-                AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependentAssembly;
+                TorchBase.RegisterAuxAssembly(asm);
             }
         }
 
