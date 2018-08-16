@@ -330,7 +330,7 @@ namespace Torch.Managers
                 foreach (var asm in assemblies)
                     if (asm == args.RequestingAssembly)
                     {
-                        _log.Warn($"Could find dependent assembly! Requesting assembly: {args.RequestingAssembly}, dependent assembly: {requiredAssemblyName}");
+                        _log.Warn($"Couldn't find dependency! {args.RequestingAssembly} depends on {requiredAssemblyName}.");
                         break;
                     }
                 return null;
