@@ -18,6 +18,7 @@ using Torch.Managers;
 using Torch.Utils;
 using Torch.ViewModels;
 using VRage.Game;
+using VRage.Game.ModAPI;
 using VRage.GameServices;
 using VRage.Network;
 using VRage.Steam;
@@ -153,7 +154,9 @@ namespace Torch.Server.Managers
             //SteamNetworking.GetP2PSessionState(new CSteamID(steamId), out P2PSessionState_t state);
             var ip = "0"; //state.GetRemoteIP();
 
-            _log.Debug($"ValidateAuthTicketResponse(user={steamId}, response={response}, owner={steamOwner})");
+            Torch.CurrentSession.KeenSession.PromotedUsers.TryGetValue(steamId, out MyPromoteLevel promoteLevel);
+
+            _log.Debug($"ValidateAuthTicketResponse(user={steamId}, response={response}, owner={steamOwner}, permissions={promoteLevel})");
 
             _log.Info($"Connection attempt by {steamId} from {ip}");
             // TODO implement IP bans
@@ -164,7 +167,7 @@ namespace Torch.Server.Managers
                 UserRejected(steamId, JoinResult.NotInGroup);
             }
             else if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE &&
-                     !Torch.CurrentSession.KeenSession.IsUserAdmin(steamId))
+                     promoteLevel < MyPromoteLevel.Admin)
             {
                 _log.Warn($"Rejecting user {steamId}, world is set to offline and user is not admin.");
                 UserRejected(steamId, JoinResult.TicketCanceled);

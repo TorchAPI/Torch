@@ -18,6 +18,8 @@ namespace Torch.Server.ViewModels
 
         [Torch.Views.Display(Description = "The type of the game mode.", Name = "Game Mode", GroupName = "Others")]
         public MyGameModeEnum GameMode { get => _settings.GameMode; set => SetValue(ref _settings.GameMode, value); }
+        [Torch.Views.Display(Description = "The type of the game online mode.", Name = "Online Mode", GroupName = "Others")]
+        public MyOnlineModeEnum OnlineMode { get => _settings.OnlineMode; set => SetValue(ref _settings.OnlineMode, value); }
 
         [Torch.Views.Display(Description = "The multiplier for inventory size.", Name = "Inventory Size", GroupName = "Multipliers")]
         public float InventorySizeMultiplier { get => _settings.InventorySizeMultiplier; set => SetValue(ref _settings.InventorySizeMultiplier, value); }
