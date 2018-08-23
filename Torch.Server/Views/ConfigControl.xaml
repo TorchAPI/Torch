@@ -84,6 +84,8 @@
                             <Label Content=":" Width="12" />
                             <TextBox Text="{Binding Port}" Width="48" Height="20" />
                         </StackPanel>
+                        <Label Content="Server Password"/>
+                        <TextBox Text="{Binding Password}" Width="160"/>
                         <CheckBox IsChecked="{Binding PauseGameWhenEmpty}" Content="Pause When Empty" Margin="3" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Margin="3">

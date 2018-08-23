@@ -99,5 +99,26 @@ namespace Torch.Server.ViewModels
         public int SteamPort { get => _config.SteamPort; set => SetValue(x => _config.SteamPort = x, value); }
 
         public string WorldName { get => _config.WorldName; set => SetValue(x => _config.WorldName = x, value); }
+
+        //this is a damn server password. I don't care if this is insecure. Bite me.
+        private string _password;
+        public string Password
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_password))
+                {
+                    if (string.IsNullOrEmpty(_config.ServerPasswordHash))
+                        return string.Empty;
+                    return "**********";
+                }
+                return _password;
+            }
+            set
+            {
+                _password = value;
+                _config.SetPassword(value);
+            }
+        }
     }
 }
