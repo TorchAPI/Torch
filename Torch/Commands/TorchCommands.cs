@@ -33,14 +33,12 @@ namespace Torch.Commands
         [Permission(MyPromoteLevel.None)]
         public void GetIP(ulong steamId = 0)
         {
-            Context.Respond("Cannot obtain client IP.");
-            return;
-
             if (steamId == 0)
                 steamId = Context.Player.SteamUserId;
-            
-            SteamNetworking.GetP2PSessionState(new CSteamID(steamId), out P2PSessionState_t state);
-            var ip = new IPAddress(BitConverter.GetBytes(state.m_nRemoteIP).Reverse().ToArray());
+
+            VRage.GameServices.MyP2PSessionState statehack = new VRage.GameServices.MyP2PSessionState();
+            VRage.Steam.MySteamService.Static.Peer2Peer.GetSessionState(steamId, ref statehack);
+            var ip = new IPAddress(BitConverter.GetBytes(statehack.RemoteIP).Reverse().ToArray());
             Context.Respond($"Your IP is {ip}");
         }
 
