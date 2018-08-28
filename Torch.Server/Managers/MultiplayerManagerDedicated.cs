@@ -151,8 +151,11 @@ namespace Torch.Server.Managers
         //Largely copied from SE
         private void ValidateAuthTicketResponse(ulong steamId, JoinResult response, ulong steamOwner)
         {
-            //SteamNetworking.GetP2PSessionState(new CSteamID(steamId), out P2PSessionState_t state);
-            var ip = "0"; //state.GetRemoteIP();
+            //SteamNetworking.GetP2PSessionState(new CSteamID(steamId), out P2PSessionState_t state);            
+            //state.GetRemoteIP();
+            MyP2PSessionState statehack = new MyP2PSessionState();
+            VRage.Steam.MySteamService.Static.Peer2Peer.GetSessionState(steamId, ref statehack);
+            var ip = new IPAddress(BitConverter.GetBytes(statehack.RemoteIP).Reverse().ToArray());
 
             Torch.CurrentSession.KeenSession.PromotedUsers.TryGetValue(steamId, out MyPromoteLevel promoteLevel);
 
