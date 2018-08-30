@@ -117,7 +117,13 @@ namespace Torch.Server.ViewModels
             set
             {
                 _password = value;
-                _config.SetPassword(value);
+                if(!string.IsNullOrEmpty(value))
+                    _config.SetPassword(value);
+                else
+                {
+                    _config.ServerPasswordHash = null;
+                    _config.ServerPasswordSalt = null;
+                }
             }
         }
     }
