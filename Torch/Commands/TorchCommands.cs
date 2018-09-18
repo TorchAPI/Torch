@@ -133,7 +133,7 @@ namespace Torch.Commands
         public void Version()
         {
             var ver = Context.Torch.TorchVersion;
-            Context.Respond($"Torch version: {ver}");
+            Context.Respond($"Torch version: {ver} SE version: {MyFinalBuildConstants.APP_VERSION}");
         }
 
         [Command("plugins", "Lists the currently loaded plugins.")]
