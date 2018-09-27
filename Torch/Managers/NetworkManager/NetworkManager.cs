@@ -25,6 +25,13 @@ namespace Torch.Managers
         private readonly HashSet<INetworkHandler> _networkHandlers = new HashSet<INetworkHandler>();
         private bool _init;
 
+        private const int MAX_ARGUMENT = 6;
+        private const int GENERIC_PARAMETERS = 8;
+        private const int DISPATCH_PARAMETERS = 10;
+        private static readonly DBNull DbNull = DBNull.Value;
+        private static readonly MethodInfo DispatchEventInfo = typeof(MyReplicationLayerBase).GetMethod("DispatchEvent", BindingFlags.NonPublic | BindingFlags.Instance);
+
+
         [ReflectedGetter(Name = "m_typeTable")]
         private static Func<MyReplicationLayerBase, MyTypeTable> _typeTableGetter;
         [ReflectedGetter(Name = "m_methodInfoLookup")]
@@ -109,6 +116,7 @@ namespace Torch.Managers
 
         #region Network Intercept
 
+        //TODO: Change this to a method patch so I don't have to try to keep up with Keen.
         /// <summary>
         /// This is the main body of the network intercept system. When messages come in from clients, they are processed here
         /// before being passed on to the game server.
@@ -140,7 +148,7 @@ namespace Torch.Managers
             var networkId = stream.ReadNetworkId();
             //this value is unused, but removing this line corrupts the rest of the stream
             var blockedNetworkId = stream.ReadNetworkId();
-            var eventId = (uint)stream.ReadInt16();
+            var eventId = (uint)stream.ReadUInt16();
 
 
             CallSite site;
@@ -283,8 +291,8 @@ namespace Torch.Managers
             if (method == null)
                 throw new ArgumentNullException(nameof(method), "MethodInfo cannot be null!");
 
-            if (args.Length > 6)
-                throw new ArgumentOutOfRangeException(nameof(args), "Cannot pass more than 6 arguments!");
+            if (args.Length > MAX_ARGUMENT)
+                throw new ArgumentOutOfRangeException(nameof(args), $"Cannot pass more than {MAX_ARGUMENT} arguments!");
 
             var owner = obj as IMyEventOwner;
             if (obj != null && owner == null)
@@ -294,28 +302,28 @@ namespace Torch.Managers
                 throw new CustomAttributeFormatException("Provided event target does not have the Event attribute! Replication will not succeed!");
 
             //array to hold arguments to pass into DispatchEvent
-            object[] arguments = new object[11];
+            object[] arguments = new object[DISPATCH_PARAMETERS];
+            
 
             arguments[0] = obj == null ? TryGetStaticCallSite(method) : TryGetCallSite(method, obj);
             arguments[1] = endpoint;
-            arguments[2] = 1f;
-            arguments[3] = owner;
+            arguments[2] = owner;
 
             //copy supplied arguments into the reflection arguments
             for (var i = 0; i < args.Length; i++)
-                arguments[i + 4] = args[i];
+                arguments[i + 3] = args[i];
 
-            //pad the array out with DBNull
-            for (var j = args.Length + 4; j < 10; j++)
-                arguments[j] = e;
-
-            arguments[10] = null;
-
+            //pad the array out with DBNull, skip last element
+            //last element should stay null (this is for blocking events -- not used?)
+            for (var j = args.Length + 3; j < arguments.Length - 1; j++)
+                arguments[j] = DbNull;
+            
             //create an array of Types so we can create a generic method
-            var argTypes = new Type[8];
+            var argTypes = new Type[GENERIC_PARAMETERS];
 
-            for (var k = 3; k < 11; k++)
-                argTypes[k - 3] = arguments[k]?.GetType() ?? typeof(IMyEventOwner);
+            //any null arguments (not DBNull) must be of type IMyEventOwner
+            for (var k = 2; k < arguments.Length; k++)
+                argTypes[k - 2] = arguments[k]?.GetType() ?? typeof(IMyEventOwner);
 
             var parameters = method.GetParameters();
             for (var i = 0; i < parameters.Length; i++)
@@ -325,11 +333,9 @@ namespace Torch.Managers
             }
 
             //create a generic method of DispatchEvent and invoke to inject our data into the network
-            var dispatch = typeof(MyReplicationLayerBase).GetMethod("DispatchEvent", BindingFlags.NonPublic | BindingFlags.Instance).MakeGenericMethod(argTypes);
+            var dispatch = DispatchEventInfo.MakeGenericMethod(argTypes);
             dispatch.Invoke(MyMultiplayer.ReplicationLayer, arguments);
         }
-
-        private static DBNull e = DBNull.Value;
 
         /// <summary>
         /// Broadcasts a static event to all connected clients
