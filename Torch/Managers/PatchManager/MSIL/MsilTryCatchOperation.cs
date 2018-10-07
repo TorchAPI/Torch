@@ -24,6 +24,8 @@ namespace Torch.Managers.PatchManager.MSIL
     /// </summary>
     public class MsilTryCatchOperation
     {
+        internal int NativeOffset;
+        
         /// <summary>
         /// Operation type
         /// </summary>

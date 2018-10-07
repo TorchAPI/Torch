@@ -54,6 +54,8 @@ namespace Torch.Managers.PatchManager.MSIL
             {
             }
 
+            public override int MaxBytes => Instruction.OpCode.OperandType == OperandType.InlineI ? 4 : 1;
+
             internal override void Read(MethodContext context, BinaryReader reader)
             {
                 // ReSharper disable once SwitchStatementMissingSomeCases
@@ -98,6 +100,8 @@ namespace Torch.Managers.PatchManager.MSIL
             {
             }
 
+            public override int MaxBytes => 4;
+
             internal override void Read(MethodContext context, BinaryReader reader)
             {
                 // ReSharper disable once SwitchStatementMissingSomeCases
@@ -135,6 +139,8 @@ namespace Torch.Managers.PatchManager.MSIL
             internal MsilOperandDouble(MsilInstruction instruction) : base(instruction)
             {
             }
+
+            public override int MaxBytes => 8;
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
@@ -174,6 +180,8 @@ namespace Torch.Managers.PatchManager.MSIL
             {
             }
 
+            public override int MaxBytes => 8;
+
             internal override void Read(MethodContext context, BinaryReader reader)
             {
                 // ReSharper disable once SwitchStatementMissingSomeCases
@@ -211,6 +219,8 @@ namespace Torch.Managers.PatchManager.MSIL
             internal MsilOperandString(MsilInstruction instruction) : base(instruction)
             {
             }
+
+            public override int MaxBytes => 4;
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
@@ -250,6 +260,8 @@ namespace Torch.Managers.PatchManager.MSIL
             {
             }
 
+            public override int MaxBytes => throw new NotImplementedException();
+
             internal override void Read(MethodContext context, BinaryReader reader)
             {
                 // ReSharper disable once SwitchStatementMissingSomeCases
@@ -285,6 +297,8 @@ namespace Torch.Managers.PatchManager.MSIL
             internal MsilOperandArgument(MsilInstruction instruction) : base(instruction)
             {
             }
+
+            public override int MaxBytes => Instruction.OpCode.OperandType == OperandType.ShortInlineVar ? 1 : 2;
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {
@@ -339,6 +353,8 @@ namespace Torch.Managers.PatchManager.MSIL
             {
             }
 
+            public override int MaxBytes => 2;
+
             internal override void Read(MethodContext context, BinaryReader reader)
             {
                 int id;
@@ -389,6 +405,8 @@ namespace Torch.Managers.PatchManager.MSIL
             internal MsilOperandReflected(MsilInstruction instruction) : base(instruction)
             {
             }
+            
+            public override int MaxBytes => 4;
 
             internal override void Read(MethodContext context, BinaryReader reader)
             {

@@ -40,21 +40,25 @@ namespace Torch.Managers.PatchManager
             MethodTranspiler.EmitMethod(insn.ToList(), generator);
         }
 
+        public delegate void DelPrintIntegrityInfo(bool error, string msg);
+
         /// <summary>
         /// Analyzes the integrity of a set of instructions.
         /// </summary>
-        /// <param name="level">default logging level</param>
+        /// <param name="handler">Logger</param>
         /// <param name="instructions">instructions</param>
-        public static void IntegrityAnalysis(LogLevel level, IReadOnlyList<MsilInstruction> instructions)
+        public static void IntegrityAnalysis(DelPrintIntegrityInfo handler, IReadOnlyList<MsilInstruction> instructions)
         {
-            MethodTranspiler.IntegrityAnalysis(level, instructions);
+            MethodTranspiler.IntegrityAnalysis(handler, instructions);
         }
 
 #pragma warning disable 649
-        [ReflectedStaticMethod(Type = typeof(RuntimeHelpers), Name = "_CompileMethod", OverrideTypeNames = new[] { "System.IRuntimeMethodInfo" })]
+        [ReflectedStaticMethod(Type = typeof(RuntimeHelpers), Name = "_CompileMethod", OverrideTypeNames = new[] {"System.IRuntimeMethodInfo"})]
         private static Action<object> _compileDynamicMethod;
+
         [ReflectedMethod(Name = "GetMethodInfo")]
         private static Func<RuntimeMethodHandle, object> _getMethodInfo;
+
         [ReflectedMethod(Name = "GetMethodDescriptor")]
         private static Func<DynamicMethod, RuntimeMethodHandle> _getMethodHandle;
 #pragma warning restore 649
