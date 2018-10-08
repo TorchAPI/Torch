@@ -29,8 +29,9 @@ namespace Torch.Managers
         private const int GENERIC_PARAMETERS = 8;
         private const int DISPATCH_PARAMETERS = 10;
         private static readonly DBNull DbNull = DBNull.Value;
-        private static readonly MethodInfo DispatchEventInfo = typeof(MyReplicationLayerBase).GetMethod("DispatchEvent", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static MethodInfo _dispatchInfo;
 
+        private static MethodInfo DispatchEventInfo => _dispatchInfo ?? (_dispatchInfo = typeof(MyReplicationLayerBase).GetMethod("DispatchEvent", BindingFlags.NonPublic | BindingFlags.Instance));
 
         [ReflectedGetter(Name = "m_typeTable")]
         private static Func<MyReplicationLayerBase, MyTypeTable> _typeTableGetter;
