@@ -9,9 +9,6 @@ def packageAndArchive(buildMode, packageName, exclude) {
 	if (exclude.length() > 0) {
 		bat "del ${packageDir}${exclude}"
 	}
-	if (buildMode == "Release") {
-		bat "del ${packageDir}*.pdb"
-	}
 	powershell "Add-Type -Assembly System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory(\"\$PWD\\${packageDir}\", \"\$PWD\\${zipFile}\")"
 	archiveArtifacts artifacts: zipFile, caseSensitive: false, onlyIfSuccessful: true
 }
