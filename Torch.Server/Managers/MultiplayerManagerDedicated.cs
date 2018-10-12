@@ -169,6 +169,8 @@ namespace Torch.Server.Managers
                 _log.Warn($"Rejecting user {steamId} because they are not whitelisted in Torch.cfg.");
                 UserRejected(steamId, JoinResult.NotInGroup);
             }
+            else if(config.EnableReservedSlots && config.ReservedPlayers.Contains(steamId))
+                UserAccepted(steamId);
             else if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE &&
                      promoteLevel < MyPromoteLevel.Admin)
             {

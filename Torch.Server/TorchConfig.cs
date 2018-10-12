@@ -68,6 +68,9 @@ namespace Torch.Server
 
         public string LastUsedTheme { get; set; } = "Torch Theme";
 
+        public bool EnableReservedSlots { get; set; } = false;
+        public HashSet<ulong> ReservedPlayers { get; set; } = new HashSet<ulong>();
+
         [XmlIgnore]
         private string _path;
 
