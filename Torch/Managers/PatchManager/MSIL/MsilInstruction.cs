@@ -2,9 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
+using System.Windows.Documents;
 using Torch.Managers.PatchManager.Transpile;
 using Torch.Utils;
 
@@ -103,8 +105,21 @@ namespace Torch.Managers.PatchManager.MSIL
         /// <summary>
         /// The try catch operation that is performed here.
         /// </summary>
-        public MsilTryCatchOperation TryCatchOperation { get; set; } = null;
+        [Obsolete("Since instructions can have multiple try catch operations you need to be using TryCatchOperations")]
+        public MsilTryCatchOperation TryCatchOperation
+        {
+            get => TryCatchOperations.FirstOrDefault();
+            set
+            {
+                TryCatchOperations.Clear();
+                TryCatchOperations.Add(value);
+            }
+        }
 
+        /// <summary>
+        /// The try catch operations performed here, in order from first to last.
+        /// </summary>
+        public readonly List<MsilTryCatchOperation> TryCatchOperations = new List<MsilTryCatchOperation>();
 
         private static readonly ConcurrentDictionary<Type, PropertyInfo> _setterInfoForInlines = new ConcurrentDictionary<Type, PropertyInfo>();
 
@@ -125,15 +140,18 @@ namespace Torch.Managers.PatchManager.MSIL
                     target = genType.GetProperty(nameof(MsilOperandInline<int>.Value));
                     _setterInfoForInlines[type] = target;
                 }
+
                 Debug.Assert(target?.DeclaringType != null);
                 if (target.DeclaringType.IsInstanceOfType(Operand))
                 {
                     target.SetValue(Operand, o);
                     return this;
                 }
+
                 type = type.BaseType;
             }
-            ((MsilOperandInline<T>)Operand).Value = o;
+
+            ((MsilOperandInline<T>) Operand).Value = o;
             return this;
         }
 
@@ -148,7 +166,8 @@ namespace Torch.Managers.PatchManager.MSIL
             Operand?.CopyTo(result.Operand);
             foreach (MsilLabel x in Labels)
                 result.Labels.Add(x);
-            result.TryCatchOperation = TryCatchOperation;
+            foreach (var op in TryCatchOperations)
+                result.TryCatchOperations.Add(op);
             return result;
         }
 
@@ -170,7 +189,7 @@ namespace Torch.Managers.PatchManager.MSIL
         /// <returns>This instruction</returns>
         public MsilInstruction InlineTarget(MsilLabel label)
         {
-            ((MsilOperandBrTarget)Operand).Target = label;
+            ((MsilOperandBrTarget) Operand).Target = label;
             return this;
         }
 
@@ -183,7 +202,6 @@ namespace Torch.Managers.PatchManager.MSIL
             sb.Append(OpCode.Name).Append("\t").Append(Operand);
             return sb.ToString();
         }
-
 
 
 #pragma warning disable 649
@@ -210,7 +228,13 @@ namespace Torch.Managers.PatchManager.MSIL
                 if (!op.IsStatic && OpCode != OpCodes.Newobj)
                     num--;
             }
+
             return num;
         }
+
+        /// <summary>
+        /// Gets the maximum amount of space this instruction will use.
+        /// </summary>
+        public int MaxBytes => 2 + (Operand?.MaxBytes ?? 0);
     }
 }

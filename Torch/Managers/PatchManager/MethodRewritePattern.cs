@@ -168,18 +168,71 @@ namespace Torch.Managers.PatchManager
         /// <summary>
         /// Should the resulting MSIL of the transpile operation be printed.
         /// </summary>
+        [Obsolete]
         public bool PrintMsil
         {
-            get => _parent?.PrintMsil ?? _printMsilBacking;
+            get => PrintMode != 0;
+            set => PrintMode = PrintModeEnum.Emitted;
+        }
+        
+        private PrintModeEnum _printMsilBacking;
+        
+        /// <summary>
+        /// Types of IL to print to log
+        /// </summary>
+        public PrintModeEnum PrintMode
+        {
+            get => _parent?.PrintMode ?? _printMsilBacking;
             set
             {
                 if (_parent != null)
-                    _parent.PrintMsil = value;
+                    _parent.PrintMode = value;
                 else
                     _printMsilBacking = value;
             }
         }
-        private bool _printMsilBacking;
+
+        [Flags]
+        public enum PrintModeEnum
+        {
+            Original = 1,
+            Emitted = 2,
+            Patched = 4,
+            EmittedReflection = 8
+        }
+        
+        /// <summary>
+        /// File to dump the emitted MSIL to.
+        /// </summary>
+        public string DumpTarget
+        {
+            get => _parent?.DumpTarget ?? _dumpTargetBacking;
+            set
+            {
+                if (_parent != null)
+                    _parent.DumpTarget = value;
+                else
+                    _dumpTargetBacking = value;
+            }
+        }
+        
+        /// <summary>
+        /// Types of IL to dump to file
+        /// </summary>
+        public PrintModeEnum DumpMode
+        {
+            get => _parent?.DumpMode ?? _dumpTargetMode;
+            set
+            {
+                if (_parent != null)
+                    _parent.DumpMode = value;
+                else
+                    _dumpTargetMode = value;
+            }
+        }
+
+        private PrintModeEnum _dumpTargetMode;
+        private string _dumpTargetBacking;
 
         private readonly MethodRewritePattern _parent;
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -44,7 +45,7 @@ namespace Torch.Managers.PatchManager
 
                 if (Prefixes.Count == 0 && Suffixes.Count == 0 && Transpilers.Count == 0 && PostTranspilers.Count == 0)
                     return;
-                _log.Log(PrintMsil ? LogLevel.Info : LogLevel.Debug,
+                _log.Log(PrintMode != 0 ? LogLevel.Info : LogLevel.Debug,
                     $"Begin patching {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
                 var patch = ComposePatchedMethod();
 
@@ -52,7 +53,7 @@ namespace Torch.Managers.PatchManager
                 var newAddress = AssemblyMemory.GetMethodBodyStart(patch);
                 _revertData = AssemblyMemory.WriteJump(_revertAddress, newAddress);
                 _pinnedPatch = GCHandle.Alloc(patch);
-                _log.Log(PrintMsil ? LogLevel.Info : LogLevel.Debug,
+                _log.Log(PrintMode != 0 ? LogLevel.Info : LogLevel.Debug,
                     $"Done patching {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
             }
             catch (Exception exception)
@@ -104,36 +105,110 @@ namespace Torch.Managers.PatchManager
         public const string PREFIX_SKIPPED_PARAMETER = "__prefixSkipped";
         public const string LOCAL_PARAMETER = "__local";
 
+        private void SavePatchedMethod(string target)
+        {
+            var asmBuilder =
+                AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("SomeName"), AssemblyBuilderAccess.RunAndSave, Path.GetDirectoryName(target));
+            var moduleBuilder = asmBuilder.DefineDynamicModule(Path.GetFileNameWithoutExtension(target), Path.GetFileName(target));
+            var typeBuilder = moduleBuilder.DefineType("Test", TypeAttributes.Public);
+
+
+            var methodName = _method.Name + $"_{_patchSalt}";
+            var returnType = _method is MethodInfo meth ? meth.ReturnType : typeof(void);
+            var parameters = _method.GetParameters();
+            var parameterTypes = (_method.IsStatic ? Enumerable.Empty<Type>() : new[] {_method.DeclaringType})
+                .Concat(parameters.Select(x => x.ParameterType)).ToArray();
+
+            var patchMethod = typeBuilder.DefineMethod(methodName, MethodAttributes.Public | MethodAttributes.Static, CallingConventions.Standard,
+                returnType, parameterTypes);
+            if (!_method.IsStatic)
+                patchMethod.DefineParameter(0, ParameterAttributes.None, INSTANCE_PARAMETER);
+            for (var i = 0; i < parameters.Length; i++)
+                patchMethod.DefineParameter((patchMethod.IsStatic ? 0 : 1) + i, parameters[i].Attributes, parameters[i].Name);
+
+            var generator = new LoggingIlGenerator(patchMethod.GetILGenerator(), LogLevel.Trace);
+            List<MsilInstruction> il = EmitPatched((type, pinned) => new MsilLocal(generator.DeclareLocal(type, pinned))).ToList();
+
+            MethodTranspiler.EmitMethod(il, generator);
+
+            Type res = typeBuilder.CreateType();
+            asmBuilder.Save(Path.GetFileName(target));
+            foreach (var method in res.GetMethods(BindingFlags.Public | BindingFlags.Static))
+                _log.Info($"Information " + method);
+        }
 
         public DynamicMethod ComposePatchedMethod()
         {
             DynamicMethod method = AllocatePatchMethod();
-            var generator = new LoggingIlGenerator(method.GetILGenerator(), PrintMsil ? LogLevel.Info : LogLevel.Trace);
+            var generator = new LoggingIlGenerator(method.GetILGenerator(),
+                PrintMode.HasFlag(PrintModeEnum.EmittedReflection) ? LogLevel.Info : LogLevel.Trace);
             List<MsilInstruction> il = EmitPatched((type, pinned) => new MsilLocal(generator.DeclareLocal(type, pinned))).ToList();
-            if (PrintMsil)
-            {
-                lock (_log)
-                {
-                    MethodTranspiler.IntegrityAnalysis(LogLevel.Info, il);
-                }
-            }
 
-            MethodTranspiler.EmitMethod(il, generator);
-
+            var dumpTarget = DumpTarget != null ? File.CreateText(DumpTarget) : null;
             try
             {
-                PatchUtilities.Compile(method);
-            }
-            catch
-            {
-                lock (_log)
+                const string gap = "\n\n\n\n\n";
+
+                void LogTarget(PrintModeEnum mode, bool err, string msg)
                 {
-                    var ctx = new MethodContext(method);
-                    ctx.Read();
-                    MethodTranspiler.IntegrityAnalysis(LogLevel.Warn, ctx.Instructions);
+                    if (DumpMode.HasFlag(mode))
+                        dumpTarget?.WriteLine((err ? "ERROR " : "") + msg);
+                    if (!PrintMode.HasFlag(mode)) return;
+                    if (err)
+                        _log.Error(msg);
+                    else
+                        _log.Info(msg);
                 }
 
-                throw;
+                if (PrintMsil || DumpTarget != null)
+                {
+                    lock (_log)
+                    {
+                        var ctx = new MethodContext(_method);
+                        ctx.Read();
+                        LogTarget(PrintModeEnum.Original, false, "========== Original method ==========");
+                        MethodTranspiler.IntegrityAnalysis((a, b) => LogTarget(PrintModeEnum.Original, a, b), ctx.Instructions, true);
+                        LogTarget(PrintModeEnum.Original, false, gap);
+
+                        LogTarget(PrintModeEnum.Emitted, false, "========== Desired method ==========");
+                        MethodTranspiler.IntegrityAnalysis((a, b) => LogTarget(PrintModeEnum.Emitted, a, b), il);
+                        LogTarget(PrintModeEnum.Emitted, false, gap);
+                    }
+                }
+
+                MethodTranspiler.EmitMethod(il, generator);
+
+                try
+                {
+                    PatchUtilities.Compile(method);
+                }
+                catch
+                {
+                    lock (_log)
+                    {
+                        var ctx = new MethodContext(method);
+                        ctx.Read();
+                        MethodTranspiler.IntegrityAnalysis((err, msg) => _log.Warn(msg), ctx.Instructions);
+                    }
+
+                    throw;
+                }
+
+                if (PrintMsil || DumpTarget != null)
+                {
+                    lock (_log)
+                    {
+                        var ctx = new MethodContext(method);
+                        ctx.Read();
+                        LogTarget(PrintModeEnum.Patched, false, "========== Patched method ==========");
+                        MethodTranspiler.IntegrityAnalysis((a, b) => LogTarget(PrintModeEnum.Patched, a, b), ctx.Instructions, true);
+                        LogTarget(PrintModeEnum.Patched, false, gap);
+                    }
+                }
+            }
+            finally
+            {
+                dumpTarget?.Close();
             }
 
             return method;
@@ -274,7 +349,8 @@ namespace Torch.Managers.PatchManager
                             ? param.ParameterType.GetElementType()
                             : param.ParameterType;
                         if (retType == null || !retType.IsAssignableFrom(specialVariables[RESULT_PARAMETER].Type))
-                            throw new Exception($"Return type {specialVariables[RESULT_PARAMETER].Type} can't be assigned to result parameter type {retType}");
+                            throw new Exception(
+                                $"Return type {specialVariables[RESULT_PARAMETER].Type} can't be assigned to result parameter type {retType}");
                         yield return new MsilInstruction(param.ParameterType.IsByRef ? OpCodes.Ldloca : OpCodes.Ldloc)
                             .InlineValue(specialVariables[RESULT_PARAMETER]);
                         break;

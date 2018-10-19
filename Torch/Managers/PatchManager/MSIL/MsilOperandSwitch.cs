@@ -20,6 +20,7 @@ namespace Torch.Managers.PatchManager.MSIL
         /// </summary>
         public MsilLabel[] Labels { get; set; }
 
+        public override int MaxBytes => 4 + (Labels?.Length * 4 ?? 0);
 
         internal override void CopyTo(MsilOperand operand)
         {

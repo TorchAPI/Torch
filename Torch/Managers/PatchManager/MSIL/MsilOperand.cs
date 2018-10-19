@@ -18,6 +18,11 @@ namespace Torch.Managers.PatchManager.MSIL
         /// </summary>
         public MsilInstruction Instruction { get; }
 
+        /// <summary>
+        /// Gets the maximum amount of space this operand will use.
+        /// </summary>
+        public abstract int MaxBytes { get; }
+
         internal abstract void CopyTo(MsilOperand operand);
 
         internal abstract void Read(MethodContext context, BinaryReader reader);

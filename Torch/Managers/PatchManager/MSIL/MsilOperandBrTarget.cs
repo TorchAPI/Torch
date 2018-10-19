@@ -57,6 +57,8 @@ namespace Torch.Managers.PatchManager.MSIL
 
         }
 
+        public override int MaxBytes => 4; // Long branch
+
         internal override void CopyTo(MsilOperand operand)
         {
             var lt = operand as MsilOperandBrTarget;

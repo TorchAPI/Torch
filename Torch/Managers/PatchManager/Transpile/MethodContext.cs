@@ -8,6 +8,7 @@ using System.Reflection.Emit;
 using NLog;
 using Torch.Managers.PatchManager.MSIL;
 using Torch.Utils;
+using VRage.Game.VisualScripting.Utils;
 
 namespace Torch.Managers.PatchManager.Transpile
 {
@@ -44,14 +45,47 @@ namespace Torch.Managers.PatchManager.Transpile
 
 
 #pragma warning disable 649
-        [ReflectedMethod(Name = "BakeByteArray")] private static Func<ILGenerator, byte[]> _ilGeneratorBakeByteArray;
+        [ReflectedMethod(Name = "BakeByteArray")]
+        private static Func<ILGenerator, byte[]> _ilGeneratorBakeByteArray;
+
+        [ReflectedMethod(Name = "GetExceptions")]
+        private static Func<ILGenerator, Array> _ilGeneratorGetExceptionHandlers;
+
+        private const string InternalExceptionInfo = "System.Reflection.Emit.__ExceptionInfo, mscorlib";
+
+        [ReflectedMethod(Name = "GetExceptionTypes", TypeName = InternalExceptionInfo)]
+        private static Func<object, int[]> _exceptionHandlerGetTypes;
+
+        [ReflectedMethod(Name = "GetStartAddress", TypeName = InternalExceptionInfo)]
+        private static Func<object, int> _exceptionHandlerGetStart;
+
+        [ReflectedMethod(Name = "GetEndAddress", TypeName = InternalExceptionInfo)]
+        private static Func<object, int> _exceptionHandlerGetEnd;
+
+        [ReflectedMethod(Name = "GetFinallyEndAddress", TypeName = InternalExceptionInfo)]
+        private static Func<object, int> _exceptionHandlerGetFinallyEnd;
+
+        [ReflectedMethod(Name = "GetNumberOfCatches", TypeName = InternalExceptionInfo)]
+        private static Func<object, int> _exceptionHandlerGetCatchCount;
+
+        [ReflectedMethod(Name = "GetCatchAddresses", TypeName = InternalExceptionInfo)]
+        private static Func<object, int[]> _exceptionHandlerGetCatchAddrs;
+
+        [ReflectedMethod(Name = "GetCatchEndAddresses", TypeName = InternalExceptionInfo)]
+        private static Func<object, int[]> _exceptionHandlerGetCatchEndAddrs;
+
+        [ReflectedMethod(Name = "GetFilterAddresses", TypeName = InternalExceptionInfo)]
+        private static Func<object, int[]> _exceptionHandlerGetFilterAddrs;
 #pragma warning restore 649
+
+        private readonly Array _dynamicExceptionTable;
 
         public MethodContext(DynamicMethod method)
         {
             Method = null;
             MethodBody = null;
             _msilBytes = _ilGeneratorBakeByteArray(method.GetILGenerator());
+            _dynamicExceptionTable = _ilGeneratorGetExceptionHandlers(method.GetILGenerator());
             TokenResolver = new DynamicMethodTokenResolver(method);
         }
 
@@ -76,6 +110,7 @@ namespace Torch.Managers.PatchManager.Transpile
                     {
                         instructionValue = (short) ((instructionValue << 8) | memory.ReadByte());
                     }
+
                     if (!OpCodeLookup.TryGetValue(instructionValue, out OpCode opcode))
                     {
                         var msg = $"Unknown opcode {instructionValue:X}";
@@ -83,6 +118,7 @@ namespace Torch.Managers.PatchManager.Transpile
                         Debug.Assert(false, msg);
                         continue;
                     }
+
                     if (opcode.Size != memory.Position - opcodeOffset)
                         throw new Exception(
                             $"Opcode said it was {opcode.Size} but we read {memory.Position - opcodeOffset}");
@@ -97,28 +133,56 @@ namespace Torch.Managers.PatchManager.Transpile
 
         private void ResolveCatchClauses()
         {
-            if (MethodBody == null)
-                return;
-            foreach (ExceptionHandlingClause clause in MethodBody.ExceptionHandlingClauses)
-            {
-                var beginInstruction = FindInstruction(clause.TryOffset);
-                var catchInstruction = FindInstruction(clause.HandlerOffset);
-                var finalInstruction = FindInstruction(clause.HandlerOffset + clause.HandlerLength);
-                beginInstruction.TryCatchOperation =
-                    new MsilTryCatchOperation(MsilTryCatchOperationType.BeginExceptionBlock);
-                if ((clause.Flags & ExceptionHandlingClauseOptions.Fault) != 0)
-                    catchInstruction.TryCatchOperation =
-                        new MsilTryCatchOperation(MsilTryCatchOperationType.BeginFaultBlock);
-                else if ((clause.Flags & ExceptionHandlingClauseOptions.Finally) != 0)
-                    catchInstruction.TryCatchOperation =
-                        new MsilTryCatchOperation(MsilTryCatchOperationType.BeginFinallyBlock);
-                else
-                    catchInstruction.TryCatchOperation =
-                        new MsilTryCatchOperation(MsilTryCatchOperationType.BeginClauseBlock, clause.CatchType);
+            if (MethodBody != null)
+                foreach (var clause in MethodBody.ExceptionHandlingClauses)
+                {
+                    AddEhHandler(clause.TryOffset, MsilTryCatchOperationType.BeginExceptionBlock);
+                    if ((clause.Flags & ExceptionHandlingClauseOptions.Fault) != 0)
+                        AddEhHandler(clause.HandlerOffset, MsilTryCatchOperationType.BeginFaultBlock);
+                    else if ((clause.Flags & ExceptionHandlingClauseOptions.Finally) != 0)
+                        AddEhHandler(clause.HandlerOffset, MsilTryCatchOperationType.BeginFinallyBlock);
+                    else
+                        AddEhHandler(clause.HandlerOffset, MsilTryCatchOperationType.BeginClauseBlock, clause.CatchType);
+                    AddEhHandler(clause.HandlerOffset + clause.HandlerLength, MsilTryCatchOperationType.EndExceptionBlock);
+                }
 
-                finalInstruction.TryCatchOperation =
-                    new MsilTryCatchOperation(MsilTryCatchOperationType.EndExceptionBlock);
-            }
+            if (_dynamicExceptionTable != null)
+                foreach (var eh in _dynamicExceptionTable)
+                {
+                    var catchCount = _exceptionHandlerGetCatchCount(eh);
+                    var exTypes = _exceptionHandlerGetTypes(eh);
+                    var exCatches = _exceptionHandlerGetCatchAddrs(eh);
+                    var exCatchesEnd = _exceptionHandlerGetCatchEndAddrs(eh);
+                    var exFilters = _exceptionHandlerGetFilterAddrs(eh);
+                    var tryAddr = _exceptionHandlerGetStart(eh);
+                    var endAddr = _exceptionHandlerGetEnd(eh);
+                    var endFinallyAddr = _exceptionHandlerGetFinallyEnd(eh);
+                    for (var i = 0; i < catchCount; i++)
+                    {
+                        var flags = (ExceptionHandlingClauseOptions) exTypes[i];
+                        var endAddress = (flags & ExceptionHandlingClauseOptions.Finally) != 0 ? endFinallyAddr : endAddr;
+
+                        var catchAddr = exCatches[i];
+                        var catchEndAddr = exCatchesEnd[i];
+                        var filterAddr = exFilters[i];
+                        
+                        AddEhHandler(tryAddr, MsilTryCatchOperationType.BeginExceptionBlock);
+                        if ((flags & ExceptionHandlingClauseOptions.Fault) != 0)
+                            AddEhHandler(catchAddr, MsilTryCatchOperationType.BeginFaultBlock);
+                        else if ((flags & ExceptionHandlingClauseOptions.Finally) != 0)
+                            AddEhHandler(catchAddr, MsilTryCatchOperationType.BeginFinallyBlock);
+                        else
+                            AddEhHandler(catchAddr, MsilTryCatchOperationType.BeginClauseBlock);
+                        AddEhHandler(catchEndAddr, MsilTryCatchOperationType.EndExceptionBlock);
+                    }
+                }
+        }
+
+        private void AddEhHandler(int offset, MsilTryCatchOperationType op, Type type = null)
+        {
+            var instruction = FindInstruction(offset);
+            instruction.TryCatchOperations.Add(new MsilTryCatchOperation(op, type) {NativeOffset = offset});
+            instruction.TryCatchOperations.Sort((a, b) => a.NativeOffset.CompareTo(b.NativeOffset));
         }
 
         public MsilInstruction FindInstruction(int offset)
@@ -132,6 +196,7 @@ namespace Torch.Managers.PatchManager.Transpile
                 else
                     max = mid;
             }
+
             return min >= 0 && min < _instructions.Count ? _instructions[min] : null;
         }
 
