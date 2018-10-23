@@ -112,7 +112,8 @@ namespace Torch.Managers.PatchManager.MSIL
             set
             {
                 TryCatchOperations.Clear();
-                TryCatchOperations.Add(value);
+                if (value != null)
+                    TryCatchOperations.Add(value);
             }
         }
 
