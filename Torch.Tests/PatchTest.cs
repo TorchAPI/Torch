@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using Torch.Managers.PatchManager;
 using Torch.Managers.PatchManager.MSIL;
 using Torch.Utils;
@@ -17,6 +19,7 @@ namespace Torch.Tests
     public class PatchTest
     {
         #region TestRunner
+
         private static readonly PatchManager _patchContext = new PatchManager(null);
 
         [Theory]
@@ -48,6 +51,133 @@ namespace Torch.Tests
         }
 
 
+        [Fact]
+        public void TestTryCatchNop()
+        {
+            var ctx = _patchContext.AcquireContext();
+            ctx.GetPattern(TryCatchTest._target).Transpilers.Add(_nopTranspiler);
+            _patchContext.Commit();
+            Assert.False(TryCatchTest.Target());
+            Assert.True(TryCatchTest.FinallyHit);
+            _patchContext.FreeContext(ctx);
+            _patchContext.Commit();
+        }
+
+        [Fact]
+        public void TestTryCatchCancel()
+        {
+            var ctx = _patchContext.AcquireContext();
+            ctx.GetPattern(TryCatchTest._target).Transpilers.Add(TryCatchTest._removeThrowTranspiler);
+            ctx.GetPattern(TryCatchTest._target).DumpTarget = @"C:\tmp\dump.txt";
+            ctx.GetPattern(TryCatchTest._target).DumpMode = MethodRewritePattern.PrintModeEnum.Original | MethodRewritePattern.PrintModeEnum.Patched;
+            _patchContext.Commit();
+            Assert.True(TryCatchTest.Target());
+            Assert.True(TryCatchTest.FinallyHit);
+            _patchContext.FreeContext(ctx);
+            _patchContext.Commit();
+        }
+
+        private static readonly MethodInfo _nopTranspiler = typeof(PatchTest).GetMethod(nameof(NopTranspiler), BindingFlags.Static | BindingFlags.NonPublic);
+
+        private static IEnumerable<MsilInstruction> NopTranspiler(IEnumerable<MsilInstruction> input)
+        {
+            return input;
+        }
+
+        private class TryCatchTest
+        {
+            public static readonly MethodInfo _removeThrowTranspiler =
+                typeof(TryCatchTest).GetMethod(nameof(RemoveThrowTranspiler), BindingFlags.Static | BindingFlags.NonPublic);
+
+            private static IEnumerable<MsilInstruction> RemoveThrowTranspiler(IEnumerable<MsilInstruction> input)
+            {
+                foreach (var i in input)
+                    if (i.OpCode == OpCodes.Throw)
+                        yield return i.CopyWith(OpCodes.Pop);
+                    else
+                        yield return i;
+            }
+
+            public static readonly MethodInfo _target = typeof(TryCatchTest).GetMethod(nameof(Target), BindingFlags.Public | BindingFlags.Static);
+
+            public static bool FinallyHit = false;
+
+            public static bool Target()
+            {
+                FinallyHit = false;
+                try
+                {
+                    try
+                    {
+                        // shim to prevent compiler optimization
+                        if ("test".Length > "".Length)
+                            throw new Exception();
+                        return true;
+                    }
+                    catch (IOException ioe)
+                    {
+                        return false;
+                    }
+                    catch (Exception e)
+                    {
+                        return false;
+                    }
+                    finally
+                    {
+                        FinallyHit = true;
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw;
+                }
+            }
+        }
+
+        [Fact]
+        public void TestAsyncNop()
+        {
+            var candidates = new List<Type>();
+            var nestedTypes = typeof(PatchTest).GetNestedTypes(BindingFlags.NonPublic | BindingFlags.Static);
+            foreach (var nested in nestedTypes)
+                if (nested.Name.StartsWith("<" + nameof(TestAsyncMethod) + ">"))
+                {
+                    var good = false;
+                    foreach (var itf in nested.GetInterfaces())
+                        if (itf.FullName == typeof(IAsyncStateMachine).FullName)
+                        {
+                            good = true;
+                            break;
+                        }
+
+                    if (good)
+                        candidates.Add(nested);
+                }
+
+            if (candidates.Count != 1)
+                throw new Exception("Couldn't find async worker");
+
+            var method = candidates[0].GetMethod("MoveNext", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            if (method == null)
+                throw new Exception("Failed to find state machine move next instruction, cannot proceed");
+
+            var ctx = _patchContext.AcquireContext();
+            ctx.GetPattern(method).Transpilers.Add(_nopTranspiler);
+            ctx.GetPattern(method).DumpTarget = @"C:\tmp\dump.txt";
+            ctx.GetPattern(method).DumpMode = MethodRewritePattern.PrintModeEnum.Original | MethodRewritePattern.PrintModeEnum.Patched;
+            _patchContext.Commit();
+            
+            Assert.Equal("TEST", TestAsyncMethod().Result);
+            _patchContext.FreeContext(ctx);
+            _patchContext.Commit();
+        }
+        
+        private async Task<string> TestAsyncMethod()
+        {
+            var first = await Task.Run(() => "TE");
+            var last = await Task.Run(() => "ST");
+            return await Task.Run(() => first + last);
+        }
 
         public class TestBootstrap
         {
@@ -82,7 +212,7 @@ namespace Torch.Tests
                 if (_targetAssert == null)
                     throw new Exception($"{t.FullName} must have a method named AssertNormal");
                 _instance = !_targetMethod.IsStatic ? Activator.CreateInstance(t) : null;
-                _targetParams = (object[])t.GetField("_targetParams", flags)?.GetValue(null) ?? new object[0];
+                _targetParams = (object[]) t.GetField("_targetParams", flags)?.GetValue(null) ?? new object[0];
             }
 
             private void Invoke(MethodBase i, params object[] args)
@@ -185,10 +315,11 @@ namespace Torch.Tests
                     _patchTest.Add(new TestBootstrap(type));
         }
 
-        public static IEnumerable<object[]> Prefixes => _patchTest.Where(x => x.HasPrefix).Select(x => new object[] { x });
-        public static IEnumerable<object[]> Transpilers => _patchTest.Where(x => x.HasTranspile).Select(x => new object[] { x });
-        public static IEnumerable<object[]> Suffixes => _patchTest.Where(x => x.HasSuffix).Select(x => new object[] { x });
-        public static IEnumerable<object[]> Combo => _patchTest.Where(x => x.HasPrefix || x.HasTranspile || x.HasSuffix).Select(x => new object[] { x });
+        public static IEnumerable<object[]> Prefixes => _patchTest.Where(x => x.HasPrefix).Select(x => new object[] {x});
+        public static IEnumerable<object[]> Transpilers => _patchTest.Where(x => x.HasTranspile).Select(x => new object[] {x});
+        public static IEnumerable<object[]> Suffixes => _patchTest.Where(x => x.HasSuffix).Select(x => new object[] {x});
+        public static IEnumerable<object[]> Combo => _patchTest.Where(x => x.HasPrefix || x.HasTranspile || x.HasSuffix).Select(x => new object[] {x});
+
         #endregion
 
         #region PatchTests
@@ -220,7 +351,8 @@ namespace Torch.Tests
             {
                 yield return new MsilInstruction(OpCodes.Ldnull);
                 yield return new MsilInstruction(OpCodes.Ldc_I4_1);
-                yield return new MsilInstruction(OpCodes.Stfld).InlineValue(typeof(StaticNoRetNoParm).GetField("_transpileHit", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
+                yield return new MsilInstruction(OpCodes.Stfld).InlineValue(typeof(StaticNoRetNoParm).GetField("_transpileHit",
+                    BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
                 foreach (MsilInstruction i in instructions)
                     yield return i;
             }
@@ -255,7 +387,7 @@ namespace Torch.Tests
         private class StaticNoRetParam
         {
             private static bool _prefixHit, _normalHit, _suffixHit;
-            private static readonly object[] _targetParams = { "test", 1, new StringBuilder("test1") };
+            private static readonly object[] _targetParams = {"test", 1, new StringBuilder("test1")};
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static void Prefix(string str, int i, StringBuilder o)
@@ -306,8 +438,8 @@ namespace Torch.Tests
         private class StaticNoRetParamReplace
         {
             private static bool _prefixHit, _normalHit, _suffixHit;
-            private static readonly object[] _targetParams = { "test", 1, new StringBuilder("stest1") };
-            private static readonly object[] _replacedParams = { "test2", 2, new StringBuilder("stest2") };
+            private static readonly object[] _targetParams = {"test", 1, new StringBuilder("stest1")};
+            private static readonly object[] _replacedParams = {"test2", 2, new StringBuilder("stest2")};
             private static object[] _calledParams;
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -316,16 +448,16 @@ namespace Torch.Tests
                 Assert.Equal(_targetParams[0], str);
                 Assert.Equal(_targetParams[1], i);
                 Assert.Equal(_targetParams[2], o);
-                str = (string)_replacedParams[0];
-                i = (int)_replacedParams[1];
-                o = (StringBuilder)_replacedParams[2];
+                str = (string) _replacedParams[0];
+                i = (int) _replacedParams[1];
+                o = (StringBuilder) _replacedParams[2];
                 _prefixHit = true;
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static void Target(string str, int i, StringBuilder o)
             {
-                _calledParams = new object[] { str, i, o };
+                _calledParams = new object[] {str, i, o};
                 _normalHit = true;
             }
 
@@ -380,6 +512,7 @@ namespace Torch.Tests
                 Assert.True(_prefixHit, "Failed to prefix");
             }
         }
+
         #endregion
     }
 #pragma warning restore 414
