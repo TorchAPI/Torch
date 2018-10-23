@@ -143,8 +143,8 @@ namespace Torch.Server.ViewModels
         [Torch.Views.Display(Description = "Enables in game scripts.", Name = "Enable Ingame Scripts", GroupName = "Others")]
         public bool EnableIngameScripts { get => _settings.EnableIngameScripts; set => SetValue(ref _settings.EnableIngameScripts, value); }
 
-        [Torch.Views.Display(Description = "", Name = "Flora Density", GroupName = "Environment")]
-        public int FloraDensity { get => _settings.FloraDensity; set => SetValue(ref _settings.FloraDensity, value); }
+        [Torch.Views.Display(Description = "", Name = "Flora Density Multiplier", GroupName = "Environment")]
+        public float FloraDensityMultiplier { get => _settings.FloraDensityMultiplier; set => SetValue(ref _settings.FloraDensityMultiplier, value); }
 
         [Torch.Views.Display(Description = "Enables tool shake feature.", Name = "Enable Tool Shake", GroupName = "Players")]
         [DefaultValue(false)]
@@ -164,10 +164,7 @@ namespace Torch.Server.ViewModels
 
         [Torch.Views.Display(Description = "Enables random encounters in the world.", Name = "Enable Encounters", GroupName = "NPCs")]
         public bool EnableEncounters { get => _settings.EnableEncounters; set => SetValue(ref _settings.EnableEncounters, value); }
-
-        [Torch.Views.Display(Description = "", Name = "Enable Flora", GroupName = "Environment")]
-        public bool EnableFlora { get => _settings.EnableFlora; set => SetValue(ref _settings.EnableFlora, value); }
-
+        
         [Torch.Views.Display(Description = "Enables possibility of converting grid to station.", Name = "Enable Convert to Station", GroupName = "Others")]
         public bool EnableConvertToStation { get => _settings.EnableConvertToStation; set => SetValue(ref _settings.EnableConvertToStation, value); }
 

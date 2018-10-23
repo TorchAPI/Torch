@@ -10,7 +10,7 @@ namespace Torch.Mod
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     public class TorchModCore : MySessionComponentBase
     {
-        public const long MOD_ID = 1406994352;
+        public const ulong MOD_ID = 1406994352;
         private static bool _init;
 
         public override void UpdateAfterSimulation()

@@ -343,5 +343,8 @@ namespace Torch.Collections
 
         /// <inheritdoc/>
         bool ICollection.IsSynchronized => true;
+
+        /// <inheritdoc/>
+        int ICollection.Count => Count;
     }
 }

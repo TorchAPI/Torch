@@ -13,6 +13,7 @@ using Torch.Utils;
 using VRage;
 using VRage.Library.Collections;
 using VRage.Network;
+using VRageMath;
 
 namespace Torch.Managers
 {
@@ -116,7 +117,7 @@ namespace Torch.Managers
         }
 
         #region Network Intercept
-
+        
         //TODO: Change this to a method patch so I don't have to try to keep up with Keen.
         /// <summary>
         /// This is the main body of the network intercept system. When messages come in from clients, they are processed here
@@ -150,7 +151,10 @@ namespace Torch.Managers
             //this value is unused, but removing this line corrupts the rest of the stream
             var blockedNetworkId = stream.ReadNetworkId();
             var eventId = (uint)stream.ReadUInt16();
-
+            bool flag = stream.ReadBool();
+            Vector3D? position = new Vector3D?();
+            if (flag)
+                position = new Vector3D?(stream.ReadVector3D());
 
             CallSite site;
             object obj;

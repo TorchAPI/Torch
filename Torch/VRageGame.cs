@@ -277,7 +277,7 @@ namespace Torch
             MyObjectBuilder_Checkpoint checkpoint = MyLocalCache.LoadCheckpoint(sessionPath, out checkpointSize);
             if (MySession.IsCompatibleVersion(checkpoint))
             {
-                if (MyWorkshop.DownloadWorldModsBlocking(checkpoint.Mods).Success)
+                if (MyWorkshop.DownloadWorldModsBlocking(checkpoint.Mods, null).Success)
                 {
                     // MySpaceAnalytics.Instance.SetEntry(MyGameEntryEnum.Load);
                     MySession.Load(sessionPath, checkpoint, checkpointSize);
