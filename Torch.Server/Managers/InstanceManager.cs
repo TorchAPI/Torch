@@ -188,9 +188,13 @@ namespace Torch.Server.Managers
                 checkpoint.SessionName = DedicatedConfig.WorldName;
                 checkpoint.Settings = DedicatedConfig.SessionSettings;
                 checkpoint.Mods.Clear();
-                
+
                 foreach (var mod in DedicatedConfig.Mods)
-                    checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(mod.Name, mod.PublishedFileId, mod.FriendlyName));
+                {
+                    var savedMod = new MyObjectBuilder_Checkpoint.ModItem(mod.Name, mod.PublishedFileId, mod.FriendlyName);
+                    savedMod.IsDependency = mod.IsDependency;
+                    checkpoint.Mods.Add(savedMod);
+                }
                 Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
 
                 MyObjectBuilderSerializer.SerializeXML(sandboxPath, false, checkpoint);
