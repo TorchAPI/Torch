@@ -260,9 +260,6 @@
     <Compile Include="ViewModels\Entities\EntityControlViewModel.cs" />
     <Compile Include="ViewModels\ModItemInfo.cs" />
     <Compile Include="ViewModels\SessionSettingsViewModel.cs" />
-    <Compile Include="Views\AddModDialog.xaml.cs">
-      <DependentUpon>AddModDialog.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\Converters\DefinitionToIdConverter.cs" />
     <Compile Include="Views\Converters\BooleanAndConverter.cs" />
     <Compile Include="Views\Converters\ListConverter.cs" />
@@ -399,10 +396,6 @@
     <Page Include="Themes\Light Theme.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Views\AddModDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Entities\EntityControlHost.xaml">
       <SubType>Designer</SubType>
