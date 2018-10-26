@@ -4,11 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:viewModels="clr-namespace:Torch.Server.ViewModels"   
-             xmlns:local="clr-namespace:Torch.Server.Views"
-             xmlns:objModel="clr-namespace:System.Collections.ObjectModel"
              xmlns:s="clr-namespace:System"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             MouseMove="UserControl_MouseMove">
     <!--<UserControl.DataContext>
         <viewModels:ConfigDedicatedViewModel />
     </UserControl.DataContext>-->
@@ -27,20 +26,37 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" MinWidth="400px"/>
             <ColumnDefinition Width="10px"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*" MinWidth="200px"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="60px"/>
         </Grid.RowDefinitions>
         
-        <DataGrid Name="ModList" Grid.Column="0" Grid.ColumnSpan="1" ItemsSource="{Binding Mods, UpdateSourceTrigger=PropertyChanged}"
+        <DataGrid Name="ModList" Grid.Column="0" Grid.ColumnSpan="1" ItemsSource="{Binding UpdateSourceTrigger=PropertyChanged}"
+                  Sorting="ModList_Sorting"
                   Width="Auto"
                   SelectionMode="Single"
                   SelectionUnit="FullRow"
+                  AllowDrop="True"
+                  CanUserReorderColumns="False"
+                  CanUserSortColumns="True"
+                  PreviewMouseLeftButtonDown="ModList_MouseLeftButtonDown"
+                  MouseLeftButtonUp="ModList_MouseLeftButtonUp"
+                  SelectedCellsChanged="ModList_Selected"
                   AutoGenerateColumns="False">
             <!--:DesignSource="{d:DesignInstance Type={x:Type MyObjectBuilder_Checkpoint:ModItem, CreateList=True}}">-->
             <DataGrid.Columns>
+                <DataGridTextColumn Header="Load Order"
+                                    Width="Auto"
+                                    IsReadOnly="True">
+                    <DataGridTextColumn.Binding>
+                        <MultiBinding Converter="{StaticResource ModToIdConverter}" StringFormat="{}{0}">
+                            <Binding />
+                            <Binding ElementName="ModList" Path="DataContext"></Binding>
+                        </MultiBinding>
+                    </DataGridTextColumn.Binding>
+                </DataGridTextColumn>
                 <DataGridTextColumn Header="Workshop Id" 
                                     IsReadOnly="True"
                                     Binding="{Binding PublishedFileId, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged}"></DataGridTextColumn>
@@ -50,22 +66,24 @@
                                     Binding="{Binding FriendlyName, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged}"></DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
-        <TextBlock Name="ModDescription" Grid.Column="2" TextWrapping="WrapWithOverflow"
+        <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Disabled" Background="#1b2838">
+            <TextBlock Name="ModDescription" TextWrapping="WrapWithOverflow" Foreground="White" Padding="2px"
                    Text="{Binding ElementName=ModList, Path=SelectedItem.Description}">
-        </TextBlock>
+            </TextBlock>
+        </ScrollViewer>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="10px"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            
-            <Button Content="Add" Grid.Column="1" Width="60px" Height="40px"/>
-            <Button Content="Remove" Grid.Column="3" Width="60px" Height="40px"/>
+            <Label Content="ID/URL:" Margin="6px 0 0 0" VerticalAlignment="Center" Grid.Column="0"/>
+            <TextBox Name="AddModIDTextBox" Grid.Column="1" Margin="6px 16px"/>
+            <Button Content="Add" Grid.Column="2" Margin="6px 0" Width="60px" Height="40px" Click="AddBtn_OnClick"/>
+            <Button Content="Remove" Grid.Column="4" Margin="6px 0" Width="60px" Height="40px" Click="RemoveBtn_OnClick"
+                     IsEnabled="{Binding ElementName=ModList, Path=SelectedItems.Count}"/>
         </Grid>
+        <Button Content="Save Config" Grid.Row="2" HorizontalAlignment="Right" Margin="6px 0" Grid.Column="3" Width="80px" Height="40px" Click="SaveBtn_OnClick"/>
     </Grid>
 </UserControl>

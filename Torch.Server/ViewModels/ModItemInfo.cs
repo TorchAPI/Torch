@@ -64,7 +64,7 @@ namespace Torch.Server.ViewModels
             }
         }
 
-        public async Task<bool> UpdateModInfoAsync(Action<string> messageHandler = null)
+        public async Task<bool> UpdateModInfoAsync()
         {
             var msg = "";
             var workshopService = WebAPI.Instance;
