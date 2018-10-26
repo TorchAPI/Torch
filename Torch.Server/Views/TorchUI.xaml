@@ -80,6 +80,9 @@
                     <views:ConfigControl Grid.Row="1" x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom" IsEnabled="{Binding CanRun}"/>
                 </Grid>
             </TabItem>
+            <TabItem Header="Mods">
+                <views:ModListControl/>
+            </TabItem>
             <TabItem Header="Chat/Players">
                 <Grid>
                     <Grid.ColumnDefinitions>

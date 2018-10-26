@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -94,7 +95,8 @@ namespace Torch.Server.Managers
                 //remove the Torch mod to avoid running multiple copies of it
                 DedicatedConfig.SelectedWorld.Checkpoint.Mods.RemoveAll(m => m.PublishedFileId == TorchModCore.MOD_ID);
                 foreach (var m in DedicatedConfig.SelectedWorld.Checkpoint.Mods)
-                    DedicatedConfig.Mods.Add(m.PublishedFileId);
+                    DedicatedConfig.Mods.Add(new ModItemInfo(m));
+                Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
             }
         }
 
@@ -108,7 +110,8 @@ namespace Torch.Server.Managers
                 //remove the Torch mod to avoid running multiple copies of it
                 DedicatedConfig.SelectedWorld.Checkpoint.Mods.RemoveAll(m => m.PublishedFileId == TorchModCore.MOD_ID);
                 foreach (var m in DedicatedConfig.SelectedWorld.Checkpoint.Mods)
-                    DedicatedConfig.Mods.Add(m.PublishedFileId);
+                    DedicatedConfig.Mods.Add(new ModItemInfo(m));
+                Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
             }
         }
 
@@ -123,7 +126,9 @@ namespace Torch.Server.Managers
             foreach (var mod in world.Checkpoint.Mods)
                 sb.AppendLine(mod.PublishedFileId.ToString());
             
-            DedicatedConfig.Mods = world.Checkpoint.Mods.Select(x => x.PublishedFileId).ToList();
+            DedicatedConfig.Mods = new ObservableCollection<ModItemInfo>(world.Checkpoint.Mods.Select(m => new ModItemInfo(m)));
+
+            Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
 
 
             Log.Debug("Loaded mod list from world");
@@ -151,7 +156,7 @@ namespace Torch.Server.Managers
                     return;
                 }
 
-                DedicatedConfig.Mods = checkpoint.Mods.Select(x => x.PublishedFileId).ToList();
+                DedicatedConfig.Mods = new ObservableCollection<ModItemInfo>(checkpoint.Mods.Select(m => new ModItemInfo(m)));
 
                 Log.Debug("Loaded mod list from world");
 
@@ -184,8 +189,9 @@ namespace Torch.Server.Managers
                 checkpoint.Settings = DedicatedConfig.SessionSettings;
                 checkpoint.Mods.Clear();
                 
-                foreach (var modId in DedicatedConfig.Mods)
-                    checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(modId));
+                foreach (var mod in DedicatedConfig.Mods)
+                    checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(mod.Name, mod.PublishedFileId, mod.FriendlyName));
+                Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
 
                 MyObjectBuilderSerializer.SerializeXML(sandboxPath, false, checkpoint);
 
