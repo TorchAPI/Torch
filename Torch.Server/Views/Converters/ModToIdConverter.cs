@@ -16,8 +16,6 @@ namespace Torch.Server.Views.Converters
     /// </summary>
     public class ModToListIdConverter : IMultiValueConverter
     {
-        private static Logger Log = LogManager.GetLogger("TorchBase");
-
         /// <summary>
         /// Converts a ModItemInfo object into its index within a Collection of ModItemInfo objects
         /// </summary>

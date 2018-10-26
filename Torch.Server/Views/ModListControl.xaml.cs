@@ -32,13 +32,16 @@ namespace Torch.Server.Views
     /// </summary>
     public partial class ModListControl : UserControl, INotifyPropertyChanged
     {
-        private static Logger Log = LogManager.GetLogger("ModListControl");
+        private static Logger Log = LogManager.GetLogger(nameof(ModListControl));
         private InstanceManager _instanceManager;
-        ModItemInfo DraggedMod;
-        bool HasOrderChanged = false;
-        bool IsSortedByLoadOrder = true;
+        ModItemInfo _draggedMod;
+        bool _hasOrderChanged = false;
+        bool _isSortedByLoadOrder = true;
 
         //private List<BindingExpression> _bindingExpressions = new List<BindingExpression>();
+        /// <summary>
+        /// Constructor for ModListControl 
+        /// </summary>
         public ModListControl()
         {
             InitializeComponent();
@@ -141,10 +144,10 @@ namespace Torch.Server.Views
                 var dataView = CollectionViewSource.GetDefaultView(ModList.ItemsSource);
                 dataView.SortDescriptions.Clear();
                 dataView.Refresh();
-                IsSortedByLoadOrder = true;
+                _isSortedByLoadOrder = true;
             }
             else
-                IsSortedByLoadOrder = false;
+                _isSortedByLoadOrder = false;
         }
 
         private void ModList_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -152,7 +155,7 @@ namespace Torch.Server.Views
             Log.Warn("Left button down!");
             //return;
 
-            DraggedMod = (ModItemInfo) TryFindRowAtPoint((UIElement) sender, e.GetPosition(ModList))?.DataContext;
+            _draggedMod = (ModItemInfo) TryFindRowAtPoint((UIElement) sender, e.GetPosition(ModList))?.DataContext;
 
             //DraggedMod = (ModItemInfo) ModList.SelectedItem;
         }
@@ -192,29 +195,29 @@ namespace Torch.Server.Views
 
         private void UserControl_MouseMove(object sender, MouseEventArgs e)
         {
-            if (DraggedMod == null)
+            if (_draggedMod == null)
                 return;
 
-            if (!IsSortedByLoadOrder)
+            if (!_isSortedByLoadOrder)
                 return;
 
             var targetMod = (ModItemInfo)TryFindRowAtPoint((UIElement)sender, e.GetPosition(ModList))?.DataContext;
-            if( targetMod != null && !ReferenceEquals(DraggedMod, targetMod))
+            if( targetMod != null && !ReferenceEquals(_draggedMod, targetMod))
             {
-                HasOrderChanged = true;
+                _hasOrderChanged = true;
                 var modList = (ObservableCollection<ModItemInfo>)DataContext;
-                modList.Move(modList.IndexOf(DraggedMod), modList.IndexOf(targetMod));
+                modList.Move(modList.IndexOf(_draggedMod), modList.IndexOf(targetMod));
                 ModList.Items.Refresh();
-                ModList.SelectedItem = DraggedMod;
+                ModList.SelectedItem = _draggedMod;
             }
         }
 
         private void ModList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (!IsSortedByLoadOrder)
+            if (!_isSortedByLoadOrder)
             {
                 var targetMod = (ModItemInfo)TryFindRowAtPoint((UIElement)sender, e.GetPosition(ModList))?.DataContext;
-                if (targetMod != null && !ReferenceEquals(DraggedMod, targetMod))
+                if (targetMod != null && !ReferenceEquals(_draggedMod, targetMod))
                 {
                     var msg = "Drag and drop is only available when sorted by load order!";
                     Log.Warn(msg);
@@ -224,7 +227,7 @@ namespace Torch.Server.Views
             //if (DraggedMod != null && HasOrderChanged)
                 //Log.Info("Dragging over, saving...");
                 //_instanceManager.SaveConfig();
-            DraggedMod = null;
+            _draggedMod = null;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -236,8 +239,8 @@ namespace Torch.Server.Views
 
         private void ModList_Selected(object sender, SelectedCellsChangedEventArgs e)
         {
-            if (DraggedMod != null)
-                ModList.SelectedItem = DraggedMod;
+            if (_draggedMod != null)
+                ModList.SelectedItem = _draggedMod;
             else if( e.AddedCells.Count > 0)
                 ModList.SelectedItem = e.AddedCells[0].Item;
         }
