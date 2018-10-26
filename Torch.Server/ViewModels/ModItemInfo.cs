@@ -48,6 +48,16 @@ namespace Torch.Server.ViewModels
             }
         }
 
+        public bool IsDependency
+        {
+            get { return _modItem.IsDependency; }
+            set
+            {
+                _modItem.IsDependency = value;
+                OnPropertyChanged(nameof(Name));
+            }
+        }
+
         public ModItemInfo(MyObjectBuilder_Checkpoint.ModItem mod)
         {
             _modItem = mod;

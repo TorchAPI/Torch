@@ -11,7 +11,7 @@ using NLog;
 
 namespace Torch.Server.Views.Converters
 {
-    public class ModToIdConverter : IMultiValueConverter
+    public class ModToListIdConverter : IMultiValueConverter
     {
         private static Logger Log = LogManager.GetLogger("TorchBase");
 

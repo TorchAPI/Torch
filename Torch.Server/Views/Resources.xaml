@@ -18,6 +18,7 @@
     </Style>
     <converters:ListConverter x:Key="ListConverterString" Type="system:String"/>
     <converters:ListConverter x:Key="ListConverterUInt64" Type="system:UInt64"/>
-    <converters:ModToIdConverter x:Key="ModToIdConverter"/>
+    <converters:ModToListIdConverter x:Key="ModToListIdConverter"/>
+    <converters:ListConverterWorkshopId x:Key="ListConverterWorkshopId"/>
     <converters:BooleanAndConverter x:Key="BooleanAndConverter"/>
 </ResourceDictionary>

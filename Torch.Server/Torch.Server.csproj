@@ -268,6 +268,7 @@
     <Compile Include="Views\Converters\ListConverter.cs" />
     <Compile Include="MultiTextWriter.cs" />
     <Compile Include="RichTextBoxWriter.cs" />
+    <Compile Include="Views\Converters\ListConverterWorkshopId.cs" />
     <Compile Include="Views\Converters\ModToIdConverter.cs" />
     <Compile Include="Views\Entities\CharacterView.xaml.cs">
       <DependentUpon>CharacterView.xaml</DependentUpon>
@@ -367,7 +368,7 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ScriptManager\SteamWorkshopService\SteamWorkshopService.csproj">
+    <ProjectReference Include="..\SteamWorkshopService\SteamWorkshopService.csproj">
       <Project>{e66eac7d-f5a5-4ee9-a211-dfb00d6e95a8}</Project>
       <Name>SteamWorkshopService</Name>
     </ProjectReference>

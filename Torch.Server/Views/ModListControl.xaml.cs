@@ -47,10 +47,15 @@ namespace Torch.Server.Views
             //var mods = _instanceManager.DedicatedConfig?.Mods;
             //if( mods != null)
             //    DataContext = new ObservableCollection<MyObjectBuilder_Checkpoint.ModItem>();
-            DataContext = _instanceManager.DedicatedConfig?.Mods ?? new ObservableCollection<ModItemInfo>();
+            DataContext = _instanceManager.DedicatedConfig?.Mods;
 
             // Gets called once all children are loaded
             //Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(ApplyStyles));
+        }
+
+        private void ModListControl_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private void ResetSorting()
@@ -69,7 +74,6 @@ namespace Torch.Server.Views
             {
                 ((ObservableCollection<ModItemInfo>)DataContext).CollectionChanged += OnModlistUpdate;
             });
-
         }
 
         private void OnModlistUpdate(object sender, NotifyCollectionChangedEventArgs e)
@@ -89,8 +93,8 @@ namespace Torch.Server.Views
         {
             if (TryExtractId(AddModIDTextBox.Text, out ulong id))
             {
-                var mod = new ModItemInfo(new MyObjectBuilder_Checkpoint.ModItem());
-                mod.PublishedFileId = id;
+                var mod = new ModItemInfo(new MyObjectBuilder_Checkpoint.ModItem(id));
+                //mod.PublishedFileId = id;
                 _instanceManager.DedicatedConfig.Mods.Add(mod);
                 Task.Run(mod.UpdateModInfoAsync)
                     .ContinueWith((t) =>
@@ -192,12 +196,7 @@ namespace Torch.Server.Views
                 return;
 
             if (!IsSortedByLoadOrder)
-            {
-                var msg = "Drag and drop is only available when sorted by load order!";
-                Log.Warn(msg);
-                MessageBox.Show(msg);
                 return;
-            }
 
             var targetMod = (ModItemInfo)TryFindRowAtPoint((UIElement)sender, e.GetPosition(ModList))?.DataContext;
             if( targetMod != null && !ReferenceEquals(DraggedMod, targetMod))
@@ -212,6 +211,16 @@ namespace Torch.Server.Views
 
         private void ModList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            if (!IsSortedByLoadOrder)
+            {
+                var targetMod = (ModItemInfo)TryFindRowAtPoint((UIElement)sender, e.GetPosition(ModList))?.DataContext;
+                if (targetMod != null && !ReferenceEquals(DraggedMod, targetMod))
+                {
+                    var msg = "Drag and drop is only available when sorted by load order!";
+                    Log.Warn(msg);
+                    MessageBox.Show(msg);
+                }
+            }
             //if (DraggedMod != null && HasOrderChanged)
                 //Log.Info("Dragging over, saving...");
                 //_instanceManager.SaveConfig();

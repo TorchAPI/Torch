@@ -29,7 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Versioning", "Versioning", 
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Torch.Mod", "Torch.Mod\Torch.Mod.shproj", "{3CE4D2E9-B461-4F19-8233-F87E0DFDDD74}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamWorkshopService", "..\ScriptManager\SteamWorkshopService\SteamWorkshopService.csproj", "{E66EAC7D-F5A5-4EE9-A211-DFB00D6E95A8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamWorkshopService", "SteamWorkshopService\SteamWorkshopService.csproj", "{E66EAC7D-F5A5-4EE9-A211-DFB00D6E95A8}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

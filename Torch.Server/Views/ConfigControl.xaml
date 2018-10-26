@@ -89,19 +89,19 @@
                         <CheckBox IsChecked="{Binding PauseGameWhenEmpty}" Content="Pause When Empty" Margin="3" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Margin="3">
-                        <Label Content="Mods" />
+                        <!--<Label Content="Mods" />
                         <TextBox Margin="3" Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"
                                  Style="{StaticResource ValidatedTextBox}">
                             <TextBox.Text>
                                 <Binding Path="Mods" UpdateSourceTrigger="PropertyChanged"
                                          ValidatesOnDataErrors="True" NotifyOnValidationError="True"
-                                         Converter="{StaticResource ListConverterUInt64}">
+                                         Converter="{StaticResource ListConverterWorkshopId}">
                                     <Binding.ValidationRules>
                                         <validationRules:ListConverterValidationRule Type="system:UInt64" />
                                     </Binding.ValidationRules>
                                 </Binding>
                             </TextBox.Text>
-                        </TextBox>
+                        </TextBox>-->
                         <Label Content="Administrators" />
                         <TextBox Text="{Binding Administrators, Converter={StaticResource ListConverterString}}"
                                  Margin="3"
