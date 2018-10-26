@@ -16,10 +16,19 @@ namespace Torch.Server.Views.Converters
     {
         public Type Type { get; set; }
 
-        /// <inheritdoc />
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        /// <summary>
+        /// Converts a list of ModItemInfo objects into a list of their workshop IDs (PublishedFileIds).
+        /// </summary>
+        /// <param name="valueList">
+        /// Expected to contain a list of ModItemInfo objects
+        /// </param>
+        /// <param name="targetType">This parameter will be ignored</param>
+        /// <param name="parameter">This parameter will be ignored</param>
+        /// <param name="culture"> This parameter will be ignored</param>
+        /// <returns>A string containing the workshop ids of all mods, one per line</returns>
+        public object Convert(object valueList, Type targetType, object parameter, CultureInfo culture)
         {
-            if (!(value is IList list))
+            if (!(valueList is IList list))
                 throw new InvalidOperationException("Value is not the proper type.");
 
             var sb = new StringBuilder();
@@ -31,7 +40,18 @@ namespace Torch.Server.Views.Converters
             return sb.ToString();
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Converts a list of workshop ids into a list of ModItemInfo objects
+        /// </summary>
+        /// <param name="value">A string containing workshop ids separated by new lines</param>
+        /// <param name="targetType">This parameter will be ignored</param>
+        /// <param name="parameter">
+        /// A list of ModItemInfos which should 
+        /// contain the requestted mods
+        /// (or they will be dropped)
+        /// </param>
+        /// <param name="culture">This parameter will be ignored</param>
+        /// <returns>A list of ModItemInfo objects</returns>
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(Type));

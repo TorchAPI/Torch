@@ -14,11 +14,19 @@ using SteamWorkshopService.Types;
 
 namespace Torch.Server.ViewModels
 {
+    /// <summary>
+    /// Wrapper around VRage.Game.Objectbuilder_Checkpoint.ModItem 
+    /// that holds additional meta information
+    /// (e.g. workshop description)
+    /// </summary>
     public class ModItemInfo : INotifyPropertyChanged
     {
         MyObjectBuilder_Checkpoint.ModItem _modItem;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
+        /// <summary>
+        /// Human friendly name of the mod
+        /// </summary>
         public string FriendlyName
         {
             get { return _modItem.FriendlyName;  }
@@ -28,6 +36,9 @@ namespace Torch.Server.ViewModels
             }
         }
 
+        /// <summary>
+        /// Workshop ID of the mod
+        /// </summary>
         public ulong PublishedFileId
         {
             get { return _modItem.PublishedFileId; }
@@ -38,6 +49,9 @@ namespace Torch.Server.ViewModels
             }
         }
 
+        /// <summary>
+        /// Local filename of the mod
+        /// </summary>
         public string Name
         {
             get { return _modItem.Name; }
@@ -48,6 +62,10 @@ namespace Torch.Server.ViewModels
             }
         }
 
+        /// <summary>
+        /// Whether or not the mod was added
+        /// because another mod depends on it
+        /// </summary>
         public bool IsDependency
         {
             get { return _modItem.IsDependency; }
@@ -58,12 +76,19 @@ namespace Torch.Server.ViewModels
             }
         }
 
+        /// <summary>
+        /// Constructor, returns a new ModItemInfo instance
+        /// </summary>
+        /// <param name="mod">The wrapped mod</param>
         public ModItemInfo(MyObjectBuilder_Checkpoint.ModItem mod)
         {
             _modItem = mod;
         }
 
         private string _description;
+        /// <summary>
+        /// Workshop description of the mod
+        /// </summary>
         public string Description
         {
             get { return _description; }
@@ -74,6 +99,12 @@ namespace Torch.Server.ViewModels
             }
         }
 
+        /// <summary>
+        /// Retrieve information about the
+        /// wrapped mod from the workhop asynchronously
+        /// via the Steam web API.
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool> UpdateModInfoAsync()
         {
             var msg = "";
@@ -103,7 +134,12 @@ namespace Torch.Server.ViewModels
             }
         }
 
+        /// <inheritdoc/>
         public event PropertyChangedEventHandler PropertyChanged;
+        /// <summary>
+        /// Raise PropertyChanged event.
+        /// </summary>
+        /// <param name="propertyName">The name of the property that has been changed</param>
         [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
