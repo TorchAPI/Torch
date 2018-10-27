@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
+using System.Linq;
 using NLog;
 using SteamKit2;
 
@@ -28,49 +31,18 @@ namespace SteamWorkshopService
             }
 
             var value = match.Value ?? "";
-            var success = false;
 
-            if (typeof(T) == typeof(UInt64))
+            try
             {
-                if (success = UInt64.TryParse(value, out UInt64 uintResult))
-                    result = uintResult;
-                else
-                    result = default(UInt64);
+                var converter = TypeDescriptor.GetConverter(typeof(T));
+                result = converter.ConvertFromString(value);
+                typedValue = (T)result;
+                return true;
             }
-            else if (typeof(T) == typeof(uint) || typeof(T) == typeof(UInt32) )
-            {
-                if (success = UInt32.TryParse(value, out UInt32 uintResult))
-                    result = uintResult;
-                else
-                    result = default(UInt32);
-            }
-            else if (typeof(T) == typeof(string) || typeof(T) == typeof(String))
-            {
-                success = true;
-                result = value;
-            }
-            else if (typeof(T) == typeof(Int32) || typeof(T) == typeof(int))
-            {
-                if (success = Int32.TryParse(value, out int intResult))
-                    result = intResult;
-                else
-                    result = default(int);
-            }
-            else if (typeof(T) == typeof(long) || typeof(T) == typeof(Int64))
-            {
-                if (success = Int64.TryParse(value, out long longResult))
-                    result = longResult;
-                else
-                    result = default(long);
-            }
-            else
+            catch (NotSupportedException)
             {
                 throw new Exception($"Unexpected Type '{typeof(T)}'!");
             }
-
-            typedValue = (T)result;
-
-            return true;
         }
     }
 }

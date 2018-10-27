@@ -135,13 +135,14 @@ namespace SteamWorkshopService
                                 tags.Add(tag);
                         }
 
-                    result[workshopIds.ElementAt(i)] = new PublishedItemDetails()
+                    var publishedFileId = fileDetails.GetValueOrDefault<ulong>("publishedfileid");
+                    result[publishedFileId] = new PublishedItemDetails()
                     {
-                        PublishedFileId = fileDetails.GetValueOrDefault<ulong>("publishedfileid"),
+                        PublishedFileId = publishedFileId,
                         Views           = fileDetails.GetValueOrDefault<uint>("views"),
                         Subscriptions   = fileDetails.GetValueOrDefault<uint>("subscriptions"),
-                        TimeUpdated     = Util.DateTimeFromUnixTimeStamp(fileDetails.GetValueOrDefault<ulong>("time_updated")),
-                        TimeCreated     = Util.DateTimeFromUnixTimeStamp(fileDetails.GetValueOrDefault<ulong>("time_created")),
+                        TimeUpdated     = DateTimeOffset.FromUnixTimeSeconds(fileDetails.GetValueOrDefault<long>("time_updated")).DateTime,
+                        TimeCreated     = DateTimeOffset.FromUnixTimeSeconds(fileDetails.GetValueOrDefault<long>("time_created")).DateTime,
                         Description     = fileDetails.GetValueOrDefault<string>("description"),
                         Title           = fileDetails.GetValueOrDefault<string>("title"),
                         FileUrl         = fileDetails.GetValueOrDefault<string>("file_url"),
