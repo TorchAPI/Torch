@@ -122,13 +122,7 @@ namespace Torch.Server.Managers
 
         private void ImportWorldConfig(WorldViewModel world, bool modsOnly = true)
         {
-            var sb = new StringBuilder();
-            foreach (var mod in world.Checkpoint.Mods)
-                sb.AppendLine(mod.PublishedFileId.ToString());
-            
             DedicatedConfig.Mods = new ObservableCollection<ModItemInfo>(world.Checkpoint.Mods.Select(m => new ModItemInfo(m)));
-
-            Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
 
 
             Log.Debug("Loaded mod list from world");
