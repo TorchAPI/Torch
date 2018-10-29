@@ -9,8 +9,7 @@ using System.Runtime.CompilerServices;
 using NLog;
 using VRage.Game;
 using Torch.Server.Annotations;
-using SteamWorkshopService;
-using SteamWorkshopService.Types;
+using Torch.Utils.SteamWorkshopTools;
 
 namespace Torch.Server.ViewModels
 {

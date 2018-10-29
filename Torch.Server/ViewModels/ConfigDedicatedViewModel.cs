@@ -10,8 +10,7 @@ using Torch.Collections;
 using Torch.Server.Managers;
 using VRage.Game;
 using VRage.Game.ModAPI;
-using SteamWorkshopService;
-using SteamWorkshopService.Types;
+using Torch.Utils.SteamWorkshopTools;
 
 namespace Torch.Server.ViewModels
 {

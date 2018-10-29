@@ -11,9 +11,8 @@ using System.Net;
 using NLog;
 using SteamKit2;
 using System.Net.Http;
-using SteamWorkshopService.Types;
 
-namespace SteamWorkshopService
+namespace Torch.Utils.SteamWorkshopTools
 {
     public class WebAPI
     {

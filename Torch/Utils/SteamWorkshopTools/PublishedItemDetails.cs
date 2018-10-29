@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SteamWorkshopService.Types
+namespace Torch.Utils.SteamWorkshopTools
 {
     public class PublishedItemDetails
     {

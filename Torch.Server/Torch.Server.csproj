@@ -123,9 +123,6 @@
       <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.XmlSerializers.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="SteamKit2, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SteamKit2.2.1.0\lib\netstandard2.0\SteamKit2.dll</HintPath>
-    </Reference>
     <Reference Include="Steamworks.NET">
       <HintPath>..\GameBinaries\Steamworks.NET.dll</HintPath>
     </Reference>
@@ -365,10 +362,6 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SteamWorkshopService\SteamWorkshopService.csproj">
-      <Project>{e66eac7d-f5a5-4ee9-a211-dfb00d6e95a8}</Project>
-      <Name>SteamWorkshopService</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Torch.API\Torch.API.csproj">
       <Project>{fba5d932-6254-4a1e-baf4-e229fa94e3c2}</Project>
       <Name>Torch.API</Name>

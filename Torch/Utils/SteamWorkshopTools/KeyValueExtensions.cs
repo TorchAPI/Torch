@@ -9,7 +9,7 @@ using System.Linq;
 using NLog;
 using SteamKit2;
 
-namespace SteamWorkshopService
+namespace Torch.Utils.SteamWorkshopTools
 {
     public static class KeyValueExtensions
     {
