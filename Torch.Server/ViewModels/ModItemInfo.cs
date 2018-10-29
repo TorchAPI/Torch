@@ -18,7 +18,7 @@ namespace Torch.Server.ViewModels
     /// that holds additional meta information
     /// (e.g. workshop description)
     /// </summary>
-    public class ModItemInfo : INotifyPropertyChanged
+    public class ModItemInfo : ViewModel
     {
         MyObjectBuilder_Checkpoint.ModItem _modItem;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -30,8 +30,7 @@ namespace Torch.Server.ViewModels
         {
             get { return _modItem.FriendlyName;  }
             set {
-                _modItem.FriendlyName = value;
-                OnPropertyChanged(nameof(FriendlyName));
+                SetValue(ref _modItem.FriendlyName, value);
             }
         }
 
@@ -43,8 +42,7 @@ namespace Torch.Server.ViewModels
             get { return _modItem.PublishedFileId; }
             set
             {
-                _modItem.PublishedFileId = value;
-                OnPropertyChanged(nameof(PublishedFileId));
+                SetValue(ref _modItem.PublishedFileId, value);
             }
         }
 
@@ -56,8 +54,7 @@ namespace Torch.Server.ViewModels
             get { return _modItem.Name; }
             set
             {
-                _modItem.FriendlyName = value;
-                OnPropertyChanged(nameof(Name));
+                SetValue(ref _modItem.FriendlyName, value);
             }
         }
 
@@ -70,18 +67,8 @@ namespace Torch.Server.ViewModels
             get { return _modItem.IsDependency; }
             set
             {
-                _modItem.IsDependency = value;
-                OnPropertyChanged(nameof(Name));
+                SetValue(ref _modItem.IsDependency, value);
             }
-        }
-
-        /// <summary>
-        /// Constructor, returns a new ModItemInfo instance
-        /// </summary>
-        /// <param name="mod">The wrapped mod</param>
-        public ModItemInfo(MyObjectBuilder_Checkpoint.ModItem mod)
-        {
-            _modItem = mod;
         }
 
         private string _description;
@@ -93,9 +80,17 @@ namespace Torch.Server.ViewModels
             get { return _description; }
             set
             {
-                _description = value;
-                OnPropertyChanged(nameof(Description));
+                SetValue(ref _description, value);
             }
+        }
+
+        /// <summary>
+        /// Constructor, returns a new ModItemInfo instance
+        /// </summary>
+        /// <param name="mod">The wrapped mod</param>
+        public ModItemInfo(MyObjectBuilder_Checkpoint.ModItem mod)
+        {
+            _modItem = mod;
         }
 
         /// <summary>
@@ -131,18 +126,6 @@ namespace Torch.Server.ViewModels
                 //Name = modInfo.FileName;
                 return true;
             }
-        }
-
-        /// <inheritdoc/>
-        public event PropertyChangedEventHandler PropertyChanged;
-        /// <summary>
-        /// Raise PropertyChanged event.
-        /// </summary>
-        /// <param name="propertyName">The name of the property that has been changed</param>
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
