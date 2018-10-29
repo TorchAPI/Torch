@@ -186,7 +186,9 @@ namespace Torch.Utils.SteamWorkshopTools
                 }
                 catch (Exception e)
                 {
-                    throw new Exception($"{e.Message} - url: {fileDetails.FileUrl}, path: {Path.Combine(dir, name)}");
+                    Log.Error("Failed to download workshop item! /n" +
+                        $"{e.Message} - url: {fileDetails.FileUrl}, path: {Path.Combine(dir, name)}");
+                    throw e;
                 }
             }
 
