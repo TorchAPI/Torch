@@ -152,7 +152,6 @@ namespace Torch.Server.Views
 
         private void ModList_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            Log.Warn("Left button down!");
             //return;
 
             _draggedMod = (ModItemInfo) TryFindRowAtPoint((UIElement) sender, e.GetPosition(ModList))?.DataContext;
