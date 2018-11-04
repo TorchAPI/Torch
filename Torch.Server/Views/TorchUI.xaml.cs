@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using NLog;
+using NLog.Targets.Wrappers;
 using Sandbox;
 using Torch.API;
 using Torch.API.Managers;
@@ -57,7 +58,13 @@ namespace Torch.Server
 
         private void AttachConsole()
         {
-            var doc = LogManager.Configuration.FindTargetByName<FlowDocumentTarget>("wpf")?.Document;
+            const string target = "wpf";
+            var doc = LogManager.Configuration.FindTargetByName<FlowDocumentTarget>(target)?.Document;
+            if (doc == null)
+            {
+                var wrapped = LogManager.Configuration.FindTargetByName<WrapperTargetBase>(target);
+                doc = (wrapped?.WrappedTarget as FlowDocumentTarget)?.Document;
+            }
             ConsoleText.Document = doc ?? new FlowDocument(new Paragraph(new Run("No target!")));
             ConsoleText.TextChanged += (sender, args) => ConsoleText.ScrollToEnd();
         }
