@@ -260,7 +260,8 @@
     <Compile Include="Utils\Reflected\ReflectedStaticMethodAttribute.cs" />
     <Compile Include="Utils\Reflection.cs" />
     <Compile Include="Managers\ScriptingManager.cs" />
-    <Compile Include="Utils\SteamWorkshopTools\SteamWorkshopTools.cs" />
+    <Compile Include="Utils\SteamWorkshopTools\SteamUGC.cs" />
+    <Compile Include="Utils\SteamWorkshopTools\WebAPI.cs" />
     <Compile Include="Utils\StringUtils.cs" />
     <Compile Include="Utils\SynchronizationExtensions.cs" />
     <Compile Include="Utils\TorchAssemblyResolver.cs" />

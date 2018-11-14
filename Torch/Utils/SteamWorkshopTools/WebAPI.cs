@@ -81,18 +81,22 @@ namespace Torch.Utils.SteamWorkshopTools
             //if (!IsReady)
             //    throw new Exception("SteamWorkshopService not initialized!");
 
-            using (SteamKit2.WebAPI.Interface remoteStorage = SteamKit2.WebAPI.GetInterface("ISteamRemoteStorage"))
+            using (dynamic remoteStorage = SteamKit2.WebAPI.GetInterface("ISteamRemoteStorage"))
             {
                 KeyValue allFilesDetails = null ;
                 remoteStorage.Timeout = TimeSpan.FromSeconds(30);
                 allFilesDetails = await Task.Run(delegate {
                     try
                     {
-                        var ifaceArgs = new Dictionary<string, string>();
-                        ifaceArgs["itemcount"] = workshopIds.Count().ToString();
+                        return remoteStorage.GetPublishedFileDetails1(
+                            itemcount: workshopIds.Count(),
+                            publishedfileids: workshopIds,
+                            method: HttpMethod.Post);
+                        // var ifaceArgs = new Dictionary<string, string>();
+                        // ifaceArgs["itemcount"] = workshopIds.Count().ToString();
                         // no idea if that formatting is correct - in fact I get a 404 response
-                        ifaceArgs["publishedfileids"] = string.Join(",", workshopIds);
-                        return remoteStorage.Call(HttpMethod.Post, "GetPublishedFileDetails", args: ifaceArgs);
+                        // ifaceArgs["publishedfileids"] = string.Join(",", workshopIds);
+                        // return remoteStorage.Call(HttpMethod.Post, "GetPublishedFileDetails", args: ifaceArgs);
                     }
                     catch (HttpRequestException e)
                     {
