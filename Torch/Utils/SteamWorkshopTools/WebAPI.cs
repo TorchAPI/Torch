@@ -162,6 +162,7 @@ namespace Torch.Utils.SteamWorkshopTools
             }
         }
 
+        [Obsolete("Space Engineers has transitioned to Steam's UGC api, therefore this method might not always work!")]
         public async Task DownloadPublishedFile(PublishedItemDetails fileDetails, string dir, string name = null)
         {
             var fullPath = Path.Combine(dir, name);
