@@ -73,6 +73,8 @@ namespace Torch
             RegisterCoreAssembly(typeof(ITorchBase).Assembly);
             RegisterCoreAssembly(typeof(TorchBase).Assembly);
             RegisterCoreAssembly(Assembly.GetEntryAssembly());
+            //exceptions in English, please
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
         }
 
         /// <summary>
