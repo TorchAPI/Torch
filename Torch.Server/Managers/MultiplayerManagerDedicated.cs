@@ -59,9 +59,16 @@ namespace Torch.Server.Managers
             Torch.Invoke(() =>
             {
                 MyMultiplayer.Static.BanClient(steamId, banned);
-                if (_gameOwnerIds.ContainsKey(steamId))
-                    MyMultiplayer.Static.BanClient(_gameOwnerIds[steamId], banned);
             });
+        }
+
+        internal void RaiseClientBanned(ulong user, bool banned)
+        {
+            Torch.Invoke(() =>
+                         {
+                             if(_gameOwnerIds.TryGetValue(user, out ulong owner))
+                                 MyMultiplayer.Static.BanClient(owner, banned);
+                         });
         }
 
         /// <inheritdoc />
