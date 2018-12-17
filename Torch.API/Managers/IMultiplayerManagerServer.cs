@@ -32,5 +32,15 @@ namespace Torch.API.Managers
         /// <param name="steamId">The SteamID of the player.</param>
         /// <returns>True if the player is banned; otherwise false.</returns>
         bool IsBanned(ulong steamId);
+
+        /// <summary>
+        /// Raised when a player is kicked. Passes with SteamID of kicked player.
+        /// </summary>
+        event Action<ulong> PlayerKicked;
+
+        /// <summary>
+        /// Raised when a player is banned or unbanned. Passes SteamID of player, and true if banned, false if unbanned.
+        /// </summary>
+        event Action<ulong, bool> PlayerBanned;
     }
 }

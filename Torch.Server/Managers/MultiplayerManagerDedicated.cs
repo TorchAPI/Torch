@@ -64,6 +64,7 @@ namespace Torch.Server.Managers
 
         internal void RaiseClientBanned(ulong user, bool banned)
         {
+            PlayerBanned?.Invoke(user, banned);
             Torch.Invoke(() =>
                          {
                              if(_gameOwnerIds.TryGetValue(user, out ulong owner))
@@ -71,9 +72,20 @@ namespace Torch.Server.Managers
                          });
         }
 
+        internal void RaiseClientKicked(ulong user)
+        {
+            PlayerKicked?.Invoke(user);
+        }
+
         /// <inheritdoc />
         public bool IsBanned(ulong steamId) => _isClientBanned.Invoke(MyMultiplayer.Static, steamId) ||
                                                MySandboxGame.ConfigDedicated.Banned.Contains(steamId);
+
+        /// <inheritdoc />
+        public event Action<ulong> PlayerKicked;
+
+        /// <inheritdoc />
+        public event Action<ulong, bool> PlayerBanned;
 
         /// <inheritdoc/>
         public override void Attach()
