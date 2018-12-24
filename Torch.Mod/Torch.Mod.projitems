@@ -9,6 +9,7 @@
     <Import_RootNamespace>Torch.Mod</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Messages\IncomingMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Messages\NotificationMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Messages\DialogMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Messages\MessageBase.cs" />
