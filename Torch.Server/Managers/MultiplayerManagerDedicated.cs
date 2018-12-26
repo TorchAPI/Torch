@@ -59,14 +59,33 @@ namespace Torch.Server.Managers
             Torch.Invoke(() =>
             {
                 MyMultiplayer.Static.BanClient(steamId, banned);
-                if (_gameOwnerIds.ContainsKey(steamId))
-                    MyMultiplayer.Static.BanClient(_gameOwnerIds[steamId], banned);
             });
+        }
+
+        internal void RaiseClientBanned(ulong user, bool banned)
+        {
+            PlayerBanned?.Invoke(user, banned);
+            Torch.Invoke(() =>
+                         {
+                             if(_gameOwnerIds.TryGetValue(user, out ulong owner))
+                                 MyMultiplayer.Static.BanClient(owner, banned);
+                         });
+        }
+
+        internal void RaiseClientKicked(ulong user)
+        {
+            PlayerKicked?.Invoke(user);
         }
 
         /// <inheritdoc />
         public bool IsBanned(ulong steamId) => _isClientBanned.Invoke(MyMultiplayer.Static, steamId) ||
                                                MySandboxGame.ConfigDedicated.Banned.Contains(steamId);
+
+        /// <inheritdoc />
+        public event Action<ulong> PlayerKicked;
+
+        /// <inheritdoc />
+        public event Action<ulong, bool> PlayerBanned;
 
         /// <inheritdoc/>
         public override void Attach()

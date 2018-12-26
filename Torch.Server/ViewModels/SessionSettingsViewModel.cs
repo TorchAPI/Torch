@@ -222,6 +222,9 @@ namespace Torch.Server.ViewModels
         [Torch.Views.Display(Description = "Defines synchronization distance in multiplayer. High distance can slow down server drastically. Use with caution.", Name = "Sync Distance", GroupName = "Environment")]
         public int SyncDistance { get => _settings.SyncDistance; set => SetValue(ref _settings.SyncDistance, value); }
 
+        [Torch.Views.Display(Description = "Defines render distance for clients in multiplayer. High distance can slow down client FPS. Values larger than SyncDistance may not work as expected.", Name = "View Distance", GroupName = "Environment")]
+        public int ViewDistance { get => _settings.ViewDistance; set => SetValue(ref _settings.ViewDistance, value);}
+
         [Torch.Views.Display(Description = "Enables experimental mode.", Name = "Experimental Mode", GroupName = "Others")]
         public bool ExperimentalMode { get => _settings.ExperimentalMode; set => SetValue(ref _settings.ExperimentalMode, value); }
 

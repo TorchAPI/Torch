@@ -236,6 +236,7 @@
     <Compile Include="Managers\MultiplayerManagerDedicated.cs" />
     <Compile Include="Managers\InstanceManager.cs" />
     <Compile Include="Managers\MultiplayerManagerDedicatedEventShim.cs" />
+    <Compile Include="Managers\MultiplayerManagerDedicatedPatchShim.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Initializer.cs" />
     <Compile Include="Properties\Annotations.cs" />

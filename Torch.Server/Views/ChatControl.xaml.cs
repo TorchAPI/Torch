@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using NLog;
 using Torch;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
@@ -33,11 +35,31 @@ namespace Torch.Server
     /// </summary>
     public partial class ChatControl : UserControl
     {
+        private static Logger _log = LogManager.GetCurrentClassLogger();
         private ITorchServer _server;
 
         public ChatControl()
         {
             InitializeComponent();
+            this.IsVisibleChanged += OnIsVisibleChanged;
+        }
+
+        private void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            _log.Info($"VisibleChanged: {IsVisible}");
+            if (IsVisible)
+            {
+                Task.Run(() =>
+                {
+                    Thread.Sleep(100);
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        Message.Focus();
+                        Keyboard.Focus(Message);
+                    });
+                });
+            }
         }
 
         public void BindServer(ITorchServer server)

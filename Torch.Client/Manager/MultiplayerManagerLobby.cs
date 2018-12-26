@@ -27,6 +27,20 @@ namespace Torch.Client.Manager
         /// <inheritdoc />
         public bool IsBanned(ulong steamId) => false;
 
+        /// <inheritdoc />
+        public event Action<ulong> PlayerKicked
+        {
+            add => throw new NotImplementedException();
+            remove => throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public event Action<ulong, bool> PlayerBanned
+        {
+            add => throw new NotImplementedException();
+            remove => throw new NotImplementedException();
+        }
+
         /// <inheritdoc/>
         public override void Attach()
         {

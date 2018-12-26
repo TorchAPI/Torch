@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Sandbox.ModAPI;
 using Torch.Mod.Messages;
 using VRage;
+using VRage.Collections;
 using VRage.Game.ModAPI;
 using VRage.Utils;
 using Task = ParallelTasks.Task;
@@ -17,25 +18,22 @@ namespace Torch.Mod
     public static class ModCommunication
     {
         public const ushort NET_ID = 4352;
-        private static bool _closing;
-        private static ConcurrentQueue<MessageBase> _outgoing;
-        private static ConcurrentQueue<byte[]> _incoming;
+        private static bool _closing = false;
+        private static BlockingCollection<MessageBase> _processing;
+        private static MyConcurrentPool<IncomingMessage> _messagePool;
         private static List<IMyPlayer> _playerCache;
-        private static FastResourceLock _lock;
-        private static Task _task;
 
         public static void Register()
         {
             MyLog.Default.WriteLineAndConsole("TORCH MOD: Registering mod communication.");
-            _outgoing = new ConcurrentQueue<MessageBase>();
-            _incoming = new ConcurrentQueue<byte[]>();
+            _processing = new BlockingCollection<MessageBase>(new ConcurrentQueue<MessageBase>());
             _playerCache = new List<IMyPlayer>();
-            _lock = new FastResourceLock();
-           
+            _messagePool = new MyConcurrentPool<IncomingMessage>(8);
 
             MyAPIGateway.Multiplayer.RegisterMessageHandler(NET_ID, MessageHandler);
             //background thread to handle de/compression and processing
-            _task = MyAPIGateway.Parallel.StartBackground(DoProcessing);
+            _closing = false;
+            MyAPIGateway.Parallel.StartBackground(DoProcessing);
             MyLog.Default.WriteLineAndConsole("TORCH MOD: Mod communication registered successfully.");
         }
 
@@ -43,15 +41,16 @@ namespace Torch.Mod
         {
             MyLog.Default.WriteLineAndConsole("TORCH MOD: Unregistering mod communication.");
             MyAPIGateway.Multiplayer?.UnregisterMessageHandler(NET_ID, MessageHandler);
-            ReleaseLock();
+            _processing?.CompleteAdding();
             _closing = true;
             //_task.Wait();
         }
 
         private static void MessageHandler(byte[] bytes)
         {
-            _incoming.Enqueue(bytes);
-            ReleaseLock();
+            var m = _messagePool.Get();
+            m.CompressedData = bytes;
+            _processing.Add(m);
         }
 
         public static void DoProcessing()
@@ -60,75 +59,70 @@ namespace Torch.Mod
             {
                 try
                 {
-                    byte[] incoming;
-                    while (_incoming.TryDequeue(out incoming))
+                    var m = _processing.Take();
+                    MyLog.Default.WriteLineAndConsole($"Processing message: {m.GetType().Name}");
+
+                    if (m is IncomingMessage)
                     {
-                        MessageBase m;
+                        MessageBase i;
                         try
                         {
-                            var o = MyCompression.Decompress(incoming);
-                            m = MyAPIGateway.Utilities.SerializeFromBinary<MessageBase>(o);
+                            var o = MyCompression.Decompress(m.CompressedData);
+                            m.CompressedData = null;
+                            _messagePool.Return((IncomingMessage)m);
+                            i = MyAPIGateway.Utilities.SerializeFromBinary<MessageBase>(o);
                         }
                         catch (Exception ex)
                         {
                             MyLog.Default.WriteLineAndConsole($"TORCH MOD: Failed to deserialize message! {ex}");
                             continue;
                         }
-                        if (MyAPIGateway.Multiplayer.IsServer)
-                            m.ProcessServer();
-                        else
-                            m.ProcessClient();
-                    }
 
-                    if (!_outgoing.IsEmpty)
+                        if (MyAPIGateway.Multiplayer.IsServer)
+                            i.ProcessServer();
+                        else
+                            i.ProcessClient();
+                    }
+                    else
                     {
-                        List<MessageBase> tosend = new List<MessageBase>(_outgoing.Count);
-                        MessageBase outMessage;
-                        while (_outgoing.TryDequeue(out outMessage))
-                        {
-                            var b = MyAPIGateway.Utilities.SerializeToBinary(outMessage);
-                            outMessage.CompressedData = MyCompression.Compress(b);
-                            tosend.Add(outMessage);
-                        }
+                        var b = MyAPIGateway.Utilities.SerializeToBinary(m);
+                        m.CompressedData = MyCompression.Compress(b);
 
                         MyAPIGateway.Utilities.InvokeOnGameThread(() =>
-                                                                  {
-                                                                      MyAPIGateway.Players.GetPlayers(_playerCache);
-                                                                      foreach (var outgoing in tosend)
-                                                                      {
-                                                                          switch (outgoing.TargetType)
-                                                                          {
-                                                                              case MessageTarget.Single:
-                                                                                  MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, outgoing.CompressedData, outgoing.Target);
-                                                                                  break;
-                                                                              case MessageTarget.Server:
-                                                                                  MyAPIGateway.Multiplayer.SendMessageToServer(NET_ID, outgoing.CompressedData);
-                                                                                  break;
-                                                                              case MessageTarget.AllClients:
-                                                                                  foreach (var p in _playerCache)
-                                                                                  {
-                                                                                      if (p.SteamUserId == MyAPIGateway.Multiplayer.MyId)
-                                                                                          continue;
-                                                                                      MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, outgoing.CompressedData, p.SteamUserId);
-                                                                                  }
-                                                                                  break;
-                                                                              case MessageTarget.AllExcept:
-                                                                                  foreach (var p in _playerCache)
-                                                                                  {
-                                                                                      if (p.SteamUserId == MyAPIGateway.Multiplayer.MyId || outgoing.Ignore.Contains(p.SteamUserId))
-                                                                                          continue;
-                                                                                      MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, outgoing.CompressedData, p.SteamUserId);
-                                                                                  }
-                                                                                  break;
-                                                                              default:
-                                                                                  throw new Exception();
-                                                                          }
-                                                                      }
-                                                                      _playerCache.Clear();
-                                                                  });
-                    }
+                        {
 
-                    AcquireLock();
+                            switch (m.TargetType)
+                            {
+                                case MessageTarget.Single:
+                                    MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, m.CompressedData, m.Target);
+                                    break;
+                                case MessageTarget.Server:
+                                    MyAPIGateway.Multiplayer.SendMessageToServer(NET_ID, m.CompressedData);
+                                    break;
+                                case MessageTarget.AllClients:
+                                    MyAPIGateway.Players.GetPlayers(_playerCache);
+                                    foreach (var p in _playerCache)
+                                    {
+                                        if (p.SteamUserId == MyAPIGateway.Multiplayer.MyId)
+                                            continue;
+                                        MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, m.CompressedData, p.SteamUserId);
+                                    }
+                                    break;
+                                case MessageTarget.AllExcept:
+                                    MyAPIGateway.Players.GetPlayers(_playerCache);
+                                    foreach (var p in _playerCache)
+                                    {
+                                        if (p.SteamUserId == MyAPIGateway.Multiplayer.MyId || m.Ignore.Contains(p.SteamUserId))
+                                            continue;
+                                        MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, m.CompressedData, p.SteamUserId);
+                                    }
+                                    break;
+                                default:
+                                    throw new Exception();
+                            }
+                            _playerCache.Clear();
+                        });
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -136,14 +130,15 @@ namespace Torch.Mod
                 }
             }
 
-            MyLog.Default.WriteLineAndConsole("TORCH MOD: COMMUNICATION THREAD: EXIT SIGNAL RECIEVED!");
+            MyLog.Default.WriteLineAndConsole("TORCH MOD: COMMUNICATION THREAD: EXIT SIGNAL RECEIVED!");
             //exit signal received. Clean everything and GTFO
-            _outgoing = null;
-            _incoming = null;
+            _processing?.Dispose();
+            _processing = null;
+            _messagePool?.Clean();
+            _messagePool = null;
             _playerCache = null;
-            _lock = null;
         }
-
+        
         public static void SendMessageTo(MessageBase message, ulong target)
         {
             if (!MyAPIGateway.Multiplayer.IsServer)
@@ -154,9 +149,7 @@ namespace Torch.Mod
 
             message.Target = target;
             message.TargetType = MessageTarget.Single;
-            MyLog.Default.WriteLineAndConsole($"Sending message of type {message.GetType().FullName}");
-            _outgoing.Enqueue(message);
-            ReleaseLock();
+            _processing.Add(message);
         }
 
         public static void SendMessageToClients(MessageBase message)
@@ -168,8 +161,7 @@ namespace Torch.Mod
                 return;
 
             message.TargetType = MessageTarget.AllClients;
-            _outgoing.Enqueue(message);
-            ReleaseLock();
+            _processing.Add(message);
         }
 
         public static void SendMessageExcept(MessageBase message, params ulong[] ignoredUsers)
@@ -182,8 +174,7 @@ namespace Torch.Mod
 
             message.TargetType = MessageTarget.AllExcept;
             message.Ignore = ignoredUsers;
-            _outgoing.Enqueue(message);
-            ReleaseLock();
+            _processing.Add(message);
         }
 
         public static void SendMessageToServer(MessageBase message)
@@ -192,22 +183,7 @@ namespace Torch.Mod
                 return;
 
             message.TargetType = MessageTarget.Server;
-            _outgoing.Enqueue(message);
-            ReleaseLock();
-        }
-
-        private static void ReleaseLock()
-        {
-            while(_lock?.TryAcquireExclusive() == false)
-                _lock?.ReleaseExclusive();
-            _lock?.ReleaseExclusive();
-        }
-
-        private static void AcquireLock()
-        {
-            ReleaseLock();
-            _lock?.AcquireExclusive();
-            _lock?.AcquireExclusive();
+            _processing.Add(message);
         }
     }
 }
