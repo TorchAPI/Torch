@@ -19,6 +19,7 @@ namespace Torch.Commands
         public string Name { get; }
         public string Description { get; }
         public string HelpText { get; }
+        public Delegate Action { get; }
         public Type Module { get; }
         public List<string> Path { get; } = new List<string>();
         public ITorchPlugin Plugin { get; }
@@ -28,6 +29,51 @@ namespace Torch.Commands
         private ParameterInfo[] _parameters;
         private int? _requiredParamCount;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+        public Command(string name, string description, Delegate action, ITorchPlugin plugin, MyPromoteLevel? minimumPromoteLevel = null, string helpText = null)
+        {
+            HelpText = helpText;
+            Action = action;
+            Plugin = plugin;
+            MinimumPromoteLevel = minimumPromoteLevel ?? MyPromoteLevel.Admin;
+
+            var split = name.Split(' ');
+            Name = split.Last();
+            Description = description;
+            HelpText = helpText ?? description;
+
+            Path.AddRange(split);
+
+            var commandMethod = action.Method;
+
+            _method = commandMethod;
+            Module = commandMethod.DeclaringType;
+
+            //parameters
+            _parameters = commandMethod.GetParameters();
+
+            var sb = new StringBuilder();
+            sb.Append($"!{string.Join(" ", Path)} ");
+            for (var i = 0; i < _parameters.Length; i++)
+            {
+                var param = _parameters[i];
+
+                if (param.HasDefaultValue)
+                {
+                    _requiredParamCount = _requiredParamCount ?? i;
+
+                    sb.Append($"[{param.ParameterType.Name} {param.Name}] ");
+                }
+                else
+                {
+                    sb.Append($"<{param.ParameterType.Name} {param.Name}> ");
+                }
+            }
+
+            _requiredParamCount = _requiredParamCount ?? _parameters.Length;
+            Log.Debug($"Params: {_parameters.Length} ({_requiredParamCount} required)");
+            SyntaxHelp = sb.ToString();
+        }
 
         public Command(ITorchPlugin plugin, MethodInfo commandMethod)
         {
