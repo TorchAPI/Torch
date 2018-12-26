@@ -18,7 +18,7 @@ namespace Torch.Mod
     public static class ModCommunication
     {
         public const ushort NET_ID = 4352;
-        private static bool _closing;
+        private static bool _closing = false;
         private static BlockingCollection<MessageBase> _processing;
         private static MyConcurrentPool<IncomingMessage> _messagePool;
         private static List<IMyPlayer> _playerCache;
@@ -32,6 +32,7 @@ namespace Torch.Mod
 
             MyAPIGateway.Multiplayer.RegisterMessageHandler(NET_ID, MessageHandler);
             //background thread to handle de/compression and processing
+            _closing = false;
             MyAPIGateway.Parallel.StartBackground(DoProcessing);
             MyLog.Default.WriteLineAndConsole("TORCH MOD: Mod communication registered successfully.");
         }
@@ -40,7 +41,7 @@ namespace Torch.Mod
         {
             MyLog.Default.WriteLineAndConsole("TORCH MOD: Unregistering mod communication.");
             MyAPIGateway.Multiplayer?.UnregisterMessageHandler(NET_ID, MessageHandler);
-            _processing.CompleteAdding();
+            _processing?.CompleteAdding();
             _closing = true;
             //_task.Wait();
         }
@@ -59,6 +60,8 @@ namespace Torch.Mod
                 try
                 {
                     var m = _processing.Take();
+                    MyLog.Default.WriteLineAndConsole($"Processing message: {m.GetType().Name}");
+
                     if (m is IncomingMessage)
                     {
                         MessageBase i;
@@ -129,9 +132,9 @@ namespace Torch.Mod
 
             MyLog.Default.WriteLineAndConsole("TORCH MOD: COMMUNICATION THREAD: EXIT SIGNAL RECEIVED!");
             //exit signal received. Clean everything and GTFO
-            _processing.Dispose();
+            _processing?.Dispose();
             _processing = null;
-            _messagePool.Clean();
+            _messagePool?.Clean();
             _messagePool = null;
             _playerCache = null;
         }
@@ -146,7 +149,6 @@ namespace Torch.Mod
 
             message.Target = target;
             message.TargetType = MessageTarget.Single;
-            MyLog.Default.WriteLineAndConsole($"Sending message of type {message.GetType().FullName}");
             _processing.Add(message);
         }
 

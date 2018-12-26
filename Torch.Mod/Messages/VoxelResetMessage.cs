@@ -24,18 +24,16 @@ namespace Torch.Mod.Messages
 
         public override void ProcessClient()
         {
-            MyAPIGateway.Parallel.ForEach(EntityId, id =>
-                                                      {
-                                                          IMyEntity e;
-                                                          if (!MyAPIGateway.Entities.TryGetEntityById(id, out e))
-                                                              return;
+            //MyAPIGateway.Parallel.ForEach(EntityId, id =>
+            foreach (var id in EntityId)
+            {
+                IMyEntity e;
+                if (!MyAPIGateway.Entities.TryGetEntityById(id, out e))
+                    continue;
 
-                                                          var v = e as IMyVoxelBase;
-                                                          if (v == null)
-                                                              return;
-
-                                                          v.Storage.Reset(MyStorageDataTypeFlags.All);
-                                                      });
+                var v = e as IMyVoxelBase;
+                v?.Storage.Reset(MyStorageDataTypeFlags.All);
+            }
         }
 
         public override void ProcessServer()
