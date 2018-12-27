@@ -114,13 +114,15 @@ namespace Torch.Commands
             try
             {
                 var invokeByAction = Action != null;
-                var parameters = new object[_parameters.Length];
+                object[] parameters;
 
                 if (context.Args.Count < _requiredParamCount)
                     return false;
 
                 if (!invokeByAction)
                 {
+                    parameters = new object[_parameters.Length];
+
                     //Convert args from string
                     for (var i = 0; i < _parameters.Length && i < context.Args.Count; i++)
                     {
