@@ -32,7 +32,7 @@ namespace Torch.Commands
         private int? _requiredParamCount;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        public Command(string name, string description, CommandAction action, ITorchPlugin plugin, MyPromoteLevel? minimumPromoteLevel = null, string helpText = null)
+        public Command(string name, string description, CommandAction action, ITorchPlugin plugin, MyPromoteLevel? minimumPromoteLevel = null, string helpText = null, int requiredParamCount = 0)
         {
             HelpText = helpText;
             Action = action;
@@ -46,34 +46,11 @@ namespace Torch.Commands
 
             Path.AddRange(split);
 
-            var commandMethod = action.Method;
-
-            _method = commandMethod;
-            Module = commandMethod.DeclaringType;
-
-            //parameters
-            _parameters = commandMethod.GetParameters();
-
             var sb = new StringBuilder();
             sb.Append($"!{string.Join(" ", Path)} ");
-            for (var i = 0; i < _parameters.Length; i++)
-            {
-                var param = _parameters[i];
 
-                if (param.HasDefaultValue)
-                {
-                    _requiredParamCount = _requiredParamCount ?? i;
-
-                    sb.Append($"[{param.ParameterType.Name} {param.Name}] ");
-                }
-                else
-                {
-                    sb.Append($"<{param.ParameterType.Name} {param.Name}> ");
-                }
-            }
-
-            _requiredParamCount = _requiredParamCount ?? _parameters.Length;
-            Log.Debug($"Params: {_parameters.Length} ({_requiredParamCount} required)");
+            _requiredParamCount = requiredParamCount;
+            Log.Debug($"Params: ({_requiredParamCount} required)");
             SyntaxHelp = sb.ToString();
         }
 
@@ -136,35 +113,37 @@ namespace Torch.Commands
         {
             try
             {
+                var invokeByAction = Action != null;
                 var parameters = new object[_parameters.Length];
 
                 if (context.Args.Count < _requiredParamCount)
                     return false;
 
-                //Convert args from string
-                for (var i = 0; i < _parameters.Length && i < context.Args.Count; i++)
+                if (!invokeByAction)
                 {
-                    if (context.Args[i].TryConvert(_parameters[i].ParameterType, out object obj))
-                        parameters[i] = obj;
-                    else
-                        return false;
-                }
+                    //Convert args from string
+                    for (var i = 0; i < _parameters.Length && i < context.Args.Count; i++)
+                    {
+                        if (context.Args[i].TryConvert(_parameters[i].ParameterType, out object obj))
+                            parameters[i] = obj;
+                        else
+                            return false;
+                    }
 
-                //Fill remaining parameters with default values
-                for (var i = 0; i < parameters.Length; i++)
-                {
-                    if (parameters[i] == null)
-                        parameters[i] = _parameters[i].DefaultValue;
-                }
+                    //Fill remaining parameters with default values
+                    for (var i = 0; i < parameters.Length; i++)
+                    {
+                        if (parameters[i] == null)
+                            parameters[i] = _parameters[i].DefaultValue;
+                    }
 
-                if (Action != null)
-                {
-                    Action.Invoke(context, parameters);
+                    var moduleInstance = (CommandModule)Activator.CreateInstance(Module);
+                    moduleInstance.Context = context;
+                    _method.Invoke(moduleInstance, parameters);
                     return true;
                 }
-                var moduleInstance = (CommandModule)Activator.CreateInstance(Module);
-                moduleInstance.Context = context;
-                _method.Invoke(moduleInstance, parameters);
+
+                Action.Invoke(context, parameters);
                 return true;
             }
             catch (Exception e)
