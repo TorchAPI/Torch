@@ -149,10 +149,7 @@ namespace Torch.Commands
 
                     for (var i = 0; i < parameters.Length && i < context.Args.Count; i++)
                     {
-                        if (context.Args[i].TryConvert(_parameters[i].ParameterType, out object obj))
-                            parameters[i] = obj;
-                        else
-                            return false;
+                        parameters[i] = context.Args[i];
                     }
                 }
 
