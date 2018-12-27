@@ -15,11 +15,13 @@ namespace Torch.Commands
 {
     public class Command
     {
+        public delegate void CommandAction(CommandContext context, object[] arguments);
+
         public MyPromoteLevel MinimumPromoteLevel { get; }
         public string Name { get; }
         public string Description { get; }
         public string HelpText { get; }
-        public Delegate Action { get; }
+        public CommandAction Action { get; }
         public Type Module { get; }
         public List<string> Path { get; } = new List<string>();
         public ITorchPlugin Plugin { get; }
@@ -30,7 +32,7 @@ namespace Torch.Commands
         private int? _requiredParamCount;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        public Command(string name, string description, Delegate action, ITorchPlugin plugin, MyPromoteLevel? minimumPromoteLevel = null, string helpText = null)
+        public Command(string name, string description, CommandAction action, ITorchPlugin plugin, MyPromoteLevel? minimumPromoteLevel = null, string helpText = null)
         {
             HelpText = helpText;
             Action = action;
@@ -155,6 +157,11 @@ namespace Torch.Commands
                         parameters[i] = _parameters[i].DefaultValue;
                 }
 
+                if (Action != null)
+                {
+                    Action.Invoke(context, parameters);
+                    return true;
+                }
                 var moduleInstance = (CommandModule)Activator.CreateInstance(Module);
                 moduleInstance.Context = context;
                 _method.Invoke(moduleInstance, parameters);
