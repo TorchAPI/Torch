@@ -143,6 +143,17 @@ namespace Torch.Commands
                     moduleInstance.Context = context;
                     _method.Invoke(moduleInstance, parameters);
                     return true;
+                } else
+                {
+                    parameters = new object[context.Args.Count];
+
+                    for (var i = 0; i < parameters.Length && i < context.Args.Count; i++)
+                    {
+                        if (context.Args[i].TryConvert(_parameters[i].ParameterType, out object obj))
+                            parameters[i] = obj;
+                        else
+                            return false;
+                    }
                 }
 
                 Action.Invoke(context, parameters);
