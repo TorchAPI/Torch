@@ -141,6 +141,19 @@ namespace Torch.Commands
             }
         }
 
+        public bool DeleteNode(CommandNode node)
+        {
+            if (node.Parent != null)
+            {
+                node.Parent.RemoveNode(node);
+                return true;
+            }
+            if (node.Command?.Path != null)
+                return _root.Remove(node.Command.Path.First());
+
+            return false;
+        }
+
         private void DebugNode(CommandNode commandNode, StringBuilder sb, ref int indent)
         {
             sb.AppendLine(new string(' ', indent) + commandNode.Name);
