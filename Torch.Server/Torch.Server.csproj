@@ -227,6 +227,7 @@
     <Compile Include="Managers\MultiplayerManagerDedicatedPatchShim.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Initializer.cs" />
+    <Compile Include="Patches\PromotePatch.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TorchConfig.cs" />
