@@ -209,27 +209,17 @@ namespace Torch.Server.Managers
         //Largely copied from SE
         private void ValidateAuthTicketResponse(ulong steamId, JoinResult response, ulong steamOwner)
         {
-            //SteamNetworking.GetP2PSessionState(new CSteamID(steamId), out P2PSessionState_t state);            
-            //state.GetRemoteIP();
-            MyP2PSessionState statehack = new MyP2PSessionState();
-            VRage.Steam.MySteamService.Static.Peer2Peer.GetSessionState(steamId, ref statehack);
-            var ip = new IPAddress(BitConverter.GetBytes(statehack.RemoteIP).Reverse().ToArray());
+            var state = new MyP2PSessionState();
+            MySteamService.Static.Peer2Peer.GetSessionState(steamId, ref state);
+            var ip = new IPAddress(BitConverter.GetBytes(state.RemoteIP).Reverse().ToArray());
 
             Torch.CurrentSession.KeenSession.PromotedUsers.TryGetValue(steamId, out MyPromoteLevel promoteLevel);
 
             _log.Debug($"ValidateAuthTicketResponse(user={steamId}, response={response}, owner={steamOwner}, permissions={promoteLevel})");
 
             _log.Info($"Connection attempt by {steamId} from {ip}");
-            // TODO implement IP bans
-            var config = (TorchConfig) Torch.Config;
-            if (config.EnableWhitelist && !config.Whitelist.Contains(steamId))
-            {
-                _log.Warn($"Rejecting user {steamId} because they are not whitelisted in Torch.cfg.");
-                UserRejected(steamId, JoinResult.NotInGroup);
-            }
-            else if(config.EnableReservedSlots && config.ReservedPlayers.Contains(steamId))
-                UserAccepted(steamId);
-            else if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE &&
+            
+            if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE &&
                      promoteLevel < MyPromoteLevel.Admin)
             {
                 _log.Warn($"Rejecting user {steamId}, world is set to offline and user is not admin.");
@@ -252,40 +242,48 @@ namespace Torch.Server.Managers
 
         private void RunEvent(ValidateAuthTicketEvent info)
         {
-            MultiplayerManagerDedicatedEventShim.RaiseValidateAuthTicket(ref info);
+            JoinResult internalAuth;
 
-            if (info.FutureVerdict == null)
+
+            if (IsBanned(info.SteamOwner) || IsBanned(info.SteamID))
+                internalAuth = JoinResult.BannedByAdmins;
+            else if (_isClientKicked(MyMultiplayer.Static, info.SteamID) ||
+                     _isClientKicked(MyMultiplayer.Static, info.SteamOwner))
+                internalAuth = JoinResult.KickedRecently;
+            else if (info.SteamResponse == JoinResult.OK)
             {
-                if (IsBanned(info.SteamOwner) || IsBanned(info.SteamID))
-                    CommitVerdict(info.SteamID, JoinResult.BannedByAdmins);
-                else if (_isClientKicked(MyMultiplayer.Static, info.SteamID) ||
-                         _isClientKicked(MyMultiplayer.Static, info.SteamOwner))
-                    CommitVerdict(info.SteamID, JoinResult.KickedRecently);
-                else if (info.SteamResponse == JoinResult.OK)
+                var config = (TorchConfig) Torch.Config;
+                if (config.EnableWhitelist && !config.Whitelist.Contains(info.SteamID))
                 {
-                    //Admins can bypass member limit
-                    if (MySandboxGame.ConfigDedicated.Administrators.Contains(info.SteamID.ToString()) ||
-                        MySandboxGame.ConfigDedicated.Administrators.Contains(_convertSteamIDFrom64(info.SteamID)))
-                        CommitVerdict(info.SteamID, JoinResult.OK);
-                    //Server counts as a client, so subtract 1 from MemberCount
-                    else if (MyMultiplayer.Static.MemberLimit > 0 &&
-                             MyMultiplayer.Static.MemberCount - 1 >= MyMultiplayer.Static.MemberLimit)
-                        CommitVerdict(info.SteamID, JoinResult.ServerFull);
-                    else if (MySandboxGame.ConfigDedicated.GroupID == 0uL)
-                        CommitVerdict(info.SteamID, JoinResult.OK);
-                    else
-                    {
-                        if (MySandboxGame.ConfigDedicated.GroupID == info.Group && (info.Member || info.Officer))
-                            CommitVerdict(info.SteamID, JoinResult.OK);
-                        else
-                            CommitVerdict(info.SteamID, JoinResult.NotInGroup);
-                    }
+                    _log.Warn($"Rejecting user {info.SteamID} because they are not whitelisted in Torch.cfg.");
+                    internalAuth = JoinResult.NotInGroup;
                 }
+                else if (config.EnableReservedSlots && config.ReservedPlayers.Contains(info.SteamID))
+                    internalAuth = JoinResult.OK;
+                //Admins can bypass member limit
+                else if (MySandboxGame.ConfigDedicated.Administrators.Contains(info.SteamID.ToString()) ||
+                         MySandboxGame.ConfigDedicated.Administrators.Contains(_convertSteamIDFrom64(info.SteamID)))
+                    internalAuth = JoinResult.OK;
+                //Server counts as a client, so subtract 1 from MemberCount
+                else if (MyMultiplayer.Static.MemberLimit > 0 &&
+                         MyMultiplayer.Static.MemberCount - 1 >= MyMultiplayer.Static.MemberLimit)
+                    internalAuth = JoinResult.ServerFull;
+                else if (MySandboxGame.ConfigDedicated.GroupID == 0uL)
+                    internalAuth = JoinResult.OK;
                 else
-                    CommitVerdict(info.SteamID, info.SteamResponse);
-                
-                return;
+                {
+                    if (MySandboxGame.ConfigDedicated.GroupID == info.Group && (info.Member || info.Officer))
+                        internalAuth = JoinResult.OK;
+                    else
+                        internalAuth = JoinResult.NotInGroup;
+                }
             }
+            else
+                internalAuth = info.SteamResponse;
+
+            info.FutureVerdict = Task.FromResult(internalAuth);
+
+            MultiplayerManagerDedicatedEventShim.RaiseValidateAuthTicket(ref info);
 
             info.FutureVerdict.ContinueWith((task) =>
             {
