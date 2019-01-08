@@ -90,6 +90,8 @@ namespace Torch.Server.ViewModels
 
         public string ServerName { get => _config.ServerName; set => SetValue(x => _config.ServerName = x, value); }
 
+        public string ServerDescription { get => _config.ServerDescription; set => SetValue(x => _config.ServerDescription = x, value); }
+
         public bool PauseGameWhenEmpty { get => _config.PauseGameWhenEmpty; set => SetValue(x => _config.PauseGameWhenEmpty = x, value); }
 
         public string PremadeCheckpointPath { get => _config.PremadeCheckpointPath; set => SetValue(x => _config.PremadeCheckpointPath = x, value); }
