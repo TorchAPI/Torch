@@ -76,7 +76,9 @@ namespace Torch.Server.ViewModels
         public List<string> Administrators { get => _config.Administrators; set => SetValue(x => _config.Administrators = x, value); }
 
         public List<ulong> Banned { get => _config.Banned; set => SetValue(x => _config.Banned = x, value); }
-        
+
+        public List<ulong> Reserved { get => _config.Reserved; set => SetValue(x => _config.Reserved = x, value); }
+
         private List<ulong> _mods = new List<ulong>();
         public List<ulong> Mods { get => _mods; set => SetValue(x => _mods = x, value); }
 
@@ -90,7 +92,11 @@ namespace Torch.Server.ViewModels
 
         public string ServerName { get => _config.ServerName; set => SetValue(x => _config.ServerName = x, value); }
 
+        public string ServerDescription { get => _config.ServerDescription; set => SetValue(x => _config.ServerDescription = x, value); }
+
         public bool PauseGameWhenEmpty { get => _config.PauseGameWhenEmpty; set => SetValue(x => _config.PauseGameWhenEmpty = x, value); }
+
+        public bool AutodetectDependencies { get => _config.AutodetectDependencies; set => SetValue(x => _config.AutodetectDependencies = x, value); }
 
         public string PremadeCheckpointPath { get => _config.PremadeCheckpointPath; set => SetValue(x => _config.PremadeCheckpointPath = x, value); }
 

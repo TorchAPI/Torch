@@ -65,9 +65,12 @@
                     <StackPanel Grid.Column="0" Margin="3" DockPanel.Dock="Left">
                         <Label Content="Server Name" />
                         <TextBox Text="{Binding ServerName}" Margin="3,0,3,3" Width="160" />
-                        <Label Content="World Name" />
-                        <TextBox Text="{Binding WorldName}" Margin="3,0,3,3" Width="160" />
-                        <Label Content="Whitelist Group ID" />
+                      <Label Content="World Name" />
+                      <TextBox Text="{Binding WorldName}" Margin="3,0,3,3" Width="160" />
+                      <Label Content="Server Description" />
+                      <TextBox Text="{Binding ServerDescription}" Margin="3,0,3,3" Width="160" Height="100"
+                               AcceptsReturn="true" VerticalScrollBarVisibility="Auto"/>
+                      <Label Content="Whitelist Group ID" />
                         <TextBox Margin="3,0,3,3" Width="160" Style="{StaticResource ValidatedTextBox}">
                             <TextBox.Text>
                                 <Binding Path="GroupId" UpdateSourceTrigger="PropertyChanged"
@@ -87,10 +90,11 @@
                         <Label Content="Server Password"/>
                         <TextBox Text="{Binding Password}" Width="160"/>
                         <CheckBox IsChecked="{Binding PauseGameWhenEmpty}" Content="Pause When Empty" Margin="3" />
+                        <CheckBox IsChecked="{Binding AutodetectDependencies}" Content="Auto Detect Dependencies" Margin="3" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Margin="3">
                         <Label Content="Mods" />
-                        <TextBox Margin="3" Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"
+                        <TextBox Margin="3" Height="60" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"
                                  Style="{StaticResource ValidatedTextBox}">
                             <TextBox.Text>
                                 <Binding Path="Mods" UpdateSourceTrigger="PropertyChanged"
@@ -106,6 +110,19 @@
                         <TextBox Text="{Binding Administrators, Converter={StaticResource ListConverterString}}"
                                  Margin="3"
                                  Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto" />
+                        <Label Content="Reserved Players" />
+                        <TextBox Margin="3" Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"
+                                 Style="{StaticResource ValidatedTextBox}">
+                            <TextBox.Text>
+                                <Binding Path="Reserved" UpdateSourceTrigger="PropertyChanged"
+                                         ValidatesOnDataErrors="True" NotifyOnValidationError="True"
+                                         Converter="{StaticResource ListConverterUInt64}">
+                                    <Binding.ValidationRules>
+                                        <validationRules:ListConverterValidationRule Type="system:UInt64" />
+                                    </Binding.ValidationRules>
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
                         <Label Content="Banned Players" />
                         <TextBox Margin="3" Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"
                                  Style="{StaticResource ValidatedTextBox}">
