@@ -90,6 +90,7 @@
                         <Label Content="Server Password"/>
                         <TextBox Text="{Binding Password}" Width="160"/>
                         <CheckBox IsChecked="{Binding PauseGameWhenEmpty}" Content="Pause When Empty" Margin="3" />
+                        <CheckBox IsChecked="{Binding AutodetectDependencies}" Content="Auto Detect Dependencies" Margin="3" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Margin="3">
                         <Label Content="Mods" />
@@ -109,6 +110,19 @@
                         <TextBox Text="{Binding Administrators, Converter={StaticResource ListConverterString}}"
                                  Margin="3"
                                  Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto" />
+                        <Label Content="Reserved Players" />
+                        <TextBox Margin="3" Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"
+                                 Style="{StaticResource ValidatedTextBox}">
+                            <TextBox.Text>
+                                <Binding Path="Reserved" UpdateSourceTrigger="PropertyChanged"
+                                         ValidatesOnDataErrors="True" NotifyOnValidationError="True"
+                                         Converter="{StaticResource ListConverterUInt64}">
+                                    <Binding.ValidationRules>
+                                        <validationRules:ListConverterValidationRule Type="system:UInt64" />
+                                    </Binding.ValidationRules>
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
                         <Label Content="Banned Players" />
                         <TextBox Margin="3" Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"
                                  Style="{StaticResource ValidatedTextBox}">
