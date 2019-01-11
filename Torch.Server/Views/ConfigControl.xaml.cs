@@ -116,5 +116,11 @@ namespace Torch.Server.Views
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        private void NewWorld_OnClick(object sender, RoutedEventArgs e)
+        {
+            var c  = new WorldGeneratorDialog(_instanceManager);
+            c.Show();
+        }
     }
 }
