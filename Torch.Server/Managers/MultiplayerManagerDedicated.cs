@@ -219,8 +219,7 @@ namespace Torch.Server.Managers
                     _log.Warn($"Rejecting user {info.SteamID} because they are not whitelisted in Torch.cfg.");
                     internalAuth = JoinResult.NotInGroup;
                 }
-                else if (config.EnableReservedSlots && (config.ReservedPlayers.Contains(info.SteamID) ||
-                    MySandboxGame.ConfigDedicated.Reserved.Contains(info.SteamID)))
+                else if (MySandboxGame.ConfigDedicated.Reserved.Contains(info.SteamID))
                     internalAuth = JoinResult.OK;
                 //Admins can bypass member limit
                 else if (MySandboxGame.ConfigDedicated.Administrators.Contains(info.SteamID.ToString()) ||
