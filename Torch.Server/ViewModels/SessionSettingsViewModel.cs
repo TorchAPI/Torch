@@ -120,8 +120,14 @@ namespace Torch.Server.ViewModels
         public bool EnableSaving { get => _settings.EnableSaving; set => SetValue(ref _settings.EnableSaving, value); }
 
         [Torch.Views.Display(Description = "Enables respawn screen.", Name = "Enable Respawn Screen in the Game", GroupName = "Players")]
-        public bool EnableRespawnScreen { get => _settings.EnableRespawnScreen; set => SetValue(ref _settings.EnableRespawnScreen, value); }
-
+        public bool StartInRespawnScreen { get => _settings.StartInRespawnScreen; set => SetValue(ref _settings.StartInRespawnScreen, value); }
+        
+        [Torch.Views.Display(Description = "Enables research.", Name = "Enable Research", GroupName = "Players")]
+        public bool EnableResearch { get => _settings.EnableResearch; set => SetValue(ref _settings.EnableResearch, value); }
+        
+        [Torch.Views.Display(Description = "Enables Good.bot hints.", Name = "Enable Good.bot hints", GroupName = "Players")]
+        public bool EnableGoodBotHints { get => _settings.EnableGoodBotHints; set => SetValue(ref _settings.EnableGoodBotHints, value); }
+        
         [Torch.Views.Display(Description = "Enables infinite ammunition in survival game mode.", Name = "Enable Infinite Ammunition in Survival", GroupName = "Others")]
         public bool InfiniteAmmo { get => _settings.InfiniteAmmo; set => SetValue(ref _settings.InfiniteAmmo, value); }
 
