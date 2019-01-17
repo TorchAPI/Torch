@@ -68,8 +68,13 @@ namespace Torch.Server
 
         public string LastUsedTheme { get; set; } = "Torch Theme";
 
-        public bool EnableReservedSlots { get; set; } = false;
+        //TODO: REMOVE ME BY JULY 2019
+        [Obsolete("Use vanilla reserved slot config")]
         public HashSet<ulong> ReservedPlayers { get; set; } = new HashSet<ulong>();
+
+        //Prevent reserved players being written to disk, but allow it to bre read
+        //remove this when ReservedPlayers is removed
+        private bool ShouldSerializeReservedPlayers() => false;
 
         [XmlIgnore]
         private string _path;
