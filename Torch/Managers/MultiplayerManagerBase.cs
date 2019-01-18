@@ -116,7 +116,7 @@ namespace Torch.Managers
         protected void RaiseClientJoined(ulong steamId)
         {
             var vm = new PlayerViewModel(steamId) { State = ConnectionState.Connected };
-            _log.Info($"Player {vm.Name} joined ({vm.SteamId}");
+            _log.Info($"Player {vm.Name} joined ({vm.SteamId})");
             Players.Add(steamId, vm);
             PlayerJoined?.Invoke(vm);
         }
