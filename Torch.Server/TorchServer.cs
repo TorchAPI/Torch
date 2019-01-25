@@ -18,7 +18,6 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Session;
 using Torch.Commands;
-using Torch.Managers;
 using Torch.Mod;
 using Torch.Server.Commands;
 using Torch.Server.Managers;
@@ -101,7 +100,6 @@ namespace Torch.Server
             base.Init();
             Managers.GetManager<ITorchSessionManager>().SessionStateChanged += OnSessionStateChanged;
             GetManager<InstanceManager>().LoadInstance(Config.InstancePath);
-            GetManager<PluginManager>().LoadPlugins();
             CanRun = true;
             Initialized?.Invoke(this);
             Log.Info($"Initialized server '{Config.InstanceName}' at '{Config.InstancePath}'");
