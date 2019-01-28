@@ -70,11 +70,9 @@ namespace Torch.Server.Views
         private void _instanceManager_InstanceLoaded(ConfigDedicatedViewModel obj)
         {
             Log.Info("Instance loaded.");
-            //Dispatcher.Invoke(() => DataContext = new ObservableCollection<MyObjectBuilder_Checkpoint.ModItem>(obj.Mods));
-            Dispatcher.Invoke(() => DataContext = obj?.Mods ?? new ObservableCollection<ModItemInfo>());
-            Dispatcher.Invoke(UpdateLayout);
-            Dispatcher.Invoke(() =>
-            {
+            Dispatcher.Invoke(() => {
+                DataContext = obj?.Mods ?? new ObservableCollection<ModItemInfo>();
+                UpdateLayout();
                 ((ObservableCollection<ModItemInfo>)DataContext).CollectionChanged += OnModlistUpdate;
             });
         }
