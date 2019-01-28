@@ -47,9 +47,9 @@ namespace Torch.Utils.SteamWorkshopTools
 
         public async Task<bool> Logon(string user = "anonymous", string pw = "")
         {
-            if (user == null)
+            if (string.IsNullOrEmpty(user))
                 throw new ArgumentNullException("User can't be null!");
-            if (user != "anonymous" && pw != "")
+            if (user.Equals("anonymous") && !pw.Equals(""))
                 throw new ArgumentNullException("Password can't be null if user is not anonymous!");
 
             Username = user;
