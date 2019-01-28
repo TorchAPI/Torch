@@ -49,7 +49,7 @@ namespace Torch.Utils.SteamWorkshopTools
         {
             if (string.IsNullOrEmpty(user))
                 throw new ArgumentNullException("User can't be null!");
-            if (user.Equals("anonymous") && !pw.Equals(""))
+            if (!user.Equals("anonymous") && !pw.Equals(""))
                 throw new ArgumentNullException("Password can't be null if user is not anonymous!");
 
             Username = user;
