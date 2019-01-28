@@ -5,14 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Torch.Server"
         xmlns:views="clr-namespace:Torch.Server.Views"
+        xmlns:views1="clr-namespace:Torch.Views;assembly=Torch"
         mc:Ignorable="d"
-        Title="WorldGeneratorDialog" Height="300" Width="700">
+        Title="WorldGeneratorDialog" Height="500" Width="700">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="250"/>
-            <ColumnDefinition Width="440"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <ListView Grid.Column="0" x:Name="PremadeCheckpoints" ScrollViewer.CanContentScroll="False" HorizontalContentAlignment="Center" Margin="3">
+        <ListView Grid.Column="0" x:Name="PremadeCheckpoints" ScrollViewer.CanContentScroll="False" HorizontalContentAlignment="Center" Margin="3" SelectionChanged="PremadeCheckpoints_SelectionChanged">
             <ListView.ItemTemplate>
                 <DataTemplate DataType="local:PremadeCheckpointItem">
                     <StackPanel HorizontalAlignment="Center">
@@ -26,13 +27,18 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <StackPanel Grid.Column="1" Margin="3">
+        <Grid Grid.Column="1" Margin="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height ="Auto"/>
+                <RowDefinition Height ="*"/>
+                <RowDefinition Height ="Auto"/>
+            </Grid.RowDefinitions>
             <StackPanel Orientation="Horizontal">
                 <Label Content="World Name: "/>
                 <TextBox x:Name="WorldName" Width="300" Margin="3"/>
             </StackPanel>
-            <views:SessionSettingsView/>
-            <Button Content="Create World" Click="ButtonBase_OnClick"/>
-        </StackPanel>
+            <views1:PropertyGrid Grid.Row="1" x:Name="SettingsView" Margin="3"/>
+            <Button Grid.Row="2"  Content="Create World" Click="ButtonBase_OnClick" Margin ="3"/>
+        </Grid>
     </Grid>
 </Window>

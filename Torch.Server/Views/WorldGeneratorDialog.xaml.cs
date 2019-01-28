@@ -13,7 +13,15 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NLog;
 using Sandbox.Definitions;
+using Sandbox.Engine.Networking;
+using Sandbox.Game.World;
 using Torch.Server.Managers;
+using Torch.Server.ViewModels;
+using Torch.Utils;
+using VRage;
+using VRage.Dedicated;
+using VRage.FileSystem;
+using VRage.Game;
 using VRage.Game.Localization;
 using VRage.Utils;
 
@@ -26,19 +34,25 @@ namespace Torch.Server
     {
         private InstanceManager _instanceManager;
         private List<PremadeCheckpointItem> _checkpoints = new List<PremadeCheckpointItem>();
+        private PremadeCheckpointItem _currentItem;
+
+        [ReflectedStaticMethod(Type = typeof(ConfigForm), Name = "LoadLocalization")]
+        private static Action _loadLocalization;
 
         public WorldGeneratorDialog(InstanceManager instanceManager)
         {
             _instanceManager = instanceManager;
             InitializeComponent();
-
-            MyDefinitionManager.Static.LoadScenarios();
-            var scenarios = MyDefinitionManager.Static.GetScenarioDefinitions();
-            MyDefinitionManager.Static.UnloadData();
-            foreach (var scenario in scenarios)
+            _loadLocalization();
+            var scenarios = MyLocalCache.GetAvailableWorldInfos(Path.Combine(MyFileSystem.ContentPath, "CustomWorlds"));
+            foreach (var tup in scenarios)
             {
-                //TODO: Load localization
-                _checkpoints.Add(new PremadeCheckpointItem { Name = scenario.DisplayNameText, Icon = @"C:\Users\jgross\Documents\Projects\TorchAPI\Torch\bin\x64\Release\Content\CustomWorlds\Empty World\thumb.jpg" });
+                string directory = tup.Item1;
+                MyWorldInfo info = tup.Item2;
+                string localizedName = MyTexts.GetString(MyStringId.GetOrCompute(info.SessionName));
+                var checkpoint = MyLocalCache.LoadCheckpoint(directory, out _);
+                checkpoint.OnlineMode = MyOnlineModeEnum.PUBLIC;
+                _checkpoints.Add(new PremadeCheckpointItem { Name = localizedName, Icon = Path.Combine(directory, "thumb.jpg"), Path = directory, Checkpoint = checkpoint});
             }
 
             /*
@@ -56,23 +70,39 @@ namespace Torch.Server
             }*/
             PremadeCheckpoints.ItemsSource = _checkpoints;
         }
-
+        
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
-            /*
-            var worldPath = Path.Combine("Instance", "Saves", WorldName.Text);
-            var checkpointItem = (PremadeCheckpointItem)PremadeCheckpoints.SelectedItem;
+            string worldName = string.IsNullOrEmpty(WorldName.Text) ? _currentItem.Name : WorldName.Text;
+            var worldPath = Path.Combine("Instance", "Saves", worldName);
+            var checkpoint= _currentItem.Checkpoint;
             if (Directory.Exists(worldPath))
             {
                 MessageBox.Show("World already exists with that name.");
                 return;
             }
             Directory.CreateDirectory(worldPath);
-            foreach (var file in Directory.EnumerateFiles(checkpointItem.Path, "*", SearchOption.AllDirectories))
+            foreach (var file in Directory.EnumerateFiles(_currentItem.Path, "*", SearchOption.AllDirectories))
             {
-                File.Copy(file, Path.Combine(worldPath, file.Replace($"{checkpointItem.Path}\\", "")));
+                File.Copy(file, Path.Combine(worldPath, file.Replace($"{_currentItem.Path}\\", "")));
             }
-            _instanceManager.SelectWorld(worldPath, false);*/
+
+            checkpoint.SessionName = worldName;
+
+            MyLocalCache.SaveCheckpoint(checkpoint, worldPath);
+
+
+            _instanceManager.SelectWorld(worldPath, false);
+            _instanceManager.LoadInstance(worldPath);
+            _instanceManager.ImportSelectedWorldConfig();
+            Close();
+        }
+
+        private void PremadeCheckpoints_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var selected = (PremadeCheckpointItem)PremadeCheckpoints.SelectedItem;
+            _currentItem = selected;
+            SettingsView.DataContext = new SessionSettingsViewModel(_currentItem.Checkpoint.Settings);
         }
     }
 
@@ -81,5 +111,6 @@ namespace Torch.Server
         public string Path { get; set; }
         public string Name { get; set; }
         public string Icon { get; set; }
+        public MyObjectBuilder_Checkpoint Checkpoint { get; set; }
     }
 }

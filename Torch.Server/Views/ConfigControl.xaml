@@ -27,6 +27,7 @@
         <DockPanel Grid.Row="0">
             <Label Content="World:" DockPanel.Dock="Left" />
             <Button Content="Import World Config" Margin="3" Padding="3" DockPanel.Dock="Right" Click="ImportConfig_OnClick" ToolTip="Override the DS config with the one from the selected world." IsEnabled="{Binding ElementName=WorldList, Path=Items.Count, Mode=OneWay}"/>
+            <Button Content="New World" Margin="3" Padding="3" DockPanel.Dock="Right" Click="NewWorld_OnClick"/>
             <ComboBox x:Name="WorldList" ItemsSource="{Binding Worlds}" SelectedItem="{Binding SelectedWorld}" Margin="3"
                       SelectionChanged="Selector_OnSelectionChanged">
                 <ComboBox.ItemTemplate>
@@ -57,57 +58,89 @@
                     <RowDefinition />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Margin="3" DockPanel.Dock="Left">
-                        <Label Content="Server Name" />
-                        <TextBox Text="{Binding ServerName}" Margin="3,0,3,3" Width="160" />
-                        <Label Content="World Name" />
-                        <TextBox Text="{Binding WorldName}" Margin="3,0,3,3" Width="160" />
-                        <Label Content="Whitelist Group ID" />
-                        <TextBox Margin="3,0,3,3" Width="160" Style="{StaticResource ValidatedTextBox}">
-                            <TextBox.Text>
-                                <Binding Path="GroupId" UpdateSourceTrigger="PropertyChanged"
-                                         ValidatesOnDataErrors="True" NotifyOnValidationError="True">
-                                    <Binding.ValidationRules>
-                                        <validationRules:NumberValidationRule />
-                                    </Binding.ValidationRules>
-                                </Binding>
-                            </TextBox.Text>
-                        </TextBox>
-                        <Label Content="Server IP" />
-                        <StackPanel Orientation="Horizontal" Margin="3,0,3,3">
-                            <TextBox Text="{Binding IP}" Width="100" Height="20" />
-                            <Label Content=":" Width="12" />
-                            <TextBox Text="{Binding Port}" Width="48" Height="20" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="3" DockPanel.Dock="Left">
+                            <Label Content="Server Name" />
+                            <TextBox Text="{Binding ServerName}" Margin="3,0,3,3" Width="160" />
+                          <Label Content="World Name" />
+                          <TextBox Text="{Binding WorldName}" Margin="3,0,3,3" Width="160" />
+                          <Label Content="Server Description" />
+                          <TextBox Text="{Binding ServerDescription}" Margin="3,0,3,3" Width="160" Height="100"
+                                   AcceptsReturn="true" VerticalScrollBarVisibility="Auto"/>
+                          <Label Content="Whitelist Group ID" />
+                            <TextBox Margin="3,0,3,3" Width="160" Style="{StaticResource ValidatedTextBox}">
+                                <TextBox.Text>
+                                    <Binding Path="GroupId" UpdateSourceTrigger="PropertyChanged"
+                                             ValidatesOnDataErrors="True" NotifyOnValidationError="True">
+                                        <Binding.ValidationRules>
+                                            <validationRules:NumberValidationRule />
+                                        </Binding.ValidationRules>
+                                    </Binding>
+                                </TextBox.Text>
+                            </TextBox>
+                            <Label Content="Server IP" />
+                            <StackPanel Orientation="Horizontal" Margin="3,0,3,3">
+                                <TextBox Text="{Binding IP}" Width="100" Height="20" />
+                                <Label Content=":" Width="12" />
+                                <TextBox Text="{Binding Port}" Width="48" Height="20" />
+                            </StackPanel>
+                            <Label Content="Server Password"/>
+                            <TextBox Text="{Binding Password}" Width="160"/>
+                            <CheckBox IsChecked="{Binding PauseGameWhenEmpty}" Content="Pause When Empty" Margin="3" />
+                            <CheckBox IsChecked="{Binding AutodetectDependencies}" Content="Auto Detect Dependencies" Margin="3" />
                         </StackPanel>
-                        <Label Content="Server Password"/>
-                        <TextBox Text="{Binding Password}" Width="160"/>
-                        <CheckBox IsChecked="{Binding PauseGameWhenEmpty}" Content="Pause When Empty" Margin="3" />
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Margin="3">
-                        <Label Content="Administrators" />
-                        <TextBox Text="{Binding Administrators, Converter={StaticResource ListConverterString}}"
-                                 Margin="3"
-                                 Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto" />
-                        <Label Content="Banned Players" />
-                        <TextBox Margin="3" Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"
-                                 Style="{StaticResource ValidatedTextBox}">
-                            <TextBox.Text>
-                                <Binding Path="Banned" UpdateSourceTrigger="PropertyChanged"
-                                         ValidatesOnDataErrors="True" NotifyOnValidationError="True"
-                                         Converter="{StaticResource ListConverterUInt64}">
-                                    <Binding.ValidationRules>
-                                        <validationRules:ListConverterValidationRule Type="system:UInt64" />
-                                    </Binding.ValidationRules>
-                                </Binding>
-                            </TextBox.Text>
-                        </TextBox>
-                    </StackPanel>
-                </Grid>
+                        <StackPanel Grid.Column="1" Margin="3">
+                            <Label Content="Mods" />
+                            <TextBox Margin="3" Height="60" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"
+                                     Style="{StaticResource ValidatedTextBox}">
+                                <TextBox.Text>
+                                    <Binding Path="Mods" UpdateSourceTrigger="PropertyChanged"
+                                             ValidatesOnDataErrors="True" NotifyOnValidationError="True"
+                                             Converter="{StaticResource ListConverterUInt64}">
+                                        <Binding.ValidationRules>
+                                            <validationRules:ListConverterValidationRule Type="system:UInt64" />
+                                        </Binding.ValidationRules>
+                                    </Binding>
+                                </TextBox.Text>
+                            </TextBox>
+                            <Label Content="Administrators" />
+                            <TextBox Text="{Binding Administrators, Converter={StaticResource ListConverterString}}"
+                                     Margin="3"
+                                     Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto" />
+                            <Label Content="Reserved Players" />
+                            <TextBox Margin="3" Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"
+                                     Style="{StaticResource ValidatedTextBox}">
+                                <TextBox.Text>
+                                    <Binding Path="Reserved" UpdateSourceTrigger="PropertyChanged"
+                                             ValidatesOnDataErrors="True" NotifyOnValidationError="True"
+                                             Converter="{StaticResource ListConverterUInt64}">
+                                        <Binding.ValidationRules>
+                                            <validationRules:ListConverterValidationRule Type="system:UInt64" />
+                                        </Binding.ValidationRules>
+                                    </Binding>
+                                </TextBox.Text>
+                            </TextBox>
+                            <Label Content="Banned Players" />
+                            <TextBox Margin="3" Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"
+                                     Style="{StaticResource ValidatedTextBox}">
+                                <TextBox.Text>
+                                    <Binding Path="Banned" UpdateSourceTrigger="PropertyChanged"
+                                             ValidatesOnDataErrors="True" NotifyOnValidationError="True"
+                                             Converter="{StaticResource ListConverterUInt64}">
+                                        <Binding.ValidationRules>
+                                            <validationRules:ListConverterValidationRule Type="system:UInt64" />
+                                        </Binding.ValidationRules>
+                                    </Binding>
+                                </TextBox.Text>
+                            </TextBox>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
                 <Button Grid.Row="1" Content="Save Config" Margin="3" Click="Save_OnClick" />
             </Grid>
             <views:PropertyGrid Grid.Column="1" Margin="3" DataContext="{Binding SessionSettings}" IgnoreDisplay ="True" />

@@ -166,6 +166,16 @@ namespace Torch.Server.Managers
 
         public void SaveConfig()
         {
+            var cf = Torch.Config as TorchConfig;
+            if (cf?.ReservedPlayers?.Count > 0)
+            {
+                foreach (var res in cf.ReservedPlayers)
+                {
+                    if (!DedicatedConfig.Reserved.Contains(res))
+                        DedicatedConfig.Reserved.Add(res);
+                }
+            }
+
             DedicatedConfig.Save(Path.Combine(Torch.Config.InstancePath, CONFIG_NAME));
             Log.Info("Saved dedicated config.");
 

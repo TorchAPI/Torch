@@ -15,10 +15,13 @@ namespace Torch.Commands
 {
     public class Command
     {
+        public delegate void CommandAction(CommandContext context, object[] arguments);
+
         public MyPromoteLevel MinimumPromoteLevel { get; }
         public string Name { get; }
         public string Description { get; }
         public string HelpText { get; }
+        public CommandAction Action { get; }
         public Type Module { get; }
         public List<string> Path { get; } = new List<string>();
         public ITorchPlugin Plugin { get; }
@@ -28,6 +31,28 @@ namespace Torch.Commands
         private ParameterInfo[] _parameters;
         private int? _requiredParamCount;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+        public Command(string name, string description, CommandAction action, ITorchPlugin plugin, MyPromoteLevel? minimumPromoteLevel = null, string helpText = null, int requiredParamCount = 0)
+        {
+            HelpText = helpText;
+            Action = action;
+            Plugin = plugin;
+            MinimumPromoteLevel = minimumPromoteLevel ?? MyPromoteLevel.Admin;
+
+            var split = name.Split(' ');
+            Name = split.Last();
+            Description = description;
+            HelpText = helpText ?? description;
+
+            Path.AddRange(split);
+
+            var sb = new StringBuilder();
+            sb.Append($"!{string.Join(" ", Path)} ");
+
+            _requiredParamCount = requiredParamCount;
+            Log.Debug($"Params: ({_requiredParamCount} required)");
+            SyntaxHelp = sb.ToString();
+        }
 
         public Command(ITorchPlugin plugin, MethodInfo commandMethod)
         {
@@ -88,30 +113,47 @@ namespace Torch.Commands
         {
             try
             {
-                var parameters = new object[_parameters.Length];
+                var invokeByAction = Action != null;
+                object[] parameters;
 
                 if (context.Args.Count < _requiredParamCount)
                     return false;
 
-                //Convert args from string
-                for (var i = 0; i < _parameters.Length && i < context.Args.Count; i++)
+                if (!invokeByAction)
                 {
-                    if (context.Args[i].TryConvert(_parameters[i].ParameterType, out object obj))
-                        parameters[i] = obj;
-                    else
-                        return false;
+                    parameters = new object[_parameters.Length];
+
+                    //Convert args from string
+                    for (var i = 0; i < _parameters.Length && i < context.Args.Count; i++)
+                    {
+                        if (context.Args[i].TryConvert(_parameters[i].ParameterType, out object obj))
+                            parameters[i] = obj;
+                        else
+                            return false;
+                    }
+
+                    //Fill remaining parameters with default values
+                    for (var i = 0; i < parameters.Length; i++)
+                    {
+                        if (parameters[i] == null)
+                            parameters[i] = _parameters[i].DefaultValue;
+                    }
+
+                    var moduleInstance = (CommandModule)Activator.CreateInstance(Module);
+                    moduleInstance.Context = context;
+                    _method.Invoke(moduleInstance, parameters);
+                    return true;
+                } else
+                {
+                    parameters = new object[context.Args.Count];
+
+                    for (var i = 0; i < parameters.Length && i < context.Args.Count; i++)
+                    {
+                        parameters[i] = context.Args[i];
+                    }
                 }
 
-                //Fill remaining parameters with default values
-                for (var i = 0; i < parameters.Length; i++)
-                {
-                    if (parameters[i] == null)
-                        parameters[i] = _parameters[i].DefaultValue;
-                }
-
-                var moduleInstance = (CommandModule)Activator.CreateInstance(Module);
-                moduleInstance.Context = context;
-                _method.Invoke(moduleInstance, parameters);
+                Action.Invoke(context, parameters);
                 return true;
             }
             catch (Exception e)
