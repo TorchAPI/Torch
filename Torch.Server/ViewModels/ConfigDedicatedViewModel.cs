@@ -115,8 +115,6 @@ namespace Torch.Server.ViewModels
         public List<string> Administrators { get => _config.Administrators; set => SetValue(x => _config.Administrators = x, value); }
 
         public List<ulong> Banned { get => _config.Banned; set => SetValue(x => _config.Banned = x, value); }
-       
-	public List<ulong> Reserved { get => _config.Reserved; set => SetValue(x => _config.Reserved = x, value); }
 
         private ObservableCollection<ModItemInfo> _mods = new ObservableCollection<ModItemInfo>();
         public ObservableCollection<ModItemInfo> Mods

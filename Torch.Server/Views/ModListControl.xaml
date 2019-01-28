@@ -29,7 +29,6 @@
     <UserControl.DataContext>
         <viewModels:ConfigDedicatedViewModel />
     </UserControl.DataContext>
-    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
         <Grid Style="{StaticResource RootGridStyle}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="500px"/>
@@ -43,7 +42,6 @@
         
             <DataGrid Name="ModList" Grid.Column="0" Grid.ColumnSpan="1" ItemsSource="{Binding UpdateSourceTrigger=PropertyChanged}"
                       Sorting="ModList_Sorting"
-                      Width="Auto"
                       SelectionMode="Single"
                       SelectionUnit="FullRow"
                       AllowDrop="True"
@@ -94,8 +92,8 @@
                         </Style>
                 </DataGrid.ItemContainerStyle>
             </DataGrid>
-            <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Disabled" Background="#1b2838">
-                <TextBlock Name="ModDescription" TextWrapping="WrapWithOverflow" Foreground="White" Padding="2px"
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="#1b2838">
+                <TextBlock Name="ModDescription" TextWrapping="Wrap" Foreground="White" Padding="2px"
                        Text="{Binding ElementName=ModList, Path=SelectedItem.Description}">
                 </TextBlock>
             </ScrollViewer>
@@ -124,5 +122,4 @@
         
             <Button Content="Save Config" Grid.Row="2" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="6px" Grid.Column="3" Width="80px" Height="40px" Click="SaveBtn_OnClick"/>
         </Grid>
-    </ScrollViewer>
 </UserControl>
