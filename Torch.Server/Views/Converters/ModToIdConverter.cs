@@ -8,6 +8,7 @@ using System.Windows.Data;
 using System.Threading.Tasks;
 using Torch.Server.ViewModels;
 using NLog;
+using Torch.Collections;
 
 namespace Torch.Server.Views.Converters
 {
@@ -32,7 +33,7 @@ namespace Torch.Server.Views.Converters
             //if (targetType != typeof(int))
             //    throw new NotSupportedException("ModToIdConverter can only convert mods into int values or vise versa!");
             var mod = (ModItemInfo) values[0];
-            var theModList = (Collection<ModItemInfo>) values[1];
+            var theModList = (MtObservableList<ModItemInfo>) values[1];
             return theModList.IndexOf(mod);
         }
 

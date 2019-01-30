@@ -24,6 +24,7 @@ using Torch.Server.Managers;
 using Torch.API.Managers;
 using Torch.Server.ViewModels;
 using Torch.Server.Annotations;
+using Torch.Collections;
 
 namespace Torch.Server.Views
 {
@@ -71,9 +72,9 @@ namespace Torch.Server.Views
         {
             Log.Info("Instance loaded.");
             Dispatcher.Invoke(() => {
-                DataContext = obj?.Mods ?? new ObservableCollection<ModItemInfo>();
+                DataContext = obj?.Mods ?? new MtObservableList<ModItemInfo>();
                 UpdateLayout();
-                ((ObservableCollection<ModItemInfo>)DataContext).CollectionChanged += OnModlistUpdate;
+                ((MtObservableList<ModItemInfo>)DataContext).CollectionChanged += OnModlistUpdate;
             });
         }
 
@@ -116,7 +117,7 @@ namespace Torch.Server.Views
         }
         private void RemoveBtn_OnClick(object sender, RoutedEventArgs e)
         {
-            var modList = ((ObservableCollection<ModItemInfo>)DataContext);
+            var modList = ((MtObservableList<ModItemInfo>)DataContext);
             if (ModList.SelectedItem is ModItemInfo mod && modList.Contains(mod))
                 modList.Remove(mod);
         }
@@ -202,8 +203,10 @@ namespace Torch.Server.Views
             if( targetMod != null && !ReferenceEquals(_draggedMod, targetMod))
             {
                 _hasOrderChanged = true;
-                var modList = (ObservableCollection<ModItemInfo>)DataContext;
-                modList.Move(modList.IndexOf(_draggedMod), modList.IndexOf(targetMod));
+                var modList = (MtObservableList<ModItemInfo>)DataContext;
+                //modList.Move(modList.IndexOf(_draggedMod), modList.IndexOf(targetMod));
+                modList.RemoveAt(modList.IndexOf(_draggedMod));
+                modList.Insert(modList.IndexOf(targetMod), _draggedMod);
                 ModList.Items.Refresh();
                 ModList.SelectedItem = _draggedMod;
             }

@@ -15,6 +15,7 @@ using Sandbox.Game;
 using Sandbox.Game.Gui;
 using Torch.API;
 using Torch.API.Managers;
+using Torch.Collections;
 using Torch.Managers;
 using Torch.Mod;
 using Torch.Server.ViewModels;
@@ -122,7 +123,10 @@ namespace Torch.Server.Managers
 
         private void ImportWorldConfig(WorldViewModel world, bool modsOnly = true)
         {
-            DedicatedConfig.Mods = new ObservableCollection<ModItemInfo>(world.Checkpoint.Mods.Select(m => new ModItemInfo(m)));
+            var mods = new MtObservableList<ModItemInfo>();
+            foreach (var mod in world.Checkpoint.Mods)
+                mods.Add(new ModItemInfo(mod));
+            DedicatedConfig.Mods = mods;
 
 
             Log.Debug("Loaded mod list from world");
@@ -150,7 +154,10 @@ namespace Torch.Server.Managers
                     return;
                 }
 
-                DedicatedConfig.Mods = new ObservableCollection<ModItemInfo>(checkpoint.Mods.Select(m => new ModItemInfo(m)));
+                var mods = new MtObservableList<ModItemInfo>();
+                foreach (var mod in checkpoint.Mods)
+                    mods.Add(new ModItemInfo(mod));
+                DedicatedConfig.Mods = mods;
 
                 Log.Debug("Loaded mod list from world");
 

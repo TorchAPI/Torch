@@ -11,6 +11,7 @@ using Torch.Server.Managers;
 using VRage.Game;
 using VRage.Game.ModAPI;
 using Torch.Utils.SteamWorkshopTools;
+using Torch.Collections;
 
 namespace Torch.Server.ViewModels
 {
@@ -110,14 +111,15 @@ namespace Torch.Server.ViewModels
                     //mod.Name = modInfos[mod.PublishedFileId].FileName;
                 }
             }
+
         }
 
         public List<string> Administrators { get => _config.Administrators; set => SetValue(x => _config.Administrators = x, value); }
 
         public List<ulong> Banned { get => _config.Banned; set => SetValue(x => _config.Banned = x, value); }
 
-        private ObservableCollection<ModItemInfo> _mods = new ObservableCollection<ModItemInfo>();
-        public ObservableCollection<ModItemInfo> Mods
+        private MtObservableList<ModItemInfo> _mods = new MtObservableList<ModItemInfo>();
+        public MtObservableList<ModItemInfo> Mods
         {
             get => _mods;
             set
