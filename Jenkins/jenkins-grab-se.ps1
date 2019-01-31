@@ -17,6 +17,6 @@ if (!(Test-Path $steamCMDPath)) {
 }
 
 cd "$steamData"
-& "$steamCMDPath/steamcmd.exe" "+login anonymous" "+force_install_dir $steamData" "+app_update 298740 -beta playtest -betapassword nt7WuDw9kdvC" "+quit"
+& "$steamCMDPath/steamcmd.exe" "+login anonymous" "+force_install_dir $steamData" "+app_update 298740 -beta playtest -betapassword nt7WuDw9kdvC validate" "+quit"
 
 popd
