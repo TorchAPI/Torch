@@ -10,6 +10,8 @@ using Torch.Collections;
 using Torch.Server.Managers;
 using VRage.Game;
 using VRage.Game.ModAPI;
+using Torch.Utils.SteamWorkshopTools;
+using Torch.Collections;
 
 namespace Torch.Server.ViewModels
 {
@@ -29,6 +31,7 @@ namespace Torch.Server.ViewModels
             _config = configDedicated;
             _config.IgnoreLastSession = true;
             SessionSettings = new SessionSettingsViewModel(_config.SessionSettings);
+            Task.Run(() => UpdateAllModInfosAsync());
         }
 
         public void Save(string path = null)
@@ -73,14 +76,61 @@ namespace Torch.Server.ViewModels
             }
         }
 
+        public async Task UpdateAllModInfosAsync(Action<string> messageHandler = null)
+        {
+            if (Mods.Count() == 0)
+                return;
+
+            var ids = Mods.Select(m => m.PublishedFileId);
+            var workshopService = WebAPI.Instance;
+            Dictionary<ulong, PublishedItemDetails> modInfos = null;
+
+            try
+            {
+                modInfos = (await workshopService.GetPublishedFileDetails(ids.ToArray()));
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.Message);
+                return;
+            }
+
+            Log.Info($"Mods Info successfully retrieved!");
+
+            foreach (var mod in Mods)
+            {
+                if (!modInfos.ContainsKey(mod.PublishedFileId) || modInfos[mod.PublishedFileId] == null)
+                {
+                    Log.Error($"Failed to retrieve info for mod with workshop id '{mod.PublishedFileId}'!");
+                }
+                //else if (!modInfo.Tags.Contains(""))
+                else
+                {
+                    mod.FriendlyName = modInfos[mod.PublishedFileId].Title;
+                    mod.Description = modInfos[mod.PublishedFileId].Description;
+                    //mod.Name = modInfos[mod.PublishedFileId].FileName;
+                }
+            }
+
+        }
+
         public List<string> Administrators { get => _config.Administrators; set => SetValue(x => _config.Administrators = x, value); }
 
         public List<ulong> Banned { get => _config.Banned; set => SetValue(x => _config.Banned = x, value); }
 
+        private MtObservableList<ModItemInfo> _mods = new MtObservableList<ModItemInfo>();
+        public MtObservableList<ModItemInfo> Mods
+        {
+            get => _mods;
+            set
+            {
+                SetValue(x => _mods = x, value);
+                Task.Run(() => UpdateAllModInfosAsync());
+            }
+        }
+
         public List<ulong> Reserved { get => _config.Reserved; set => SetValue(x => _config.Reserved = x, value); }
 
-        private List<ulong> _mods = new List<ulong>();
-        public List<ulong> Mods { get => _mods; set => SetValue(x => _mods = x, value); }
 
         public int AsteroidAmount { get => _config.AsteroidAmount; set => SetValue(x => _config.AsteroidAmount = x, value); }
 

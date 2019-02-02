@@ -47,6 +47,9 @@
     <Reference Include="MahApps.Metro, Version=1.6.1.4, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MahApps.Metro.1.6.1\lib\net45\MahApps.Metro.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Win32.Registry, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Win32.Registry.4.4.0\lib\net461\Microsoft.Win32.Registry.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\Newtonsoft.Json.dll</HintPath>
@@ -84,6 +87,9 @@
       <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.XmlSerializers.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="SteamKit2, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SteamKit2.2.1.0\lib\netstandard2.0\SteamKit2.dll</HintPath>
+    </Reference>
     <Reference Include="Steamworks.NET">
       <HintPath>..\GameBinaries\Steamworks.NET.dll</HintPath>
     </Reference>
@@ -92,6 +98,12 @@
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Security.AccessControl, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.AccessControl.4.4.0\lib\net461\System.Security.AccessControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Principal.Windows.4.4.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\ControlzEx.3.0.2.4\lib\net45\System.Windows.Interactivity.dll</HintPath>
       <Private>True</Private>
@@ -233,6 +245,7 @@
     <Compile Include="Managers\UpdateManager.cs" />
     <Compile Include="Persistent.cs" />
     <Compile Include="Plugins\PluginManifest.cs" />
+    <Compile Include="Utils\SteamWorkshopTools\KeyValueExtensions.cs" />
     <Compile Include="Utils\MiscExtensions.cs" />
     <Compile Include="Utils\Reflected\ReflectedEventReplaceAttribute.cs" />
     <Compile Include="Utils\Reflected\ReflectedEventReplacer.cs" />
@@ -247,6 +260,7 @@
     <Compile Include="Utils\Reflected\ReflectedStaticMethodAttribute.cs" />
     <Compile Include="Utils\Reflection.cs" />
     <Compile Include="Managers\ScriptingManager.cs" />
+    <Compile Include="Utils\SteamWorkshopTools\WebAPI.cs" />
     <Compile Include="Utils\StringUtils.cs" />
     <Compile Include="Utils\SynchronizationExtensions.cs" />
     <Compile Include="Utils\TorchAssemblyResolver.cs" />
@@ -256,6 +270,7 @@
     <Compile Include="TorchPluginBase.cs" />
     <Compile Include="Session\TorchSession.cs" />
     <Compile Include="Utils\TorchLauncher.cs" />
+    <Compile Include="Utils\SteamWorkshopTools\PublishedItemDetails.cs" />
     <Compile Include="ViewModels\ModViewModel.cs" />
     <Compile Include="Extensions\MyPlayerCollectionExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
