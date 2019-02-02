@@ -10,6 +10,7 @@ using NLog.Fluent;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Engine.Networking;
+using Sandbox.Game.Gui;
 using Sandbox.Game.World;
 using Steamworks;
 using Torch.API;
@@ -62,6 +63,36 @@ namespace Torch.Server.Managers
             });
         }
 
+        /// <inheritdoc />
+        public void PromoteUser(ulong steamId)
+        {
+            Torch.Invoke(() =>
+            {
+                var p = MySession.Static.GetUserPromoteLevel(steamId);
+                if (p < MyPromoteLevel.Admin) //cannot promote to owner by design
+                    //MySession.Static.SetUserPromoteLevel(steamId, p + 1);
+                    MyGuiScreenPlayers.PromoteImplementation(steamId, true);
+            });
+        }
+
+        /// <inheritdoc />
+        public void DemoteUser(ulong steamId)
+        {
+            Torch.Invoke(() =>
+            {
+                var p = MySession.Static.GetUserPromoteLevel(steamId);
+                if (p > MyPromoteLevel.None && p < MyPromoteLevel.Owner) //owner cannot be demoted by design
+                    //MySession.Static.SetUserPromoteLevel(steamId, p - 1);
+                    MyGuiScreenPlayers.PromoteImplementation(steamId, false);
+            });
+        }
+
+        /// <inheritdoc />
+        public MyPromoteLevel GetUserPromoteLevel(ulong steamId)
+        {
+            return MySession.Static.GetUserPromoteLevel(steamId);
+        }
+
         internal void RaiseClientBanned(ulong user, bool banned)
         {
             PlayerBanned?.Invoke(user, banned);
@@ -86,6 +117,14 @@ namespace Torch.Server.Managers
 
         /// <inheritdoc />
         public event Action<ulong, bool> PlayerBanned;
+
+        /// <inheritdoc />
+        public event Action<ulong, MyPromoteLevel> PlayerPromoted;
+
+        internal void RaisePromoteChanged(ulong steamId, MyPromoteLevel level)
+        {
+            PlayerPromoted?.Invoke(steamId, level);
+        }
 
         /// <inheritdoc/>
         public override void Attach()

@@ -6,14 +6,28 @@
              mc:Ignorable="d">
     <DockPanel>
         <StackPanel DockPanel.Dock="Bottom">
-            <Button x:Name="KickButton" Content="Kick" Margin="5,5,5,5" Click="KickButton_Click"/>
-            <Button x:Name="BanButton" Content="Ban" Margin="5,5,5,5" Click="BanButton_Click"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Button x:Name="KickButton" Grid.Column="0" Grid.Row="0" Content="Kick" Margin="5,5,5,5" Click="KickButton_Click"/>
+                <Button x:Name="BanButton" Grid.Column="1" Grid.Row="0" Content="Ban" Margin="5,5,5,5" Click="BanButton_Click"/>
+                <Button x:Name="PromoteButton" Grid.Column="0" Grid.Row="1" Content ="Promote" Margin="5,5,5,5" Click="PromoteButton_OnClick"/>
+                <Button x:Name="DemoteButton" Grid.Column="1" Grid.Row="1" Content ="Demote" Margin="5,5,5,5" Click="DemoteButton_OnClick"/>
+            </Grid>
+
         </StackPanel>
         <ListView x:Name="PlayerList" ItemsSource="{Binding Players}" DockPanel.Dock="Top" Margin="5,5,5,5">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel>
-                        <TextBlock Text="{Binding Value.Name}" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding Value.PromotedName}" FontWeight="Bold"/>
                         <TextBlock Text=" ("/>
                         <TextBlock Text="{Binding Value.State}"/>
                         <TextBlock Text=")"/>

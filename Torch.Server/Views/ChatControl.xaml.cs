@@ -46,9 +46,9 @@ namespace Torch.Server
 
         private void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            _log.Info($"VisibleChanged: {IsVisible}");
             if (IsVisible)
             {
+                //I hate this and I hate myself. You should hate me too
                 Task.Run(() =>
                 {
                     Thread.Sleep(100);

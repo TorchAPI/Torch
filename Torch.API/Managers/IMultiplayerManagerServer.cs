@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VRage.Game.ModAPI;
 
 namespace Torch.API.Managers
 {
@@ -20,6 +21,25 @@ namespace Torch.API.Managers
         /// Bans or unbans a player from the game.
         /// </summary>
         void BanPlayer(ulong steamId, bool banned = true);
+
+        /// <summary>
+        /// Promotes user if possible.
+        /// </summary>
+        /// <param name="steamId"></param>
+        void PromoteUser(ulong steamId);
+
+        /// <summary>
+        /// Demotes user if possible.
+        /// </summary>
+        /// <param name="steamId"></param>
+        void DemoteUser(ulong steamId);
+
+        /// <summary>
+        /// Gets a user's promote level.
+        /// </summary>
+        /// <param name="steamId"></param>
+        /// <returns></returns>
+        MyPromoteLevel GetUserPromoteLevel(ulong steamId);
 
         /// <summary>
         /// List of the banned SteamID's
@@ -42,5 +62,10 @@ namespace Torch.API.Managers
         /// Raised when a player is banned or unbanned. Passes SteamID of player, and true if banned, false if unbanned.
         /// </summary>
         event Action<ulong, bool> PlayerBanned;
+
+        /// <summary>
+        /// Raised when a player is promoted or demoted. Passes SteamID of player, and new promote level.
+        /// </summary>
+        event Action<ulong, MyPromoteLevel> PlayerPromoted;
     }
 }
