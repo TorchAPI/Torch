@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +10,9 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Session;
 using Torch.Managers;
+using Torch.Mod;
 using Torch.Session;
+using VRage.Game;
 
 namespace Torch.Session
 {
@@ -21,6 +24,15 @@ namespace Torch.Session
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private TorchSession _currentSession;
 
+        private readonly Dictionary<ulong, MyObjectBuilder_Checkpoint.ModItem> _overrideMods;
+
+        public event Action<CollectionChangeEventArgs> OverrideModsChanged;
+
+        /// <summary>
+        /// List of mods that will be injected into client world downloads.
+        /// </summary>
+        public IReadOnlyCollection<MyObjectBuilder_Checkpoint.ModItem> OverrideMods => _overrideMods.Values;
+
         /// <inheritdoc />
         public event TorchSessionStateChangedDel SessionStateChanged;
 
@@ -31,6 +43,8 @@ namespace Torch.Session
 
         public TorchSessionManager(ITorchBase torchInstance) : base(torchInstance)
         {
+            _overrideMods = new Dictionary<ulong, MyObjectBuilder_Checkpoint.ModItem>();
+            _overrideMods.Add(TorchModCore.MOD_ID, new MyObjectBuilder_Checkpoint.ModItem(TorchModCore.MOD_ID));
         }
 
         /// <inheritdoc/>
@@ -47,6 +61,27 @@ namespace Torch.Session
             if (factory == null)
                 throw new ArgumentNullException(nameof(factory), "Factory must be non-null");
             return _factories.Remove(factory);
+        }
+
+        /// <inheritdoc/>
+        public bool AddOverrideMod(ulong modId)
+        {
+            if (_overrideMods.ContainsKey(modId))
+                return false;
+            var item = new MyObjectBuilder_Checkpoint.ModItem();
+            _overrideMods.Add(modId, item);
+
+            OverrideModsChanged?.Invoke(new CollectionChangeEventArgs(CollectionChangeAction.Add, item));
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public bool RemoveOverrideMod(ulong modId)
+        {
+            if(_overrideMods.TryGetValue(modId, out var item))
+                OverrideModsChanged?.Invoke(new CollectionChangeEventArgs(CollectionChangeAction.Remove, item));
+
+            return _overrideMods.Remove(modId);
         }
 
         #region Session events
