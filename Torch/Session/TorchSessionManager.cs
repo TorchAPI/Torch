@@ -68,7 +68,7 @@ namespace Torch.Session
         {
             if (_overrideMods.ContainsKey(modId))
                 return false;
-            var item = new MyObjectBuilder_Checkpoint.ModItem();
+            var item = new MyObjectBuilder_Checkpoint.ModItem(modId);
             _overrideMods.Add(modId, item);
 
             OverrideModsChanged?.Invoke(new CollectionChangeEventArgs(CollectionChangeAction.Add, item));
