@@ -194,6 +194,7 @@
     <Compile Include="Event\EventManager.cs" />
     <Compile Include="Event\IEventList.cs" />
     <Compile Include="Managers\KeenLogPatch.cs" />
+    <Compile Include="Managers\NetworkManager\NetworkManager_Deprecated.cs" />
     <Compile Include="Managers\PatchManager\AssemblyMemory.cs" />
     <Compile Include="Managers\PatchManager\DecoratedMethod.cs" />
     <Compile Include="Managers\PatchManager\EmitExtensions.cs" />
