@@ -35,6 +35,7 @@ namespace Torch.Server.Views
             Entities = new EntityTreeViewModel(this);
             DataContext = Entities;
             Entities.Init();
+            SortCombo.ItemsSource = Enum.GetNames(typeof(EntityTreeViewModel.SortEnum));
         }
 
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -76,6 +77,31 @@ namespace Torch.Server.Views
             var item = (TreeViewItem)e.OriginalSource;
             if (item.DataContext is ILazyLoad l)
                 l.Load();
+        }
+
+        private void SortCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var sort = (EntityTreeViewModel.SortEnum)SortCombo.SelectedIndex;
+
+            var comparer = new EntityViewModel.Comparer(sort);
+
+            Task[] sortTasks = new Task[4];
+
+            Entities.CurrentSort = sort;
+            Entities.SortedCharacters.Sort(comparer);
+            Entities.SortedFloatingObjects.Sort(comparer);
+            Entities.SortedGrids.Sort(comparer);
+            Entities.SortedVoxelMaps.Sort(comparer);
+
+            foreach (var i in Entities.SortedCharacters)
+                i.DescriptiveName = i.GetSortedName(sort);
+            foreach (var i in Entities.SortedFloatingObjects)
+                i.DescriptiveName = i.GetSortedName(sort);
+            foreach (var i in Entities.SortedGrids)
+                i.DescriptiveName = i.GetSortedName(sort);
+            foreach (var i in Entities.SortedVoxelMaps)
+                i.DescriptiveName = i.GetSortedName(sort);
+            
         }
     }
 }

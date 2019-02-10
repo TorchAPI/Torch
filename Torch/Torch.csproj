@@ -34,6 +34,8 @@
     <DocumentationFile>$(SolutionDir)\bin\x64\Release\Torch.xml</DocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  <!-- I don't know why this needs to exist -->
+  <ItemGroup> <Reference Include="netstandard" /> </ItemGroup>
   <ItemGroup>
     <Reference Include="ControlzEx, Version=3.0.2.4, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\ControlzEx.3.0.2.4\lib\net45\ControlzEx.dll</HintPath>
@@ -182,6 +184,7 @@
     <Compile Include="Collections\MtObservableSortedDictionary.cs" />
     <Compile Include="Collections\MtObservableEvent.cs" />
     <Compile Include="Collections\MtObservableList.cs" />
+    <Compile Include="Collections\SortedView.cs" />
     <Compile Include="Collections\TransformComparer.cs" />
     <Compile Include="Collections\TransformEnumerator.cs" />
     <Compile Include="Event\EventShimAttribute.cs" />
