@@ -107,10 +107,18 @@ namespace Torch.Managers
         }
 
         #region Network Injection
-        
+
+        private static Dictionary<MethodInfo, Delegate> _delegateCache = new Dictionary<MethodInfo, Delegate>();
+
         private static Func<T, TA> GetDelegate<T, TA>(MethodInfo method) where TA : class
         {
-            return x => Delegate.CreateDelegate(typeof(TA), x, method) as TA;
+            if (!_delegateCache.TryGetValue(method, out var del))
+            {
+                del = (Func<T, TA>)(x => Delegate.CreateDelegate(typeof(TA), x, method) as TA);
+                _delegateCache[method] = del;
+            }
+
+            return (Func<T, TA>)del;
         }
 
         public static void RaiseEvent<T1>(T1 instance, MethodInfo method, EndpointId target = default(EndpointId)) where T1 : IMyEventOwner
