@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using NLog;
+using Torch.Collections;
 using Torch.Server.ViewModels;
 using Torch.Server.ViewModels.Blocks;
 using Torch.Server.ViewModels.Entities;
@@ -29,6 +31,8 @@ namespace Torch.Server.Views
     {
         public EntityTreeViewModel Entities { get; set; }
 
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
         public EntitiesControl()
         {
             InitializeComponent();
@@ -37,7 +41,7 @@ namespace Torch.Server.Views
             Entities.Init();
             SortCombo.ItemsSource = Enum.GetNames(typeof(EntityTreeViewModel.SortEnum));
         }
-
+        
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (e.NewValue is EntityViewModel vm)
@@ -82,16 +86,16 @@ namespace Torch.Server.Views
         private void SortCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var sort = (EntityTreeViewModel.SortEnum)SortCombo.SelectedIndex;
-
+            
             var comparer = new EntityViewModel.Comparer(sort);
 
             Task[] sortTasks = new Task[4];
 
             Entities.CurrentSort = sort;
-            Entities.SortedCharacters.Sort(comparer);
-            Entities.SortedFloatingObjects.Sort(comparer);
-            Entities.SortedGrids.Sort(comparer);
-            Entities.SortedVoxelMaps.Sort(comparer);
+            Entities.SortedCharacters.SetComparer(comparer);
+            Entities.SortedFloatingObjects.SetComparer(comparer);
+            Entities.SortedGrids.SetComparer(comparer);
+            Entities.SortedVoxelMaps.SetComparer(comparer);
 
             foreach (var i in Entities.SortedCharacters)
                 i.DescriptiveName = i.GetSortedName(sort);

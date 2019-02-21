@@ -48,7 +48,7 @@ namespace Torch.Collections
 
         public IEnumerator<T> GetEnumerator()
         {
-            return _backing.GetEnumerator();
+            return _store.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -100,6 +100,7 @@ namespace Torch.Collections
                 return;
 
             _store.Sort(comparer);
+            
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
