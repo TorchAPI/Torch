@@ -111,8 +111,15 @@ quit";
                     init.ContinueWith(x => _server.Start());
 
                 Log.Info("Showing UI");
-                Console.SetOut(TextWriter.Null);
-                NativeMethods.FreeConsole();
+
+#if !DEBUG
+                if (!_config.IndependentConsole)
+                {
+                    Console.SetOut(TextWriter.Null);
+                    NativeMethods.FreeConsole();
+                }
+#endif
+
                 new TorchUI(_server).ShowDialog();
             }
             else
