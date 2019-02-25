@@ -74,8 +74,9 @@ namespace Torch.Server
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
             string worldName = string.IsNullOrEmpty(WorldName.Text) ? _currentItem.Name : WorldName.Text;
-            var worldPath = Path.Combine("Instance", "Saves", worldName);
-            var checkpoint= _currentItem.Checkpoint;
+            
+            var worldPath = Path.Combine(TorchBase.Instance.Config.InstancePath, "Saves", worldName);
+            var checkpoint = _currentItem.Checkpoint;
             if (Directory.Exists(worldPath))
             {
                 MessageBox.Show("World already exists with that name.");
