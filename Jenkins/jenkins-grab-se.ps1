@@ -1,5 +1,9 @@
 pushd
 
+param(
+    [Parameter(Mandatory=$true)][string]$previewPass
+)
+
 $steamData = "C:/Steam/Data-preview/"
 $steamCMDPath = "C:/Steam/steamcmd/"
 $steamCMDZip = "C:/Steam/steamcmd.zip"
@@ -15,9 +19,6 @@ if (!(Test-Path $steamCMDPath)) {
 	}
 	[System.IO.Compression.ZipFile]::ExtractToDirectory($steamCMDZip, $steamCMDPath)
 }
-
-echo test
-echo $previewPass
 
 cd "$steamData"
 & "$steamCMDPath/steamcmd.exe" "+login anonymous" "+force_install_dir $steamData" "+app_update 298740 -beta steamctg -betapassword $previewPass validate" "+quit"
