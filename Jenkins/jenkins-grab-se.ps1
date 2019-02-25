@@ -1,8 +1,6 @@
-pushd
+param([string]$previewPass)
 
-param(
-    [Parameter(Mandatory=$true)][string]$previewPass
-)
+pushd
 
 $steamData = "C:/Steam/Data-preview/"
 $steamCMDPath = "C:/Steam/steamcmd/"
