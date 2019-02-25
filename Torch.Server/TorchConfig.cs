@@ -63,8 +63,8 @@ namespace Torch.Server
         public bool EnableWhitelist { get; set; } = false;
         public HashSet<ulong> Whitelist { get; set; } = new HashSet<ulong>();
 
-        internal Point WindowSize { get; set; } = new Point(800, 600);
-        internal Point WindowPosition { get; set; } = new Point();
+        public Point WindowSize { get; set; } = new Point(800, 600);
+        public Point WindowPosition { get; set; } = new Point();
 
         public string LastUsedTheme { get; set; } = "Torch Theme";
 
