@@ -12,11 +12,21 @@ using VRage.ModAPI;
 using System.Windows.Threading;
 using NLog;
 using Torch.Collections;
+using Torch.Server.Views.Entities;
 
 namespace Torch.Server.ViewModels
 {
     public class EntityTreeViewModel : ViewModel
     {
+        public enum SortEnum
+        {
+            Name,
+            Size,
+            Speed,
+            Owner,
+            BlockCount,
+            DistFromCenter,
+        }
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         //TODO: these should be sorted sets for speed
@@ -26,13 +36,25 @@ namespace Torch.Server.ViewModels
         public MtObservableSortedDictionary<long, VoxelMapViewModel> VoxelMaps { get; set; } = new MtObservableSortedDictionary<long, VoxelMapViewModel>();
         public Dispatcher ControlDispatcher => _control.Dispatcher;
 
+        public SortedView<GridViewModel> SortedGrids { get; }
+        public SortedView<CharacterViewModel> SortedCharacters { get; }
+        public SortedView<EntityViewModel> SortedFloatingObjects { get; }
+        public SortedView<VoxelMapViewModel> SortedVoxelMaps { get; }
+
         private EntityViewModel _currentEntity;
+        private SortEnum _currentSort;
         private UserControl _control;
 
         public EntityViewModel CurrentEntity
         {
             get => _currentEntity;
             set { _currentEntity = value; OnPropertyChanged(nameof(CurrentEntity)); }
+        }
+
+        public SortEnum CurrentSort
+        {
+            get => _currentSort;
+            set => SetValue(ref _currentSort, value);
         }
 
         // I hate you today WPF
@@ -43,6 +65,11 @@ namespace Torch.Server.ViewModels
         public EntityTreeViewModel(UserControl control)
         {
             _control = control;
+            var comparer = new EntityViewModel.Comparer(_currentSort);
+            SortedGrids = new SortedView<GridViewModel>(Grids.Values, comparer);
+            SortedCharacters = new SortedView<CharacterViewModel>(Characters.Values, comparer);
+            SortedFloatingObjects = new SortedView<EntityViewModel>(FloatingObjects.Values, comparer);
+            SortedVoxelMaps = new SortedView<VoxelMapViewModel>(VoxelMaps.Values, comparer);
         }
 
         public void Init()
@@ -85,16 +112,16 @@ namespace Torch.Server.ViewModels
                 switch (obj)
                 {
                     case MyCubeGrid grid:
-                        Grids.Add(obj.EntityId, new GridViewModel(grid, this));
+                        Grids.Add(grid.EntityId, new GridViewModel(grid, this));
                         break;
                     case MyCharacter character:
-                        Characters.Add(obj.EntityId, new CharacterViewModel(character, this));
+                        Characters.Add(character.EntityId, new CharacterViewModel(character, this));
                         break;
                     case MyFloatingObject floating:
-                        FloatingObjects.Add(obj.EntityId, new FloatingObjectViewModel(floating, this));
+                        FloatingObjects.Add(floating.EntityId, new FloatingObjectViewModel(floating, this));
                         break;
                     case MyVoxelBase voxel:
-                        VoxelMaps.Add(obj.EntityId, new VoxelMapViewModel(voxel, this));
+                        VoxelMaps.Add(voxel.EntityId, new VoxelMapViewModel(voxel, this));
                         break;
                 }
             }

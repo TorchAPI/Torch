@@ -273,8 +273,7 @@ namespace Torch
                 MySessionLoader.LoadSingleplayerSession(sessionPath);
                 return;
             }
-            ulong checkpointSize;
-            MyObjectBuilder_Checkpoint checkpoint = MyLocalCache.LoadCheckpoint(sessionPath, out checkpointSize);
+            MyObjectBuilder_Checkpoint checkpoint = MyLocalCache.LoadCheckpoint(sessionPath, out ulong checkpointSize);
             if (MySession.IsCompatibleVersion(checkpoint))
             {
                 if (MyWorkshop.DownloadWorldModsBlocking(checkpoint.Mods, null).Success)

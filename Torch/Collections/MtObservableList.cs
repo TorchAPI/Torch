@@ -13,7 +13,7 @@ namespace Torch.Collections
     /// Multithread safe, observable list
     /// </summary>
     /// <typeparam name="T">Value type</typeparam>
-    public class MtObservableList<T> : MtObservableCollection<IList<T>, T>, IList<T>, IList
+    public class MtObservableList<T> : MtObservableCollection<List<T>, T>, IList<T>, IList
     {
         /// <summary>
         /// Initializes a new instance of the MtObservableList class that is empty and has the default initial capacity.
@@ -114,16 +114,34 @@ namespace Torch.Collections
             using (Lock.WriteUsing())
             {
                 comparer = comparer ?? Comparer<TKey>.Default;
-                if (Backing is List<T> lst)
-                    lst.Sort(new TransformComparer<T, TKey>(selector, comparer));
-                else
-                {
-                    List<T> sortedItems = Backing.OrderBy(selector, comparer).ToList();
-                    Backing.Clear();
-                    foreach (T v in sortedItems)
-                        Backing.Add(v);
-                }
+                Backing.Sort(new TransformComparer<T, TKey>(selector, comparer));
             }
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move));
+        }
+
+        /// <summary>
+        /// Sorts the list using the given comparer./>
+        /// </summary>
+        public void Sort(IComparer<T> comparer)
+        {
+            using (DeferredUpdate())
+            using (Lock.WriteUsing())
+            {
+                Backing.Sort(comparer);
+            }
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move));
+        }
+
+        /// <summary>
+        /// Searches the entire list for an element using the specified comparer and returns the zero-based index of the element.
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="comparer"></param>
+        /// <returns></returns>
+        public int BinarySearch(T item, IComparer<T> comparer = null)
+        {
+            using(Lock.ReadUsing())
+                return Backing.BinarySearch(item, comparer ?? Comparer<T>.Default);
         }
 
         /// <inheritdoc/>

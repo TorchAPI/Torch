@@ -154,6 +154,8 @@ namespace Torch.API
         /// Raised when the server's Init() method has completed.
         /// </summary>
         event Action<ITorchServer> Initialized;
+        
+        TimeSpan ElapsedPlayTime { get; set; }
     }
 
     /// <summary>

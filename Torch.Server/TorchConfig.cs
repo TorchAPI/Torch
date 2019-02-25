@@ -63,8 +63,8 @@ namespace Torch.Server
         public bool EnableWhitelist { get; set; } = false;
         public HashSet<ulong> Whitelist { get; set; } = new HashSet<ulong>();
 
-        internal Point WindowSize { get; set; } = new Point(800, 600);
-        internal Point WindowPosition { get; set; } = new Point();
+        public Point WindowSize { get; set; } = new Point(800, 600);
+        public Point WindowPosition { get; set; } = new Point();
 
         public string LastUsedTheme { get; set; } = "Torch Theme";
 
@@ -72,9 +72,12 @@ namespace Torch.Server
         [Obsolete("Use vanilla reserved slot config")]
         public HashSet<ulong> ReservedPlayers { get; set; } = new HashSet<ulong>();
 
-        //Prevent reserved players being written to disk, but allow it to bre read
+        //Prevent reserved players being written to disk, but allow it to be read
         //remove this when ReservedPlayers is removed
         private bool ShouldSerializeReservedPlayers() => false;
+
+        [Arg("console", "Keeps a separate console window open after the main UI loads.")]
+        public bool IndependentConsole { get; set; } = false;
 
         [XmlIgnore]
         private string _path;

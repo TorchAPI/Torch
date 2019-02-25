@@ -50,17 +50,14 @@ namespace Torch.Server.ViewModels.Entities
             Blocks { get; } =
             new MtObservableSortedDictionary<MyCubeBlockDefinition, MtObservableSortedDictionary<long, BlockViewModel>>(
                 CubeBlockDefinitionComparer.Default);
-
-        /// <inheritdoc />
-        public string DescriptiveName { get; }
-
+        
         public GridViewModel()
         {
         }
 
         public GridViewModel(MyCubeGrid grid, EntityTreeViewModel tree) : base(grid, tree)
         {
-            DescriptiveName = $"{grid.DisplayName} ({grid.BlocksCount} blocks)";
+            //DescriptiveName = $"{grid.DisplayName} ({grid.BlocksCount} blocks)";
             Blocks.Add(_fillerDefinition, new MtObservableSortedDictionary<long, BlockViewModel>());
         }
 

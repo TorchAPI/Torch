@@ -195,8 +195,7 @@ namespace Torch.Server
         public override void Init(object gameInstance)
         {
             base.Init(gameInstance);
-            var game = gameInstance as MySandboxGame;
-            if (game != null && MySession.Static != null)
+            if (gameInstance is MySandboxGame && MySession.Static != null)
                 State = ServerState.Running;
             else
                 State = ServerState.Stopped;

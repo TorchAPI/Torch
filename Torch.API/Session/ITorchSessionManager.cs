@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Torch.API.Managers;
+using VRage.Game;
 
 namespace Torch.API.Session
 {
@@ -47,5 +49,29 @@ namespace Torch.API.Session
         /// <returns>true if removed, false if not present</returns>
         /// <exception cref="ArgumentNullException">If the factory is null</exception>
         bool RemoveFactory(SessionManagerFactoryDel factory);
+
+        /// <summary>
+        /// Add a mod to be injected into client's world download.
+        /// </summary>
+        /// <param name="modId"></param>
+        /// <returns></returns>
+        bool AddOverrideMod(ulong modId);
+        
+        /// <summary>
+        /// Removes a mod from the injected mod list.
+        /// </summary>
+        /// <param name="modId"></param>
+        /// <returns></returns>
+        bool RemoveOverrideMod(ulong modId);
+        
+        /// <summary>
+        /// List over mods that will be injected into client world downloads.
+        /// </summary>
+        IReadOnlyCollection<MyObjectBuilder_Checkpoint.ModItem> OverrideMods { get; }
+
+        /// <summary>
+        /// Event raised when injected mod list changes.
+        /// </summary>
+        event Action<CollectionChangeEventArgs> OverrideModsChanged;
     }
 }

@@ -6,7 +6,12 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Sandbox;
+using Sandbox.Engine.Multiplayer;
+using Sandbox.Game.Entities;
+using Sandbox.Game.World;
 using Steamworks;
+using VRage.Game.ModAPI;
 
 namespace Torch.Utils
 {
@@ -56,6 +61,13 @@ namespace Torch.Utils
         {
             // What is endianness anyway?
             return new IPAddress(BitConverter.GetBytes(state.m_nRemoteIP).Reverse().ToArray());
+        }
+
+        public static string GetGridOwnerName(this MyCubeGrid grid)
+        {
+            if (grid.BigOwners.Count == 0 || grid.BigOwners[0] == 0)
+                return "nobody";
+            return MyMultiplayer.Static.GetMemberName(MySession.Static.Players.TryGetSteamId(grid.BigOwners[0]));
         }
     }
 }

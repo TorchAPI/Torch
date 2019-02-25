@@ -102,6 +102,8 @@ namespace Torch.Server
             var newPos = new Point((int)Left, (int)Top);
             _config.WindowPosition = newPos;
 
+            _config.Save(); //you idiot
+
             if (_server?.State == ServerState.Running)
                 _server.Stop();
 

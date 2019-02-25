@@ -290,5 +290,11 @@ namespace Torch.Commands
                 }
             }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
         }
+
+        [Command("uptime", "Check how long the server has been online.")]
+        public void Uptime()
+        {
+            Context.Respond(((ITorchServer)Context.Torch).ElapsedPlayTime.ToString());
+        }
     }
 }
