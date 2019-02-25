@@ -25,6 +25,7 @@ using Torch.API.Managers;
 using Torch.Server.ViewModels;
 using Torch.Server.Annotations;
 using Torch.Collections;
+using Torch.Views;
 
 namespace Torch.Server.Views
 {
@@ -243,6 +244,41 @@ namespace Torch.Server.Views
                 ModList.SelectedItem = _draggedMod;
             else if( e.AddedCells.Count > 0)
                 ModList.SelectedItem = e.AddedCells[0].Item;
+        }
+
+        private void BulkButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var editor = new CollectionEditor();
+
+            //let's see just how poorly we can do this
+            var modList = ((MtObservableList<ModItemInfo>)DataContext).ToList();
+            var idList = modList.Select(m => m.PublishedFileId).ToList();
+            var tasks = new List<Task>();
+            //blocking
+            editor.Edit<ulong>(idList, "Mods");
+
+            modList.RemoveAll(m => !idList.Contains(m.PublishedFileId));
+            foreach (var id in idList)
+            {
+                if (!modList.Any(m => m.PublishedFileId == id))
+                {
+                    var mod = new ModItemInfo(new MyObjectBuilder_Checkpoint.ModItem(id));
+                    tasks.Add(Task.Run(mod.UpdateModInfoAsync));
+                    modList.Add(mod);
+                }
+            }
+            _instanceManager.DedicatedConfig.Mods.Clear();
+            foreach (var mod in modList)
+                _instanceManager.DedicatedConfig.Mods.Add(mod);
+
+            if (tasks.Any())
+                Task.WaitAll(tasks.ToArray());
+
+            Dispatcher.Invoke(() =>
+                              {
+                                  _instanceManager.DedicatedConfig.Save();
+                              });
+
         }
     } 
 }
