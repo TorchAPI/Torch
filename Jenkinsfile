@@ -21,7 +21,7 @@ node {
 
 	stage('Acquire SE') {
 	withCredentials([string(credentialsId: 'previewSecretPass', variable: 'previewPass')]) {
-		bat 'powershell -File Jenkins/jenkins-grab-se.ps1 $previewPass'
+		powershell "& Jenkins/jenkins-grab-se.ps1 $previewPass"
 		}
 		bat 'IF EXIST GameBinaries RMDIR GameBinaries'
 		bat 'mklink /J GameBinaries "C:/Steam/Data-preview/DedicatedServer64/"'		
