@@ -87,7 +87,15 @@ namespace Torch.Server.Managers
         public void SelectWorld(string worldPath, bool modsOnly = true)
         {
             DedicatedConfig.LoadWorld = worldPath;
-            DedicatedConfig.SelectedWorld = DedicatedConfig.Worlds.FirstOrDefault(x => x.WorldPath == worldPath);
+            
+            var worldInfo = DedicatedConfig.Worlds.FirstOrDefault(x => x.WorldPath == worldPath);
+            if (worldInfo?.Checkpoint == null)
+            {
+                worldInfo = new WorldViewModel(worldPath);
+                DedicatedConfig.Worlds.Add(worldInfo);
+            }
+
+            DedicatedConfig.SelectedWorld = worldInfo;
             if (DedicatedConfig.SelectedWorld?.Checkpoint != null)
             {
                 DedicatedConfig.Mods.Clear();

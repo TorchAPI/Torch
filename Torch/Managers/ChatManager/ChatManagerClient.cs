@@ -48,7 +48,8 @@ namespace Torch.Managers.ChatManager
                     MyMultiplayerBase.SendScriptedChatMessage(ref scripted);
                 }
                 else
-                    MyMultiplayer.Static.SendChatMessage(message);
+                    throw new NotImplementedException("Chat system changes broke this");
+                    //MyMultiplayer.Static.SendChatMessage(message);
             }
             else if (HasHud)
                 MyHud.Chat.ShowMessage(MySession.Static.LocalHumanPlayer?.DisplayName ?? "Player", message);
@@ -59,12 +60,6 @@ namespace Torch.Managers.ChatManager
         {
             if (HasHud)
                 MyHud.Chat?.ShowMessage(author, message, font);
-            MySession.Static.GlobalChatHistory.GlobalChatHistory.Chat.Enqueue(new MyGlobalChatItem()
-            {
-                Author = author,
-                AuthorFont = font,
-                Text = message
-            });
         }
 
         /// <inheritdoc/>
@@ -76,7 +71,7 @@ namespace Torch.Managers.ChatManager
             {
                 _chatMessageRecievedReplacer = _chatMessageReceivedFactory.Invoke();
                 _scriptedChatMessageRecievedReplacer = _scriptedChatMessageReceivedFactory.Invoke();
-                _chatMessageRecievedReplacer.Replace(new Action<ulong, string>(Multiplayer_ChatMessageReceived),
+                _chatMessageRecievedReplacer.Replace(new Action<ulong, string, ChatChannel, long, string>(Multiplayer_ChatMessageReceived),
                     MyMultiplayer.Static);
                 _scriptedChatMessageRecievedReplacer.Replace(
                     new Action<string, string, string>(Multiplayer_ScriptedChatMessageReceived), MyMultiplayer.Static);
@@ -130,12 +125,12 @@ namespace Torch.Managers.ChatManager
         }
 
 
-        private void Multiplayer_ChatMessageReceived(ulong steamUserId, string message)
+        private void Multiplayer_ChatMessageReceived(ulong steamUserId, string messageText, ChatChannel channel, long targetId, string customAuthorName)
         {
-            var torchMsg = new TorchChatMessage(steamUserId, message,
+            var torchMsg = new TorchChatMessage(steamUserId, $"[{channel}] {messageText}",
                 (steamUserId == MyGameService.UserId) ? MyFontEnum.DarkBlue : MyFontEnum.Blue);
             if (!RaiseMessageRecieved(torchMsg) && HasHud)
-                _hudChatMessageReceived.Invoke(MyHud.Chat, steamUserId, message);
+                _hudChatMessageReceived.Invoke(MyHud.Chat, steamUserId, $"[{channel}] {messageText}");
         }
 
         private void Multiplayer_ScriptedChatMessageReceived(string message, string author, string font)

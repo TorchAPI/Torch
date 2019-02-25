@@ -93,7 +93,6 @@ namespace Torch.Server
 
 
             _instanceManager.SelectWorld(worldPath, false);
-            _instanceManager.LoadInstance(worldPath);
             _instanceManager.ImportSelectedWorldConfig();
             Close();
         }

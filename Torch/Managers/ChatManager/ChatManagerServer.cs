@@ -137,13 +137,13 @@ namespace Torch.Managers.ChatManager
             return consumed;
         }
 
-        private void MpStaticChatMessageReceived(ulong a, string b)
+        private void MpStaticChatMessageReceived(ulong steamUserId, string messageText, ChatChannel channel, long targetId, string customAuthorName)
         {
             var tmp = false;
-            RaiseMessageRecieved(new ChatMsg()
+            RaiseMessageRecieved(new ChatMsg
             {
-                Author = a,
-                Text = b
+                Author = steamUserId,
+                Text = messageText
             }, ref tmp);
         }
 
