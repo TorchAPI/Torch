@@ -1,6 +1,6 @@
 pushd
 
-$steamData = "C:/Steam/Data-playtest/"
+$steamData = "C:/Steam/Data-preview/"
 $steamCMDPath = "C:/Steam/steamcmd/"
 $steamCMDZip = "C:/Steam/steamcmd.zip"
 
@@ -17,6 +17,6 @@ if (!(Test-Path $steamCMDPath)) {
 }
 
 cd "$steamData"
-& "$steamCMDPath/steamcmd.exe" "+login anonymous" "+force_install_dir $steamData" "+app_update 298740 -beta playtest -betapassword nt8WuDw9kdvE validate" "+quit"
+& "$steamCMDPath/steamcmd.exe" "+login anonymous" "+force_install_dir $steamData" "+app_update 298740 -beta playtest -betapassword $previewSecretPass validate" "+quit"
 
 popd
