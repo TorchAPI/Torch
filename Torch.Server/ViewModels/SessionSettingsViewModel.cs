@@ -21,8 +21,11 @@ namespace Torch.Server.ViewModels
         [Torch.Views.Display(Description = "The type of the game online mode.", Name = "Online Mode", GroupName = "Others")]
         public MyOnlineModeEnum OnlineMode { get => _settings.OnlineMode; set => SetValue(ref _settings.OnlineMode, value); }
 
-        [Torch.Views.Display(Description = "The multiplier for inventory size.", Name = "Inventory Size", GroupName = "Multipliers")]
-        public float InventorySizeMultiplier { get => _settings.InventorySizeMultiplier; set => SetValue(ref _settings.InventorySizeMultiplier, value); }
+        [Torch.Views.Display(Description = "The multiplier for character inventory size.", Name = "Character Inventory Size", GroupName = "Multipliers")]
+        public float CharacterInventorySizeMultiplier { get => _settings.InventorySizeMultiplier; set => SetValue(ref _settings.InventorySizeMultiplier, value); }
+
+        [Torch.Views.Display(Description = "The multiplier for block inventory size.", Name = "Block Inventory Size", GroupName = "Multipliers")]
+        public float BlockInventorySizeMultiplier { get => _settings.BlocksInventorySizeMultiplier; set => SetValue(ref _settings.BlocksInventorySizeMultiplier, value); }
 
         [Torch.Views.Display(Description = "The multiplier for assembler speed.", Name = "Assembler Speed", GroupName = "Multipliers")]
         public float AssemblerSpeedMultiplier { get => _settings.AssemblerSpeedMultiplier; set => SetValue(ref _settings.AssemblerSpeedMultiplier, value); }
@@ -260,6 +263,12 @@ namespace Torch.Server.ViewModels
 
         [Torch.Views.Display(Description = "Defines character removal threshold for trash removal system. If player disconnects it will remove his character after this time.\n Set to 0 to disable.", Name = "Character Removal Threshold [mins]", GroupName = "Trash Removal")]
         public int PlayerCharacterRemovalThreshold { get => _settings.PlayerCharacterRemovalThreshold; set => SetValue(ref _settings.PlayerCharacterRemovalThreshold, value); }
+
+        [Torch.Views.Display(Description = "Sets optimal distance in meters when spawning new players near others.", Name = "Optimal Spawn Distance", GroupName = "Players")]
+        public float OptimalSpawnDistance { get => _settings.OptimalSpawnDistance; set => SetValue(ref _settings.OptimalSpawnDistance, value); }
+
+        [Torch.Views.Display(Description = "Enables automatic respawn at nearest available respawn point.", Name = "Enable Auto Respawn", GroupName = "Players")]
+        public bool EnableAutoRespawn { get => _settings.EnableAutorespawn; set => SetValue(ref _settings.EnableAutorespawn, value); }
 
         public SessionSettingsViewModel(MyObjectBuilder_SessionSettings settings)
         {
