@@ -34,7 +34,7 @@ namespace Torch.ViewModels
         public PlayerViewModel(ulong steamId, string name = null)
         {
             SteamId = steamId;
-            Name = name ?? ((MyDedicatedServerBase)MyMultiplayerMinimalBase.Instance).GetMemberName(steamId);
+            Name = name ?? MySession.Static.Players.TryGetPlayerName(steamId);
         }
     }
 }

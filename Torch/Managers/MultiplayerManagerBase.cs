@@ -100,7 +100,7 @@ namespace Torch.Managers
         /// <inheritdoc />
         public string GetSteamUsername(ulong steamId)
         {
-            return MyMultiplayer.Static.GetMemberName(steamId);
+            return MySession.Static.Players.TryGetPlayerName(steamId);
         }
 
         private void OnClientLeft(ulong steamId, MyChatMemberStateChangeEnum stateChange)

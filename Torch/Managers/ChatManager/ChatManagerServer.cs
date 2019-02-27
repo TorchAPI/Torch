@@ -167,7 +167,7 @@ namespace Torch.Managers.ChatManager
 
         public static string GetMemberName(ulong steamId)
         {
-            return MyMultiplayer.Static?.GetMemberName(steamId) ?? $"user_{steamId}";
+            return MySession.Static.Players.TryGetPlayerName(steamId);
         }
 
         internal class ChatIntercept : NetworkHandlerBase, INetworkHandler
