@@ -13,6 +13,7 @@ using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Torch.API;
 using Torch.API.Managers;
+using Torch.Managers.PatchManager;
 using Torch.Utils;
 using VRage;
 using VRage.Library.Collections;
@@ -20,6 +21,26 @@ using VRage.Network;
 
 namespace Torch.Managers.ChatManager
 {
+    [PatchShim]
+    internal static class ChatInterceptPatch
+    {
+        private static ChatManagerServer _chatManager;
+        private static ChatManagerServer ChatManager => _chatManager ?? (_chatManager = TorchBase.Instance.Managers.GetManager<ChatManagerServer>());
+            
+        internal static void Patch(PatchContext context)
+        {
+            var target = typeof(MyMultiplayerBase).GetMethod("OnChatMessageRecieved_Server", BindingFlags.Static | BindingFlags.NonPublic);
+            var patchMethod = typeof(ChatInterceptPatch).GetMethod(nameof(PrefixMessageProcessing), BindingFlags.Static | BindingFlags.NonPublic);
+            context.GetPattern(target).Prefixes.Add(patchMethod);
+        }
+
+        private static void PrefixMessageProcessing(ref ChatMsg msg)
+        {
+            var consumed = false;
+            ChatManager?.RaiseMessageRecieved(msg, ref consumed);
+        }
+    }
+    
     public class ChatManagerServer : ChatManagerClient, IChatManagerServer
     {
         [Dependency(Optional = true)]
@@ -28,12 +49,10 @@ namespace Torch.Managers.ChatManager
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private static readonly Logger _chatLog = LogManager.GetLogger("Chat");
 
-        private readonly ChatIntercept _chatIntercept;
-
         /// <inheritdoc />
         public ChatManagerServer(ITorchBase torchInstance) : base(torchInstance)
         {
-            _chatIntercept = new ChatIntercept(this);
+            
         }
 
         /// <inheritdoc />
@@ -103,17 +122,6 @@ namespace Torch.Managers.ChatManager
         public override void Attach()
         {
             base.Attach();
-            if (_networkManager != null)
-                try
-                {
-                    _networkManager.RegisterNetworkHandler(_chatIntercept);
-                    _log.Debug("Initialized network intercept for chat messages");
-                    return;
-                }
-                catch
-                {
-                    // Discard exception and use second method
-                }
 
             if (MyMultiplayer.Static != null)
             {
@@ -152,7 +160,6 @@ namespace Torch.Managers.ChatManager
         {
             if (MyMultiplayer.Static != null)
                 MyMultiplayer.Static.ChatMessageReceived -= MpStaticChatMessageReceived;
-            _networkManager?.UnregisterNetworkHandler(_chatIntercept);
             base.Detach();
         }
 
@@ -168,53 +175,6 @@ namespace Torch.Managers.ChatManager
         public static string GetMemberName(ulong steamId)
         {
             return MySession.Static.Players.TryGetPlayerName(steamId);
-        }
-
-        internal class ChatIntercept : NetworkHandlerBase, INetworkHandler
-        {
-            private readonly ChatManagerServer _chatManager;
-            private bool? _unitTestResult;
-
-            public ChatIntercept(ChatManagerServer chatManager)
-            {
-                _chatManager = chatManager;
-            }
-
-            /// <inheritdoc/>
-            public override bool CanHandle(CallSite site)
-            {
-                if (site.MethodInfo.Name != "OnChatMessageRecieved")
-                    return false;
-
-                if (_unitTestResult.HasValue)
-                    return _unitTestResult.Value;
-
-                ParameterInfo[] parameters = site.MethodInfo.GetParameters();
-                if (parameters.Length != 1)
-                {
-                    _unitTestResult = false;
-                    return false;
-                }
-
-                if (parameters[0].ParameterType != typeof(ChatMsg))
-                    _unitTestResult = false;
-
-                _unitTestResult = true;
-
-                return _unitTestResult.Value;
-            }
-
-            /// <inheritdoc/>
-            public override bool Handle(ulong remoteUserId, CallSite site, BitStream stream, object obj, MyPacket packet)
-            {
-                var msg = new ChatMsg();
-                Serialize(site.MethodInfo, stream, ref msg);
-
-                var consumed = false;
-                _chatManager.RaiseMessageRecieved(msg, ref consumed);
-
-                return consumed;
-            }
         }
     }
 }

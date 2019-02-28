@@ -130,7 +130,7 @@ namespace Torch.Managers.ChatManager
             var torchMsg = new TorchChatMessage(steamUserId, messageText,
                 (steamUserId == MyGameService.UserId) ? MyFontEnum.DarkBlue : MyFontEnum.Blue);
             if (!RaiseMessageRecieved(torchMsg) && HasHud)
-                _hudChatMessageReceived.Invoke(MyHud.Chat, steamUserId, messageText);
+                _hudChatMessageReceived.Invoke(MyHud.Chat, steamUserId, messageText, channel, targetId, customAuthorName);
         }
 
         private void Multiplayer_ScriptedChatMessageReceived(string message, string author, string font)
@@ -153,7 +153,7 @@ namespace Torch.Managers.ChatManager
         protected static bool HasHud => !Sandbox.Engine.Platform.Game.IsDedicated;
 
         [ReflectedMethod(Name = _hudChatMessageReceivedName)]
-        private static Action<MyHudChat, ulong, string> _hudChatMessageReceived;
+        private static Action<MyHudChat, ulong, string, ChatChannel, long, string> _hudChatMessageReceived;
         [ReflectedMethod(Name = _hudChatScriptedMessageReceivedName)]
         private static Action<MyHudChat, string, string, string> _hudChatScriptedMessageReceived;
 
