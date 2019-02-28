@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox.Engine.Multiplayer;
+using Sandbox.Game.Multiplayer;
 using Torch.API.Managers;
 using Torch.Utils;
 using VRage;
@@ -26,6 +28,86 @@ namespace Torch.Managers
         private static MethodInfo _dispatchInfo;
 
         private static MethodInfo DispatchEventInfo => _dispatchInfo ?? (_dispatchInfo = typeof(MyReplicationLayerBase).GetMethod("DispatchEvent", BindingFlags.NonPublic | BindingFlags.Instance));
+        
+        private const string _myTransportLayerField = "TransportLayer";
+        private const string _transportHandlersField = "m_handlers";
+        private readonly HashSet<INetworkHandler> _networkHandlers = new HashSet<INetworkHandler>();
+        private bool _init;
+
+        [ReflectedGetter(Name = "m_typeTable")]
+        private static Func<MyReplicationLayerBase, MyTypeTable> _typeTableGetter;
+        [ReflectedMethod(Type = typeof(MyReplicationLayer), Name = "GetObjectByNetworkId")]
+        private static Func<MyReplicationLayer, NetworkId, IMyNetObject> _getObjectByNetworkId;
+
+        private static bool ReflectionUnitTest(bool suppress = false)
+        {
+            try
+            {
+                var syncLayerType = typeof(MySyncLayer);
+                var transportLayerField = syncLayerType.GetField(_myTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance);
+
+                if (transportLayerField == null)
+                    throw new TypeLoadException("Could not find internal type for TransportLayer");
+
+                var transportLayerType = transportLayerField.FieldType;
+
+                if (!Reflection.HasField(transportLayerType, _transportHandlersField))
+                    throw new TypeLoadException("Could not find Handlers field");
+
+                return true;
+            }
+            catch (TypeLoadException ex)
+            {
+                _log.Error(ex);
+                if (suppress)
+                    return false;
+                throw;
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void Attach()
+        {
+            if (_init)
+                return;
+
+            _init = true;
+
+            if (!ReflectionUnitTest())
+                throw new InvalidOperationException("Reflection unit test failed.");
+
+            //don't bother with nullchecks here, it was all handled in ReflectionUnitTest
+            var transportType = typeof(MySyncLayer).GetField(_myTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance).FieldType;
+            var transportInstance = typeof(MySyncLayer).GetField(_myTransportLayerField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(MyMultiplayer.Static.SyncLayer);
+            var handlers = (IDictionary)transportType.GetField(_transportHandlersField, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(transportInstance);
+            var handlerTypeField = handlers.GetType().GenericTypeArguments[0].GetField("messageId"); //Should be MyTransportLayer.HandlerId
+            object id = null;
+            foreach (var key in handlers.Keys)
+            {
+                if ((MyMessageId)handlerTypeField.GetValue(key) != MyMessageId.RPC)
+                    continue;
+
+                id = key;
+                break;
+            }
+            if (id == null)
+                throw new InvalidOperationException("RPC handler not found.");
+
+            //remove Keen's network listener
+            handlers.Remove(id);
+            //replace it with our own
+            handlers.Add(id, new Action<MyPacket>(OnEvent));
+
+            //PrintDebug();
+
+            _log.Debug("Initialized network intercept");
+        }
+
+        /// <inheritdoc/>
+        public override void Detach()
+        {
+            // TODO reverse what was done in Attach
+        }
 
         #region Network Injection
 

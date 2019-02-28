@@ -11,6 +11,7 @@ using VRage.Serialization;
 
 namespace Torch.Managers
 {
+    [Obsolete("The entire network intercept system is deprecated. Please use method patches instead.")]
     public abstract class NetworkHandlerBase
     {
         /// <summary>
@@ -18,6 +19,7 @@ namespace Torch.Managers
         /// </summary>
         /// <param name="site"></param>
         /// <returns></returns>
+        [Obsolete("The entire network intercept system is deprecated. Please use method patches instead.")]
         public abstract bool CanHandle(CallSite site);
 
         /// <summary>
@@ -29,8 +31,9 @@ namespace Torch.Managers
         /// <param name="obj"></param>
         /// <param name="packet"></param>
         /// <returns></returns>
+        [Obsolete("The entire network intercept system is deprecated. Please use method patches instead.")]
         public abstract bool Handle(ulong remoteUserId, CallSite site, BitStream stream, object obj, MyPacket packet);
-        
+
         /// <summary>
         /// Extracts method arguments from the bitstream or packs them back in, depending on stream read mode.
         /// </summary>
@@ -38,6 +41,7 @@ namespace Torch.Managers
         /// <param name="info"></param>
         /// <param name="stream"></param>
         /// <param name="arg1"></param>
+        [Obsolete("The entire network intercept system is deprecated. Please use method patches instead.")]
         public void Serialize<T1>(MethodInfo info, BitStream stream, ref T1 arg1)
         {
             var s1 = MyFactory.GetSerializer<T1>();
@@ -55,6 +59,7 @@ namespace Torch.Managers
             }
         }
 
+        [Obsolete("The entire network intercept system is deprecated. Please use method patches instead.")]
         public void Serialize<T1, T2>(MethodInfo info, BitStream stream, ref T1 arg1, ref T2 arg2)
         {
             var s1 = MyFactory.GetSerializer<T1>();
@@ -76,6 +81,7 @@ namespace Torch.Managers
             }
         }
 
+        [Obsolete("The entire network intercept system is deprecated. Please use method patches instead.")]
         public void Serialize<T1, T2, T3>(MethodInfo info, BitStream stream, ref T1 arg1, ref T2 arg2, ref T3 arg3)
         {
             var s1 = MyFactory.GetSerializer<T1>();
@@ -101,6 +107,7 @@ namespace Torch.Managers
             }
         }
 
+        [Obsolete("The entire network intercept system is deprecated. Please use method patches instead.")]
         public void Serialize<T1, T2, T3, T4>(MethodInfo info, BitStream stream, ref T1 arg1, ref T2 arg2, ref T3 arg3, ref T4 arg4)
         {
             var s1 = MyFactory.GetSerializer<T1>();
@@ -130,6 +137,7 @@ namespace Torch.Managers
             }
         }
 
+        [Obsolete("The entire network intercept system is deprecated. Please use method patches instead.")]
         public void Serialize<T1, T2, T3, T4, T5>(MethodInfo info, BitStream stream, ref T1 arg1, ref T2 arg2, ref T3 arg3, ref T4 arg4, ref T5 arg5)
         {
             var s1 = MyFactory.GetSerializer<T1>();
@@ -163,6 +171,7 @@ namespace Torch.Managers
             }
         }
 
+        [Obsolete("The entire network intercept system is deprecated. Please use method patches instead.")]
         public void Serialize<T1, T2, T3, T4, T5, T6>(MethodInfo info, BitStream stream, ref T1 arg1, ref T2 arg2, ref T3 arg3, ref T4 arg4, ref T5 arg5, ref T6 arg6)
         {
             var s1 = MyFactory.GetSerializer<T1>();
@@ -200,6 +209,7 @@ namespace Torch.Managers
             }
         }
 
+        [Obsolete("The entire network intercept system is deprecated. Please use method patches instead.")]
         public void Serialize<T1, T2, T3, T4, T5, T6, T7>(MethodInfo info, BitStream stream, ref T1 arg1, ref T2 arg2, ref T3 arg3, ref T4 arg4, ref T5 arg5, ref T6 arg6, ref T7 arg7)
         {
             var s1 = MyFactory.GetSerializer<T1>();
