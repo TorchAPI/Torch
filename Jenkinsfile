@@ -20,11 +20,9 @@ node {
 	}
 
 	stage('Acquire SE') {
-	withCredentials([string(credentialsId: 'previewSecretPass', variable: 'previewPass')]) {
-		powershell "& Jenkins/jenkins-grab-se.ps1 $previewPass"
-		}
+		bat 'powershell -File Jenkins/jenkins-grab-se.ps1'
 		bat 'IF EXIST GameBinaries RMDIR GameBinaries'
-		bat 'mklink /J GameBinaries "C:/Steam/Data-preview/DedicatedServer64/"'		
+		bat 'mklink /J GameBinaries "C:/Steam/Data/DedicatedServer64/"'		
 	}
 
 	stage('Acquire NuGet Packages') {
