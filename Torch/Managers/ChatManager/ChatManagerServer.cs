@@ -34,10 +34,11 @@ namespace Torch.Managers.ChatManager
             context.GetPattern(target).Prefixes.Add(patchMethod);
         }
 
-        private static void PrefixMessageProcessing(ref ChatMsg msg)
+        private static bool PrefixMessageProcessing(ref ChatMsg msg)
         {
             var consumed = false;
             ChatManager?.RaiseMessageRecieved(msg, ref consumed);
+            return !consumed;
         }
     }
     
@@ -160,7 +161,7 @@ namespace Torch.Managers.ChatManager
 
         internal void RaiseMessageRecieved(ChatMsg message, ref bool consumed)
         {
-            var torchMsg = new TorchChatMessage(GetMemberName(message.Author), message.Author, message.Text);
+            var torchMsg = new TorchChatMessage(GetMemberName(message.Author), message.Author, message.Text, (ChatChannel)message.Channel, message.TargetId);
             MessageProcessing?.Invoke(torchMsg, ref consumed);
 
             if (!consumed)

@@ -108,7 +108,7 @@ namespace Torch.Managers.ChatManager
         {
             if (!sendToOthers)
                 return;
-            var torchMsg = new TorchChatMessage(MySession.Static.LocalHumanPlayer?.DisplayName ?? "Player", Sync.MyId, messageText);
+            var torchMsg = new TorchChatMessage(MySession.Static.LocalHumanPlayer?.DisplayName ?? "Player", Sync.MyId, messageText, ChatChannel.Global, 0);
             bool consumed = RaiseMessageRecieved(torchMsg);
             if (!consumed)
                 consumed = OfflineMessageProcessor(torchMsg);
