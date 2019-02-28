@@ -43,9 +43,6 @@ namespace Torch.Managers.ChatManager
     
     public class ChatManagerServer : ChatManagerClient, IChatManagerServer
     {
-        [Dependency(Optional = true)]
-        private INetworkManager _networkManager;
-
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private static readonly Logger _chatLog = LogManager.GetLogger("Chat");
 
@@ -126,8 +123,6 @@ namespace Torch.Managers.ChatManager
             if (MyMultiplayer.Static != null)
             {
                 MyMultiplayer.Static.ChatMessageReceived += MpStaticChatMessageReceived;
-                _log.Warn(
-                    "Failed to initialize network intercept, we can't discard chat messages! Falling back to another method.");
             }
             else
             {
