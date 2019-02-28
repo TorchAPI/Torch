@@ -33,6 +33,9 @@ namespace Torch.Server
 
         public TorchUI(TorchServer server)
         {
+            WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            Width = 800;
+            Height = 600;
             _config = (TorchConfig)server.Config;
             _server = server;
             //TODO: data binding for whole server
@@ -41,10 +44,10 @@ namespace Torch.Server
 
             AttachConsole();
 
-            Left = _config.WindowPosition.X;
-            Top = _config.WindowPosition.Y;
-            Width = _config.WindowSize.X;
-            Height = _config.WindowSize.Y;
+            //Left = _config.WindowPosition.X;
+            //Top = _config.WindowPosition.Y;
+            //Width = _config.WindowSize.X;
+            //Height = _config.WindowSize.Y;
 
             Chat.BindServer(server);
             PlayerList.BindServer(server);
@@ -97,12 +100,14 @@ namespace Torch.Server
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            var newSize = new Point((int)Width, (int)Height);
-            _config.WindowSize = newSize;
-            var newPos = new Point((int)Left, (int)Top);
-            _config.WindowPosition = newPos;
+            // Can't save here or you'll persist all the command line arguments
+            //
+            //var newSize = new Point((int)Width, (int)Height);
+            //_config.WindowSize = newSize;
+            //var newPos = new Point((int)Left, (int)Top);
+            //_config.WindowPosition = newPos;
 
-            _config.Save(); //you idiot
+            //_config.Save(); //you idiot
 
             if (_server?.State == ServerState.Running)
                 _server.Stop();
