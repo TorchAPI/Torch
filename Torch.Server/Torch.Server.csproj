@@ -275,7 +275,7 @@
     <Compile Include="Views\ModListControl.xaml.cs">
       <DependentUpon>ModListControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\PluginBrowser\PluginBrowser.xaml.cs">
+    <Compile Include="Views\PluginBrowser.xaml.cs">
       <DependentUpon>PluginBrowser.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ThemeControl.xaml.cs">
@@ -442,7 +442,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\PluginBrowser\PluginBrowser.xaml">
+    <Page Include="Views\PluginBrowser.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
