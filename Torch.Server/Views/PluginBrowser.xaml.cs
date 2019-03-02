@@ -48,14 +48,36 @@ namespace Torch.Server.Views
         public PluginBrowser()
         {
             InitializeComponent();
+
             Task.Run(async () =>
                      {
                          var res = await PluginQuery.Instance.QueryAll();
                          if (res == null)
                              return;
-                         foreach(var item in res.Plugins)
+                         foreach (var item in res.Plugins)
                              Plugins.Add(item);
+                         PluginsList.Dispatcher.Invoke(() => PluginsList.SelectedIndex = 0);
                      });
+
+            MarkdownFlow.CommandBindings.Add(new CommandBinding(NavigationCommands.GoToPage, (sender, e) => OpenUri((string)e.Parameter)));
+        }
+
+        public static bool IsValidUri(string uri)
+        {
+            if (!Uri.IsWellFormedUriString(uri, UriKind.Absolute))
+                return false;
+            Uri tmp;
+            if (!Uri.TryCreate(uri, UriKind.Absolute, out tmp))
+                return false;
+            return tmp.Scheme == Uri.UriSchemeHttp || tmp.Scheme == Uri.UriSchemeHttps;
+        }
+
+        public static bool OpenUri(string uri)
+        {
+            if (!IsValidUri(uri))
+                return false;
+            System.Diagnostics.Process.Start(uri);
+            return true;
         }
 
         private void PluginsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
