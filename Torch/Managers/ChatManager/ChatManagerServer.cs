@@ -170,7 +170,7 @@ namespace Torch.Managers.ChatManager
 
         public static string GetMemberName(ulong steamId)
         {
-            return MySession.Static.Players.TryGetPlayerName(steamId);
+            return MyMultiplayer.Static?.GetMemberName(steamId) ?? $"user_{steamId}";
         }
     }
 }

@@ -19,20 +19,5 @@ namespace Torch
                 return null;
             return collection.TryGetPlayerById(playerId, out MyPlayer player) ? player : null;
         }
-
-        public static string TryGetPlayerName(this MyPlayerCollection collection, ulong steamId, int serialId = 0)
-        {
-            return collection.TryGetPlayerBySteamId(steamId, serialId)?.DisplayName ?? $"ID: {steamId}";
-        }
-
-        public static string TryGetPlayerName(this MyPlayerCollection collection, long identityId)
-        {
-            if (!collection.TryGetPlayerId(identityId, out MyPlayer.PlayerId playerId))
-                return null;
-
-            collection.TryGetPlayerById(playerId, out MyPlayer player);
-
-            return player?.DisplayName ?? $"ID: {collection.TryGetSteamId(identityId)}";
-        }
     }
 }
