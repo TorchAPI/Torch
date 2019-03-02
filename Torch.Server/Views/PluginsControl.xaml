@@ -26,7 +26,14 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-            <Button Grid.Row="1" Content="Open Folder" Margin="3" DockPanel.Dock="Bottom" Click="OpenFolder_OnClick"/>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+            <Button Grid.Row="0" Grid.Column="0" Content="Open Folder" Margin="3" Click="OpenFolder_OnClick"/>
+                <Button Grid.Row="0" Grid.Column="1" Content="Browse Plugins" Margin="3" Click="BrowsPlugins_OnClick"/>
+            </Grid>
         </Grid>
         <ScrollViewer Name="PScroll" Grid.Column="1" Margin="3">
             <Frame NavigationUIVisibility="Hidden" Content="{Binding SelectedPlugin.Control}"/>

@@ -71,5 +71,11 @@ namespace Torch.Server.Views
             if (_plugins?.PluginDir != null)
                 Process.Start(_plugins.PluginDir);
         }
+
+        private void BrowsPlugins_OnClick(object sender, RoutedEventArgs e)
+        {
+            var browser = new PluginBrowser();
+            browser.Show();
+        }
     }
 }

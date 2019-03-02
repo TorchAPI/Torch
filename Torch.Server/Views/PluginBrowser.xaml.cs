@@ -1,0 +1,90 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+using Newtonsoft.Json;
+using NLog;
+using Torch.API.WebAPI;
+using Torch.Collections;
+using Torch.Server.Annotations;
+
+namespace Torch.Server.Views
+{
+    /// <summary>
+    /// Interaction logic for PluginBrowser.xaml
+    /// </summary>
+    public partial class PluginBrowser : Window, INotifyPropertyChanged
+    {
+        private static Logger Log = LogManager.GetCurrentClassLogger();
+
+        public MtObservableList<PluginItem> Plugins { get; set; } = new MtObservableList<PluginItem>();
+        public PluginItem CurrentItem { get; set; }
+
+        private string _description = "Loading data from server, please wait..";
+        public string CurrentDescription
+        {
+            get { return _description; }
+            set
+            {
+                _description = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public PluginBrowser()
+        {
+            InitializeComponent();
+            Task.Run(async () =>
+                     {
+                         var res = await PluginQuery.Instance.QueryAll();
+                         if (res == null)
+                             return;
+                         foreach(var item in res.Plugins)
+                             Plugins.Add(item);
+                     });
+        }
+
+        private void PluginsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            CurrentItem = (PluginItem)PluginsList.SelectedItem;
+            CurrentDescription = CurrentItem.Description;
+            DownloadButton.IsEnabled = !string.IsNullOrEmpty(CurrentItem.LatestVersion);
+        }
+
+        private void DownloadButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var item = CurrentItem;
+            Task.Run(async () =>
+                     {
+                         var result = await PluginQuery.Instance.DownloadPlugin(item.ID);
+                         MessageBox.Show(result ? "Plugin downloaded successfully! Please restart the server to load changes."
+                                                : "Plugin failed to download! See log for details.", 
+                                                "Plugin Downloader",
+                                                MessageBoxButton.OK);
+                     });
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+}
