@@ -10,7 +10,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using NLog;
-using Octokit;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
@@ -24,7 +23,6 @@ namespace Torch.Managers
     /// <inheritdoc />
     public class PluginManager : Manager, IPluginManager
     {
-        private GitHubClient _gitClient = new GitHubClient(new ProductHeaderValue("Torch"));
         private static Logger _log = LogManager.GetCurrentClassLogger();
         private const string MANIFEST_NAME = "manifest.xml";
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
@@ -145,45 +143,45 @@ namespace Torch.Managers
             Parallel.ForEach(pluginItems, async item =>
             {
                 PluginManifest manifest = null;
-                try
-                {
-                    var path = Path.Combine(PluginDir, item);
-                    var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
-                    manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
-                    if (manifest == null)
-                    {
-                        _log.Warn($"Item '{item}' is missing a manifest, skipping update check.");
-                        return;
-                    }
+                //try
+                //{
+                //    var path = Path.Combine(PluginDir, item);
+                //    var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
+                //    manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
+                //    if (manifest == null)
+                //    {
+                //        _log.Warn($"Item '{item}' is missing a manifest, skipping update check.");
+                //        return;
+                //    }
 
-                    manifest.Version.TryExtractVersion(out Version currentVersion);
-                    var latest = await GetLatestArchiveAsync(manifest.Repository).ConfigureAwait(false);
+                //    manifest.Version.TryExtractVersion(out Version currentVersion);
+                //    var latest = await GetLatestArchiveAsync(manifest.Repository).ConfigureAwait(false);
 
-                    if (currentVersion == null || latest.Item1 == null)
-                    {
-                        _log.Error($"Error parsing version from manifest or GitHub for plugin '{manifest.Name}.'");
-                        return;
-                    }
+                //    if (currentVersion == null || latest.Item1 == null)
+                //    {
+                //        _log.Error($"Error parsing version from manifest or GitHub for plugin '{manifest.Name}.'");
+                //        return;
+                //    }
 
-                    if (latest.Item1 <= currentVersion)
-                    {
-                        _log.Debug($"{manifest.Name} {manifest.Version} is up to date.");
-                        return;
-                    }
+                //    if (latest.Item1 <= currentVersion)
+                //    {
+                //        _log.Debug($"{manifest.Name} {manifest.Version} is up to date.");
+                //        return;
+                //    }
 
-                    _log.Info($"Updating plugin '{manifest.Name}' from {currentVersion} to {latest.Item1}.");
-                    await UpdatePluginAsync(path, latest.Item2).ConfigureAwait(false);
-                    count++;
-                }
-                catch (NotFoundException)
-                {
-                    _log.Warn($"GitHub repository not found for {manifest.Name}");
-                }
-                catch (Exception e)
-                {
-                    _log.Warn($"An error occurred updating the plugin {manifest.Name}.");
-                    _log.Warn(e);
-                }
+                //    _log.Info($"Updating plugin '{manifest.Name}' from {currentVersion} to {latest.Item1}.");
+                //    await UpdatePluginAsync(path, latest.Item2).ConfigureAwait(false);
+                //    count++;
+                //}
+                //catch (NotFoundException)
+                //{
+                //    _log.Warn($"GitHub repository not found for {manifest.Name}");
+                //}
+                //catch (Exception e)
+                //{
+                //    _log.Warn($"An error occurred updating the plugin {manifest.Name}.");
+                //    _log.Warn(e);
+                //}
             });
 
             _log.Info($"Updated {count} plugins.");
@@ -193,20 +191,21 @@ namespace Torch.Managers
         {
             try
             {
-                var split = repository.Split('/');
-                var latest = await _gitClient.Repository.Release.GetLatest(split[0], split[1]).ConfigureAwait(false);
-                if (!latest.TagName.TryExtractVersion(out Version latestVersion))
-                {
-                    _log.Error($"Unable to parse version tag for the latest release of '{repository}.'");
-                }
+                //var split = repository.Split('/');
+                //var latest = await _gitClient.Repository.Release.GetLatest(split[0], split[1]).ConfigureAwait(false);
+                //if (!latest.TagName.TryExtractVersion(out Version latestVersion))
+                //{
+                //    _log.Error($"Unable to parse version tag for the latest release of '{repository}.'");
+                //}
 
-                var zipAsset = latest.Assets.FirstOrDefault(x => x.Name.Contains(".zip", StringComparison.CurrentCultureIgnoreCase));
-                if (zipAsset == null)
-                {
-                    _log.Error($"Unable to find archive for the latest release of '{repository}.'");
-                }
+                //var zipAsset = latest.Assets.FirstOrDefault(x => x.Name.Contains(".zip", StringComparison.CurrentCultureIgnoreCase));
+                //if (zipAsset == null)
+                //{
+                //    _log.Error($"Unable to find archive for the latest release of '{repository}.'");
+                //}
 
-                return new Tuple<Version, string>(latestVersion, zipAsset?.BrowserDownloadUrl);
+                //return new Tuple<Version, string>(latestVersion, zipAsset?.BrowserDownloadUrl);
+                return null;
             }
             catch (Exception e)
             {

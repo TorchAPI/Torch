@@ -22,9 +22,8 @@ namespace Torch.Managers
 
         public FilesystemManager(ITorchBase torchInstance) : base(torchInstance)
         {
-            var temp = Path.Combine(Path.GetTempPath(), "Torch");
-            TempDirectory = Directory.CreateDirectory(temp).FullName;
             var torch = new FileInfo(typeof(FilesystemManager).Assembly.Location).Directory.FullName;
+            TempDirectory = Directory.CreateDirectory(Path.Combine(torch, "tmp")).FullName;
             TorchDirectory = torch;
 
             ClearTemp();
@@ -39,13 +38,16 @@ namespace Torch.Managers
         /// <summary>
         /// Move the given file (if it exists) to a temporary directory that will be cleared the next time the application starts.
         /// </summary>
-        public void SoftDelete(string file)
+        public void SoftDelete(string path, string file)
         {
-            if (!File.Exists(file))
+            string source = Path.Combine(path, file);
+            if (!File.Exists(source))
                 return;
             var rand = Path.GetRandomFileName();
             var dest = Path.Combine(TempDirectory, rand);
-            File.Move(file, dest);
+            File.Move(source, rand);
+            string rsource = Path.Combine(path, rand);
+            File.Move(rsource, dest);
         }
     }
 }

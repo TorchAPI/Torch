@@ -193,6 +193,7 @@
     <Compile Include="Session\ITorchSessionManager.cs" />
     <Compile Include="Session\TorchSessionState.cs" />
     <Compile Include="TorchGameState.cs" />
+    <Compile Include="WebAPI\JenkinsQuery.cs" />
     <Compile Include="WebAPI\PluginQuery.cs" />
   </ItemGroup>
   <ItemGroup>
