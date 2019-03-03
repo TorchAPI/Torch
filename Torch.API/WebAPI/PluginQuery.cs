@@ -79,21 +79,22 @@ namespace Torch.API.WebAPI
             return response;
         }
 
-        public async Task<bool> DownloadPlugin(Guid guid)
+        public async Task<bool> DownloadPlugin(Guid guid, string path = null)
         {
-            return await DownloadPlugin(guid.ToString());
+            return await DownloadPlugin(guid.ToString(), path);
         }
 
-        public async Task<bool> DownloadPlugin(string guid)
+        public async Task<bool> DownloadPlugin(string guid, string path = null)
         {
             var item = await QueryOne(guid);
-            return await DownloadPlugin(item);
+            return await DownloadPlugin(item, path);
         }
 
-        public async Task<bool> DownloadPlugin(PluginFullItem item)
+        public async Task<bool> DownloadPlugin(PluginFullItem item, string path = null)
         {
             try
             {
+                path = path ?? $"Plugins\\{item.Name}.zip";
                 var h = await _client.GetAsync(string.Format(PLUGIN_QUERY, item.ID));
                 string res = await h.Content.ReadAsStringAsync();
                 var response = JsonConvert.DeserializeObject<PluginFullItem>(res);
@@ -109,7 +110,7 @@ namespace Torch.API.WebAPI
                     return false;
                 }
                 var s = await _client.GetStreamAsync(version.URL);
-                using (var f = new FileStream($"Plugins\\{item.Name}.zip", FileMode.Create))
+                using (var f = new FileStream(path, FileMode.Create))
                 {
                     await s.CopyToAsync(f);
                     await f.FlushAsync();

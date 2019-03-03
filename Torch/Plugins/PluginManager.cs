@@ -14,6 +14,7 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
 using Torch.API.Session;
+using Torch.API.WebAPI;
 using Torch.Collections;
 using Torch.Commands;
 using Torch.Utils;
@@ -133,55 +134,48 @@ namespace Torch.Managers
 
         private void DownloadPluginUpdates()
         {
-            //TODO
-            _log.Warn("Automatic plugin updates are disabled in this build of Torch while the system is reworked.");
-            return;
-
             _log.Info("Checking for plugin updates...");
             var count = 0;
             var pluginItems = Directory.EnumerateFiles(PluginDir, "*.zip").Union(Directory.EnumerateDirectories(PluginDir));
             Parallel.ForEach(pluginItems, async item =>
             {
                 PluginManifest manifest = null;
-                //try
-                //{
-                //    var path = Path.Combine(PluginDir, item);
-                //    var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
-                //    manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
-                //    if (manifest == null)
-                //    {
-                //        _log.Warn($"Item '{item}' is missing a manifest, skipping update check.");
-                //        return;
-                //    }
+                try
+                {
+                    var path = Path.Combine(PluginDir, item);
+                    var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
+                    manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
+                    if (manifest == null)
+                    {
+                        _log.Warn($"Item '{item}' is missing a manifest, skipping update check.");
+                        return;
+                    }
 
-                //    manifest.Version.TryExtractVersion(out Version currentVersion);
-                //    var latest = await GetLatestArchiveAsync(manifest.Repository).ConfigureAwait(false);
+                    manifest.Version.TryExtractVersion(out Version currentVersion);
+                    var latest = await PluginQuery.Instance.QueryOne(manifest.Guid);
+                    latest.LatestVersion.TryExtractVersion(out Version newVersion);
 
-                //    if (currentVersion == null || latest.Item1 == null)
-                //    {
-                //        _log.Error($"Error parsing version from manifest or GitHub for plugin '{manifest.Name}.'");
-                //        return;
-                //    }
+                    if (currentVersion == null || newVersion == null)
+                    {
+                        _log.Error($"Error parsing version from manifest or website for plugin '{manifest.Name}.'");
+                        return;
+                    }
 
-                //    if (latest.Item1 <= currentVersion)
-                //    {
-                //        _log.Debug($"{manifest.Name} {manifest.Version} is up to date.");
-                //        return;
-                //    }
+                    if (newVersion <= currentVersion)
+                    {
+                        _log.Debug($"{manifest.Name} {manifest.Version} is up to date.");
+                        return;
+                    }
 
-                //    _log.Info($"Updating plugin '{manifest.Name}' from {currentVersion} to {latest.Item1}.");
-                //    await UpdatePluginAsync(path, latest.Item2).ConfigureAwait(false);
-                //    count++;
-                //}
-                //catch (NotFoundException)
-                //{
-                //    _log.Warn($"GitHub repository not found for {manifest.Name}");
-                //}
-                //catch (Exception e)
-                //{
-                //    _log.Warn($"An error occurred updating the plugin {manifest.Name}.");
-                //    _log.Warn(e);
-                //}
+                    _log.Info($"Updating plugin '{manifest.Name}' from {currentVersion} to {newVersion}.");
+                    await PluginQuery.Instance.DownloadPlugin(latest, path);
+                    count++;
+                }
+                catch (Exception e)
+                {
+                    _log.Warn($"An error occurred updating the plugin {manifest?.Name ?? item}.");
+                    _log.Warn(e);
+                }
             });
 
             _log.Info($"Updated {count} plugins.");
