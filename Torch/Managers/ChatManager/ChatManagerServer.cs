@@ -25,7 +25,7 @@ namespace Torch.Managers.ChatManager
     internal static class ChatInterceptPatch
     {
         private static ChatManagerServer _chatManager;
-        private static ChatManagerServer ChatManager => _chatManager ?? (_chatManager = TorchBase.Instance.Managers.GetManager<ChatManagerServer>());
+        private static ChatManagerServer ChatManager => _chatManager ?? (_chatManager = TorchBase.Instance.CurrentSession.Managers.GetManager<ChatManagerServer>());
             
         internal static void Patch(PatchContext context)
         {
@@ -37,7 +37,7 @@ namespace Torch.Managers.ChatManager
         private static bool PrefixMessageProcessing(ref ChatMsg msg)
         {
             var consumed = false;
-            ChatManager?.RaiseMessageRecieved(msg, ref consumed);
+            ChatManager.RaiseMessageRecieved(msg, ref consumed);
             return !consumed;
         }
     }
@@ -115,22 +115,6 @@ namespace Torch.Managers.ChatManager
             MyMultiplayerBase.SendScriptedChatMessage(ref scripted);
         }
 
-
-        /// <inheritdoc/>
-        public override void Attach()
-        {
-            base.Attach();
-
-            if (MyMultiplayer.Static != null)
-            {
-                MyMultiplayer.Static.ChatMessageReceived += MpStaticChatMessageReceived;
-            }
-            else
-            {
-                _log.Debug("Using offline message processor");
-            }
-        }
-
         /// <inheritdoc />
         protected override bool OfflineMessageProcessor(TorchChatMessage msg)
         {
@@ -139,24 +123,6 @@ namespace Torch.Managers.ChatManager
             var consumed = false;
             MessageProcessing?.Invoke(msg, ref consumed);
             return consumed;
-        }
-
-        private void MpStaticChatMessageReceived(ulong steamUserId, string messageText, ChatChannel channel, long targetId, string customAuthorName)
-        {
-            var tmp = false;
-            RaiseMessageRecieved(new ChatMsg
-            {
-                Author = steamUserId,
-                Text = messageText
-            }, ref tmp);
-        }
-
-        /// <inheritdoc/>
-        public override void Detach()
-        {
-            if (MyMultiplayer.Static != null)
-                MyMultiplayer.Static.ChatMessageReceived -= MpStaticChatMessageReceived;
-            base.Detach();
         }
 
         internal void RaiseMessageRecieved(ChatMsg message, ref bool consumed)
