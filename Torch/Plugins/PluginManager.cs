@@ -153,6 +153,13 @@ namespace Torch.Managers
 
                     manifest.Version.TryExtractVersion(out Version currentVersion);
                     var latest = await PluginQuery.Instance.QueryOne(manifest.Guid);
+
+                    if (latest?.LatestVersion == null)
+                    {
+                        _log.Warn($"Plugin {manifest.Name} does not have any releases on torchapi.net. Cannot update.");
+                        return;
+                    }
+
                     latest.LatestVersion.TryExtractVersion(out Version newVersion);
 
                     if (currentVersion == null || newVersion == null)
