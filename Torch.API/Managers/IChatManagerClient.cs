@@ -58,14 +58,14 @@ namespace Torch.API.Managers
         /// <param name="authorSteamId">Author's steam ID</param>
         /// <param name="message">Message</param>
         /// <param name="font">Font</param>
-        public TorchChatMessage(ulong authorSteamId, string message, string font = MyFontEnum.Blue)
+        public TorchChatMessage(ulong authorSteamId, string message, ChatChannel channel, long target, string font = MyFontEnum.Blue)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = authorSteamId;
             Author = MyMultiplayer.Static?.GetMemberName(authorSteamId) ?? "Player";
             Message = message;
-            Channel = ChatChannel.Global;
-            Target = 0;
+            Channel = channel;
+            Target = target;
             Font = font;
         }
 

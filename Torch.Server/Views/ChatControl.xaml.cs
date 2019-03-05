@@ -20,6 +20,8 @@ using NLog;
 using Torch;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
+using Sandbox.Game.Gui;
+using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Torch.API;
 using Torch.API.Managers;
@@ -131,6 +133,15 @@ namespace Torch.Server
                 bool atBottom = ChatScroller.VerticalOffset + 8 > ChatScroller.ScrollableHeight;
                 var span = new Span();
                 span.Inlines.Add($"{msg.Timestamp} ");
+                switch (msg.Channel)
+                {
+                    case ChatChannel.Faction:
+                        span.Inlines.Add(new Run($"[{MySession.Static.Factions.TryGetFactionById(msg.Target)?.Tag ?? "???"}] ") { Foreground = Brushes.Green });
+                        break;
+                    case ChatChannel.Private:
+                        span.Inlines.Add(new Run($"[to {MySession.Static.Players.TryGetIdentity(msg.Target)?.DisplayName ?? "???"}] ") { Foreground = Brushes.DeepPink });
+                        break;
+                }
                 span.Inlines.Add(new Run(msg.Author) { Foreground = LookupBrush(msg.Font) });
                 span.Inlines.Add($": {msg.Message}");
                 span.Inlines.Add(new LineBreak());

@@ -61,7 +61,7 @@ namespace Torch.Managers.ChatManager
         {
             if (targetSteamId == Sync.MyId)
             {
-                RaiseMessageRecieved(new TorchChatMessage(authorId, message));
+                RaiseMessageRecieved(new TorchChatMessage(authorId, message, ChatChannel.Global, 0));
                 return;
             }
             if (MyMultiplayer.Static == null)
@@ -131,7 +131,7 @@ namespace Torch.Managers.ChatManager
             MessageProcessing?.Invoke(torchMsg, ref consumed);
 
             if (!consumed)
-                _chatLog.Info($"{torchMsg.Author}: {torchMsg.Message}");
+                _chatLog.Info($"[{torchMsg.Channel}:{torchMsg.Target}] {torchMsg.Author}: {torchMsg.Message}");
         }
 
         public static string GetMemberName(ulong steamId)
