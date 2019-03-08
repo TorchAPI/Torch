@@ -127,7 +127,7 @@ namespace Torch.Managers.ChatManager
 
         private void Multiplayer_ChatMessageReceived(ulong steamUserId, string messageText, ChatChannel channel, long targetId, string customAuthorName)
         {
-            var torchMsg = new TorchChatMessage(steamUserId, messageText,
+            var torchMsg = new TorchChatMessage(steamUserId, messageText, channel, targetId,
                 (steamUserId == MyGameService.UserId) ? MyFontEnum.DarkBlue : MyFontEnum.Blue);
             if (!RaiseMessageRecieved(torchMsg) && HasHud)
                 _hudChatMessageReceived.Invoke(MyHud.Chat, steamUserId, messageText, channel, targetId, customAuthorName);
