@@ -52,12 +52,12 @@
                 </TreeView.Resources>
                 <TreeViewItem ItemsSource="{Binding Path=SortedGrids}">
                     <TreeViewItem.Header>
-                        <TextBlock Text="{Binding SortedGrids.Count, StringFormat=Grids ({0})}" />
+                        <TextBlock Text="{Binding Grids.Count, StringFormat=Grids ({0})}" />
                     </TreeViewItem.Header>
                 </TreeViewItem>
                 <TreeViewItem ItemsSource="{Binding SortedCharacters}">
                     <TreeViewItem.Header>
-                        <TextBlock Text="{Binding SortedCharacters.Count, StringFormat=Characters ({0})}" />
+                        <TextBlock Text="{Binding Characters.Count, StringFormat=Characters ({0})}" />
                     </TreeViewItem.Header>
                     <TreeViewItem.ItemTemplate>
                         <DataTemplate>
@@ -67,7 +67,7 @@
                 </TreeViewItem>
                 <TreeViewItem ItemsSource="{Binding SortedVoxelMaps}">
                     <TreeViewItem.Header>
-                        <TextBlock Text="{Binding SortedVoxelMaps.Count, StringFormat=Voxel Maps ({0})}" />
+                        <TextBlock Text="{Binding VoxelMaps.Count, StringFormat=Voxel Maps ({0})}" />
                     </TreeViewItem.Header>
                     <TreeViewItem.ItemTemplate>
                         <DataTemplate>
@@ -77,7 +77,7 @@
                 </TreeViewItem>
                 <TreeViewItem ItemsSource="{Binding SortedFloatingObjects}">
                     <TreeViewItem.Header>
-                        <TextBlock Text="{Binding SortedFloatingObjects.Count, StringFormat=Floating Objects ({0})}" />
+                        <TextBlock Text="{Binding FloatingObjects.Count, StringFormat=Floating Objects ({0})}" />
                     </TreeViewItem.Header>
                     <TreeViewItem.ItemTemplate>
                         <DataTemplate>
