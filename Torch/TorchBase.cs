@@ -485,6 +485,7 @@ namespace Torch
                 if (_registeredAuxAssemblies.Add(asm))
                 {
                     ReflectedManager.Process(asm);
+                    PatchManager.AddPatchShims(asm);
                 }
         }
     }

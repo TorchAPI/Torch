@@ -224,6 +224,7 @@
     <Compile Include="Patches\GameAnalyticsPatch.cs" />
     <Compile Include="Patches\GameStatePatchShim.cs" />
     <Compile Include="Patches\ObjectFactoryInitPatch.cs" />
+    <Compile Include="Patches\PhysicsMemoryPatch.cs" />
     <Compile Include="Patches\SessionDownloadPatch.cs" />
     <Compile Include="Patches\TorchAsyncSaving.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

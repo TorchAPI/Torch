@@ -95,6 +95,10 @@ namespace Torch.API.WebAPI
             try
             {
                 path = path ?? $"Plugins\\{item.Name}.zip";
+                string relpath = Path.GetDirectoryName(path);
+
+                Directory.CreateDirectory(relpath);
+
                 var h = await _client.GetAsync(string.Format(PLUGIN_QUERY, item.ID));
                 string res = await h.Content.ReadAsStringAsync();
                 var response = JsonConvert.DeserializeObject<PluginFullItem>(res);
@@ -110,7 +114,11 @@ namespace Torch.API.WebAPI
                     return false;
                 }
                 var s = await _client.GetStreamAsync(version.URL);
-                using (var f = new FileStream(path, FileMode.Create))
+
+                if(File.Exists(path))
+                    File.Delete(path);
+
+                using (var f = File.Create(path))
                 {
                     await s.CopyToAsync(f);
                     await f.FlushAsync();
