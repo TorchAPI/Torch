@@ -18,6 +18,8 @@ namespace Torch
         bool ShouldUpdateTorch { get; }
         int TickTimeout { get; set; }
         string WaitForPID { get; set; }
+        string ChatName { get; set; }
+        string ChatColor { get; set; }
 
         bool Save(string path = null);
     }

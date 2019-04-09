@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using VRage.Game;
 
 namespace Torch.Utils
 {
@@ -59,6 +61,12 @@ namespace Torch.Utils
                 }
             }
             return builder?.ToString() ?? "";
+        }
+
+        private static readonly string[] _fontEnumValues = typeof(MyFontEnum).GetFields(BindingFlags.Public | BindingFlags.Static).Where(x => x.IsLiteral && !x.IsInitOnly).Select(x => (string)x.GetValue(null)).ToArray();
+        public static bool IsFontEnum(string str)
+        {
+            return _fontEnumValues.Contains(str);
         }
     }
 }

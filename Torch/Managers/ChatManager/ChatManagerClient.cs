@@ -38,10 +38,18 @@ namespace Torch.Managers.ChatManager
             {
                 if (Sandbox.Engine.Platform.Game.IsDedicated)
                 {
+                    // Sending invalid color to clients will crash them. KEEEN
+                    var color = Torch.Config.ChatColor;
+                    if (!StringUtils.IsFontEnum(Torch.Config.ChatColor))
+                    {
+                        _log.Warn("Invalid chat font color! Defaulting to 'Red'");
+                        color = MyFontEnum.Red;
+                    }
+                    
                     var scripted = new ScriptedChatMsg()
                     {
-                        Author = "Server",
-                        Font = MyFontEnum.Red,
+                        Author = Torch.Config.ChatName,
+                        Font = color,
                         Text = message,
                         Target = 0
                     };
