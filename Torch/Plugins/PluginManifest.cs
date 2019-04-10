@@ -23,7 +23,11 @@ namespace Torch
         /// <summary>
         /// A GitHub repository in the format of Author/Repository to retrieve plugin updates.
         /// </summary>
+        [Obsolete("Updates no longer check git. Updates are hosted only on torchapi.net")]
         public string Repository { get; set; }
+
+        //xml tomfoolery
+        public bool ShouldSerializeRepository() => false;
 
         /// <summary>
         /// The plugin version. This must include a string in the format of #[.#[.#]] for update checking purposes.

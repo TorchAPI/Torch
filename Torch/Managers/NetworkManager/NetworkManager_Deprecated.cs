@@ -68,6 +68,10 @@ namespace Torch.Managers
         /// <inheritdoc/>
         public override void Attach()
         {
+            //disable all this for now
+            _log.Warn("Network intercept disabled. Some plugins may not work correctly.");
+            return;
+
             if (_init)
                 return;
 
@@ -362,6 +366,9 @@ namespace Torch.Managers
         /// <inheritdoc />
         public void RegisterNetworkHandler(INetworkHandler handler)
         {
+            _log.Warn($"Plugin {handler.GetType().Assembly.FullName} registered a network handler. This system no longer works. Please alert the plugin author.");
+            return;
+
             var handlerType = handler.GetType().FullName;
             var toRemove = new List<INetworkHandler>();
             foreach (var item in _networkHandlers)
