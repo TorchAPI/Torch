@@ -80,6 +80,9 @@ namespace Torch.Server
 
         private void KickButton_Click(object sender, RoutedEventArgs e)
         {
+            if (PlayerList.SelectedItem == null)
+                return;
+            
             var player = (KeyValuePair<ulong, PlayerViewModel>)PlayerList.SelectedItem;
             try
             {
@@ -93,6 +96,9 @@ namespace Torch.Server
 
         private void BanButton_Click(object sender, RoutedEventArgs e)
         {
+            if (PlayerList.SelectedItem == null)
+                return;
+            
             var player = (KeyValuePair<ulong, PlayerViewModel>)PlayerList.SelectedItem;
             try
             {
@@ -106,6 +112,9 @@ namespace Torch.Server
 
         private void PromoteButton_OnClick(object sender, RoutedEventArgs e)
         {
+            if (PlayerList.SelectedItem == null)
+                return;
+            
             var player = (KeyValuePair<ulong, PlayerViewModel>)PlayerList.SelectedItem;
             try
             {
@@ -119,6 +128,9 @@ namespace Torch.Server
 
         private void DemoteButton_OnClick(object sender, RoutedEventArgs e)
         {
+            if (PlayerList.SelectedItem == null)
+                return;
+            
             var player = (KeyValuePair<ulong, PlayerViewModel>)PlayerList.SelectedItem;
             try
             {
