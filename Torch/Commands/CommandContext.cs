@@ -57,6 +57,13 @@ namespace Torch.Commands
 
         public virtual void Respond(string message, string sender = null, string font = null)
         {
+            //hack: Backwards compatibility 20190416
+            if (sender == "Server")
+            {
+                sender = null;
+                font = null;
+            }
+            
             var chat = Torch.CurrentSession.Managers.GetManager<IChatManagerServer>();
             chat?.SendMessageAsOther(sender, message, font, _steamIdSender);
         }

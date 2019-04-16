@@ -130,7 +130,7 @@ namespace Torch.Commands
                 if (!HasPermission(steamId, command))
                 {
                     _log.Info($"{player.DisplayName} tried to use command {cmdPath} without permission");
-                    _chatManager.SendMessageAsOther("Server", $"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", MyFontEnum.Red, steamId);
+                    _chatManager.SendMessageAsOther(Torch.Config.ChatName, $"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", Torch.Config.ChatColor, steamId);
                     return;
                 }
 
