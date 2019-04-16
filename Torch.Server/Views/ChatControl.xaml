@@ -17,8 +17,8 @@
                 <ColumnDefinition/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="1" x:Name="Send" Content="Send" DockPanel.Dock="Right" Width="50" Margin="5,5,5,5" Click="SendButton_Click"></Button>
-            <TextBox Grid.Column="0" x:Name="Message" DockPanel.Dock="Left" Margin="5,5,5,5" KeyDown="Message_OnKeyDown"></TextBox>
+            <Button Grid.Column="1" Content="Send" DockPanel.Dock="Right" Width="50" Margin="5" Click="SendButton_Click"></Button>
+            <TextBox Grid.Column="0" x:Name="Message" Margin="5" KeyDown="Message_OnKeyDown"></TextBox>
         </Grid>
     </Grid>
 </UserControl>

@@ -55,10 +55,10 @@ namespace Torch.Commands
             Args = args ?? new List<string>();
         }
 
-        public virtual void Respond(string message, string sender = "Server", string font = MyFontEnum.Blue)
+        public virtual void Respond(string message, string sender = null, string font = null)
         {
-            Torch.CurrentSession.Managers.GetManager<IChatManagerServer>()
-                ?.SendMessageAsOther(sender, message, font, _steamIdSender);
+            var chat = Torch.CurrentSession.Managers.GetManager<IChatManagerServer>();
+            chat?.SendMessageAsOther(sender, message, font, _steamIdSender);
         }
     }
 }

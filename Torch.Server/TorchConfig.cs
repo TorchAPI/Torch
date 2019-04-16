@@ -5,6 +5,7 @@ using System.Windows;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
 using NLog;
+using VRage.Game;
 
 namespace Torch.Server
 {
@@ -59,6 +60,10 @@ namespace Torch.Server
 
         /// <inheritdoc />
         public List<string> Plugins { get; set; } = new List<string>();
+
+        public string ChatName { get; set; } = "Server";
+
+        public string ChatColor { get; set; } = "Red";
 
         public bool EnableWhitelist { get; set; } = false;
         public HashSet<ulong> Whitelist { get; set; } = new HashSet<ulong>();
