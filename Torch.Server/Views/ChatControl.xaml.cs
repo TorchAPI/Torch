@@ -174,10 +174,12 @@ namespace Torch.Server
             var commands = _server.CurrentSession?.Managers.GetManager<Torch.Commands.CommandManager>();
             if (commands != null && commands.IsCommand(text))
             {
-                InsertMessage(new TorchChatMessage("Server", text, MyFontEnum.DarkBlue));
+                InsertMessage(new TorchChatMessage(TorchBase.Instance.Config.ChatName, text, TorchBase.Instance.Config.ChatColor));
                 _server.Invoke(() =>
                 {
-                    commands.HandleCommandFromServer(text);
+                    var responses = commands.HandleCommandFromServer(text);
+                    foreach (var response in responses)
+                        InsertMessage(response);
                 });
             }
             else

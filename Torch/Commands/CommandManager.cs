@@ -81,22 +81,22 @@ namespace Torch.Commands
             }
         }
 
-        public bool HandleCommandFromServer(string message)
+        public List<TorchChatMessage> HandleCommandFromServer(string message)
         {
             var cmdText = new string(message.Skip(1).ToArray());
             var command = Commands.GetCommand(cmdText, out string argText);
             if (command == null)
-                return false;
+                return null;
             var cmdPath = string.Join(".", command.Path);
 
             var splitArgs = Regex.Matches(argText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
             _log.Trace($"Invoking {cmdPath} for server.");
-            var context = new CommandContext(Torch, command.Plugin, Sync.MyId, argText, splitArgs);
+            var context = new ConsoleCommandContext(Torch, command.Plugin, Sync.MyId, argText, splitArgs);
             if (command.TryInvoke(context))
                 _log.Info($"Server ran command '{message}'");
             else
                 context.Respond($"Invalid Syntax: {command.SyntaxHelp}");
-            return true;
+            return context.Responses;
         }
 
         public void HandleCommand(TorchChatMessage msg, ref bool consumed)
@@ -130,7 +130,7 @@ namespace Torch.Commands
                 if (!HasPermission(steamId, command))
                 {
                     _log.Info($"{player.DisplayName} tried to use command {cmdPath} without permission");
-                    _chatManager.SendMessageAsOther("Server", $"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", MyFontEnum.Red, steamId);
+                    _chatManager.SendMessageAsOther(Torch.Config.ChatName, $"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", Torch.Config.ChatColor, steamId);
                     return;
                 }
 

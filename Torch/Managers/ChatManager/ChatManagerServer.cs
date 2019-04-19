@@ -106,9 +106,9 @@ namespace Torch.Managers.ChatManager
             }
             var scripted = new ScriptedChatMsg()
             {
-                Author = author,
+                Author = author ?? Torch.Config.ChatName,
                 Text = message,
-                Font = font,
+                Font = font ?? Torch.Config.ChatColor,
                 Target = Sync.Players.TryGetIdentityId(targetSteamId)
             };
             _chatLog.Info($"{author} (to {GetMemberName(targetSteamId)}): {message}");

@@ -187,6 +187,7 @@
     <Compile Include="Collections\SortedView.cs" />
     <Compile Include="Collections\TransformComparer.cs" />
     <Compile Include="Collections\TransformEnumerator.cs" />
+    <Compile Include="Commands\ConsoleCommandContext.cs" />
     <Compile Include="Event\EventShimAttribute.cs" />
     <Compile Include="Managers\ChatManager\ChatManagerClient.cs" />
     <Compile Include="Managers\ChatManager\ChatManagerServer.cs" />
