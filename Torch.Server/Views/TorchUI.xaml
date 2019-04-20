@@ -57,7 +57,7 @@
             </Label>
             <Label x:Name="LabelPlayers">
                 <Label.Content>
-                    <TextBlock ></TextBlock>
+                    <TextBlock Text="{Binding OnlinePlayers, StringFormat=Players: {0}}"/>
                 </Label.Content>
             </Label>
         </StackPanel>

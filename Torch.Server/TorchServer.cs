@@ -45,6 +45,8 @@ namespace Torch.Server
         private ServerState _state;
         private Stopwatch _uptime;
         private Timer _watchdog;
+        private int _players;
+        private MultiplayerManagerDedicated _multiplayerManagerDedicated;
 
         /// <inheritdoc />
        public TorchServer(TorchConfig config = null)
@@ -91,6 +93,8 @@ namespace Torch.Server
 
         /// <inheritdoc />
         public string InstancePath => Config?.InstancePath;
+
+        public int OnlinePlayers { get => _players; private set => SetValue(ref _players, value); }
 
         /// <inheritdoc />
         public override void Init()
@@ -186,6 +190,7 @@ namespace Torch.Server
 
             if (newState == TorchSessionState.Loaded)
             {
+                _multiplayerManagerDedicated = CurrentSession.Managers.GetManager<MultiplayerManagerDedicated>();
                 CurrentSession.Managers.GetManager<CommandManager>().RegisterCommandModule(typeof(WhitelistCommands));
                 ModCommunication.Register();
             }
@@ -209,6 +214,7 @@ namespace Torch.Server
             SimulationRatio = Math.Min(Sync.ServerSimulationRatio, 1);
             var elapsed = TimeSpan.FromSeconds(Math.Floor(_uptime.Elapsed.TotalSeconds));
             ElapsedPlayTime = elapsed;
+            OnlinePlayers = _multiplayerManagerDedicated?.Players.Count ?? 0;
 
             if (_watchdog == null && Config.TickTimeout > 0)
             {
