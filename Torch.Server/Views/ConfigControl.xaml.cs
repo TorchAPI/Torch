@@ -12,6 +12,7 @@ using Torch.API.Managers;
 using Torch.Server.Annotations;
 using Torch.Server.Managers;
 using Torch.Server.ViewModels;
+using Torch.Views;
 
 namespace Torch.Server.Views
 {
@@ -121,6 +122,14 @@ namespace Torch.Server.Views
         {
             var c  = new WorldGeneratorDialog(_instanceManager);
             c.Show();
+        }
+
+        private void RoleEdit_Onlick(object sender, RoutedEventArgs e)
+        {
+            //var w = new RoleEditor(_instanceManager.DedicatedConfig.SelectedWorld);
+            //w.Show();
+            var d = new RoleEditor();
+            d.Edit(_instanceManager.DedicatedConfig.SelectedWorld.Checkpoint.PromotedUsers.Dictionary);
         }
     }
 }
