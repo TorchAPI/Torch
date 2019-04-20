@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VRage.Collections;
 using VRage.Network;
 
 namespace Torch.API.Managers
@@ -41,5 +42,24 @@ namespace Torch.API.Managers
         /// <param name="font">Font to use</param>
         /// <param name="targetSteamId">Player to send the message to, or everyone by default</param>
         void SendMessageAsOther(string author, string message, string font, ulong targetSteamId = 0);
+
+        /// <summary>
+        /// Mute user from global chat.
+        /// </summary>
+        /// <param name="steamId"></param>
+        /// <returns></returns>
+        bool MuteUser(ulong steamId);
+
+        /// <summary>
+        /// Unmute user from global chat.
+        /// </summary>
+        /// <param name="steamId"></param>
+        /// <returns></returns>
+        bool UnmuteUser(ulong steamId);
+
+        /// <summary>
+        /// Users which are not allowed to chat.
+        /// </summary>
+        HashSetReader<ulong> MutedUsers { get; }
     }
 }
