@@ -35,6 +35,7 @@ namespace Torch.Server.Views
         private Type _itemType;
 
         private Action _commitChanges;
+        public MyPromoteLevel BulkPromote { get; set; } = MyPromoteLevel.Scripter;
 
         public void Edit(IDictionary dict)
         {
@@ -105,6 +106,18 @@ namespace Torch.Server.Views
         private void AddNew_OnClick(object sender, RoutedEventArgs e)
         {
             Items.Add((IDictionaryItem)Activator.CreateInstance(_itemType));
+        }
+
+        private void BulkEdit(object sender, RoutedEventArgs e)
+        {
+            List<ulong> l = Items.Where(i => i.Value.Equals(BulkPromote)).Select(i => (ulong)i.Key).ToList();
+            var w = new CollectionEditor();
+            w.Edit((ICollection<ulong>)l, "Bulk edit");
+            var r = Items.Where(j => j.Value.Equals(BulkPromote) || l.Contains((ulong)j.Key)).ToList();
+            foreach (var k in r)
+                Items.Remove(k);
+            foreach (var m in l)
+                Items.Add(new DictionaryItem<ulong, MyPromoteLevel>(m, BulkPromote));
         }
     }
 }

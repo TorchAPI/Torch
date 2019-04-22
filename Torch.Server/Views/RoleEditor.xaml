@@ -20,6 +20,7 @@
             <RowDefinition />
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <DataGrid x:Name="ItemGrid" AutoGenerateColumns="false" CanUserAddRows="true" Grid.Row="0">
             <DataGrid.Columns>
@@ -36,6 +37,16 @@
             <Button Grid.Column="0" Content="Cancel" Margin="5" Click="Cancel_OnClick" />
             <Button Grid.Column="1" Content="OK" Margin="5" Click="Ok_OnClick" />
         </Grid>
+     <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+         <ComboBox Name="BulkSelect" ItemsSource="{Binding Source={StaticResource GetEnumValues}}" SelectedValue ="{Binding 
+             RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:RoleEditor}},
+             Path = BulkPromote, Mode=TwoWay}" Margin="5"/>
+         <Button Grid.Column="1" Content="Bulk edit" Margin ="5" Click="BulkEdit"/>
+     </Grid>
     </Grid>
 </Window>
 
