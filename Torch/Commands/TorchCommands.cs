@@ -57,9 +57,15 @@ namespace Torch.Commands
             if (node != null)
             {
                 var command = node.Command;
-                var children = node.Subcommands.Select(x => x.Key);
+                var children = node.Subcommands.Where(e => e.Value.Command?.MinimumPromoteLevel <= Context.Player.PromoteLevel).Select(x => x.Key);
 
                 var sb = new StringBuilder();
+
+                if (command?.MinimumPromoteLevel > Context.Player.PromoteLevel)
+                {
+                    Context.Respond("You are not authorized to use this command.");
+                    return;
+                }
 
                 if (command != null)
                 {
@@ -94,11 +100,11 @@ namespace Torch.Commands
             if (node != null)
             {
                 var command = node.Command;
-                var children = node.Subcommands.Select(x => x.Key);
+                var children = node.Subcommands.Where(e => e.Value.Command?.MinimumPromoteLevel <= Context.Player.PromoteLevel).Select(x => x.Key);
 
                 var sb = new StringBuilder();
 
-                if (command != null)
+                if (command != null && command.MinimumPromoteLevel <= Context.Player.PromoteLevel)
                 {
                     sb.AppendLine($"Syntax: {command.SyntaxHelp}");
                     sb.Append(command.HelpText);
@@ -114,7 +120,7 @@ namespace Torch.Commands
                 var sb = new StringBuilder();
                 foreach (var command in commandManager.Commands.WalkTree())
                 {
-                    if (command.IsCommand)
+                    if (command.IsCommand && command.Command.MinimumPromoteLevel <= Context.Player.PromoteLevel)
                         sb.AppendLine($"{command.Command.SyntaxHelp}\n    {command.Command.HelpText}");
                 }
 
