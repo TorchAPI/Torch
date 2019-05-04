@@ -126,8 +126,9 @@ namespace Torch.Managers
 
                 LoadPlugin(item);
             }
-
-
+            if (!Torch.Config.LocalPlugins && firstLoad)
+                Torch.Config.Save();
+            
             if (!Torch.Config.LocalPlugins)
             {
                 List<string> toLoad = new List<string>();
