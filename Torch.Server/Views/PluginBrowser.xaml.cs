@@ -90,6 +90,7 @@ namespace Torch.Server.Views
         private void DownloadButton_OnClick(object sender, RoutedEventArgs e)
         {
             var item = CurrentItem;
+            TorchBase.Instance.Config.Plugins.Add(new Guid(item.ID));
             Task.Run(async () =>
                      {
                          var result = await PluginQuery.Instance.DownloadPlugin(item.ID);

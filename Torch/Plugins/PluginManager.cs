@@ -96,6 +96,8 @@ namespace Torch.Managers
 
         public void LoadPlugins()
         {
+            bool firstLoad = Torch.Config.Plugins.Count == 0;
+            List<Guid> foundPlugins = new List<Guid>();
             if (Torch.Config.ShouldUpdatePlugins)
                 DownloadPluginUpdates();
 
@@ -106,22 +108,55 @@ namespace Torch.Managers
                 var path = Path.Combine(PluginDir, item);
                 var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
                 var manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
-                if (manifest == null)
+                if (!Torch.Config.LocalPlugins)
                 {
-                    _log.Warn($"Item '{item}' is missing a manifest, skipping.");
-                    continue;
+                    if (isZip && !Torch.Config.Plugins.Contains(manifest.Guid))
+                    {
+                        if (!firstLoad)
+                        {
+                            _log.Warn($"Plugin {manifest.Name} ({item}) exists in the plugin directory, but is not listed in torch.cfg. Skipping load!");
+                            return;
+                        }
+                        _log.Info($"First-time load: Plugin {manifest.Name} added to torch.cfg.");
+                        Torch.Config.Plugins.Add(manifest.Guid);
+                    }
+                if(isZip)
+                    foundPlugins.Add(manifest.Guid);
                 }
 
-                if (_plugins.ContainsKey(manifest.Guid))
-                {
-                    _log.Error($"The GUID provided by {manifest.Name} ({item}) is already in use by {_plugins[manifest.Guid].Name}");
-                    continue;
-                }
+                LoadPlugin(item);
+            }
 
-                if (isZip)
-                    LoadPluginFromZip(path);
-                else
-                    LoadPluginFromFolder(path);
+
+            if (!Torch.Config.LocalPlugins)
+            {
+                List<string> toLoad = new List<string>();
+
+                //This is actually the easiest way to batch process async tasks and block until completion (????)
+                Task.WhenAll(Torch.Config.Plugins.Select(async g =>
+                                                         {
+                                                             try
+                                                             {
+                                                                 if (foundPlugins.Contains(g))
+                                                                 {
+                                                                     return;
+                                                                 }
+                                                                 var item = await PluginQuery.Instance.QueryOne(g);
+                                                                 string s = Path.Combine(PluginDir, item.Name + ".zip");
+                                                                 await PluginQuery.Instance.DownloadPlugin(item, s);
+                                                                 lock (toLoad)
+                                                                     toLoad.Add(s);
+                                                             }
+                                                             catch (Exception ex)
+                                                             {
+                                                                 _log.Error(ex);
+                                                             }
+                                                         }));
+
+                foreach (var l in toLoad)
+                {
+                    LoadPlugin(l);
+                }
             }
 
             foreach (var plugin in _plugins.Values)
@@ -132,11 +167,34 @@ namespace Torch.Managers
             PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
         }
 
+        private void LoadPlugin(string item)
+        {
+            var path = Path.Combine(PluginDir, item);
+            var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
+            var manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
+            if (manifest == null)
+            {
+                _log.Warn($"Item '{item}' is missing a manifest, skipping.");
+                return;
+            }
+
+            if (_plugins.ContainsKey(manifest.Guid))
+            {
+                _log.Error($"The GUID provided by {manifest.Name} ({item}) is already in use by {_plugins[manifest.Guid].Name}");
+                return;
+            }
+
+            if (isZip)
+                LoadPluginFromZip(path);
+            else
+                LoadPluginFromFolder(path);
+        }
+
         private void DownloadPluginUpdates()
         {
             _log.Info("Checking for plugin updates...");
             var count = 0;
-            var pluginItems = Directory.EnumerateFiles(PluginDir, "*.zip").Union(Directory.EnumerateDirectories(PluginDir));
+            var pluginItems = Directory.EnumerateFiles(PluginDir, "*.zip");
             Parallel.ForEach(pluginItems, async item =>
             {
                 PluginManifest manifest = null;
@@ -144,7 +202,12 @@ namespace Torch.Managers
                 {
                     var path = Path.Combine(PluginDir, item);
                     var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
-                    manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
+                    if (!isZip)
+                    {
+                        _log.Warn($"Unzipped plugins cannot be auto-updated. Skipping plugin {item}");
+                        return;
+                    }
+                    manifest = GetManifestFromZip(path);
                     if (manifest == null)
                     {
                         _log.Warn($"Item '{item}' is missing a manifest, skipping update check.");
@@ -187,49 +250,7 @@ namespace Torch.Managers
 
             _log.Info($"Updated {count} plugins.");
         }
-
-        private async Task<Tuple<Version, string>> GetLatestArchiveAsync(string repository)
-        {
-            try
-            {
-                //var split = repository.Split('/');
-                //var latest = await _gitClient.Repository.Release.GetLatest(split[0], split[1]).ConfigureAwait(false);
-                //if (!latest.TagName.TryExtractVersion(out Version latestVersion))
-                //{
-                //    _log.Error($"Unable to parse version tag for the latest release of '{repository}.'");
-                //}
-
-                //var zipAsset = latest.Assets.FirstOrDefault(x => x.Name.Contains(".zip", StringComparison.CurrentCultureIgnoreCase));
-                //if (zipAsset == null)
-                //{
-                //    _log.Error($"Unable to find archive for the latest release of '{repository}.'");
-                //}
-
-                //return new Tuple<Version, string>(latestVersion, zipAsset?.BrowserDownloadUrl);
-                return null;
-            }
-            catch (Exception e)
-            {
-                _log.Error($"Unable to get the latest release of '{repository}.'");
-                _log.Error(e);
-                return default(Tuple<Version, string>);
-            }
-        }
-
-        private Task UpdatePluginAsync(string localPath, string downloadUrl)
-        {
-            if (File.Exists(localPath))
-                File.Delete(localPath);
-
-            if (Directory.Exists(localPath))
-                Directory.Delete(localPath, true);
-
-            var fileName = downloadUrl.Split('/').Last();
-            var filePath = Path.Combine(PluginDir, fileName);
-
-            return new WebClient().DownloadFileTaskAsync(downloadUrl, filePath);
-        }
-
+        
         private void LoadPluginFromFolder(string directory)
         {
             var assemblies = new List<Assembly>();
