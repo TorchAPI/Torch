@@ -69,7 +69,6 @@ quit";
             _config = InitConfig();
             if (!_config.Parse(args))
                 return false;
-            _config.Save();
 
             if (!string.IsNullOrEmpty(_config.WaitForPID))
             {
