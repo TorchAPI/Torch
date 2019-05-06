@@ -55,8 +55,6 @@ namespace Torch.Managers
                     _log.Info("Failed to fetch latest version.");
                     return;
                 }
-
-                _log.Info($"Clearing tmp directory at {_fsManager.TempDirectory}");
                 
                 if (job.Version > Torch.TorchVersion)
                 {
@@ -90,6 +88,9 @@ namespace Torch.Managers
             {
                 foreach (var file in zip.Entries)
                 {
+                    if(file.Name == "NLog-user.config" && File.Exists(Path.Combine(extractPath, file.FullName)))
+                        continue;
+
                     _log.Debug($"Unzipping {file.FullName}");
                     var targetFile = Path.Combine(extractPath, file.FullName);
                     _fsManager.SoftDelete(extractPath, file.FullName);
