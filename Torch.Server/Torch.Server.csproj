@@ -513,5 +513,6 @@
   <Import Project="$(SolutionDir)\TransformOnBuild.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(SolutionDir)NLog.config" "$(TargetDir)"</PostBuildEvent>
+    <PostBuildEvent>copy "$(SolutionDir)NLog-user.config" "$(TargetDir)"</PostBuildEvent>
   </PropertyGroup>
 </Project>
