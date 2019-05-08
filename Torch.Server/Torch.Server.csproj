@@ -272,6 +272,7 @@
     <Compile Include="Views\Entities\CharacterView.xaml.cs">
       <DependentUpon>CharacterView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\Extensions.cs" />
     <Compile Include="Views\ModListControl.xaml.cs">
       <DependentUpon>ModListControl.xaml</DependentUpon>
     </Compile>
