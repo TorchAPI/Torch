@@ -136,7 +136,7 @@ namespace Torch.Server.ViewModels.Entities
 
         public virtual bool CanStop => Entity.Physics?.Enabled ?? false;
 
-        public virtual bool CanDelete => !(Entity is IMyCharacter);
+        public virtual bool CanDelete => true;
 
         public virtual void Delete()
         {

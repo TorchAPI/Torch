@@ -261,7 +261,7 @@ namespace Torch.Commands
 
         private Task DoSave()
         {
-            Task<GameSaveResult> task = Context.Torch.Save(60 * 1000, true);
+            Task<GameSaveResult> task = Context.Torch.Save(300 * 1000, true);
             if (task == null)
             {
                 Context.Respond("Save failed, a save is already in progress");
