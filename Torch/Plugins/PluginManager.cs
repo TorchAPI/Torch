@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using NLog;
@@ -50,7 +51,16 @@ namespace Torch.Managers
         public void UpdatePlugins()
         {
             foreach (var plugin in _plugins.Values)
-                plugin.Update();
+            {
+                try
+                {
+                    plugin.Update();
+                }
+                catch (Exception ex)
+                {
+                    _log.Error(ex, $"Plugin {plugin.Name} threw an exception during update!");
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -60,20 +70,22 @@ namespace Torch.Managers
             _sessionManager.SessionStateChanged += SessionManagerOnSessionStateChanged;
         }
 
+        private CommandManager _mgr;
+
         private void SessionManagerOnSessionStateChanged(ITorchSession session, TorchSessionState newState)
         {
-            var mgr = session.Managers.GetManager<CommandManager>();
-            if (mgr == null)
+            _mgr = session.Managers.GetManager<CommandManager>();
+            if (_mgr == null)
                 return;
             switch (newState)
             {
                 case TorchSessionState.Loaded:
                     foreach (ITorchPlugin plugin in _plugins.Values)
-                        mgr.RegisterPluginCommands(plugin);
+                        _mgr.RegisterPluginCommands(plugin);
                     return;
                 case TorchSessionState.Unloading:
                     foreach (ITorchPlugin plugin in _plugins.Values)
-                        mgr.UnregisterPluginCommands(plugin);
+                        _mgr.UnregisterPluginCommands(plugin);
                     return;
                 case TorchSessionState.Loading:
                 case TorchSessionState.Unloaded:
@@ -160,10 +172,29 @@ namespace Torch.Managers
                 }
             }
 
+            //just reuse the list from earlier
+            foundPlugins.Clear();
             foreach (var plugin in _plugins.Values)
             {
-                plugin.Init(Torch);
+                try
+                {
+                    plugin.Init(Torch);
+                }
+                catch (Exception e)
+                {
+                    _log.Error(e, $"Plugin {plugin.Name} threw an exception during init! Unloading plugin!");
+                    foundPlugins.Add(plugin.Id);
+                }
             }
+
+            foreach (var id in foundPlugins)
+            {
+                var p = _plugins[id];
+                _plugins.Remove(id);
+                _mgr.UnregisterPluginCommands(p);
+                p.Dispose();
+            }
+
             _log.Info($"Loaded {_plugins.Count} plugins.");
             PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
         }
@@ -196,7 +227,7 @@ namespace Torch.Managers
             _log.Info("Checking for plugin updates...");
             var count = 0;
             var pluginItems = Directory.EnumerateFiles(PluginDir, "*.zip");
-            Parallel.ForEach(pluginItems, async item =>
+            Task.WhenAll(pluginItems.Select(async item =>
             {
                 PluginManifest manifest = null;
                 try
@@ -240,14 +271,14 @@ namespace Torch.Managers
 
                     _log.Info($"Updating plugin '{manifest.Name}' from {currentVersion} to {newVersion}.");
                     await PluginQuery.Instance.DownloadPlugin(latest, path);
-                    count++;
+                    Interlocked.Increment(ref count);
                 }
                 catch (Exception e)
                 {
                     _log.Warn($"An error occurred updating the plugin {manifest?.Name ?? item}.");
                     _log.Warn(e);
                 }
-            });
+            }));
 
             _log.Info($"Updated {count} plugins.");
         }
@@ -445,8 +476,17 @@ namespace Torch.Managers
             }
 
             _log.Info($"Loading plugin '{manifest.Name}' ({manifest.Version})");
-            var plugin = (TorchPluginBase)Activator.CreateInstance(pluginType);
 
+            TorchPluginBase plugin;
+            try
+            {
+                plugin = (TorchPluginBase)Activator.CreateInstance(pluginType);
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, $"Plugin {manifest.Name} threw an exception during instantiation! Not loading!");
+                return;
+            }
             plugin.Manifest = manifest;
             plugin.StoragePath = Torch.Config.InstancePath;
             plugin.Torch = Torch;
