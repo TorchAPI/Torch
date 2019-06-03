@@ -85,9 +85,20 @@ namespace Torch.Server.ViewModels.Entities
 
         public virtual int CompareToSort(EntityViewModel other, EntityTreeViewModel.SortEnum sort)
         {
+            if (other == null)
+                return -1;
+
             switch (sort)
             {
                 case EntityTreeViewModel.SortEnum.Name:
+                    if (Name == null)
+                    {
+                        if (other.Name == null)
+                            return 0;
+                        return 1;
+                    }
+                    if (other.Name == null)
+                        return -1;
                     return string.Compare(Name, other.Name, StringComparison.InvariantCultureIgnoreCase);
                 case EntityTreeViewModel.SortEnum.Size:
                     return Entity.WorldVolume.Radius.CompareTo(other.Entity.WorldVolume.Radius);
