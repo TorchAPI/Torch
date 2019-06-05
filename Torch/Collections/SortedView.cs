@@ -107,7 +107,10 @@ namespace Torch.Collections
         public void Refresh()
         {
             _store.Clear();
-            _store.AddRange(_backing);
+            //_store.AddRange(_backing);
+            _store.EnsureCapacity(_backing.Count);
+            foreach (var e in _backing)
+                _store.Add(e);
             Sort();
         }
 
