@@ -23,6 +23,8 @@ namespace Torch.Client
         public bool NoGui { get; set; } = false;
         public bool RestartOnCrash { get; set; } = false;
         public string WaitForPID { get; set; } = null;
+        public string ChatName { get; set; }
+        public string ChatColor { get; set; }
 
         public bool Save(string path = null)
         {
