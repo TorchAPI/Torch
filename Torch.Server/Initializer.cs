@@ -65,6 +65,12 @@ quit";
             
             if (!File.Exists(apiTarget))
                 File.Copy(apiSource, apiTarget);
+
+            var protoSource = Path.Combine(basePath, "DedicatedServer64", "protobuf-net.dll");
+            var protoTarget = Path.Combine(basePath, "protobuf-net.dll");
+
+            if(!File.Exists(protoTarget))
+                File.Copy(protoSource, protoTarget);
             
             _config = InitConfig();
             if (!_config.Parse(args))
