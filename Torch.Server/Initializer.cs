@@ -230,8 +230,9 @@ quit";
             {
                 string path = Path.Combine(MyFileSystem.UserDataPath, "Minidump.dmp");
                 Log.Info($"Generating minidump at {path}");
-                MyMiniDump.Options options = MyMiniDump.Options.WithProcessThreadData | MyMiniDump.Options.WithThreadInfo;
-                MyMiniDump.Write(path, options, MyMiniDump.ExceptionInfo.Present);
+                Log.Error("Keen broke the minidump, sorry.");
+                //MyMiniDump.Options options = MyMiniDump.Options.WithProcessThreadData | MyMiniDump.Options.WithThreadInfo;
+                //MyMiniDump.Write(path, options, MyMiniDump.ExceptionInfo.Present);
             }
             LogManager.Flush();
             if (_config.RestartOnCrash)
