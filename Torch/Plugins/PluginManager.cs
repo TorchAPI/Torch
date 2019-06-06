@@ -127,7 +127,7 @@ namespace Torch.Managers
                         if (!firstLoad)
                         {
                             _log.Warn($"Plugin {manifest.Name} ({item}) exists in the plugin directory, but is not listed in torch.cfg. Skipping load!");
-                            return;
+                            continue;
                         }
                         _log.Info($"First-time load: Plugin {manifest.Name} added to torch.cfg.");
                         Torch.Config.Plugins.Add(manifest.Guid);
