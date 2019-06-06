@@ -37,6 +37,7 @@
   </PropertyGroup>
   <!-- I don't know why this needs to exist -->
   <ItemGroup>
+    <Reference Include="mscorlib" />
     <Reference Include="netstandard" />
   </ItemGroup>
   <ItemGroup>
@@ -99,6 +100,10 @@
       <HintPath>..\GameBinaries\Steamworks.NET.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\System.ComponentModel.Annotations.4.5.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -162,6 +167,9 @@
     <Reference Include="VRage.OpenVRWrapper">
       <HintPath>..\GameBinaries\VRage.OpenVRWrapper.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Platform.Windows, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\bin\x64\Release\DedicatedServer64\VRage.Platform.Windows.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Render">
       <HintPath>..\GameBinaries\VRage.Render.dll</HintPath>
