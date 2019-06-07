@@ -9,6 +9,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using NLog;
+using NLog.Fluent;
 using NLog.Targets;
 using Torch.Utils;
 
@@ -35,11 +36,19 @@ namespace Torch.Server
             {
                 "System.Security.Principal.Windows.dll"
             };
-            
-            foreach (var file in badDlls)
+
+            try
             {
-                if (File.Exists(file))
-                    File.Delete(file);
+                foreach (var file in badDlls)
+                {
+                    if (File.Exists(file))
+                        File.Delete(file);
+                }
+            }
+            catch
+            {
+                LogManager.GetCurrentClassLogger().Error($"Error updating. Please delete the following files from the Torch root folder manually:\r\n{string.Join("\r\n", badDlls)}");
+                return;
             }
 
             if (!TorchLauncher.IsTorchWrapped())
