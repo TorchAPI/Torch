@@ -66,6 +66,12 @@ quit";
             if (!File.Exists(apiTarget))
                 File.Copy(apiSource, apiTarget);
             
+            var havokSource = Path.Combine(basePath, "DedicatedServer64", "Havok.dll");
+            var havokTarget = Path.Combine(basePath, "Havok.dll");
+            
+            if (!File.Exists(havokTarget))
+                File.Copy(havokSource, havokTarget);
+            
             _config = InitConfig();
             if (!_config.Parse(args))
                 return false;
