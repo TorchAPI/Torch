@@ -123,12 +123,14 @@ namespace Torch.Server
             _hasRun = true;
             Log.Info("Starting server.");
             MySandboxGame.ConfigDedicated = DedicatedInstance.DedicatedConfig.Model;
-            if (MySandboxGame.ConfigDedicated.RemoteApiEnabled && !string.IsNullOrEmpty(MySandboxGame.ConfigDedicated.RemoteSecurityKey))
-            {
-                var myRemoteServer = new MyRemoteServer(MySandboxGame.ConfigDedicated.RemoteApiPort, MySandboxGame.ConfigDedicated.RemoteSecurityKey);
-                Log.Info($"Remote API started on port {myRemoteServer.Port}");
-            }
-            
+            //Are you serious, Keen? This is going away until it stops hanging.
+            //if (MySandboxGame.ConfigDedicated.RemoteApiEnabled && !string.IsNullOrEmpty(MySandboxGame.ConfigDedicated.RemoteSecurityKey))
+            //{
+            //    var myRemoteServer = new MyRemoteServer(MySandboxGame.ConfigDedicated.RemoteApiPort, MySandboxGame.ConfigDedicated.RemoteSecurityKey);
+            //    Log.Info($"Remote API started on port {myRemoteServer.Port}");
+            //}
+            Log.Warn("Remote API is disabled because it hangs the server start process. Blame Keen.");
+
             _uptime = Stopwatch.StartNew();
             base.Start();
         }
