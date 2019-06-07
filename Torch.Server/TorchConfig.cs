@@ -53,6 +53,14 @@ namespace Torch.Server
         public bool GetTorchUpdates { get; set; } = true;
 
         /// <inheritdoc />
+        [XmlElement(IsNullable = false)]
+        public string JenkinsUsername { get; set; } = null;
+
+        /// <inheritdoc />
+        [XmlElement(IsNullable = false)]
+        public string JenkinsPassword { get; set; } = null;
+
+        /// <inheritdoc />
         public bool GetPluginUpdates { get; set; } = true;
 
         /// <inheritdoc />

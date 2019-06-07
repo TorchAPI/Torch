@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,11 +28,16 @@ namespace Torch.API.WebAPI
             _client = new HttpClient();
         }
 
-        public async Task<Job> GetLatestVersion(string branch)
+        public async Task<Job> GetLatestVersion(string branch, string authorization = null)
         {
 #if DEBUG
             branch = "master";
 #endif
+            var oldAuthorization = _client.DefaultRequestHeaders.Authorization;
+            if (authorization != null)
+            {
+                _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes(authorization)));
+            }
             var h = await _client.GetAsync(string.Format(BRANCH_QUERY, branch));
             if (!h.IsSuccessStatusCode)
             {
@@ -74,11 +79,22 @@ namespace Torch.API.WebAPI
                 Log.Error(ex, "Failed to deserialize job response!");
                 return null;
             }
+            
+            // Cleanup after ourself
+            if (authorization != null)
+            {
+                _client.DefaultRequestHeaders.Authorization = oldAuthorization;
+            }
             return job;
         }
 
-        public async Task<bool> DownloadRelease(Job job, string path)
+        public async Task<bool> DownloadRelease(Job job, string path, string authorization = null)
         {
+            var oldAuthorization = _client.DefaultRequestHeaders.Authorization;
+            if (authorization != null)
+            {
+                _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes(authorization)));
+            }
             var h = await _client.GetAsync(job.URL + ARTIFACT_PATH);
             if (!h.IsSuccessStatusCode)
             {
@@ -90,6 +106,11 @@ namespace Torch.API.WebAPI
             {
                 await s.CopyToAsync(fs);
                 await fs.FlushAsync();
+            }
+            // Cleanup after ourself
+            if (authorization != null)
+            {
+                _client.DefaultRequestHeaders.Authorization = oldAuthorization;
             }
             return true;
         }

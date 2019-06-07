@@ -18,6 +18,8 @@ namespace Torch
         bool RestartOnCrash { get; set; }
         bool ShouldUpdatePlugins { get; }
         bool ShouldUpdateTorch { get; }
+        string JenkinsUsername { get; }
+        string JenkinsPassword { get; }
         int TickTimeout { get; set; }
         string WaitForPID { get; set; }
         string ChatName { get; set; }

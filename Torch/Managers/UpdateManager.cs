@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -49,7 +49,12 @@ namespace Torch.Managers
 
             try
             {
-                var job = await JenkinsQuery.Instance.GetLatestVersion(Torch.TorchVersion.Branch);
+                string authorization = null;
+                if (Torch.Config.JenkinsUsername != null && Torch.Config.JenkinsPassword != null)
+                {
+                    authorization = $"{Torch.Config.JenkinsUsername}:{Torch.Config.JenkinsPassword}";
+                }
+                var job = await JenkinsQuery.Instance.GetLatestVersion(Torch.TorchVersion.Branch, authorization);
                 if (job == null)
                 {
                     _log.Info("Failed to fetch latest version.");
@@ -61,7 +66,7 @@ namespace Torch.Managers
                     _log.Warn($"Updating Torch from version {Torch.TorchVersion} to version {job.Version}");
                     var updateName = Path.Combine(_fsManager.TempDirectory, "torchupdate.zip");
                     //new WebClient().DownloadFile(new Uri(releaseInfo.Item2), updateName);
-                    if (!await JenkinsQuery.Instance.DownloadRelease(job, updateName))
+                    if (!await JenkinsQuery.Instance.DownloadRelease(job, updateName, authorization))
                     {
                         _log.Warn("Failed to download new release!");
                         return;
