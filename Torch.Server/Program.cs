@@ -31,11 +31,17 @@ namespace Torch.Server
             Directory.SetCurrentDirectory(workingDir);
 
             //HACK for block skins update
-            foreach (var f in Directory.EnumerateFiles(workingDir, "System.*", SearchOption.TopDirectoryOnly))
+            var badDlls = new[]
             {
-                File.Delete(f);
-            }
+                "System.Security.Principal.Windows.dll"
+            };
             
+            foreach (var file in badDlls)
+            {
+                if (File.Exists(file))
+                    File.Delete(file);
+            }
+
             if (!TorchLauncher.IsTorchWrapped())
             {
                 TorchLauncher.Launch(Assembly.GetEntryAssembly().FullName, args, binDir);

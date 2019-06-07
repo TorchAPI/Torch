@@ -171,9 +171,10 @@ quit";
                     File.Delete(STEAMCMD_ZIP);
                     log.Info("SteamCMD downloaded successfully!");
                 }
-                catch
+                catch (Exception e)
                 {
                     log.Error("Failed to download SteamCMD, unable to update the DS.");
+                    log.Error(e);
                     return;
                 }
             }
