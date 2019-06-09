@@ -65,12 +65,12 @@ quit";
             
             if (!File.Exists(apiTarget))
                 File.Copy(apiSource, apiTarget);
-
-            var protoSource = Path.Combine(basePath, "DedicatedServer64", "protobuf-net.dll");
-            var protoTarget = Path.Combine(basePath, "protobuf-net.dll");
-
-            if(!File.Exists(protoTarget))
-                File.Copy(protoSource, protoTarget);
+            
+            var havokSource = Path.Combine(basePath, "DedicatedServer64", "Havok.dll");
+            var havokTarget = Path.Combine(basePath, "Havok.dll");
+            
+            if (!File.Exists(havokTarget))
+                File.Copy(havokSource, havokTarget);
             
             _config = InitConfig();
             if (!_config.Parse(args))
@@ -177,9 +177,10 @@ quit";
                     File.Delete(STEAMCMD_ZIP);
                     log.Info("SteamCMD downloaded successfully!");
                 }
-                catch
+                catch (Exception e)
                 {
                     log.Error("Failed to download SteamCMD, unable to update the DS.");
+                    log.Error(e);
                     return;
                 }
             }
