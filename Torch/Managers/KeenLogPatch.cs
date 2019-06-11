@@ -76,7 +76,21 @@ namespace Torch.Managers
 
         private static StringBuilder PrepareLog(MyLog log)
         {
-            return _tmpStringBuilder.Value.Clear().Append(' ', _getIndentByThread(log, _getThreadId(log)) * 3);
+            try
+            {
+                var v = _tmpStringBuilder.Value;
+                v.Clear();
+                var i = _getThreadId(log);
+                var t = _getIndentByThread(log, i);
+                v.Append(' ', t * 3);
+                return v;
+            }
+            catch (Exception e)
+            {
+                _log.Error(e);
+                return _tmpStringBuilder.Value.Clear();
+            }
+            //return _tmpStringBuilder.Value.Clear().Append(' ', _getIndentByThread(log, _getThreadId(log)) * 3);
         }
 
         private static bool PrefixWriteLine(MyLog __instance, string msg)
