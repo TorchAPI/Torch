@@ -24,20 +24,12 @@ namespace Torch.Managers
 
         public FilesystemManager(ITorchBase torchInstance) : base(torchInstance)
         {
-            var tmp = Path.Combine(Path.GetTempPath(), "Torch");
             var torch = new FileInfo(typeof(FilesystemManager).Assembly.Location).Directory.FullName;
-            if (Path.GetPathRoot(tmp) == Path.GetPathRoot(torch))
-            {
-                TempDirectory = tmp;
-            }
-            else
-            {
-                TempDirectory = Directory.CreateDirectory(Path.Combine(torch, "tmp")).FullName;
-                TorchDirectory = torch;
+            TempDirectory = Directory.CreateDirectory(Path.Combine(torch, "tmp")).FullName;
+            TorchDirectory = torch;
 
-                _log.Info($"Clearing tmp directory at {TempDirectory}");
-                ClearTemp();
-            }
+            _log.Debug($"Clearing tmp directory at {TempDirectory}");
+            ClearTemp();
         }
 
         private void ClearTemp()
