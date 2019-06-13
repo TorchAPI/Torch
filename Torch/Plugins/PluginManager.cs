@@ -385,6 +385,9 @@ namespace Torch.Managers
                     if (!type.GetInterfaces().Contains(typeof(ITorchPlugin)))
                         continue;
 
+                    if (type.IsAbstract)
+                        continue;
+
                     _log.Info($"Loading plugin at {type.FullName}");
 
                     if (pluginType != null)
