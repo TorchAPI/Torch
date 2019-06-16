@@ -59,7 +59,11 @@ namespace Torch.Server
         public int TickTimeout { get; set; } = 60;
 
         /// <inheritdoc />
-        public List<string> Plugins { get; set; } = new List<string>();
+        [Arg("plugins", "Starts Torch with the given plugin GUIDs (space delimited).")]
+        public List<Guid> Plugins { get; set; } = new List<Guid>();
+
+        [Arg("localplugins", "Loads all pluhins from disk, ignores the plugins defined in config.")]
+        public bool LocalPlugins { get; set; }
 
         public string ChatName { get; set; } = "Server";
 

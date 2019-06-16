@@ -283,11 +283,15 @@
     <Compile Include="Views\Entities\CharacterView.xaml.cs">
       <DependentUpon>CharacterView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\Extensions.cs" />
     <Compile Include="Views\ModListControl.xaml.cs">
       <DependentUpon>ModListControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\PluginBrowser.xaml.cs">
       <DependentUpon>PluginBrowser.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\RoleEditor.xaml.cs">
+      <DependentUpon>RoleEditor.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ThemeControl.xaml.cs">
       <DependentUpon>ThemeControl.xaml</DependentUpon>
@@ -470,6 +474,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Resources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\RoleEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

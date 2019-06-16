@@ -41,7 +41,9 @@ namespace Torch.Server.Views
         {
             if (propertyChangedEventArgs.PropertyName == nameof(PluginManagerViewModel.SelectedPlugin))
             {
-                if (((PluginManagerViewModel)DataContext).SelectedPlugin.Control is PropertyGrid)
+                var plugin = ((PluginManagerViewModel)DataContext).SelectedPlugin;
+               
+                if (plugin.Control is PropertyGrid || !plugin.Control.GetScrollContainer())
                     PScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
                 else
                     PScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;

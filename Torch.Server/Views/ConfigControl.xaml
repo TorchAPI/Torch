@@ -58,7 +58,7 @@
                     <RowDefinition />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <ScrollViewer VerticalScrollBarVisibility="Disabled">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -99,6 +99,7 @@
                             <TextBox Text="{Binding Administrators, Converter={StaticResource ListConverterString}}"
                                      Margin="3"
                                      Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto" />
+                            <Button Content="Edit Roles" Click="RoleEdit_Onlick" Margin="3"/>
                             <Label Content="Reserved Players" />
                             <TextBox Margin="3" Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto"
                                      Style="{StaticResource ValidatedTextBox}">

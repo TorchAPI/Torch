@@ -16,6 +16,7 @@ using Torch.API.Managers;
 using Torch.Managers.PatchManager;
 using Torch.Utils;
 using VRage;
+using VRage.Collections;
 using VRage.Library.Collections;
 using VRage.Network;
 
@@ -47,6 +48,10 @@ namespace Torch.Managers.ChatManager
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private static readonly Logger _chatLog = LogManager.GetLogger("Chat");
 
+        private readonly HashSet<ulong> _muted = new HashSet<ulong>();
+        /// <inheritdoc />
+        public HashSetReader<ulong> MutedUsers => _muted;
+
         /// <inheritdoc />
         public ChatManagerServer(ITorchBase torchInstance) : base(torchInstance)
         {
@@ -55,6 +60,18 @@ namespace Torch.Managers.ChatManager
 
         /// <inheritdoc />
         public event MessageProcessingDel MessageProcessing;
+
+        /// <inheritdoc />
+        public bool MuteUser(ulong steamId)
+        {
+            return _muted.Add(steamId);
+        }
+
+        /// <inheritdoc />
+        public bool UnmuteUser(ulong steamId)
+        {
+            return _muted.Remove(steamId);
+        }
 
         /// <inheritdoc />
         public void SendMessageAsOther(ulong authorId, string message, ulong targetSteamId = 0)
@@ -128,6 +145,13 @@ namespace Torch.Managers.ChatManager
         internal void RaiseMessageRecieved(ChatMsg message, ref bool consumed)
         {
             var torchMsg = new TorchChatMessage(GetMemberName(message.Author), message.Author, message.Text, (ChatChannel)message.Channel, message.TargetId);
+            if (_muted.Contains(message.Author))
+            {
+                consumed = true;
+                _chatLog.Warn($"MUTED USER: [{torchMsg.Channel}:{torchMsg.Target}] {torchMsg.Author}: {torchMsg.Message}");
+                return;
+            }
+
             MessageProcessing?.Invoke(torchMsg, ref consumed);
 
             if (!consumed)
