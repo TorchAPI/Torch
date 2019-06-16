@@ -71,8 +71,16 @@ namespace Torch.Server.Managers
 
             foreach (var f in worldFolders)
             {
-                if (!string.IsNullOrEmpty(f) && File.Exists(Path.Combine(f, "Sandbox.sbc")))
-                    DedicatedConfig.Worlds.Add(new WorldViewModel(f));
+                try
+                {
+                    if (!string.IsNullOrEmpty(f) && File.Exists(Path.Combine(f, "Sandbox.sbc")))
+                        DedicatedConfig.Worlds.Add(new WorldViewModel(f));
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Failed to load world at path: " + f);
+                    continue;
+                }
             }
 
             if (DedicatedConfig.Worlds.Count == 0)
@@ -91,10 +99,19 @@ namespace Torch.Server.Managers
             DedicatedConfig.LoadWorld = worldPath;
             
             var worldInfo = DedicatedConfig.Worlds.FirstOrDefault(x => x.WorldPath == worldPath);
-            if (worldInfo?.Checkpoint == null)
+            try
             {
-                worldInfo = new WorldViewModel(worldPath);
-                DedicatedConfig.Worlds.Add(worldInfo);
+                if (worldInfo?.Checkpoint == null)
+                {
+                    worldInfo = new WorldViewModel(worldPath);
+                    DedicatedConfig.Worlds.Add(worldInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Failed to load world at path: " + worldPath);
+                DedicatedConfig.LoadWorld = null;
+                return;
             }
 
             DedicatedConfig.SelectedWorld = worldInfo;
@@ -256,11 +273,19 @@ namespace Torch.Server.Managers
 
         public WorldViewModel(string worldPath)
         {
-            WorldPath = worldPath;
-            WorldSizeKB = new DirectoryInfo(worldPath).GetFiles().Sum(x => x.Length) / 1024;
-            _checkpointPath = Path.Combine(WorldPath, "Sandbox.sbc");
-            FolderName = Path.GetFileName(worldPath);
-            BeginLoadCheckpoint();
+            try
+            {
+                WorldPath = worldPath;
+                WorldSizeKB = new DirectoryInfo(worldPath).GetFiles().Sum(x => x.Length) / 1024;
+                _checkpointPath = Path.Combine(WorldPath, "Sandbox.sbc");
+                FolderName = Path.GetFileName(worldPath);
+                BeginLoadCheckpoint();
+            }
+            catch (ArgumentException ex)
+            {
+                Log.Error($"World view model failed to load the path: {worldPath} Please ensure this is a valid path.");
+                throw; //rethrow to be handled further up the stack
+            }
         }
 
         public async Task SaveCheckpointAsync()
