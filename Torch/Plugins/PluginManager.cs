@@ -166,18 +166,25 @@ namespace Torch.Managers
             {
                 pluginsToLoad = pluginsToLoad.TSort(item => item.ResolvedDependencies)
                     .ToList();
-                
-                // Actually load the plugins now.
-                foreach (var item in pluginsToLoad)
-                {
-                    LoadPlugin(item);
-                } 
             }
             catch (Exception e)
             {
                 // This will happen on cylic dependencies.
                 _log.Error(e);
             }
+            
+            // Actually load the plugins now.
+            foreach (var item in pluginsToLoad)
+            {
+                LoadPlugin(item);
+            } 
+            
+            foreach (var plugin in _plugins.Values)
+            {
+                plugin.Init(Torch);
+            }
+            _log.Info($"Loaded {_plugins.Count} plugins.");
+            PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
         }
 
         private List<PluginItem> GetLocalPlugins(string pluginDir)
