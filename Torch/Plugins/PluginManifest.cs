@@ -37,7 +37,7 @@ namespace Torch
         /// <summary>
         /// A list of dependent plugin repositories. This may be updated to include GUIDs in the future.
         /// </summary>
-        public List<string> Dependencies { get; } = new List<string>();
+        public List<PluginDependency> Dependencies { get; } = new List<PluginDependency>();
 
         public void Save(string path)
         {
