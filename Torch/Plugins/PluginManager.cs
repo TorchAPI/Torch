@@ -238,6 +238,9 @@ namespace Torch.Managers
                 });
             }
 
+            if (!Torch.Config.LocalPlugins && firstLoad)
+                Torch.Config.Save();
+            
             return results;
         } 
         
