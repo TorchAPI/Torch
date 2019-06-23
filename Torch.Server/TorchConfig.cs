@@ -41,8 +41,8 @@ namespace Torch.Server
                 }
                 catch (Exception ex)
                 {
-                    _log.Error(ex, "Invalid path assigned to InstancePath! Please report this immediately!");
-                    throw;
+                    _log.Error(ex, "Invalid path assigned to InstancePath! Please report this immediately! Value: " + value);
+                    //throw;
                 }
 
                 _instancePath = value;
