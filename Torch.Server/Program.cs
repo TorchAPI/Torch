@@ -34,7 +34,8 @@ namespace Torch.Server
             //HACK for block skins update
             var badDlls = new[]
             {
-                "System.Security.Principal.Windows.dll"
+                "System.Security.Principal.Windows.dll",
+                "steam_api64.dll"
             };
 
             try
