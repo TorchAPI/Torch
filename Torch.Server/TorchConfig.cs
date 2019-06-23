@@ -21,9 +21,33 @@ namespace Torch.Server
         [Arg("instancename", "The name of the Torch instance.")]
         public string InstanceName { get; set; }
 
+
+        private string _instancePath;
+
         /// <inheritdoc />
         [Arg("instancepath", "Server data folder where saves and mods are stored.")]
-        public string InstancePath { get; set; }
+        public string InstancePath
+        {
+            get => _instancePath;
+            set
+            {
+                try
+                {
+                    if(value.Contains("\""))
+                        throw new InvalidOperationException();
+
+                    var s = Path.GetFullPath(value);
+                    Console.WriteLine(s); //prevent compiler opitmization - just in case
+                }
+                catch (Exception ex)
+                {
+                    _log.Error(ex, "Invalid path assigned to InstancePath! Please report this immediately!");
+                    throw;
+                }
+
+                _instancePath = value;
+            }
+        }
 
         /// <inheritdoc />
         [XmlIgnore, Arg("noupdate", "Disable automatically downloading game and plugin updates.")]
