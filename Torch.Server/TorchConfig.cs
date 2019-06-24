@@ -31,6 +31,11 @@ namespace Torch.Server
             get => _instancePath;
             set
             {
+                if(String.IsNullOrEmpty(value))
+                {
+                    _instancePath = value;
+                    return;
+                }
                 try
                 {
                     if(value.Contains("\""))
