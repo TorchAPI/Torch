@@ -219,7 +219,12 @@ namespace Torch.Server.Managers
 
             _log.Info($"Connection attempt by {steamId} from {ip}");
             
-            if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE &&
+            if (Players.ContainsKey(steamId))
+            {
+                _log.Warn($"Player {steamId} already has already joined!");
+                UserRejected(steamId, JoinResult.AlreadyJoined);
+            }
+            else if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE &&
                      promoteLevel < MyPromoteLevel.Admin)
             {
                 _log.Warn($"Rejecting user {steamId}, world is set to offline and user is not admin.");
