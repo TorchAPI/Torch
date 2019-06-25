@@ -63,13 +63,13 @@ quit";
             var apiSource = Path.Combine(basePath, "DedicatedServer64", "steam_api64.dll");
             var apiTarget = Path.Combine(basePath, "steam_api64.dll");
             
-            if (!File.Exists(apiTarget))
+            if (!File.Exists(apiTarget) || File.GetLastWriteTime(apiTarget) < File.GetLastWriteTime(apiSource))
                 File.Copy(apiSource, apiTarget);
             
             var havokSource = Path.Combine(basePath, "DedicatedServer64", "Havok.dll");
             var havokTarget = Path.Combine(basePath, "Havok.dll");
             
-            if (!File.Exists(havokTarget))
+            if (!File.Exists(havokTarget) || File.GetLastWriteTime(havokTarget) < File.GetLastWriteTime(havokSource))
                 File.Copy(havokSource, havokTarget);
             
             _config = InitConfig();
