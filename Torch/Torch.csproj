@@ -193,12 +193,14 @@
     <Compile Include="..\Versioning\AssemblyVersion.cs">
       <Link>Properties\AssemblyVersion.cs</Link>
     </Compile>
+    <Compile Include="Collections\BinaryMinHeap.cs" />
     <Compile Include="Collections\MtObservableCollection.cs" />
     <Compile Include="Collections\MtObservableCollectionBase.cs" />
     <Compile Include="Collections\MtObservableSortedDictionary.cs" />
     <Compile Include="Collections\MtObservableEvent.cs" />
     <Compile Include="Collections\MtObservableList.cs" />
     <Compile Include="Collections\SortedView.cs" />
+    <Compile Include="Collections\SystemSortedView.cs" />
     <Compile Include="Collections\TransformComparer.cs" />
     <Compile Include="Collections\TransformEnumerator.cs" />
     <Compile Include="Commands\ConsoleCommandContext.cs" />

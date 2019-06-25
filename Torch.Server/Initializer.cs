@@ -55,6 +55,15 @@ quit";
             AppDomain.CurrentDomain.UnhandledException += HandleException;
 #endif
 
+#if DEBUG
+            //enables logging debug messages when built in debug mode. Amazing.
+            LogManager.Configuration.AddRule(LogLevel.Debug, LogLevel.Debug, "main");
+            LogManager.Configuration.AddRule(LogLevel.Debug, LogLevel.Debug, "console");
+            LogManager.Configuration.AddRule(LogLevel.Debug, LogLevel.Debug, "wpf");
+            LogManager.ReconfigExistingLoggers();
+            Log.Debug("Debug logging enabled.");
+#endif
+
             // This is what happens when Keen is bad and puts extensions into the System namespace.
             if (!Enumerable.Contains(args, "-noupdate"))
                 RunSteamCmd();

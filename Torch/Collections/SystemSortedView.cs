@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
@@ -11,25 +12,19 @@ using Torch.Annotations;
 
 namespace Torch.Collections
 {
-    public class SortedView<T>: IReadOnlyCollection<T>, INotifyCollectionChanged, INotifyPropertyChanged
+    public class SystemSortedView<T> : IReadOnlyCollection<T>, INotifyCollectionChanged, INotifyPropertyChanged
     {
-        private readonly MtObservableCollectionBase<T> _backing;
+        private readonly ObservableCollection<T> _backing;
         private IComparer<T> _comparer;
         private readonly List<T> _store;
 
-        public SortedView(MtObservableCollectionBase<T> backing, IComparer<T> comparer)
+        public SystemSortedView(ObservableCollection<T> backing, IComparer<T> comparer)
         {
             _comparer = comparer;
             _backing = backing;
             _store = new List<T>(_backing.Count);
             _store.AddRange(_backing);
             _backing.CollectionChanged += backing_CollectionChanged;
-            _backing.PropertyChanged += backing_PropertyChanged;
-        }
-
-        private void backing_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            OnPropertyChanged(e.PropertyName);
         }
 
         private void backing_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -83,12 +78,12 @@ namespace Torch.Collections
                 _store.Add(item);
                 return 0;
             }
-            if(comparer.Compare(_store[_store.Count - 1], item) <= 0)
+            if (comparer.Compare(_store[_store.Count - 1], item) <= 0)
             {
                 _store.Add(item);
                 return _store.Count - 1;
             }
-            if(comparer.Compare(_store[0], item) >= 0)
+            if (comparer.Compare(_store[0], item) >= 0)
             {
                 _store.Insert(0, item);
                 return 0;
@@ -109,24 +104,21 @@ namespace Torch.Collections
                 return;
 
             _store.Sort(comparer);
-            
+
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         public void Refresh()
         {
             _store.Clear();
-            //_store.AddRange(_backing);
-            _store.EnsureCapacity(_backing.Count);
-            foreach (var e in _backing)
-                _store.Add(e);
+            _store.AddRange(_backing);
             Sort();
         }
 
         public void SetComparer(IComparer<T> comparer, bool resort = true)
         {
             _comparer = comparer;
-            if(resort)
+            if (resort)
                 Sort();
         }
 
