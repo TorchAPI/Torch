@@ -4,12 +4,16 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Havok;
+using NLog;
 
 namespace Torch.Collections
 {
     public class SortedView<T>: IReadOnlyCollection<T>, INotifyCollectionChanged
     {
+        private readonly Logger _log = LogManager.GetCurrentClassLogger();
         private readonly MtObservableCollectionBase<T> _backing;
         private IComparer<T> _comparer;
         private readonly List<T> _store;
@@ -106,9 +110,19 @@ namespace Torch.Collections
 
         public void Refresh()
         {
-            _store.Clear();
-            _store.AddRange(_backing);
-            Sort();
+            //HACK, fix the multithreading
+            try
+            {
+                _store.Clear();
+                _store.AddRange(_backing);
+                Sort();
+            }
+            catch (IndexOutOfRangeException e)
+            {
+                _log.Error(e);
+                Thread.Sleep(10);
+                Refresh();
+            }
         }
 
         public void SetComparer(IComparer<T> comparer, bool resort = true)
