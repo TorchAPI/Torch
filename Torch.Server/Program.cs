@@ -34,7 +34,7 @@ namespace Torch.Server
             //HACK for block skins update
             var badDlls = new[]
             {
-                "System.Security.Principal.Windows.dll"
+                "System.Security.Principal.Windows.dll",
             };
 
             try
@@ -45,9 +45,11 @@ namespace Torch.Server
                         File.Delete(file);
                 }
             }
-            catch
+            catch (Exception e)
             {
-                LogManager.GetCurrentClassLogger().Error($"Error updating. Please delete the following files from the Torch root folder manually:\r\n{string.Join("\r\n", badDlls)}");
+                var log = LogManager.GetCurrentClassLogger();
+                log.Error($"Error updating. Please delete the following files from the Torch root folder manually:\r\n{string.Join("\r\n", badDlls)}");
+                log.Error(e);
                 return;
             }
 
