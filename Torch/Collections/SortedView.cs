@@ -110,19 +110,12 @@ namespace Torch.Collections
 
         public void Refresh()
         {
-            //HACK, fix the multithreading
-            try
-            {
-                _store.Clear();
-                _store.AddRange(_backing);
-                Sort();
-            }
-            catch (IndexOutOfRangeException e)
-            {
-                _log.Error(e);
-                Thread.Sleep(10);
-                Refresh();
-            }
+            _store.Clear();
+            //_store.AddRange(_backing);
+            _store.EnsureCapacity(_backing.Count);
+            foreach (var e in _backing)
+                _store.Add(e);
+            Sort();
         }
 
         public void SetComparer(IComparer<T> comparer, bool resort = true)
