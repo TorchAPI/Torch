@@ -31,7 +31,7 @@ node {
 
 	stage('Build') {
 		currentBuild.description = bat(returnStdout: true, script: '@powershell -File Versioning/version.ps1').trim()
-		if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "Patron") {
+		if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "Patron" || env.BRANCH_NAME == "publictest") {
 			buildMode = "Release"
 		} else {
 			buildMode = "Debug"
