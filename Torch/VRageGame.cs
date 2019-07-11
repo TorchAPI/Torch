@@ -157,8 +157,7 @@ namespace Torch
             _tweakGameSettings();
 
             MyFileSystem.Reset();
-            VRage.Platform.Windows.MyVRageWindows.Init(MySandboxGame.Log,  Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpaceEngineersDedicated"));
-            MyVRageWindows.Init(MySandboxGame.Log, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpaceEngineersDedicated"));
+            MyVRageWindows.Init("SpaceEngineersDedicated", MySandboxGame.Log, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)), true);
             MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _userDataPath);
             // MyInitializer.InitCheckSum();
 
