@@ -17,12 +17,24 @@ namespace Torch.Server.Managers
         /// <inheritdoc />
         public override void Attach()
         {
-            if (MySandboxGame.ConfigDedicated.RemoteApiEnabled && !string.IsNullOrEmpty(MySandboxGame.ConfigDedicated.RemoteSecurityKey))
+            Torch.GameStateChanged += TorchOnGameStateChanged;
+            base.Attach();
+        }
+
+        /// <inheritdoc />
+        public override void Detach()
+        {
+            Torch.GameStateChanged -= TorchOnGameStateChanged;
+            base.Detach();
+        }
+
+        private void TorchOnGameStateChanged(MySandboxGame game, TorchGameState newstate)
+        {
+            if (newstate == TorchGameState.Loading && MySandboxGame.ConfigDedicated.RemoteApiEnabled && !string.IsNullOrEmpty(MySandboxGame.ConfigDedicated.RemoteSecurityKey))
             {
                 var myRemoteServer = new MyRemoteServer(MySandboxGame.ConfigDedicated.RemoteApiPort, MySandboxGame.ConfigDedicated.RemoteSecurityKey);
                 LogManager.GetCurrentClassLogger().Info($"Remote API started on port {myRemoteServer.Port}");
             }
-            base.Attach();
         }
     }
 }
