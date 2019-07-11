@@ -59,12 +59,13 @@ namespace Torch.Server
                 return;
             }
 
+            /* Breaks on Windows Server 2019 and we don't fully support services anyway
             if (!Environment.UserInteractive)
             {
                 using (var service = new TorchService())
                     ServiceBase.Run(service);
                 return;
-            }
+            }*/
 
             var initializer = new Initializer(workingDir);
             if (!initializer.Initialize(args))
