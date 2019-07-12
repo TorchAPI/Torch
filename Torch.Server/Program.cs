@@ -8,6 +8,7 @@ using System.Reflection;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
+using Microsoft.VisualBasic.Devices;
 using NLog;
 using NLog.Fluent;
 using NLog.Targets;
@@ -59,13 +60,13 @@ namespace Torch.Server
                 return;
             }
 
-            /* Breaks on Windows Server 2019 and we don't fully support services anyway
-            if (!Environment.UserInteractive)
+            // Breaks on Windows Server 2019
+            if (!new ComputerInfo().OSFullName.Contains("Server 2019") && !Environment.UserInteractive)
             {
                 using (var service = new TorchService())
                     ServiceBase.Run(service);
                 return;
-            }*/
+            }
 
             var initializer = new Initializer(workingDir);
             if (!initializer.Initialize(args))
