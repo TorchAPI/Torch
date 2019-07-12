@@ -33,6 +33,7 @@ using VRage.GameServices;
 using VRage.Network;
 using VRage.Platform.Windows;
 using VRage.Plugins;
+using VRage.Scripting;
 using VRage.Steam;
 using VRage.Utils;
 using VRageRender;
@@ -157,7 +158,6 @@ namespace Torch
             _tweakGameSettings();
 
             MyFileSystem.Reset();
-            MyVRageWindows.Init("SpaceEngineersDedicated", MySandboxGame.Log, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)), true);
             MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _userDataPath);
             // MyInitializer.InitCheckSum();
 

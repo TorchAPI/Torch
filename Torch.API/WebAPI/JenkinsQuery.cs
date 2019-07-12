@@ -30,9 +30,6 @@ namespace Torch.API.WebAPI
 
         public async Task<Job> GetLatestVersion(string branch)
         {
-#if DEBUG
-            branch = "master";
-#endif
             var h = await _client.GetAsync(string.Format(BRANCH_QUERY, branch));
             if (!h.IsSuccessStatusCode)
             {

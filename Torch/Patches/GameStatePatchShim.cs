@@ -7,7 +7,7 @@ using Torch.Utils;
 
 namespace Torch.Patches
 {
-    [PatchShim]
+    //[PatchShim]
     internal static class GameStatePatchShim
     {
 #pragma warning disable 649

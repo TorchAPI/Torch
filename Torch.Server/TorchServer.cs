@@ -26,6 +26,7 @@ using VRage;
 using VRage.Dedicated;
 using VRage.Dedicated.RemoteAPI;
 using VRage.GameServices;
+using VRage.Scripting;
 using VRage.Steam;
 using Timer = System.Threading.Timer;
 

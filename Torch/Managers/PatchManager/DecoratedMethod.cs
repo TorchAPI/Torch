@@ -83,7 +83,7 @@ namespace Torch.Managers.PatchManager
         private DynamicMethod AllocatePatchMethod()
         {
             Debug.Assert(_method.DeclaringType != null);
-            var methodName = _method.Name + $"_{_patchSalt++}";
+            var methodName = "Patched_" + _method.DeclaringType.FullName + _method.Name + $"_{_patchSalt++}";
             var returnType = _method is MethodInfo meth ? meth.ReturnType : typeof(void);
             var parameters = _method.GetParameters();
             var parameterTypes = (_method.IsStatic ? Enumerable.Empty<Type>() : new[] {typeof(object)})
