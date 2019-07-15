@@ -22,6 +22,7 @@ namespace Torch
         string WaitForPID { get; set; }
         string ChatName { get; set; }
         string ChatColor { get; set; }
+        string TestPlugin { get; set; }
 
         bool Save(string path = null);
     }

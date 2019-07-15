@@ -118,6 +118,10 @@ namespace Torch.Server
         public bool IndependentConsole { get; set; } = false;
 
         [XmlIgnore]
+        [Arg("testplugin", "Path to a plugin to debug. For development use only.")]
+        public string TestPlugin { get; set; }
+
+        [XmlIgnore]
         private string _path;
 
         public TorchConfig() : this("Torch") { }

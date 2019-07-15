@@ -121,6 +121,25 @@ namespace Torch.Managers
         {
             _log.Info("Loading plugins...");
 
+            if (!string.IsNullOrEmpty(Torch.Config.TestPlugin))
+            {
+                _log.Info($"Loading plugin for debug at {Torch.Config.TestPlugin}");
+                
+                foreach (var item in GetLocalPlugins(Torch.Config.TestPlugin, true))
+                {
+                    _log.Info(item.Path);
+                    LoadPlugin(item);
+                }
+
+                foreach (var plugin in _plugins.Values)
+                {
+                    plugin.Init(Torch);
+                }
+                _log.Info($"Loaded {_plugins.Count} plugins.");
+                PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
+                return;
+            }
+
             var pluginItems = GetLocalPlugins(PluginDir);
             var pluginsToLoad = new List<PluginItem>();
             foreach (var item in pluginItems)
@@ -187,24 +206,35 @@ namespace Torch.Managers
             PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
         }
 
-        private List<PluginItem> GetLocalPlugins(string pluginDir)
+        private List<PluginItem> GetLocalPlugins(string pluginDir, bool debug = false)
         {
             var firstLoad = Torch.Config.Plugins.Count == 0;
             
             var pluginItems = Directory.EnumerateFiles(pluginDir, "*.zip")
-                .Union(Directory.EnumerateDirectories(PluginDir));
+                .Union(Directory.EnumerateDirectories(pluginDir));
+            if (debug)
+                pluginItems = pluginItems.Union(new List<string> {pluginDir});
             var results = new List<PluginItem>();
 
             foreach (var item in pluginItems)
             {
-                var path = Path.Combine(PluginDir, item);
+                var path = Path.Combine(pluginDir, item);
                 var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
                 var manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
 
                 if (manifest == null)
                 {
-                    _log.Warn($"Item '{item}' is missing a manifest, skipping.");
-                    continue;
+                    if (!debug)
+                    {
+                        _log.Warn($"Item '{item}' is missing a manifest, skipping.");
+                        continue;
+                    }
+                    manifest = new PluginManifest()
+                               {
+                                   Guid = new Guid(),
+                                   Version = "0",
+                                   Name = "TEST"
+                               };
                 }
 
                 var duplicatePlugin = results.FirstOrDefault(r => r.Manifest.Guid == manifest.Guid);
@@ -215,7 +245,7 @@ namespace Torch.Managers
                     continue;
                 }
                 
-                if (!Torch.Config.LocalPlugins)
+                if (!Torch.Config.LocalPlugins && !debug)
                 {
                     if (isZip && !Torch.Config.Plugins.Contains(manifest.Guid))
                     {
