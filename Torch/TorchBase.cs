@@ -155,7 +155,6 @@ namespace Torch
             Plugins = new PluginManager(this);
 
             var sessionManager = new TorchSessionManager(this);
-            sessionManager.AddFactory((x) => MyMultiplayer.Static?.SyncLayer != null ? new NetworkManager(this) : null);
             sessionManager.AddFactory((x) => Sync.IsServer ? new ChatManagerServer(this) : new ChatManagerClient(this));
             sessionManager.AddFactory((x) => Sync.IsServer ? new CommandManager(this) : null);
             sessionManager.AddFactory((x) => new EntityManager(this));
