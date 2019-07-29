@@ -133,7 +133,10 @@ namespace Torch.Server.Views
             {
                 var d = new RoleEditor();
                 d.Edit(_instanceManager.DedicatedConfig.SelectedWorld.Checkpoint.PromotedUsers.Dictionary);
-                var removed = promotedUsers.Dictionary.Where(p => p.Value == VRage.Game.ModAPI.MyPromoteLevel.None).Select(p => p.Key).ToArray();
+                var removed = promotedUsers.Dictionary
+                    .Where(p => p.Value == VRage.Game.ModAPI.MyPromoteLevel.None)
+                    .Select(p => p.Key)
+                    .ToArray();
                 foreach (var id in removed)
                 {
                     promotedUsers.Dictionary.Remove(id);

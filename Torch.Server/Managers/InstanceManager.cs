@@ -206,7 +206,7 @@ namespace Torch.Server.Managers
 
             try
             {
-                var promotedUsers = DedicatedConfig.SelectedWorld.Checkpoint.PromotedUsers;
+                var promotedUsers = DedicatedConfig?.SelectedWorld?.Checkpoint?.PromotedUsers;
                 
                 var sandboxPath = Path.Combine(DedicatedConfig.LoadWorld, "Sandbox.sbc");
                 MyObjectBuilderSerializer.DeserializeXML(sandboxPath, out MyObjectBuilder_Checkpoint checkpoint, out ulong sizeInBytes);
@@ -215,8 +215,11 @@ namespace Torch.Server.Managers
                     Log.Error($"Failed to load {DedicatedConfig.LoadWorld}, checkpoint null ({sizeInBytes} bytes, instance {Torch.Config.InstancePath})");
                     return;
                 }
-                
-                checkpoint.PromotedUsers = promotedUsers;
+
+                if (promotedUsers != null)
+                {
+                    checkpoint.PromotedUsers = promotedUsers;
+                }
                 checkpoint.SessionName = DedicatedConfig.WorldName;
                 checkpoint.Settings = DedicatedConfig.SessionSettings;
                 checkpoint.Mods.Clear();
