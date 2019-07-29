@@ -114,7 +114,15 @@ namespace Torch.Server.ViewModels
 
         }
 
-        public List<string> Administrators { get => _config.Administrators; set => SetValue(x => _config.Administrators = x, value); }
+        public List<string> Administrators
+        {
+            get => _config.Administrators;
+            set
+            {
+                SetValue(x => _config.Administrators = x, value);
+                OnPropertyChanged("Administrators");
+            }
+        }
 
         public List<ulong> Banned { get => _config.Banned; set => SetValue(x => _config.Banned = x, value); }
 

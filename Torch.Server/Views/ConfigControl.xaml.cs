@@ -128,8 +128,25 @@ namespace Torch.Server.Views
         {
             //var w = new RoleEditor(_instanceManager.DedicatedConfig.SelectedWorld);
             //w.Show();
-            var d = new RoleEditor();
-            d.Edit(_instanceManager.DedicatedConfig.SelectedWorld.Checkpoint.PromotedUsers.Dictionary);
+            var promotedUsers = _instanceManager?.DedicatedConfig?.SelectedWorld?.Checkpoint?.PromotedUsers;
+            if (promotedUsers?.Dictionary != null)
+            {
+                var d = new RoleEditor();
+                d.Edit(_instanceManager.DedicatedConfig.SelectedWorld.Checkpoint.PromotedUsers.Dictionary);
+                var removed = promotedUsers.Dictionary.Where(p => p.Value == VRage.Game.ModAPI.MyPromoteLevel.None).Select(p => p.Key).ToArray();
+                foreach (var id in removed)
+                {
+                    promotedUsers.Dictionary.Remove(id);
+                }
+                _instanceManager.DedicatedConfig.Administrators = promotedUsers.Dictionary
+                    .Where(p => p.Value == VRage.Game.ModAPI.MyPromoteLevel.Admin || p.Value == VRage.Game.ModAPI.MyPromoteLevel.Owner)
+                    .Select(p => p.Key.ToString())
+                    .ToList();
+            } 
+            else
+            {
+                MessageBox.Show("World not loaded.");
+            }
         }
     }
 }

@@ -95,7 +95,7 @@
                             <CheckBox IsChecked="{Binding AutodetectDependencies}" Content="Auto Detect Dependencies" Margin="3" />
                         </StackPanel>
                         <StackPanel Grid.Column="1" Margin="3">
-                            <Label Content="Administrators" />
+                            <Label Content="Owner/Administrators" />
                             <TextBox Text="{Binding Administrators, Converter={StaticResource ListConverterString}}"
                                      Margin="3"
                                      Height="100" AcceptsReturn="true" VerticalScrollBarVisibility="Auto" />

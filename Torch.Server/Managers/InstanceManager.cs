@@ -114,22 +114,11 @@ namespace Torch.Server.Managers
                 return;
             }
 
-            DedicatedConfig.SelectedWorld = worldInfo;
-            if (DedicatedConfig.SelectedWorld?.Checkpoint != null)
-            {
-                DedicatedConfig.Mods.Clear();
-                //remove the Torch mod to avoid running multiple copies of it
-                DedicatedConfig.SelectedWorld.Checkpoint.Mods.RemoveAll(m => m.PublishedFileId == TorchModCore.MOD_ID);
-                foreach (var m in DedicatedConfig.SelectedWorld.Checkpoint.Mods)
-                    DedicatedConfig.Mods.Add(new ModItemInfo(m));
-                Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
-            }
+            SelectWorld(worldInfo);
         }
 
         public void SelectWorld(WorldViewModel world, bool modsOnly = true)
         {
-            DedicatedConfig.LoadWorld = world.WorldPath;
-            DedicatedConfig.SelectedWorld = world;
             if (DedicatedConfig.SelectedWorld?.Checkpoint != null)
             {
                 DedicatedConfig.Mods.Clear();
@@ -138,6 +127,10 @@ namespace Torch.Server.Managers
                 foreach (var m in DedicatedConfig.SelectedWorld.Checkpoint.Mods)
                     DedicatedConfig.Mods.Add(new ModItemInfo(m));
                 Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
+                DedicatedConfig.Administrators = DedicatedConfig.SelectedWorld.Checkpoint.PromotedUsers.Dictionary
+                    .Where(p => p.Value == VRage.Game.ModAPI.MyPromoteLevel.Admin || p.Value == VRage.Game.ModAPI.MyPromoteLevel.Owner)
+                    .Select(p => p.Key.ToString())
+                    .ToList();
             }
         }
 
@@ -207,12 +200,14 @@ namespace Torch.Server.Managers
                         DedicatedConfig.Reserved.Add(res);
                 }
             }
-
+                        
             DedicatedConfig.Save(Path.Combine(Torch.Config.InstancePath, CONFIG_NAME));
             Log.Info("Saved dedicated config.");
 
             try
             {
+                var promotedUsers = DedicatedConfig.SelectedWorld.Checkpoint.PromotedUsers;
+                
                 var sandboxPath = Path.Combine(DedicatedConfig.LoadWorld, "Sandbox.sbc");
                 MyObjectBuilderSerializer.DeserializeXML(sandboxPath, out MyObjectBuilder_Checkpoint checkpoint, out ulong sizeInBytes);
                 if (checkpoint == null)
@@ -220,11 +215,12 @@ namespace Torch.Server.Managers
                     Log.Error($"Failed to load {DedicatedConfig.LoadWorld}, checkpoint null ({sizeInBytes} bytes, instance {Torch.Config.InstancePath})");
                     return;
                 }
-
+                
+                checkpoint.PromotedUsers = promotedUsers;
                 checkpoint.SessionName = DedicatedConfig.WorldName;
                 checkpoint.Settings = DedicatedConfig.SessionSettings;
                 checkpoint.Mods.Clear();
-
+                
                 foreach (var mod in DedicatedConfig.Mods)
                 {
                     var savedMod = new MyObjectBuilder_Checkpoint.ModItem(mod.Name, mod.PublishedFileId, mod.FriendlyName);
@@ -288,13 +284,13 @@ namespace Torch.Server.Managers
             }
         }
 
-        public async Task SaveCheckpointAsync()
+        public void SaveCheckpoint()
         {
-            await Task.Run(() =>
+            //await Task.Run(() =>
             {
                 using (var f = File.Open(_checkpointPath, FileMode.Create))
                     MyObjectBuilderSerializer.SerializeXML(f, Checkpoint);
-            });
+            }//);
         }
 
         private void BeginLoadCheckpoint()
