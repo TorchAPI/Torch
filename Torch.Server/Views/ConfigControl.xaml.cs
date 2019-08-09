@@ -13,6 +13,7 @@ using Torch.Server.Annotations;
 using Torch.Server.Managers;
 using Torch.Server.ViewModels;
 using Torch.Views;
+using VRage.Game.ModAPI;
 
 namespace Torch.Server.Views
 {
@@ -129,7 +130,9 @@ namespace Torch.Server.Views
             //var w = new RoleEditor(_instanceManager.DedicatedConfig.SelectedWorld);
             //w.Show();
             var d = new RoleEditor();
-            d.Edit(_instanceManager.DedicatedConfig.SelectedWorld.Checkpoint.PromotedUsers.Dictionary);
+            var w = _instanceManager.DedicatedConfig.SelectedWorld;
+            d.Edit(w.Checkpoint.PromotedUsers.Dictionary);
+            _instanceManager.DedicatedConfig.Administrators = w.Checkpoint.PromotedUsers.Dictionary.Where(k => k.Value >= MyPromoteLevel.Admin).Select(k => k.Key.ToString()).ToList();
         }
     }
 }
