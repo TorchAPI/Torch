@@ -39,6 +39,7 @@ namespace Torch.Mod
         {
             try
             {
+                MyAPIGateway.Utilities.MessageEntered -= Utilities_MessageEntered;
                 ModCommunication.Unregister();
             }
             catch
