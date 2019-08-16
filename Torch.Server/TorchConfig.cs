@@ -94,6 +94,9 @@ namespace Torch.Server
         [Arg("localplugins", "Loads all pluhins from disk, ignores the plugins defined in config.")]
         public bool LocalPlugins { get; set; }
 
+        [Arg("disconnect", "When server restarts, all clients are rejected to main menu to prevent auto rejoin")]
+        public bool DisconnectOnRestart { get; set; }
+
         public string ChatName { get; set; } = "Server";
 
         public string ChatColor { get; set; } = "Red";

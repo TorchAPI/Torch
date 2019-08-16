@@ -11,6 +11,7 @@ namespace Torch.Mod.Messages
     [ProtoInclude(1, typeof(DialogMessage))]
     [ProtoInclude(2, typeof(NotificationMessage))]
     [ProtoInclude(3, typeof(VoxelResetMessage))]
+    [ProtoInclude(4, typeof(JoinServerMessage))]
     #endregion
 
     [ProtoContract]
@@ -28,7 +29,7 @@ namespace Torch.Mod.Messages
         internal ulong[] Ignore;
         internal byte[] CompressedData;
     }
-
+    
     public enum MessageTarget
     {
         /// <summary>
