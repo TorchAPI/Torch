@@ -19,6 +19,7 @@ using Torch.API.Managers;
 using Torch.API.Session;
 using Torch.Commands;
 using Torch.Mod;
+using Torch.Mod.Messages;
 using Torch.Server.Commands;
 using Torch.Server.Managers;
 using Torch.Utils;
@@ -152,6 +153,11 @@ namespace Torch.Server
         /// </summary>
         public override void Restart()
         {
+            if (Config.DisconnectOnRestart)
+            {
+                ModCommunication.SendMessageToClients(new JoinServerMessage("0.0.0.0:25555"));
+            }
+
             if (IsRunning)
                 Save().ContinueWith(DoRestart, this, TaskContinuationOptions.RunContinuationsAsynchronously);
             else

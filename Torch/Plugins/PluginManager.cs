@@ -124,7 +124,7 @@ namespace Torch.Managers
             if (!string.IsNullOrEmpty(Torch.Config.TestPlugin))
             {
                 _log.Info($"Loading plugin for debug at {Torch.Config.TestPlugin}");
-                
+
                 foreach (var item in GetLocalPlugins(Torch.Config.TestPlugin, true))
                 {
                     _log.Info(item.Path);

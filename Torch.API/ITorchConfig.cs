@@ -23,6 +23,7 @@ namespace Torch
         string ChatName { get; set; }
         string ChatColor { get; set; }
         string TestPlugin { get; set; }
+        bool DisconnectOnRestart { get; set; }
 
         bool Save(string path = null);
     }
