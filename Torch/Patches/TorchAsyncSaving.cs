@@ -62,12 +62,11 @@ namespace Torch.Patches
 
                 if (!Game.IsDedicated)
                     TakeSaveScreenshot();
-                tmpSnapshot.SaveParallel(() =>
+                tmpSnapshot.SaveParallel(() => true, () =>
                 {
                     if (!Game.IsDedicated && MySession.Static != null)
                         ShowWorldSaveResult(tmpSnapshot.SavingSuccess);
                     saveTaskSource.TrySetResult(tmpSnapshot.SavingSuccess ? GameSaveResult.Success : GameSaveResult.FailedToSaveToDisk);
-                    return false;
                 });
             });
             return saveTaskSource.Task;
