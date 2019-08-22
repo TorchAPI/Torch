@@ -12,7 +12,7 @@ namespace Torch.Patches
     public static class GameAnalyticsPatch
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
-        private static Action<ILogger> _setLogger;
+        private static Action<ILogger, ILogger> _setLogger;
 
         public static void Patch(PatchContext ctx)
         {
@@ -27,7 +27,7 @@ namespace Torch.Patches
                 return;
             }
             RuntimeHelpers.RunClassConstructor(type.TypeHandle);
-            _setLogger = loggerField?.CreateSetter<ILogger>();
+            _setLogger = loggerField?.CreateSetter<ILogger, ILogger>();
             FixLogging();
 
             ConstructorInfo ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[0], new ParameterModifier[0]);
@@ -42,7 +42,7 @@ namespace Torch.Patches
 
         private static void FixLogging()
         {
-            _setLogger(LogManager.GetLogger("GameAnalytics"));
+            _setLogger(null, LogManager.GetLogger("GameAnalytics"));
             if (!(LogManager.Configuration is XmlLoggingConfiguration))
                 LogManager.Configuration = new XmlLoggingConfiguration(Path.Combine(
                     Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) ?? Environment.CurrentDirectory, "NLog.config"));

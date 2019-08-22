@@ -49,6 +49,7 @@ using VRage.Game.SessionComponents;
 using VRage.GameServices;
 using VRage.Library;
 using VRage.ObjectBuilders;
+using VRage.Platform.Windows;
 using VRage.Plugins;
 using VRage.Scripting;
 using VRage.Steam;
@@ -64,6 +65,7 @@ namespace Torch
     {
         static TorchBase()
         {
+            MyVRageWindows.Init("SpaceEngineersDedicated", MySandboxGame.Log, null, false);
             ReflectedManager.Process(typeof(TorchBase).Assembly);
             ReflectedManager.Process(typeof(ITorchBase).Assembly);
             PatchManager.AddPatchShim(typeof(GameStatePatchShim));
@@ -153,7 +155,6 @@ namespace Torch
             Plugins = new PluginManager(this);
 
             var sessionManager = new TorchSessionManager(this);
-            sessionManager.AddFactory((x) => MyMultiplayer.Static?.SyncLayer != null ? new NetworkManager(this) : null);
             sessionManager.AddFactory((x) => Sync.IsServer ? new ChatManagerServer(this) : new ChatManagerClient(this));
             sessionManager.AddFactory((x) => Sync.IsServer ? new CommandManager(this) : null);
             sessionManager.AddFactory((x) => new EntityManager(this));

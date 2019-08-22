@@ -67,6 +67,7 @@ namespace Torch.Patches
                     if (!Game.IsDedicated && MySession.Static != null)
                         ShowWorldSaveResult(tmpSnapshot.SavingSuccess);
                     saveTaskSource.TrySetResult(tmpSnapshot.SavingSuccess ? GameSaveResult.Success : GameSaveResult.FailedToSaveToDisk);
+                    return false;
                 });
             });
             return saveTaskSource.Task;
