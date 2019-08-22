@@ -269,7 +269,40 @@ namespace Torch.Server.ViewModels
 
         [Torch.Views.Display(Description = "Enables automatic respawn at nearest available respawn point.", Name = "Enable Auto Respawn", GroupName = "Players")]
         public bool EnableAutoRespawn { get => _settings.EnableAutorespawn; set => SetValue(ref _settings.EnableAutorespawn, value); }
+        
+        [Torch.Views.Display(Description = "The number of NPC factions generated on the start of the world.", Name = "NPC Factions Count", GroupName = "NPCs")]
+        public int TradeFactionsCount { get => _settings.TradeFactionsCount; set => SetValue(ref _settings.TradeFactionsCount, value); }
+        
+        [Torch.Views.Display(Description = "The inner radius [m] (center is in 0,0,0), where stations can spawn. Does not affect planet-bound stations (surface Outposts and Orbital stations).", Name = "Stations Inner Radius", GroupName = "NPCs")]
+        public double StationsDistanceInnerRadius { get => _settings.StationsDistanceInnerRadius; set => SetValue(ref _settings.StationsDistanceInnerRadius, value); }
 
+        [Torch.Views.Display(Description = "The outer radius [m] (center is in 0,0,0), where stations can spawn. Does not affect planet-bound stations (surface Outposts and Orbital stations).", Name = "Stations Outer Radius Start", GroupName = "NPCs")]
+        public double StationsDistanceOuterRadiusStart { get => _settings.StationsDistanceOuterRadiusStart; set => SetValue(ref _settings.StationsDistanceOuterRadiusStart, value); }
+        
+        [Torch.Views.Display(Description = "The outer radius [m] (center is in 0,0,0), where stations can spawn. Does not affect planet-bound stations (surface Outposts and Orbital stations).", Name = "Stations Outer Radius End", GroupName = "NPCs")]
+        public double StationsDistanceOuterRadiusEnd { get => _settings.StationsDistanceOuterRadiusEnd; set => SetValue(ref _settings.StationsDistanceOuterRadiusEnd, value); }
+        
+        [Torch.Views.Display(Description = "Time period between two economy updates in seconds.", Name = "Economy tick time", GroupName = "NPCs")]
+        public int EconomyTickInSeconds { get => _settings.EconomyTickInSeconds; set => SetValue(ref _settings.EconomyTickInSeconds, value); }
+        
+        [Torch.Views.Display(Description = "If enabled bounty contracts will be available on stations.", Name = "Enable Bounty Contracts", GroupName = "Players")]
+        public bool EnableBountyContracts { get => _settings.EnableBountyContracts; set => SetValue(ref _settings.EnableBountyContracts, value); }
+        
+        [Torch.Views.Display(Description = "Resource deposits count coefficient for generated world content (voxel generator version > 2).", Name = "Deposits Count Coefficient", GroupName = "Environment")]
+        public float DepositsCountCoefficient { get => _settings.DepositsCountCoefficient; set => SetValue(ref _settings.DepositsCountCoefficient, value); }
+        
+        [Torch.Views.Display(Description = "Resource deposit size denominator for generated world content (voxel generator version > 2).", Name = "Deposit Size Denominator", GroupName = "Environment")]
+        public float DepositSideDenominator { get => _settings.DepositSizeDenominator; set => SetValue(ref _settings.DepositSizeDenominator, value); }
+        
+        [Torch.Views.Display(Description = "Enables economy features.", Name = "Enable Economy", GroupName = "NPCs")]
+        public bool EnableEconomy { get => _settings.EnableEconomy; set => SetValue(ref _settings.EnableEconomy, value); }
+        
+        [Torch.Views.Display(Description = "Enables system for voxel reverting.", Name = "Enable Voxel Reverting", GroupName = "Trash Removal")]
+        public bool VoxelTrashRemovalEnabled { get => _settings.VoxelTrashRemovalEnabled; set => SetValue(ref _settings.VoxelTrashRemovalEnabled, value); }
+        
+        [Torch.Views.Display(Description = "Allows super gridding exploit to be used.", Name = "Enable Supergridding", GroupName = "Others")]
+        public bool EnableSupergridding { get => _settings.EnableSupergridding; set => SetValue(ref _settings.EnableSupergridding, value); }
+        
         public SessionSettingsViewModel(MyObjectBuilder_SessionSettings settings)
         {
             _settings = settings;

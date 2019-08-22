@@ -146,7 +146,7 @@ namespace Torch.Managers.ChatManager
         {
             var torchMsg = new TorchChatMessage(author, message, font);
             if (!RaiseMessageRecieved(torchMsg) && HasHud)
-                _hudChatScriptedMessageReceived.Invoke(MyHud.Chat, author, message, font);
+                _hudChatScriptedMessageReceived.Invoke(MyHud.Chat, author, message, font, color);
         }
 
         protected bool RaiseMessageRecieved(TorchChatMessage msg)
@@ -164,7 +164,7 @@ namespace Torch.Managers.ChatManager
         [ReflectedMethod(Name = _hudChatMessageReceivedName)]
         private static Action<MyHudChat, ulong, string, ChatChannel, long, string> _hudChatMessageReceived;
         [ReflectedMethod(Name = _hudChatScriptedMessageReceivedName)]
-        private static Action<MyHudChat, string, string, string> _hudChatScriptedMessageReceived;
+        private static Action<MyHudChat, string, string, string, Color> _hudChatScriptedMessageReceived;
 
         [ReflectedEventReplace(typeof(MyMultiplayerBase), nameof(MyMultiplayerBase.ChatMessageReceived), typeof(MyHudChat), _hudChatMessageReceivedName)]
         private static Func<ReflectedEventReplacer> _chatMessageReceivedFactory;
