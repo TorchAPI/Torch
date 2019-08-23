@@ -383,12 +383,14 @@ namespace Torch
         {
             if (exclusive)
             {
-                if (MyAsyncSaving.InProgress || Interlocked.Increment(ref _inProgressSaves) != 1)
+                if (MyAsyncSaving.InProgress || _inProgressSaves >= 0)
                 {
                     Log.Error("Failed to save game, game is already saving");
                     return null;
                 }
             }
+            
+            Interlocked.Increment(ref _inProgressSaves);
             return TorchAsyncSaving.Save(this, timeoutMs).ContinueWith((task, torchO) =>
             {
                 var torch = (TorchBase) torchO;
