@@ -169,7 +169,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Platform.Windows, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\bin\x64\Release\DedicatedServer64\VRage.Platform.Windows.dll</HintPath>
+      <HintPath>..\GameBinaries\VRage.Platform.Windows.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Render">
       <HintPath>..\GameBinaries\VRage.Render.dll</HintPath>
