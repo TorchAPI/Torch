@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using NLog;
 using Sandbox.Game.Multiplayer;
 using Sandbox.ModAPI;
 using Steamworks;
@@ -28,6 +29,7 @@ namespace Torch.Commands
     {
         private static bool _restartPending = false;
         private static bool _cancelRestart = false;
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         
         [Command("whatsmyip")]
         [Permission(MyPromoteLevel.None)]
@@ -176,6 +178,7 @@ namespace Torch.Commands
             }
         
             _restartPending = true;
+            
             Task.Run(() =>
             {
                 var countdown = RestartCountdown(countdownSeconds, save).GetEnumerator();
@@ -232,15 +235,18 @@ namespace Torch.Commands
                 else
                 {
                     if (save)
-                        Context.Torch.Save().ContinueWith(x => Restart());
-                    else
-                        Restart();
+                    {
+                        Log.Info("Savin game before restart.");
+                        Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                           .SendMessageAsSelf($"Saving game before restart.");
+                    }
+
+                    Log.Info("Restarting server.");
+                    Context.Torch.Invoke(() => Context.Torch.Restart(save));
                         
                     yield break;
                 }
             }
-
-            void Restart() => Context.Torch.Invoke(() => Context.Torch.Restart());
         }
 
         private string Pluralize(int num)

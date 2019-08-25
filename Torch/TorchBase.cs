@@ -427,7 +427,7 @@ namespace Torch
         }
 
         /// <inheritdoc />
-        public abstract void Restart();
+        public abstract void Restart(bool save = true);
 
         /// <inheritdoc />
         public virtual void Init(object gameInstance)
