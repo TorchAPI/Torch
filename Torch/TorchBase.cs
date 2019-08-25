@@ -414,6 +414,7 @@ namespace Torch
             Game.SignalStart();
             if (!Game.WaitFor(VRageGame.GameState.Running))
                 Log.Warn("Failed to wait for the game to be started");
+            Invoke(() => Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US"));
         }
 
         /// <inheritdoc />
