@@ -383,7 +383,7 @@ namespace Torch
         {
             if (exclusive)
             {
-                if (MyAsyncSaving.InProgress || _inProgressSaves >= 0)
+                if (MyAsyncSaving.InProgress || _inProgressSaves > 0)
                 {
                     Log.Error("Failed to save game, game is already saving");
                     return null;
