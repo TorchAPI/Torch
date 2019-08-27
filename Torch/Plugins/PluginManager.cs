@@ -206,6 +206,8 @@ namespace Torch.Managers
             PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
         }
 
+        //debug flag is set when the user asks us to run with a specific plugin for plugin development debug
+        //please do not change references to this arg unless you are very sure you know what you're doing
         private List<PluginItem> GetLocalPlugins(string pluginDir, bool debug = false)
         {
             var firstLoad = Torch.Config.Plugins.Count == 0;
@@ -505,18 +507,26 @@ namespace Torch.Managers
         
         private PluginManifest GetManifestFromZip(string path)
         {
-            using (var zipFile = ZipFile.OpenRead(path))
+            try
             {
-                foreach (var entry in zipFile.Entries)
+                using (var zipFile = ZipFile.OpenRead(path))
                 {
-                    if (!entry.Name.Equals(MANIFEST_NAME, StringComparison.CurrentCultureIgnoreCase))
-                        continue;
-
-                    using (var stream = new StreamReader(entry.Open()))
+                    foreach (var entry in zipFile.Entries)
                     {
-                        return PluginManifest.Load(stream);
+                        if (!entry.Name.Equals(MANIFEST_NAME, StringComparison.CurrentCultureIgnoreCase))
+                            continue;
+
+                        using (var stream = new StreamReader(entry.Open()))
+                        {
+                            return PluginManifest.Load(stream);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, $"Error opening zip! File is likely corrupt. File at {path} will be deleted and re-acquired on the next restart!");
+                File.Delete(path);
             }
 
             return null;
