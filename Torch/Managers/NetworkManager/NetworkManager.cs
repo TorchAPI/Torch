@@ -10,16 +10,10 @@ using VRageMath;
 
 namespace Torch.Managers
 {
-    //TOOD: Make this not a manager, and instead just a static class?
-    public partial class NetworkManager : Manager, INetworkManager
+    public static class NetworkManager
     {
         private static Logger _log = LogManager.GetCurrentClassLogger();
-
-        public NetworkManager(ITorchBase torchInstance) : base(torchInstance)
-        {
-
-        }
-
+        
         #region Network Injection
 
         private static Dictionary<MethodInfo, Delegate> _delegateCache = new Dictionary<MethodInfo, Delegate>();

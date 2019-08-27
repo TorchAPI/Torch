@@ -104,7 +104,7 @@ namespace Torch.API
         /// <summary>
         /// Restart the Torch instance, blocking until the restart has been performed.
         /// </summary>
-        void Restart();
+        void Restart(bool save = true);
 
         /// <summary>
         /// Initializes a save of the game.

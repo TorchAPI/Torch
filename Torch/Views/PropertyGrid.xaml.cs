@@ -221,7 +221,6 @@ namespace Torch.Views
 
                         var gt = propertyType.GetGenericArguments()[0];
 
-                        //TODO: Is this the best option? Probably not
                         if (gt.IsPrimitive || gt == typeof(string))
                         {
                             button.Click += (sender, args) => EditPrimitiveCollection(((Button)sender).DataContext);

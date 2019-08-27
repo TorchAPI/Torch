@@ -44,7 +44,7 @@ namespace Torch.Managers
         
         private async void CheckAndUpdateTorch()
         {
-            if (!Torch.Config.GetTorchUpdates)
+            if (Torch.Config.NoUpdate || !Torch.Config.GetTorchUpdates)
                 return;
 
             try

@@ -27,6 +27,7 @@ using VRage;
 using VRage.Dedicated;
 using VRage.Dedicated.RemoteAPI;
 using VRage.GameServices;
+using VRage.Scripting;
 using VRage.Steam;
 using Timer = System.Threading.Timer;
 
@@ -151,14 +152,15 @@ namespace Torch.Server
         /// <summary>
         ///     Restart the program.
         /// </summary>
-        public override void Restart()
+        public override void Restart(bool save = true)
         {
             if (Config.DisconnectOnRestart)
             {
                 ModCommunication.SendMessageToClients(new JoinServerMessage("0.0.0.0:25555"));
+                Log.Info("Ejected all players from server for restart.");
             }
 
-            if (IsRunning)
+            if (IsRunning && save)
                 Save().ContinueWith(DoRestart, this, TaskContinuationOptions.RunContinuationsAsynchronously);
             else
                 DoRestart(null, this);

@@ -19,7 +19,7 @@ namespace Torch.Patches
 
         internal static void Patch(PatchContext target)
         {
-            ConstructorInfo ctor = typeof(MySandboxGame).GetConstructor(new[] { typeof(string[]) });
+            ConstructorInfo ctor = typeof(MySandboxGame).GetConstructor(new[] { typeof(string[]), typeof(IntPtr) });
             if (ctor == null)
                 throw new ArgumentException("Can't find constructor MySandboxGame(string[])");
             target.GetPattern(ctor).Prefixes.Add(MethodRef(PrefixConstructor));

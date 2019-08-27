@@ -15,6 +15,7 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.Utils;
 using VRage.Game;
+using VRageMath;
 
 namespace Torch.Managers.ChatManager
 {
@@ -82,7 +83,7 @@ namespace Torch.Managers.ChatManager
                 _chatMessageRecievedReplacer.Replace(new Action<ulong, string, ChatChannel, long, string>(Multiplayer_ChatMessageReceived),
                     MyMultiplayer.Static);
                 _scriptedChatMessageRecievedReplacer.Replace(
-                    new Action<string, string, string>(Multiplayer_ScriptedChatMessageReceived), MyMultiplayer.Static);
+                    new Action<string, string, string, Color>(Multiplayer_ScriptedChatMessageReceived), MyMultiplayer.Static);
             }
             else
             {
@@ -141,11 +142,11 @@ namespace Torch.Managers.ChatManager
                 _hudChatMessageReceived.Invoke(MyHud.Chat, steamUserId, messageText, channel, targetId, customAuthorName);
         }
 
-        private void Multiplayer_ScriptedChatMessageReceived(string message, string author, string font)
+        private void Multiplayer_ScriptedChatMessageReceived(string message, string author, string font, Color color)
         {
             var torchMsg = new TorchChatMessage(author, message, font);
             if (!RaiseMessageRecieved(torchMsg) && HasHud)
-                _hudChatScriptedMessageReceived.Invoke(MyHud.Chat, author, message, font);
+                _hudChatScriptedMessageReceived.Invoke(MyHud.Chat, author, message, font, color);
         }
 
         protected bool RaiseMessageRecieved(TorchChatMessage msg)
@@ -163,7 +164,7 @@ namespace Torch.Managers.ChatManager
         [ReflectedMethod(Name = _hudChatMessageReceivedName)]
         private static Action<MyHudChat, ulong, string, ChatChannel, long, string> _hudChatMessageReceived;
         [ReflectedMethod(Name = _hudChatScriptedMessageReceivedName)]
-        private static Action<MyHudChat, string, string, string> _hudChatScriptedMessageReceived;
+        private static Action<MyHudChat, string, string, string, Color> _hudChatScriptedMessageReceived;
 
         [ReflectedEventReplace(typeof(MyMultiplayerBase), nameof(MyMultiplayerBase.ChatMessageReceived), typeof(MyHudChat), _hudChatMessageReceivedName)]
         private static Func<ReflectedEventReplacer> _chatMessageReceivedFactory;

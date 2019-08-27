@@ -49,6 +49,7 @@ using VRage.Game.SessionComponents;
 using VRage.GameServices;
 using VRage.Library;
 using VRage.ObjectBuilders;
+using VRage.Platform.Windows;
 using VRage.Plugins;
 using VRage.Scripting;
 using VRage.Steam;
@@ -64,6 +65,7 @@ namespace Torch
     {
         static TorchBase()
         {
+            MyVRageWindows.Init("SpaceEngineersDedicated", MySandboxGame.Log, null, false);
             ReflectedManager.Process(typeof(TorchBase).Assembly);
             ReflectedManager.Process(typeof(ITorchBase).Assembly);
             PatchManager.AddPatchShim(typeof(GameStatePatchShim));
@@ -153,7 +155,6 @@ namespace Torch
             Plugins = new PluginManager(this);
 
             var sessionManager = new TorchSessionManager(this);
-            sessionManager.AddFactory((x) => MyMultiplayer.Static?.SyncLayer != null ? new NetworkManager(this) : null);
             sessionManager.AddFactory((x) => Sync.IsServer ? new ChatManagerServer(this) : new ChatManagerClient(this));
             sessionManager.AddFactory((x) => Sync.IsServer ? new CommandManager(this) : null);
             sessionManager.AddFactory((x) => new EntityManager(this));
@@ -382,12 +383,14 @@ namespace Torch
         {
             if (exclusive)
             {
-                if (MyAsyncSaving.InProgress || Interlocked.Increment(ref _inProgressSaves) != 1)
+                if (MyAsyncSaving.InProgress || _inProgressSaves > 0)
                 {
                     Log.Error("Failed to save game, game is already saving");
                     return null;
                 }
             }
+            
+            Interlocked.Increment(ref _inProgressSaves);
             return TorchAsyncSaving.Save(this, timeoutMs).ContinueWith((task, torchO) =>
             {
                 var torch = (TorchBase) torchO;
@@ -411,6 +414,7 @@ namespace Torch
             Game.SignalStart();
             if (!Game.WaitFor(VRageGame.GameState.Running))
                 Log.Warn("Failed to wait for the game to be started");
+            Invoke(() => Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US"));
         }
 
         /// <inheritdoc />
@@ -423,7 +427,7 @@ namespace Torch
         }
 
         /// <inheritdoc />
-        public abstract void Restart();
+        public abstract void Restart(bool save = true);
 
         /// <inheritdoc />
         public virtual void Init(object gameInstance)
