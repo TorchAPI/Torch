@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.ServiceProcess;
+using System.Threading;
 using NLog;
 using Torch.API;
 
@@ -12,8 +14,8 @@ namespace Torch.Server
 {
     class TorchService : ServiceBase
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         public const string Name = "Torch (SEDS)";
-        private TorchServer _server;
         private Initializer _initializer;
         private string[] _args;
 
@@ -42,8 +44,10 @@ namespace Torch.Server
         /// <inheritdoc />
         protected override void OnStop()
         {
-            _server.Stop();
-            base.OnStop();
+            var mre = new ManualResetEvent(false);
+            Task.Run(() => _initializer.Server.Stop());
+            if (!mre.WaitOne(TimeSpan.FromMinutes(1)))
+                Process.GetCurrentProcess().Kill();
         }
     }
 }
