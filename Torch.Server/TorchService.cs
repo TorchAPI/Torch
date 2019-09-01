@@ -15,9 +15,11 @@ namespace Torch.Server
         public const string Name = "Torch (SEDS)";
         private TorchServer _server;
         private Initializer _initializer;
+        private string[] _args;
 
-        public TorchService()
+        public TorchService(string[] args)
         {
+            _args = args;
             var workingDir = new FileInfo(typeof(TorchService).Assembly.Location).Directory.ToString();
             Directory.SetCurrentDirectory(workingDir);
             _initializer = new Initializer(workingDir);
@@ -29,11 +31,11 @@ namespace Torch.Server
         }
 
         /// <inheritdoc />
-        protected override void OnStart(string[] args)
+        protected override void OnStart(string[] _)
         {
-            base.OnStart(args);
+            base.OnStart(_args);
 
-            _initializer.Initialize(args);
+            _initializer.Initialize(_args);
             _initializer.Run();
         }
 

@@ -199,7 +199,8 @@ namespace Torch
                 }
                 MyRenderProxy.Initialize(renderer);
                 MyRenderProfiler.SetAutocommit(false);
-                MyRenderProfiler.InitMemoryHack("MainEntryPoint");
+                //This broke services?
+                //MyRenderProfiler.InitMemoryHack("MainEntryPoint");
             }
 
             // Loads object builder serializers. Intuitive, right?
