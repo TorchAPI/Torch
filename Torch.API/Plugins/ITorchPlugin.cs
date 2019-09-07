@@ -34,5 +34,22 @@ namespace Torch.API.Plugins
         /// This is called on the game thread after each tick.
         /// </summary>
         void Update();
+
+        /// <summary>
+        /// Plugin's enabled state. Mainly for UI niceness
+        /// </summary>
+        PluginState State { get; }
+    }
+
+    public enum PluginState
+    {
+         NotInitialized,
+         DisabledError,
+         DisabledUser,
+         UpdateRequired,
+         UninstallRequested,
+         NotInstalled,
+         MissingDependency,
+         Enabled
     }
 }

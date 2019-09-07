@@ -22,7 +22,7 @@
             <ListView Grid.Row="0" ItemsSource="{Binding Plugins}" SelectedItem="{Binding SelectedPlugin}" Margin="3">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Name}"/>
+                        <TextBlock Text="{Binding Name}" Background="{Binding Color}" ToolTip="{Binding ToolTip}"/>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
