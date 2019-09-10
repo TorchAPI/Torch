@@ -156,7 +156,7 @@ namespace Torch.Commands
         }
 
         [Command("stop", "Stops the server.")]
-        public void Stop(bool save = true)
+        public void Stop(bool save = true, int countdownSeconds = 0)
         {
             if (_stopPending)
             {
