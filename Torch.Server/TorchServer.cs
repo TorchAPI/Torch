@@ -49,6 +49,8 @@ namespace Torch.Server
         private Timer _watchdog;
         private int _players;
         private MultiplayerManagerDedicated _multiplayerManagerDedicated;
+        
+        internal bool FatalException { get; set; }
 
         /// <inheritdoc />
        public TorchServer(TorchConfig config = null)
@@ -232,10 +234,16 @@ namespace Torch.Server
 
         private static void CheckServerResponding(object state)
         {
+            var server = (TorchServer)state;
             var mre = new ManualResetEvent(false);
-            ((TorchServer)state).Invoke(() => mre.Set());
+            server.Invoke(() => mre.Set());
             if (!mre.WaitOne(TimeSpan.FromSeconds(Instance.Config.TickTimeout)))
             {
+                if (server.FatalException)
+                {
+                    server._watchdog.Dispose();
+                    return;
+                }
 #if DEBUG
                 Log.Error(
                     $"Server watchdog detected that the server was frozen for at least {((TorchServer) state).Config.TickTimeout} seconds.");

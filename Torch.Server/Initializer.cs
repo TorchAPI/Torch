@@ -245,6 +245,7 @@ quit";
 
         private void HandleException(object sender, UnhandledExceptionEventArgs e)
         {
+            _server.FatalException = true;
             var ex = (Exception)e.ExceptionObject;
             LogException(ex);
             if (MyFakes.ENABLE_MINIDUMP_SENDING)
