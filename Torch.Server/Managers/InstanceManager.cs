@@ -204,6 +204,9 @@ namespace Torch.Server.Managers
             try
             {
                 var sandboxPath = Path.Combine(DedicatedConfig.LoadWorld, "Sandbox.sbc");
+                var sandboxConfigPath = Path.Combine(DedicatedConfig.LoadWorld, "Sandbox_config.sbc");
+                
+                var configPresent = MyObjectBuilderSerializer.DeserializeXML(sandboxConfigPath, out MyObjectBuilder_WorldConfiguration worldConfig, out ulong configSizeInBytes);
                 MyObjectBuilderSerializer.DeserializeXML(sandboxPath, out MyObjectBuilder_Checkpoint checkpoint, out ulong sizeInBytes);
                 if (checkpoint == null)
                 {
@@ -215,15 +218,29 @@ namespace Torch.Server.Managers
                 checkpoint.Settings = DedicatedConfig.SessionSettings;
                 checkpoint.Mods.Clear();
 
+                switch (configPresent)
+                {
+                    case true:
+                        worldConfig.Settings = DedicatedConfig.SessionSettings;
+                        worldConfig.Mods.Clear();
+                        break;
+                    case false:
+                        Log.Info($"No '{sandboxConfigPath}' present.");
+                        break;
+                }
+
                 foreach (var mod in DedicatedConfig.Mods)
                 {
                     var savedMod = new MyObjectBuilder_Checkpoint.ModItem(mod.Name, mod.PublishedFileId, mod.FriendlyName);
                     savedMod.IsDependency = mod.IsDependency;
                     checkpoint.Mods.Add(savedMod);
+                    if (configPresent)worldConfig.Mods.Add(savedMod);                   
                 }
                 Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
 
                 MyObjectBuilderSerializer.SerializeXML(sandboxPath, false, checkpoint);
+                if (configPresent) MyObjectBuilderSerializer.SerializeXML(sandboxConfigPath, false, worldConfig);
+                
 
                 //MyLocalCache.SaveCheckpoint(checkpoint, DedicatedConfig.LoadWorld);
                 Log.Info("Saved world config.");
