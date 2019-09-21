@@ -217,17 +217,15 @@ namespace Torch.Server.Managers
                 checkpoint.SessionName = DedicatedConfig.WorldName;
                 checkpoint.Settings = DedicatedConfig.SessionSettings;
                 checkpoint.Mods.Clear();
-
-                switch (configPresent)
+                
+                if (configPresent)
                 {
-                    case true:
-                        worldConfig.Settings = DedicatedConfig.SessionSettings;
-                        worldConfig.Mods.Clear();
-                        break;
-                    case false:
-                        Log.Info($"No '{sandboxConfigPath}' present.");
-                        break;
+                //Jimm won't let me use switches
+                    worldConfig.Settings = DedicatedConfig.SessionSettings;
+                    worldConfig.Mods.Clear();
                 }
+
+
 
                 foreach (var mod in DedicatedConfig.Mods)
                 {
@@ -239,7 +237,11 @@ namespace Torch.Server.Managers
                 Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
 
                 MyObjectBuilderSerializer.SerializeXML(sandboxPath, false, checkpoint);
-                if (configPresent) MyObjectBuilderSerializer.SerializeXML(sandboxConfigPath, false, worldConfig);
+                if (configPresent) 
+                {
+                    MyObjectBuilderSerializer.SerializeXML(sandboxConfigPath, false, worldConfig);
+                    Log.Info($"'{sandboxConfigPath}' updated");
+                }
                 
 
                 //MyLocalCache.SaveCheckpoint(checkpoint, DedicatedConfig.LoadWorld);
