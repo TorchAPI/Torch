@@ -65,7 +65,7 @@ namespace Torch.Commands
 
                 var sb = new StringBuilder();
 
-                if (command?.MinimumPromoteLevel > Context.Player.PromoteLevel)
+                if (Context.Player != null && command?.MinimumPromoteLevel > Context.Player.PromoteLevel)
                 {
                     Context.Respond("You are not authorized to use this command.");
                     return;
