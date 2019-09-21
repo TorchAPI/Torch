@@ -131,6 +131,13 @@ namespace Torch.Server.Views
             //w.Show();
             var d = new RoleEditor();
             var w = _instanceManager.DedicatedConfig.SelectedWorld;
+
+            if (w == null)
+            {
+                MessageBox.Show("A world is not selected.");
+                return;
+            }
+            
             d.Edit(w.Checkpoint.PromotedUsers.Dictionary);
             _instanceManager.DedicatedConfig.Administrators = w.Checkpoint.PromotedUsers.Dictionary.Where(k => k.Value >= MyPromoteLevel.Admin).Select(k => k.Key.ToString()).ToList();
         }

@@ -16,12 +16,12 @@ namespace Torch.Server.ViewModels
     public class CheckpointViewModel : ViewModel
     {
         private MyObjectBuilder_Checkpoint _checkpoint;
-        private SessionSettingsViewModel _sessionSettings;
+        //private SessionSettingsViewModel _sessionSettings;
 
         public CheckpointViewModel(MyObjectBuilder_Checkpoint checkpoint)
         {
             _checkpoint = checkpoint;
-            _sessionSettings = new SessionSettingsViewModel(_checkpoint.Settings);
+            //_sessionSettings = new SessionSettingsViewModel(_checkpoint.Settings);
         }
 
         public static implicit operator MyObjectBuilder_Checkpoint(CheckpointViewModel model)
@@ -59,15 +59,15 @@ namespace Torch.Server.ViewModels
 
         public SerializableDictionary<long, MyObjectBuilder_Checkpoint.PlayerId> ControlledEntities { get => _checkpoint.ControlledEntities; set => SetValue(ref _checkpoint.ControlledEntities, value); }
 
-        public SessionSettingsViewModel Settings
-        {
-            get => _sessionSettings;
-            set
-            {
-                SetValue(ref _sessionSettings, value);
-                _checkpoint.Settings = _sessionSettings;
-            }
-        }
+        //public SessionSettingsViewModel Settings
+        //{
+        //    get => _sessionSettings;
+        //    set
+        //    {
+        //        SetValue(ref _sessionSettings, value);
+        //        _checkpoint.Settings = _sessionSettings;
+        //    }
+        //}
 
         public MyObjectBuilder_ScriptManager ScriptManagerData => throw new NotImplementedException();
 
@@ -75,7 +75,7 @@ namespace Torch.Server.ViewModels
 
         public MyObjectBuilder_FactionCollection Factions => throw new NotImplementedException();
 
-        public List<MyObjectBuilder_Checkpoint.ModItem> Mods { get => _checkpoint.Mods; set => SetValue(ref _checkpoint.Mods, value); }
+        //public List<MyObjectBuilder_Checkpoint.ModItem> Mods { get => _checkpoint.Mods; set => SetValue(ref _checkpoint.Mods, value); }
 
         public SerializableDictionary<ulong, MyPromoteLevel> PromotedUsers { get => _checkpoint.PromotedUsers; set => SetValue(ref _checkpoint.PromotedUsers, value); }
 

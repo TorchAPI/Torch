@@ -119,8 +119,8 @@ namespace Torch.Server.Managers
             {
                 DedicatedConfig.Mods.Clear();
                 //remove the Torch mod to avoid running multiple copies of it
-                DedicatedConfig.SelectedWorld.Checkpoint.Mods.RemoveAll(m => m.PublishedFileId == TorchModCore.MOD_ID);
-                foreach (var m in DedicatedConfig.SelectedWorld.Checkpoint.Mods)
+                DedicatedConfig.SelectedWorld.WorldConfiguration.Mods.RemoveAll(m => m.PublishedFileId == TorchModCore.MOD_ID);
+                foreach (var m in DedicatedConfig.SelectedWorld.WorldConfiguration.Mods)
                     DedicatedConfig.Mods.Add(new ModItemInfo(m));
                 Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
             }
@@ -134,8 +134,8 @@ namespace Torch.Server.Managers
             {
                 DedicatedConfig.Mods.Clear();
                 //remove the Torch mod to avoid running multiple copies of it
-                DedicatedConfig.SelectedWorld.Checkpoint.Mods.RemoveAll(m => m.PublishedFileId == TorchModCore.MOD_ID);
-                foreach (var m in DedicatedConfig.SelectedWorld.Checkpoint.Mods)
+                DedicatedConfig.SelectedWorld.WorldConfiguration.Mods.RemoveAll(m => m.PublishedFileId == TorchModCore.MOD_ID);
+                foreach (var m in DedicatedConfig.SelectedWorld.WorldConfiguration.Mods)
                     DedicatedConfig.Mods.Add(new ModItemInfo(m));
                 Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
             }
@@ -149,7 +149,7 @@ namespace Torch.Server.Managers
         private void ImportWorldConfig(WorldViewModel world, bool modsOnly = true)
         {
             var mods = new MtObservableList<ModItemInfo>();
-            foreach (var mod in world.Checkpoint.Mods)
+            foreach (var mod in world.WorldConfiguration.Mods)
                 mods.Add(new ModItemInfo(mod));
             DedicatedConfig.Mods = mods;
 
@@ -157,7 +157,7 @@ namespace Torch.Server.Managers
             Log.Debug("Loaded mod list from world");
 
             if (!modsOnly)
-                DedicatedConfig.SessionSettings = world.Checkpoint.Settings;
+                DedicatedConfig.SessionSettings = world.WorldConfiguration.Settings;
         }
 
         private void ImportWorldConfig(bool modsOnly = true)
@@ -203,29 +203,22 @@ namespace Torch.Server.Managers
 
             try
             {
-                var sandboxPath = Path.Combine(DedicatedConfig.LoadWorld, "Sandbox.sbc");
-                MyObjectBuilderSerializer.DeserializeXML(sandboxPath, out MyObjectBuilder_Checkpoint checkpoint, out ulong sizeInBytes);
-                if (checkpoint == null)
-                {
-                    Log.Error($"Failed to load {DedicatedConfig.LoadWorld}, checkpoint null ({sizeInBytes} bytes, instance {Torch.Config.InstancePath})");
-                    return;
-                }
+                var world = DedicatedConfig.Worlds.FirstOrDefault(x => x.WorldPath == DedicatedConfig.LoadWorld) ?? new WorldViewModel(DedicatedConfig.LoadWorld);
 
-                checkpoint.SessionName = DedicatedConfig.WorldName;
-                checkpoint.Settings = DedicatedConfig.SessionSettings;
-                checkpoint.Mods.Clear();
+                world.Checkpoint.SessionName = DedicatedConfig.WorldName;
+                world.WorldConfiguration.Settings = DedicatedConfig.SessionSettings;
+                world.WorldConfiguration.Mods.Clear();
 
                 foreach (var mod in DedicatedConfig.Mods)
                 {
                     var savedMod = new MyObjectBuilder_Checkpoint.ModItem(mod.Name, mod.PublishedFileId, mod.FriendlyName);
                     savedMod.IsDependency = mod.IsDependency;
-                    checkpoint.Mods.Add(savedMod);
+                    world.WorldConfiguration.Mods.Add(savedMod);
                 }
                 Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
 
-                MyObjectBuilderSerializer.SerializeXML(sandboxPath, false, checkpoint);
+                world.SaveSandbox();
 
-                //MyLocalCache.SaveCheckpoint(checkpoint, DedicatedConfig.LoadWorld);
                 Log.Info("Saved world config.");
             }
             catch (Exception e)
@@ -259,7 +252,10 @@ namespace Torch.Server.Managers
         public string WorldPath { get; }
         public long WorldSizeKB { get; }
         private string _checkpointPath;
+        private string _worldConfigPath;
         public CheckpointViewModel Checkpoint { get; private set; }
+        
+        public WorldConfigurationViewModel WorldConfiguration { get; private set; }
 
         public WorldViewModel(string worldPath)
         {
@@ -268,8 +264,9 @@ namespace Torch.Server.Managers
                 WorldPath = worldPath;
                 WorldSizeKB = new DirectoryInfo(worldPath).GetFiles().Sum(x => x.Length) / 1024;
                 _checkpointPath = Path.Combine(WorldPath, "Sandbox.sbc");
+                _worldConfigPath = Path.Combine(WorldPath, "Sandbox_config.sbc");
                 FolderName = Path.GetFileName(worldPath);
-                BeginLoadCheckpoint();
+                LoadSandbox();
             }
             catch (ArgumentException ex)
             {
@@ -278,24 +275,40 @@ namespace Torch.Server.Managers
             }
         }
 
-        public async Task SaveCheckpointAsync()
+        public void SaveSandbox()
         {
-            await Task.Run(() =>
-            {
-                using (var f = File.Open(_checkpointPath, FileMode.Create))
-                    MyObjectBuilderSerializer.SerializeXML(f, Checkpoint);
-            });
+            using (var f = File.Open(_checkpointPath, FileMode.Create))
+                MyObjectBuilderSerializer.SerializeXML(f, Checkpoint);
+
+            using (var f = File.Open(_worldConfigPath, FileMode.Create))
+                MyObjectBuilderSerializer.SerializeXML(f, WorldConfiguration);
         }
 
-        private void BeginLoadCheckpoint()
+        private void LoadSandbox()
         {
-            //Task.Run(() =>
+            MyObjectBuilderSerializer.DeserializeXML(_checkpointPath, out MyObjectBuilder_Checkpoint checkpoint);
+            Checkpoint = new CheckpointViewModel(checkpoint);
+            
+            // migrate old saves
+            if (File.Exists(_worldConfigPath))
             {
-                Log.Info($"Preloading checkpoint {_checkpointPath}");
-                MyObjectBuilderSerializer.DeserializeXML(_checkpointPath, out MyObjectBuilder_Checkpoint checkpoint);
-                Checkpoint = new CheckpointViewModel(checkpoint);
-                OnPropertyChanged(nameof(Checkpoint));
-            }//);
+                MyObjectBuilderSerializer.DeserializeXML(_worldConfigPath, out MyObjectBuilder_WorldConfiguration worldConfig);
+                WorldConfiguration = new WorldConfigurationViewModel(worldConfig);
+            }
+            else
+            {
+                WorldConfiguration = new WorldConfigurationViewModel(new MyObjectBuilder_WorldConfiguration
+                {
+                    Mods = checkpoint.Mods,
+                    Settings = checkpoint.Settings
+                });
+
+                checkpoint.Mods = null;
+                checkpoint.Settings = null;
+            }
+            
+            OnPropertyChanged(nameof(Checkpoint));
+            OnPropertyChanged(nameof(WorldConfiguration));  
         }
     }
 }
