@@ -68,6 +68,7 @@ namespace Torch.Server
         {
             var scrollViewer = FindDescendant<ScrollViewer>(ConsoleText);
             scrollViewer.ScrollChanged += ConsoleText_OnScrollChanged;
+            TabControl.SelectedIndex = 3;
         }
 
         private void AttachConsole()
