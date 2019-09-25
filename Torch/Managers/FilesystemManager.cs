@@ -35,7 +35,20 @@ namespace Torch.Managers
         private void ClearTemp()
         {
             foreach (var file in Directory.GetFiles(TempDirectory, "*", SearchOption.AllDirectories))
-                File.Delete(file);
+            {
+                try
+                {
+                    File.Delete(file);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    _log.Debug($"Failed to delete file {file}, it's probably in use by another process'");
+                }
+                catch (Exception ex)
+                {
+                    _log.Warn($"Unhandled exception when clearing temp files. You may ignore this. {ex}");
+                }
+            }
         }
 
         /// <summary>
