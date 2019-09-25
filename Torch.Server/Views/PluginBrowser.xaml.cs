@@ -91,6 +91,7 @@ namespace Torch.Server.Views
         {
             var item = CurrentItem;
             TorchBase.Instance.Config.Plugins.Add(new Guid(item.ID));
+            TorchBase.Instance.Config.Save();
             Task.Run(async () =>
                      {
                          var result = await PluginQuery.Instance.DownloadPlugin(item.ID);
