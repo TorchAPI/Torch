@@ -210,8 +210,9 @@ namespace Torch.Server.Managers
         private void ValidateAuthTicketResponse(ulong steamId, JoinResult response, ulong steamOwner)
         {
             var state = new MyP2PSessionState();
-            MySteamService.Static.Peer2Peer.GetSessionState(steamId, ref state);
-            var ip = new IPAddress(BitConverter.GetBytes(state.RemoteIP).Reverse().ToArray());
+            //MySteamService.Static.Peer2Peer.GetSessionState(steamId, ref state);
+            //var ip = new IPAddress(BitConverter.GetBytes(state.RemoteIP).Reverse().ToArray());
+            string ip = "Can't acquire IP because Keen did a stupid";
 
             Torch.CurrentSession.KeenSession.PromotedUsers.TryGetValue(steamId, out MyPromoteLevel promoteLevel);
 

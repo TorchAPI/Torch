@@ -16,7 +16,6 @@ using NLog.Targets;
 using Sandbox.Engine.Utils;
 using Torch.Utils;
 using VRage.FileSystem;
-using VRage.Library.Exceptions;
 
 namespace Torch.Server
 {

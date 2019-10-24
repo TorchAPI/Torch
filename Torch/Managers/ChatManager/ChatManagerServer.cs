@@ -22,7 +22,7 @@ using VRage.Network;
 
 namespace Torch.Managers.ChatManager
 {
-    [PatchShim]
+    //[PatchShim]
     internal static class ChatInterceptPatch
     {
         private static ChatManagerServer _chatManager;
