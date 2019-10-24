@@ -37,14 +37,13 @@ namespace Torch.Commands
         [Permission(MyPromoteLevel.None)]
         public void GetIP(ulong steamId = 0)
         {
-            Context.Respond("Keen broke this command. Fix coming Soon(tm)");
-            //if (steamId == 0)
-            //    steamId = Context.Player.SteamUserId;
-
-            //VRage.GameServices.MyP2PSessionState statehack = new VRage.GameServices.MyP2PSessionState();
-            //VRage.Steam.MySteamService.Static.Peer2Peer.GetSessionState(steamId, ref statehack);
-            //var ip = new IPAddress(BitConverter.GetBytes(statehack.RemoteIP).Reverse().ToArray());
-            //Context.Respond($"Your IP is {ip}");
+            if (steamId == 0)
+                steamId = Context.Player.SteamUserId;
+            
+            VRage.GameServices.MyP2PSessionState statehack = new VRage.GameServices.MyP2PSessionState();
+            MySteamServiceWrapper.Static.Peer2Peer.GetSessionState(steamId, ref statehack);
+            var ip = new IPAddress(BitConverter.GetBytes(statehack.RemoteIP).Reverse().ToArray());
+            Context.Respond($"Your IP is {ip}");
         }
 
         [Command("help", "Displays help for a command")]

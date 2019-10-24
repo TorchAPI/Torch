@@ -25,6 +25,7 @@ using SpaceEngineers.Game.GUI;
 using Torch.Utils;
 using VRage;
 using VRage.Audio;
+using VRage.Dedicated;
 using VRage.FileSystem;
 using VRage.Game;
 using VRage.Game.ObjectBuilder;
@@ -137,8 +138,11 @@ namespace Torch
             bool dedicated = Sandbox.Engine.Platform.Game.IsDedicated;
             Environment.SetEnvironmentVariable("SteamAppId", _appSteamId.ToString());
             //KEEN WHY
-            var service = Activator.CreateInstance(Type.GetType("VRage.Steam.MySteamService, VRage.Steam"), new object[] {dedicated, _appSteamId});
-            MyServiceManager.Instance.AddService<IMyGameService>((IMyGameService)service);
+            Activator.CreateInstance(Type.GetType("VRage.Steam.MySteamService, VRage.Steam"), new object[] {dedicated, _appSteamId});
+            var service = MySteamServiceWrapper.Static;
+            MyServiceManager.Instance.AddService<IMyGameService>(service);
+            var serviceInstance = MySteamUgcService.Create(MyPerServerSettings.AppId, service);
+            MyServiceManager.Instance.AddService<IMyUGCService>(serviceInstance);
             if (dedicated && !MyGameService.HasGameServer)
             {
                 _log.Warn("Steam service is not running! Please reinstall dedicated server.");

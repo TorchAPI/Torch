@@ -22,7 +22,7 @@ using VRage.Network;
 
 namespace Torch.Managers.ChatManager
 {
-    //[PatchShim]
+    [PatchShim]
     internal static class ChatInterceptPatch
     {
         private static ChatManagerServer _chatManager;
@@ -30,7 +30,7 @@ namespace Torch.Managers.ChatManager
             
         internal static void Patch(PatchContext context)
         {
-            var target = typeof(MyMultiplayerBase).GetMethod("OnChatMessageRecieved_Server", BindingFlags.Static | BindingFlags.NonPublic);
+            var target = typeof(MyMultiplayerBase).GetMethod("OnChatMessageReceived_Server", BindingFlags.Static | BindingFlags.NonPublic);
             var patchMethod = typeof(ChatInterceptPatch).GetMethod(nameof(PrefixMessageProcessing), BindingFlags.Static | BindingFlags.NonPublic);
             context.GetPattern(target).Prefixes.Add(patchMethod);
         }
