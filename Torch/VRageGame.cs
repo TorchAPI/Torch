@@ -136,7 +136,9 @@ namespace Torch
         {
             bool dedicated = Sandbox.Engine.Platform.Game.IsDedicated;
             Environment.SetEnvironmentVariable("SteamAppId", _appSteamId.ToString());
-            MyServiceManager.Instance.AddService<IMyGameService>(new MySteamService(dedicated, _appSteamId));
+            //KEEN WHY
+            var service = Activator.CreateInstance(Type.GetType("VRage.Steam.MySteamService, VRage.Steam"), new object[] {dedicated, _appSteamId});
+            MyServiceManager.Instance.AddService<IMyGameService>((IMyGameService)service);
             if (dedicated && !MyGameService.HasGameServer)
             {
                 _log.Warn("Steam service is not running! Please reinstall dedicated server.");
@@ -176,7 +178,7 @@ namespace Torch
                 else
                 {
                     MyPerformanceSettings preset = MyGuiScreenOptionsGraphics.GetPreset(MyRenderQualityEnum.NORMAL);
-                    MyRenderProxy.Settings.User = MyVideoSettingsManager.GetGraphicsSettingsFromConfig(ref preset)
+                    MyRenderProxy.Settings.User = MyVideoSettingsManager.GetGraphicsSettingsFromConfig(ref preset, false)
                         .PerformanceSettings.RenderSettings;
                     MyStringId graphicsRenderer = MySandboxGame.Config.GraphicsRenderer;
                     if (graphicsRenderer == MySandboxGame.DirectX11RendererKey)
