@@ -216,11 +216,11 @@ quit";
                 StandardOutputEncoding = Encoding.ASCII
             };
             var cmd = Process.Start(steamCmdProc);
-
+            
             // ReSharper disable once PossibleNullReferenceException
             while (!cmd.HasExited)
             {
-                log.Info(cmd.StandardOutput.ReadLine());
+                log.Info(cmd.StandardOutput.ReadToEnd());
                 Thread.Sleep(100);
             }
         }

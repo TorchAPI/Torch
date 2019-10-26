@@ -221,7 +221,7 @@ namespace Torch.Server.Managers
             
             if (Players.ContainsKey(steamId))
             {
-                _log.Warn($"Player {steamId} already has already joined!");
+                _log.Warn($"Player {steamId} has already joined!");
                 UserRejected(steamId, JoinResult.AlreadyJoined);
             }
             else if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE &&

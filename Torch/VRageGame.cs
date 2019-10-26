@@ -137,11 +137,9 @@ namespace Torch
         {
             bool dedicated = Sandbox.Engine.Platform.Game.IsDedicated;
             Environment.SetEnvironmentVariable("SteamAppId", _appSteamId.ToString());
-            //KEEN WHY
-            Activator.CreateInstance(Type.GetType("VRage.Steam.MySteamService, VRage.Steam"), new object[] {dedicated, _appSteamId});
-            var service = MySteamServiceWrapper.Static;
+            var service = MySteamServiceWrapper.Init(dedicated, _appSteamId);
             MyServiceManager.Instance.AddService<IMyGameService>(service);
-            var serviceInstance = MySteamUgcService.Create(MyPerServerSettings.AppId, service);
+            var serviceInstance = MySteamUgcService.Create(_appSteamId, service);
             MyServiceManager.Instance.AddService<IMyUGCService>(serviceInstance);
             if (dedicated && !MyGameService.HasGameServer)
             {
@@ -239,7 +237,7 @@ namespace Torch
 
             if (MySandboxGame.FatalErrorDuringInit)
             {
-                throw new InvalidOperationException("Failed to start sandbox game: fatal error during init");
+                throw new InvalidOperationException("Failed to start sandbox game: see Keen log for details");
             }
             try
             {
