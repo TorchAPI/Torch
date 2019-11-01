@@ -342,8 +342,8 @@ namespace Torch.Managers
                         if (!entry.Name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
                             continue;
 
-                        if (loaded.Any(a => entry.Name.Contains(a.GetName().Name)))
-                            continue;
+                        //if (loaded.Any(a => entry.Name.Contains(a.GetName().Name)))
+                        //    continue;
 
 
                         using (var stream = entry.Open())
@@ -380,8 +380,8 @@ namespace Torch.Managers
                     if (!file.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
                         continue;
 
-                    if (loaded.Any(a => file.Contains(a.GetName().Name)))
-                        continue;
+                    //if (loaded.Any(a => file.Contains(a.GetName().Name)))
+                    //    continue;
 
                     using (var stream = File.OpenRead(file))
                     {
