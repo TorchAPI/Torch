@@ -330,6 +330,8 @@ namespace Torch.Managers
         private void LoadPlugin(PluginItem item)
         {
             var assemblies = new List<Assembly>();
+
+            var loaded = AppDomain.CurrentDomain.GetAssemblies();
             
             if (item.IsZip)
             {
@@ -339,6 +341,9 @@ namespace Torch.Managers
                     {
                         if (!entry.Name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
                             continue;
+
+                        //if (loaded.Any(a => entry.Name.Contains(a.GetName().Name)))
+                        //    continue;
 
 
                         using (var stream = entry.Open())
@@ -375,6 +380,9 @@ namespace Torch.Managers
                     if (!file.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
                         continue;
 
+                    //if (loaded.Any(a => file.Contains(a.GetName().Name)))
+                    //    continue;
+
                     using (var stream = File.OpenRead(file))
                     {
                         var data = stream.ReadToEnd();
@@ -391,7 +399,7 @@ namespace Torch.Managers
                             {
                                 _log.Warn(e, $"Failed to read debugging symbols from {symbolPath}");
                             }
-
+                        
                         assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
                     }
                 }
