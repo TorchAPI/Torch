@@ -125,21 +125,14 @@ quit";
         public void Run()
         {
             _server = new TorchServer(_config);
-            var init = Task.Run(() => _server.Init()).ContinueWith(x =>
+
+            if (_config.NoGui)
             {
-                if (!x.IsFaulted)
-                    return;
-
-                Log.Error("Error initializing server.");
-                LogException(x.Exception);
-            });
-            if (!_config.NoGui)
+                _server.Init();
+                _server.Start();
+            }
+            else
             {
-                if (_config.Autostart)
-                    init.ContinueWith(x => _server.Start());
-
-                Log.Info("Showing UI");
-
 #if !DEBUG
                 if (!_config.IndependentConsole)
                 {
@@ -147,13 +140,19 @@ quit";
                     NativeMethods.FreeConsole();
                 }
 #endif
-
-                new TorchUI(_server).ShowDialog();
-            }
-            else
-            {
-                init.Wait();
-                _server.Start();
+                
+                var gameThread = new Thread(() =>
+                {
+                    _server.Init();
+                    
+                    if (_config.Autostart)
+                        _server.Start();
+                });
+                
+                gameThread.Start();
+                
+                var ui = new TorchUI(_server);
+                ui.ShowDialog();
             }
         }
 
