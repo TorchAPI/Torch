@@ -29,7 +29,7 @@ namespace Torch.Server.ViewModels
         public ConfigDedicatedViewModel(MyConfigDedicated<MyObjectBuilder_SessionSettings> configDedicated)
         {
             _config = configDedicated;
-            _config.IgnoreLastSession = true;
+            //_config.IgnoreLastSession = true;
             SessionSettings = new SessionSettingsViewModel(_config.SessionSettings);
             Task.Run(() => UpdateAllModInfosAsync());
         }
@@ -40,7 +40,7 @@ namespace Torch.Server.ViewModels
 
             _config.SessionSettings = _sessionSettings;
             // Never ever
-            _config.IgnoreLastSession = true;
+            //_config.IgnoreLastSession = true;
             _config.Save(path);
         }
 
