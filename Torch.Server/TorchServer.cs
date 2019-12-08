@@ -41,7 +41,6 @@ namespace Torch.Server
     {
         private bool _canRun;
         private TimeSpan _elapsedPlayTime;
-        private bool _hasRun;
         private bool _isRunning;
         private float _simRatio;
         private ServerState _state;
@@ -65,6 +64,8 @@ namespace Torch.Server
             sessionManager.AddFactory(x => new MultiplayerManagerDedicated(this));
         }
 
+        public bool HasRun { get; private set; }
+        
         /// <inheritdoc />
         public float SimulationRatio { get => _simRatio; set => SetValue(ref _simRatio, value); }
 
@@ -120,7 +121,7 @@ namespace Torch.Server
             if (State != ServerState.Stopped)
                 return;
 
-            if (_hasRun)
+            if (IsRunning || HasRun)
             {
                 Restart();
                 return;
@@ -129,7 +130,6 @@ namespace Torch.Server
             State = ServerState.Starting;
             IsRunning = true;
             CanRun = false;
-            _hasRun = true;
             Log.Info("Starting server.");
             MySandboxGame.ConfigDedicated = DedicatedInstance.DedicatedConfig.Model;
 
@@ -144,6 +144,7 @@ namespace Torch.Server
                 Log.Error("Server is already stopped");
             Log.Info("Stopping server.");
             base.Stop();
+            HasRun = true;
             Log.Info("Server stopped.");
 
             State = ServerState.Stopped;

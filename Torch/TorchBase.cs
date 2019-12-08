@@ -230,7 +230,6 @@ namespace Torch
             MySandboxGame.Static.Invoke(action, caller);
         }
 
-
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.NoInlining)]
         public void InvokeBlocking(Action action, int timeoutMs = -1, [CallerMemberName] string caller = "")

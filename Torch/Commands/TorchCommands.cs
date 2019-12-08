@@ -272,7 +272,6 @@ namespace Torch.Commands
                             Debug.Assert(torch != null);
                             torch.Stop();
                         }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
-
                     }
                     else
                     {

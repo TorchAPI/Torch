@@ -198,6 +198,12 @@ namespace Torch.Server.Managers
 
         public void SaveConfig()
         {
+            if (((TorchServer)Torch).HasRun)
+            {
+                Log.Warn("Checkpoint cache is stale, not saving dedicated config.");
+                return;
+            }
+            
             DedicatedConfig.Save(Path.Combine(Torch.Config.InstancePath, CONFIG_NAME));
             Log.Info("Saved dedicated config.");
 
@@ -308,7 +314,7 @@ namespace Torch.Server.Managers
             }
             
             OnPropertyChanged(nameof(Checkpoint));
-            OnPropertyChanged(nameof(WorldConfiguration));  
+            OnPropertyChanged(nameof(WorldConfiguration));
         }
     }
 }
