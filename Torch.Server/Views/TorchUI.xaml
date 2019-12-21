@@ -66,7 +66,7 @@
                 <RichTextBox x:Name="ConsoleText" VerticalScrollBarVisibility="Visible" FontFamily="Consolas" IsReadOnly="True"/>
             </TabItem>
             <TabItem Header="Configuration">
-                <Grid IsEnabled="{Binding CanRun}">
+                <Grid IsEnabled="{Binding Path=HasRun, Converter={StaticResource InverseBool}}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition/>
