@@ -70,6 +70,9 @@
     <Reference Include="MahApps.Metro, Version=1.6.1.4, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MahApps.Metro.1.6.1\lib\net45\MahApps.Metro.dll</HintPath>
     </Reference>
+    <Reference Include="Markdown.Xaml, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Markdown.Xaml.1.0.0\lib\net45\Markdown.Xaml.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CodeAnalysis, Version=1.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\Microsoft.CodeAnalysis.dll</HintPath>
@@ -80,12 +83,24 @@
       <HintPath>..\GameBinaries\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Microsoft.Win32.Registry, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Win32.Registry.4.4.0\lib\net461\Microsoft.Win32.Registry.dll</HintPath>
+    </Reference>
+    <Reference Include="mscorlib" />
+    <Reference Include="netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51">
+      <HintPath>..\GameBinaries\netstandard.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="protobuf-net, Version=2.4.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\packages\protobuf-net.2.4.0\lib\net40\protobuf-net.dll</HintPath>
     </Reference>
     <Reference Include="Sandbox.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -121,11 +136,24 @@
       <HintPath>..\GameBinaries\Steamworks.NET.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\System.ComponentModel.Annotations.4.5.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security.AccessControl, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.AccessControl.4.4.0\lib\net461\System.Security.AccessControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Principal.Windows.4.4.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -180,15 +208,8 @@
       <HintPath>..\GameBinaries\VRage.Math.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="VRage.Native, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\GameBinaries\VRage.Native.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.OpenVRWrapper, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\GameBinaries\VRage.OpenVRWrapper.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="VRage.Platform.Windows, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\GameBinaries\VRage.Platform.Windows.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Render, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -225,9 +246,11 @@
     <Compile Include="Managers\InstanceManager.cs" />
     <Compile Include="Managers\MultiplayerManagerDedicatedEventShim.cs" />
     <Compile Include="Managers\MultiplayerManagerDedicatedPatchShim.cs" />
+    <Compile Include="Managers\RemoteAPIManager.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Initializer.cs" />
     <Compile Include="Patches\PromotePatch.cs" />
+    <Compile Include="Patches\WorldLoadExceptionPatch.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TorchConfig.cs" />
@@ -245,14 +268,28 @@
     <Compile Include="ViewModels\Entities\CharacterViewModel.cs" />
     <Compile Include="ViewModels\ConfigDedicatedViewModel.cs" />
     <Compile Include="ViewModels\Entities\EntityControlViewModel.cs" />
+    <Compile Include="ViewModels\ModItemInfo.cs" />
     <Compile Include="ViewModels\SessionSettingsViewModel.cs" />
+    <Compile Include="ViewModels\WorldConfigurationViewModel.cs" />
     <Compile Include="Views\Converters\DefinitionToIdConverter.cs" />
     <Compile Include="Views\Converters\BooleanAndConverter.cs" />
     <Compile Include="Views\Converters\ListConverter.cs" />
     <Compile Include="MultiTextWriter.cs" />
     <Compile Include="RichTextBoxWriter.cs" />
+    <Compile Include="Views\Converters\ListConverterWorkshopId.cs" />
+    <Compile Include="Views\Converters\ModToIdConverter.cs" />
     <Compile Include="Views\Entities\CharacterView.xaml.cs">
       <DependentUpon>CharacterView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Extensions.cs" />
+    <Compile Include="Views\ModListControl.xaml.cs">
+      <DependentUpon>ModListControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\PluginBrowser.xaml.cs">
+      <DependentUpon>PluginBrowser.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\RoleEditor.xaml.cs">
+      <DependentUpon>RoleEditor.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ThemeControl.xaml.cs">
       <DependentUpon>ThemeControl.xaml</DependentUpon>
@@ -414,6 +451,14 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\ModListControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\PluginBrowser.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\PluginsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -427,6 +472,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Resources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\RoleEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -469,9 +518,10 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\TransformOnBuild.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(SolutionDir)NLog.config" "$(TargetDir)"</PostBuildEvent>
+    <PostBuildEvent>copy "$(SolutionDir)NLog.config" "$(TargetDir)" &amp; copy "$(SolutionDir)NLog-user.config" "$(TargetDir)"</PostBuildEvent>
   </PropertyGroup>
 </Project>

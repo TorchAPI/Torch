@@ -12,6 +12,8 @@ using Torch.API.Managers;
 using Torch.Server.Annotations;
 using Torch.Server.Managers;
 using Torch.Server.ViewModels;
+using Torch.Views;
+using VRage.Game.ModAPI;
 
 namespace Torch.Server.Views
 {
@@ -115,6 +117,29 @@ namespace Torch.Server.Views
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void NewWorld_OnClick(object sender, RoutedEventArgs e)
+        {
+            var c  = new WorldGeneratorDialog(_instanceManager);
+            c.Show();
+        }
+
+        private void RoleEdit_Onlick(object sender, RoutedEventArgs e)
+        {
+            //var w = new RoleEditor(_instanceManager.DedicatedConfig.SelectedWorld);
+            //w.Show();
+            var d = new RoleEditor();
+            var w = _instanceManager.DedicatedConfig.SelectedWorld;
+
+            if (w == null)
+            {
+                MessageBox.Show("A world is not selected.");
+                return;
+            }
+            
+            d.Edit(w.Checkpoint.PromotedUsers.Dictionary);
+            _instanceManager.DedicatedConfig.Administrators = w.Checkpoint.PromotedUsers.Dictionary.Where(k => k.Value >= MyPromoteLevel.Admin).Select(k => k.Key.ToString()).ToList();
         }
     }
 }

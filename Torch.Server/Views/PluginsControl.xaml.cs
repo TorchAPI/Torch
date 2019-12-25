@@ -41,7 +41,9 @@ namespace Torch.Server.Views
         {
             if (propertyChangedEventArgs.PropertyName == nameof(PluginManagerViewModel.SelectedPlugin))
             {
-                if (((PluginManagerViewModel)DataContext).SelectedPlugin.Control is PropertyGrid)
+                var plugin = ((PluginManagerViewModel)DataContext).SelectedPlugin;
+               
+                if (plugin.Control is PropertyGrid || !plugin.Control.GetScrollContainer())
                     PScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
                 else
                     PScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
@@ -70,6 +72,12 @@ namespace Torch.Server.Views
         {
             if (_plugins?.PluginDir != null)
                 Process.Start(_plugins.PluginDir);
+        }
+
+        private void BrowsPlugins_OnClick(object sender, RoutedEventArgs e)
+        {
+            var browser = new PluginBrowser();
+            browser.Show();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Torch
 {
@@ -12,12 +13,17 @@ namespace Torch
         string InstancePath { get; set; }
         bool NoGui { get; set; }
         bool NoUpdate { get; set; }
-        List<string> Plugins { get; set; }
+        List<Guid> Plugins { get; set; }
+        bool LocalPlugins { get; set; }
         bool RestartOnCrash { get; set; }
         bool ShouldUpdatePlugins { get; }
         bool ShouldUpdateTorch { get; }
         int TickTimeout { get; set; }
         string WaitForPID { get; set; }
+        string ChatName { get; set; }
+        string ChatColor { get; set; }
+        string TestPlugin { get; set; }
+        bool DisconnectOnRestart { get; set; }
 
         bool Save(string path = null);
     }

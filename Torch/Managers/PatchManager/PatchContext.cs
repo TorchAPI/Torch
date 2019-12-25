@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using NLog;
 
 namespace Torch.Managers.PatchManager
 {
@@ -10,6 +11,7 @@ namespace Torch.Managers.PatchManager
     public sealed class PatchContext
     {
         private readonly Dictionary<MethodBase, MethodRewritePattern> _rewritePatterns = new Dictionary<MethodBase, MethodRewritePattern>();
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         internal PatchContext()
         {

@@ -10,6 +10,8 @@ using Torch.Collections;
 using Torch.Server.Managers;
 using VRage.Game;
 using VRage.Game.ModAPI;
+using Torch.Utils.SteamWorkshopTools;
+using Torch.Collections;
 
 namespace Torch.Server.ViewModels
 {
@@ -27,8 +29,9 @@ namespace Torch.Server.ViewModels
         public ConfigDedicatedViewModel(MyConfigDedicated<MyObjectBuilder_SessionSettings> configDedicated)
         {
             _config = configDedicated;
-            _config.IgnoreLastSession = true;
+            //_config.IgnoreLastSession = true;
             SessionSettings = new SessionSettingsViewModel(_config.SessionSettings);
+            Task.Run(() => UpdateAllModInfosAsync());
         }
 
         public void Save(string path = null)
@@ -37,7 +40,7 @@ namespace Torch.Server.ViewModels
 
             _config.SessionSettings = _sessionSettings;
             // Never ever
-            _config.IgnoreLastSession = true;
+            //_config.IgnoreLastSession = true;
             _config.Save(path);
         }
 
@@ -73,12 +76,61 @@ namespace Torch.Server.ViewModels
             }
         }
 
+        public async Task UpdateAllModInfosAsync(Action<string> messageHandler = null)
+        {
+            if (Mods.Count() == 0)
+                return;
+
+            var ids = Mods.Select(m => m.PublishedFileId);
+            var workshopService = WebAPI.Instance;
+            Dictionary<ulong, PublishedItemDetails> modInfos = null;
+
+            try
+            {
+                modInfos = (await workshopService.GetPublishedFileDetails(ids.ToArray()));
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.Message);
+                return;
+            }
+
+            Log.Info($"Mods Info successfully retrieved!");
+
+            foreach (var mod in Mods)
+            {
+                if (!modInfos.ContainsKey(mod.PublishedFileId) || modInfos[mod.PublishedFileId] == null)
+                {
+                    Log.Error($"Failed to retrieve info for mod with workshop id '{mod.PublishedFileId}'!");
+                }
+                //else if (!modInfo.Tags.Contains(""))
+                else
+                {
+                    mod.FriendlyName = modInfos[mod.PublishedFileId].Title;
+                    mod.Description = modInfos[mod.PublishedFileId].Description;
+                    //mod.Name = modInfos[mod.PublishedFileId].FileName;
+                }
+            }
+
+        }
+
         public List<string> Administrators { get => _config.Administrators; set => SetValue(x => _config.Administrators = x, value); }
 
         public List<ulong> Banned { get => _config.Banned; set => SetValue(x => _config.Banned = x, value); }
-        
-        private List<ulong> _mods = new List<ulong>();
-        public List<ulong> Mods { get => _mods; set => SetValue(x => _mods = x, value); }
+
+        private MtObservableList<ModItemInfo> _mods = new MtObservableList<ModItemInfo>();
+        public MtObservableList<ModItemInfo> Mods
+        {
+            get => _mods;
+            set
+            {
+                SetValue(x => _mods = x, value);
+                Task.Run(() => UpdateAllModInfosAsync());
+            }
+        }
+
+        public List<ulong> Reserved { get => _config.Reserved; set => SetValue(x => _config.Reserved = x, value); }
+
 
         public int AsteroidAmount { get => _config.AsteroidAmount; set => SetValue(x => _config.AsteroidAmount = x, value); }
 
@@ -90,7 +142,11 @@ namespace Torch.Server.ViewModels
 
         public string ServerName { get => _config.ServerName; set => SetValue(x => _config.ServerName = x, value); }
 
+        public string ServerDescription { get => _config.ServerDescription; set => SetValue(x => _config.ServerDescription = x, value); }
+
         public bool PauseGameWhenEmpty { get => _config.PauseGameWhenEmpty; set => SetValue(x => _config.PauseGameWhenEmpty = x, value); }
+
+        public bool AutodetectDependencies { get => _config.AutodetectDependencies; set => SetValue(x => _config.AutodetectDependencies = x, value); }
 
         public string PremadeCheckpointPath { get => _config.PremadeCheckpointPath; set => SetValue(x => _config.PremadeCheckpointPath = x, value); }
 

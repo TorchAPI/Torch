@@ -19,6 +19,7 @@ using Torch.API.Managers;
 using Torch.API.Session;
 using Torch.Commands;
 using Torch.Mod;
+using Torch.Mod.Messages;
 using Torch.Server.Commands;
 using Torch.Server.Managers;
 using Torch.Utils;
@@ -26,6 +27,7 @@ using VRage;
 using VRage.Dedicated;
 using VRage.Dedicated.RemoteAPI;
 using VRage.GameServices;
+using VRage.Scripting;
 using VRage.Steam;
 using Timer = System.Threading.Timer;
 
@@ -37,14 +39,18 @@ namespace Torch.Server
 {
     public class TorchServer : TorchBase, ITorchServer
     {
+        private bool _hasRun;
         private bool _canRun;
         private TimeSpan _elapsedPlayTime;
-        private bool _hasRun;
         private bool _isRunning;
         private float _simRatio;
         private ServerState _state;
         private Stopwatch _uptime;
         private Timer _watchdog;
+        private int _players;
+        private MultiplayerManagerDedicated _multiplayerManagerDedicated;
+        
+        internal bool FatalException { get; set; }
 
         /// <inheritdoc />
        public TorchServer(TorchConfig config = null)
@@ -52,12 +58,15 @@ namespace Torch.Server
             DedicatedInstance = new InstanceManager(this);
             AddManager(DedicatedInstance);
             AddManager(new EntityControlManager(this));
+            AddManager(new RemoteAPIManager(this));
             Config = config ?? new TorchConfig();
 
             var sessionManager = Managers.GetManager<ITorchSessionManager>();
             sessionManager.AddFactory(x => new MultiplayerManagerDedicated(this));
         }
-
+        
+        public bool HasRun { get => _hasRun; set => SetValue(ref _hasRun, value); }
+        
         /// <inheritdoc />
         public float SimulationRatio { get => _simRatio; set => SetValue(ref _simRatio, value); }
 
@@ -92,6 +101,8 @@ namespace Torch.Server
         /// <inheritdoc />
         public string InstancePath => Config?.InstancePath;
 
+        public int OnlinePlayers { get => _players; private set => SetValue(ref _players, value); }
+
         /// <inheritdoc />
         public override void Init()
         {
@@ -111,7 +122,7 @@ namespace Torch.Server
             if (State != ServerState.Stopped)
                 return;
 
-            if (_hasRun)
+            if (IsRunning || HasRun)
             {
                 Restart();
                 return;
@@ -119,16 +130,11 @@ namespace Torch.Server
 
             State = ServerState.Starting;
             IsRunning = true;
+            HasRun = true;
             CanRun = false;
-            _hasRun = true;
             Log.Info("Starting server.");
             MySandboxGame.ConfigDedicated = DedicatedInstance.DedicatedConfig.Model;
-            if (MySandboxGame.ConfigDedicated.RemoteApiEnabled && !string.IsNullOrEmpty(MySandboxGame.ConfigDedicated.RemoteSecurityKey))
-            {
-                var myRemoteServer = new MyRemoteServer(MySandboxGame.ConfigDedicated.RemoteApiPort, MySandboxGame.ConfigDedicated.RemoteSecurityKey);
-                Log.Info($"Remote API started on port {myRemoteServer.Port}");
-            }
-            
+
             _uptime = Stopwatch.StartNew();
             base.Start();
         }
@@ -150,9 +156,15 @@ namespace Torch.Server
         /// <summary>
         ///     Restart the program.
         /// </summary>
-        public override void Restart()
+        public override void Restart(bool save = true)
         {
-            if (IsRunning)
+            if (Config.DisconnectOnRestart)
+            {
+                ModCommunication.SendMessageToClients(new JoinServerMessage("0.0.0.0:25555"));
+                Log.Info("Ejected all players from server for restart.");
+            }
+
+            if (IsRunning && save)
                 Save().ContinueWith(DoRestart, this, TaskContinuationOptions.RunContinuationsAsynchronously);
             else
                 DoRestart(null, this);
@@ -186,6 +198,7 @@ namespace Torch.Server
 
             if (newState == TorchSessionState.Loaded)
             {
+                _multiplayerManagerDedicated = CurrentSession.Managers.GetManager<MultiplayerManagerDedicated>();
                 CurrentSession.Managers.GetManager<CommandManager>().RegisterCommandModule(typeof(WhitelistCommands));
                 ModCommunication.Register();
             }
@@ -195,8 +208,7 @@ namespace Torch.Server
         public override void Init(object gameInstance)
         {
             base.Init(gameInstance);
-            var game = gameInstance as MySandboxGame;
-            if (game != null && MySession.Static != null)
+            if (gameInstance is MySandboxGame && MySession.Static != null)
                 State = ServerState.Running;
             else
                 State = ServerState.Stopped;
@@ -210,6 +222,7 @@ namespace Torch.Server
             SimulationRatio = Math.Min(Sync.ServerSimulationRatio, 1);
             var elapsed = TimeSpan.FromSeconds(Math.Floor(_uptime.Elapsed.TotalSeconds));
             ElapsedPlayTime = elapsed;
+            OnlinePlayers = _multiplayerManagerDedicated?.Players.Count ?? 0;
 
             if (_watchdog == null && Config.TickTimeout > 0)
             {
@@ -223,10 +236,16 @@ namespace Torch.Server
 
         private static void CheckServerResponding(object state)
         {
+            var server = (TorchServer)state;
             var mre = new ManualResetEvent(false);
-            ((TorchServer)state).Invoke(() => mre.Set());
+            server.Invoke(() => mre.Set());
             if (!mre.WaitOne(TimeSpan.FromSeconds(Instance.Config.TickTimeout)))
             {
+                if (server.FatalException)
+                {
+                    server._watchdog.Dispose();
+                    return;
+                }
 #if DEBUG
                 Log.Error(
                     $"Server watchdog detected that the server was frozen for at least {((TorchServer) state).Config.TickTimeout} seconds.");

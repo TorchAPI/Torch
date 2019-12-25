@@ -7,14 +7,15 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using NLog;
-using Octokit;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
 using Torch.API.Session;
+using Torch.API.WebAPI;
 using Torch.Collections;
 using Torch.Commands;
 using Torch.Utils;
@@ -24,36 +25,57 @@ namespace Torch.Managers
     /// <inheritdoc />
     public class PluginManager : Manager, IPluginManager
     {
-        private GitHubClient _gitClient = new GitHubClient(new ProductHeaderValue("Torch"));
+        private class PluginItem
+        {
+            public string Filename { get; set; }
+            public string Path { get; set; }
+            public PluginManifest Manifest { get; set; }
+            public bool IsZip { get; set; }
+            public List<PluginItem> ResolvedDependencies { get; set; }
+        }
+        
         private static Logger _log = LogManager.GetCurrentClassLogger();
+        
         private const string MANIFEST_NAME = "manifest.xml";
+        
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
         private readonly MtObservableSortedDictionary<Guid, ITorchPlugin> _plugins = new MtObservableSortedDictionary<Guid, ITorchPlugin>();
+        private CommandManager _mgr;
+        
 #pragma warning disable 649
         [Dependency]
         private ITorchSessionManager _sessionManager;
 #pragma warning restore 649
-
+        
         /// <inheritdoc />
         public IReadOnlyDictionary<Guid, ITorchPlugin> Plugins => _plugins.AsReadOnlyObservable();
 
         public event Action<IReadOnlyCollection<ITorchPlugin>> PluginsLoaded;
-
+        
         public PluginManager(ITorchBase torchInstance) : base(torchInstance)
         {
             if (!Directory.Exists(PluginDir))
                 Directory.CreateDirectory(PluginDir);
         }
-
+        
         /// <summary>
         /// Updates loaded plugins in parallel.
         /// </summary>
         public void UpdatePlugins()
         {
             foreach (var plugin in _plugins.Values)
-                plugin.Update();
+            {
+                try
+                {
+                    plugin.Update();
+                }
+                catch (Exception ex)
+                {
+                    _log.Error(ex, $"Plugin {plugin.Name} threw an exception during update!");
+                }
+            }
         }
-
+        
         /// <inheritdoc/>
         public override void Attach()
         {
@@ -63,18 +85,18 @@ namespace Torch.Managers
 
         private void SessionManagerOnSessionStateChanged(ITorchSession session, TorchSessionState newState)
         {
-            var mgr = session.Managers.GetManager<CommandManager>();
-            if (mgr == null)
+            _mgr = session.Managers.GetManager<CommandManager>();
+            if (_mgr == null)
                 return;
             switch (newState)
             {
                 case TorchSessionState.Loaded:
                     foreach (ITorchPlugin plugin in _plugins.Values)
-                        mgr.RegisterPluginCommands(plugin);
+                        _mgr.RegisterPluginCommands(plugin);
                     return;
                 case TorchSessionState.Unloading:
                     foreach (ITorchPlugin plugin in _plugins.Values)
-                        mgr.UnregisterPluginCommands(plugin);
+                        _mgr.UnregisterPluginCommands(plugin);
                     return;
                 case TorchSessionState.Loading:
                 case TorchSessionState.Unloaded:
@@ -82,7 +104,7 @@ namespace Torch.Managers
                     return;
             }
         }
-
+        
         /// <summary>
         /// Unloads all plugins.
         /// </summary>
@@ -97,34 +119,85 @@ namespace Torch.Managers
 
         public void LoadPlugins()
         {
-            if (Torch.Config.ShouldUpdatePlugins)
-                DownloadPluginUpdates();
-
             _log.Info("Loading plugins...");
-            var pluginItems = Directory.EnumerateFiles(PluginDir, "*.zip").Union(Directory.EnumerateDirectories(PluginDir));
-            foreach (var item in pluginItems)
+
+            if (!string.IsNullOrEmpty(Torch.Config.TestPlugin))
             {
-                var path = Path.Combine(PluginDir, item);
-                var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
-                var manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
-                if (manifest == null)
+                _log.Info($"Loading plugin for debug at {Torch.Config.TestPlugin}");
+
+                foreach (var item in GetLocalPlugins(Torch.Config.TestPlugin, true))
                 {
-                    _log.Warn($"Item '{item}' is missing a manifest, skipping.");
-                    continue;
+                    _log.Info(item.Path);
+                    LoadPlugin(item);
                 }
 
-                if (_plugins.ContainsKey(manifest.Guid))
+                foreach (var plugin in _plugins.Values)
                 {
-                    _log.Error($"The GUID provided by {manifest.Name} ({item}) is already in use by {_plugins[manifest.Guid].Name}");
-                    continue;
+                    plugin.Init(Torch);
                 }
-
-                if (isZip)
-                    LoadPluginFromZip(path);
-                else
-                    LoadPluginFromFolder(path);
+                _log.Info($"Loaded {_plugins.Count} plugins.");
+                PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
+                return;
             }
 
+            var pluginItems = GetLocalPlugins(PluginDir);
+            var pluginsToLoad = new List<PluginItem>();
+            foreach (var item in pluginItems)
+            {
+                var pluginItem = item;
+                if (!TryValidatePluginDependencies(pluginItems, ref pluginItem, out var missingPlugins))
+                {
+                    // We have some missing dependencies.
+                    // Future fix would be to download them, but instead for now let's
+                    // just warn the user it's missing
+                    foreach(var missingPlugin in missingPlugins)
+                        _log.Warn($"{item.Manifest.Name} is missing dependency {missingPlugin}. Skipping plugin.");
+                    continue;
+                }
+                
+                pluginsToLoad.Add(pluginItem);
+            }
+
+            // Download any plugin updates.
+            bool updatesGotten = DownloadPluginUpdates(pluginsToLoad);
+
+            if (updatesGotten)
+            {
+                // Resort the plugins just in case updates changed load hints.
+                pluginItems = GetLocalPlugins(PluginDir);
+                pluginsToLoad.Clear();
+                foreach (var item in pluginItems)
+                {
+                    var pluginItem = item;
+                    if (!TryValidatePluginDependencies(pluginItems, ref pluginItem, out var missingPlugins))
+                    {
+                        foreach (var missingPlugin in missingPlugins)
+                            _log.Warn($"{item.Manifest.Name} is missing dependency {missingPlugin}. Skipping plugin.");
+                        continue;
+                    }
+
+                    pluginsToLoad.Add(pluginItem);
+                }
+            }
+
+            // Sort based on dependencies.
+            try
+            {
+                pluginsToLoad = pluginsToLoad.TSort(item => item.ResolvedDependencies)
+                    .ToList();
+            }
+            catch (Exception e)
+            {
+                // This will happen on cylic dependencies.
+                _log.Error(e);
+            }
+            
+            // Actually load the plugins now.
+            foreach (var item in pluginsToLoad)
+            {
+                LoadPlugin(item);
+            } 
+            
             foreach (var plugin in _plugins.Values)
             {
                 plugin.Init(Torch);
@@ -133,188 +206,211 @@ namespace Torch.Managers
             PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
         }
 
-        private void DownloadPluginUpdates()
+        //debug flag is set when the user asks us to run with a specific plugin for plugin development debug
+        //please do not change references to this arg unless you are very sure you know what you're doing
+        private List<PluginItem> GetLocalPlugins(string pluginDir, bool debug = false)
         {
-            //TODO
-            _log.Warn("Automatic plugin updates are disabled in this build of Torch while the system is reworked.");
-            return;
+            var firstLoad = Torch.Config.Plugins.Count == 0;
+            
+            var pluginItems = Directory.EnumerateFiles(pluginDir, "*.zip")
+                .Union(Directory.EnumerateDirectories(pluginDir));
+            if (debug)
+                pluginItems = pluginItems.Union(new List<string> {pluginDir});
+            var results = new List<PluginItem>();
 
+            foreach (var item in pluginItems)
+            {
+                var path = Path.Combine(pluginDir, item);
+                var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
+                var manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
+
+                if (manifest == null)
+                {
+                    if (!debug)
+                    {
+                        _log.Warn($"Item '{item}' is missing a manifest, skipping.");
+                        continue;
+                    }
+                    manifest = new PluginManifest()
+                               {
+                                   Guid = new Guid(),
+                                   Version = "0",
+                                   Name = "TEST"
+                               };
+                }
+
+                var duplicatePlugin = results.FirstOrDefault(r => r.Manifest.Guid == manifest.Guid);
+                if (duplicatePlugin != null)
+                {
+                    _log.Warn(
+                        $"The GUID provided by {manifest.Name} ({item}) is already in use by {duplicatePlugin.Manifest.Name}.");
+                    continue;
+                }
+                
+                if (!Torch.Config.LocalPlugins && !debug)
+                {
+                    if (isZip && !Torch.Config.Plugins.Contains(manifest.Guid))
+                    {
+                        if (!firstLoad)
+                        {
+                            _log.Warn($"Plugin {manifest.Name} ({item}) exists in the plugin directory, but is not listed in torch.cfg. Skipping load!");
+                            continue;
+                        }
+                        _log.Info($"First-time load: Plugin {manifest.Name} added to torch.cfg.");
+                        Torch.Config.Plugins.Add(manifest.Guid);
+                    }
+                }
+                
+                results.Add(new PluginItem
+                {
+                    Filename = item,
+                    IsZip = isZip,
+                    Manifest = manifest,
+                    Path = path
+                });
+            }
+
+            if (!Torch.Config.LocalPlugins && firstLoad)
+                Torch.Config.Save();
+            
+            return results;
+        } 
+        
+        private bool DownloadPluginUpdates(List<PluginItem> plugins)
+        {
             _log.Info("Checking for plugin updates...");
             var count = 0;
-            var pluginItems = Directory.EnumerateFiles(PluginDir, "*.zip").Union(Directory.EnumerateDirectories(PluginDir));
-            Parallel.ForEach(pluginItems, async item =>
+            Task.WhenAll(plugins.Select(async item =>
             {
-                PluginManifest manifest = null;
                 try
                 {
-                    var path = Path.Combine(PluginDir, item);
-                    var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
-                    manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
-                    if (manifest == null)
+                    if (!item.IsZip)
                     {
-                        _log.Warn($"Item '{item}' is missing a manifest, skipping update check.");
+                        _log.Warn($"Unzipped plugins cannot be auto-updated. Skipping plugin {item}");
+                        return;
+                    }
+                    item.Manifest.Version.TryExtractVersion(out Version currentVersion);
+                    var latest = await PluginQuery.Instance.QueryOne(item.Manifest.Guid);
+
+                    if (latest?.LatestVersion == null)
+                    {
+                        _log.Warn($"Plugin {item.Manifest.Name} does not have any releases on torchapi.net. Cannot update.");
                         return;
                     }
 
-                    manifest.Version.TryExtractVersion(out Version currentVersion);
-                    var latest = await GetLatestArchiveAsync(manifest.Repository).ConfigureAwait(false);
+                    latest.LatestVersion.TryExtractVersion(out Version newVersion);
 
-                    if (currentVersion == null || latest.Item1 == null)
+                    if (currentVersion == null || newVersion == null)
                     {
-                        _log.Error($"Error parsing version from manifest or GitHub for plugin '{manifest.Name}.'");
+                        _log.Error($"Error parsing version from manifest or website for plugin '{item.Manifest.Name}.'");
                         return;
                     }
 
-                    if (latest.Item1 <= currentVersion)
+                    if (newVersion <= currentVersion)
                     {
-                        _log.Debug($"{manifest.Name} {manifest.Version} is up to date.");
+                        _log.Debug($"{item.Manifest.Name} {item.Manifest.Version} is up to date.");
                         return;
                     }
 
-                    _log.Info($"Updating plugin '{manifest.Name}' from {currentVersion} to {latest.Item1}.");
-                    await UpdatePluginAsync(path, latest.Item2).ConfigureAwait(false);
-                    count++;
-                }
-                catch (NotFoundException)
-                {
-                    _log.Warn($"GitHub repository not found for {manifest.Name}");
+                    _log.Info($"Updating plugin '{item.Manifest.Name}' from {currentVersion} to {newVersion}.");
+                    await PluginQuery.Instance.DownloadPlugin(latest, item.Path);
+                    Interlocked.Increment(ref count);
                 }
                 catch (Exception e)
                 {
-                    _log.Warn($"An error occurred updating the plugin {manifest.Name}.");
+                    _log.Warn($"An error occurred updating the plugin {item.Manifest.Name}.");
                     _log.Warn(e);
                 }
-            });
+            }));
 
             _log.Info($"Updated {count} plugins.");
+            return count > 0;
         }
-
-        private async Task<Tuple<Version, string>> GetLatestArchiveAsync(string repository)
-        {
-            try
-            {
-                var split = repository.Split('/');
-                var latest = await _gitClient.Repository.Release.GetLatest(split[0], split[1]).ConfigureAwait(false);
-                if (!latest.TagName.TryExtractVersion(out Version latestVersion))
-                {
-                    _log.Error($"Unable to parse version tag for the latest release of '{repository}.'");
-                }
-
-                var zipAsset = latest.Assets.FirstOrDefault(x => x.Name.Contains(".zip", StringComparison.CurrentCultureIgnoreCase));
-                if (zipAsset == null)
-                {
-                    _log.Error($"Unable to find archive for the latest release of '{repository}.'");
-                }
-
-                return new Tuple<Version, string>(latestVersion, zipAsset?.BrowserDownloadUrl);
-            }
-            catch (Exception e)
-            {
-                _log.Error($"Unable to get the latest release of '{repository}.'");
-                _log.Error(e);
-                return default(Tuple<Version, string>);
-            }
-        }
-
-        private Task UpdatePluginAsync(string localPath, string downloadUrl)
-        {
-            if (File.Exists(localPath))
-                File.Delete(localPath);
-
-            if (Directory.Exists(localPath))
-                Directory.Delete(localPath, true);
-
-            var fileName = downloadUrl.Split('/').Last();
-            var filePath = Path.Combine(PluginDir, fileName);
-
-            return new WebClient().DownloadFileTaskAsync(downloadUrl, filePath);
-        }
-
-        private void LoadPluginFromFolder(string directory)
+        
+        private void LoadPlugin(PluginItem item)
         {
             var assemblies = new List<Assembly>();
-            var files = Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories).ToList();
 
-            var manifest = GetManifestFromDirectory(directory);
-            if (manifest == null)
+            var loaded = AppDomain.CurrentDomain.GetAssemblies();
+            
+            if (item.IsZip)
             {
-                _log.Warn($"Directory {directory} is missing a manifest, skipping load.");
-                return;
-            }
-
-            foreach (var file in files)
-            {
-                if (!file.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
-                    continue;
-
-                using (var stream = File.OpenRead(file))
+                using (var zipFile = ZipFile.OpenRead(item.Path))
                 {
-                    var data = stream.ReadToEnd();
-                    byte[] symbol = null;
-                    var symbolPath = Path.Combine(Path.GetDirectoryName(file) ?? ".",
-                        Path.GetFileNameWithoutExtension(file) + ".pdb");
-                    if (File.Exists(symbolPath))
-                        try
-                        {
-                            using (var symbolStream = File.OpenRead(symbolPath))
-                                symbol = symbolStream.ReadToEnd();
-                        }
-                        catch (Exception e)
-                        {
-                            _log.Warn(e, $"Failed to read debugging symbols from {symbolPath}");
-                        }
-                    assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
-                }
-            }
-
-            RegisterAllAssemblies(assemblies);
-            InstantiatePlugin(manifest, assemblies);
-        }
-
-        private void LoadPluginFromZip(string path)
-        {
-            PluginManifest manifest;
-            var assemblies = new List<Assembly>();
-            using (var zipFile = ZipFile.OpenRead(path))
-            {
-                manifest = GetManifestFromZip(path);
-                if (manifest == null)
-                {
-                    _log.Warn($"Zip file {path} is missing a manifest, skipping.");
-                    return;
-                }
-
-                foreach (var entry in zipFile.Entries)
-                {
-                    if (!entry.Name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
-                        continue;
-
-
-                    using (var stream = entry.Open())
+                    foreach (var entry in zipFile.Entries)
                     {
-                        var data = stream.ReadToEnd((int)entry.Length);
-                        byte[] symbol = null;
-                        var symbolEntryName = entry.FullName.Substring(0, entry.FullName.Length - "dll".Length) + "pdb";
-                        var symbolEntry = zipFile.GetEntry(symbolEntryName);
-                        if (symbolEntry != null)
-                            try
-                            {
-                                using (var symbolStream = symbolEntry.Open())
-                                    symbol = symbolStream.ReadToEnd((int)symbolEntry.Length);
-                            }
-                            catch (Exception e)
-                            {
-                                _log.Warn(e, $"Failed to read debugging symbols from {path}:{symbolEntryName}");
-                            }
-                        assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
+                        if (!entry.Name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
+                            continue;
+
+                        //if (loaded.Any(a => entry.Name.Contains(a.GetName().Name)))
+                        //    continue;
+
+
+                        using (var stream = entry.Open())
+                        {
+                            var data = stream.ReadToEnd((int) entry.Length);
+                            byte[] symbol = null;
+                            var symbolEntryName =
+                                entry.FullName.Substring(0, entry.FullName.Length - "dll".Length) + "pdb";
+                            var symbolEntry = zipFile.GetEntry(symbolEntryName);
+                            if (symbolEntry != null)
+                                try
+                                {
+                                    using (var symbolStream = symbolEntry.Open())
+                                        symbol = symbolStream.ReadToEnd((int) symbolEntry.Length);
+                                }
+                                catch (Exception e)
+                                {
+                                    _log.Warn(e, $"Failed to read debugging symbols from {item.Filename}:{symbolEntryName}");
+                                }
+
+                            assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
+                        }
                     }
                 }
             }
+            else
+            {
+                var files = Directory
+                    .EnumerateFiles(item.Path, "*.*", SearchOption.AllDirectories)
+                    .ToList();
+                
+                foreach (var file in files)
+                {
+                    if (!file.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
+                        continue;
 
+                    //if (loaded.Any(a => file.Contains(a.GetName().Name)))
+                    //    continue;
+
+                    using (var stream = File.OpenRead(file))
+                    {
+                        var data = stream.ReadToEnd();
+                        byte[] symbol = null;
+                        var symbolPath = Path.Combine(Path.GetDirectoryName(file) ?? ".",
+                            Path.GetFileNameWithoutExtension(file) + ".pdb");
+                        if (File.Exists(symbolPath))
+                            try
+                            {
+                                using (var symbolStream = File.OpenRead(symbolPath))
+                                    symbol = symbolStream.ReadToEnd();
+                            }
+                            catch (Exception e)
+                            {
+                                _log.Warn(e, $"Failed to read debugging symbols from {symbolPath}");
+                            }
+                        
+                        assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
+                    }
+                }
+
+                
+            }
+            
             RegisterAllAssemblies(assemblies);
-            InstantiatePlugin(manifest, assemblies);
+            InstantiatePlugin(item.Manifest, assemblies);
         }
-
+        
         private void RegisterAllAssemblies(IReadOnlyCollection<Assembly> assemblies)
         {
             Assembly ResolveDependentAssembly(object sender, ResolveEventArgs args)
@@ -342,38 +438,12 @@ namespace Torch.Managers
                 TorchBase.RegisterAuxAssembly(asm);
             }
         }
-
+        
         private static bool IsAssemblyCompatible(AssemblyName a, AssemblyName b)
         {
             return a.Name == b.Name && a.Version.Major == b.Version.Major && a.Version.Minor == b.Version.Minor;
         }
-
-
-        private PluginManifest GetManifestFromZip(string path)
-        {
-            using (var zipFile = ZipFile.OpenRead(path))
-            {
-                foreach (var entry in zipFile.Entries)
-                {
-                    if (!entry.Name.Equals(MANIFEST_NAME, StringComparison.CurrentCultureIgnoreCase))
-                        continue;
-
-                    using (var stream = new StreamReader(entry.Open()))
-                    {
-                        return PluginManifest.Load(stream);
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        private PluginManifest GetManifestFromDirectory(string directory)
-        {
-            var path = Path.Combine(directory, MANIFEST_NAME);
-            return !File.Exists(path) ? null : PluginManifest.Load(path);
-        }
-
+        
         private void InstantiatePlugin(PluginManifest manifest, IEnumerable<Assembly> assemblies)
         {
             Type pluginType = null;
@@ -383,6 +453,9 @@ namespace Torch.Managers
                 foreach (var type in asm.GetExportedTypes())
                 {
                     if (!type.GetInterfaces().Contains(typeof(ITorchPlugin)))
+                        continue;
+
+                    if (type.IsAbstract)
                         continue;
 
                     _log.Info($"Loading plugin at {type.FullName}");
@@ -423,12 +496,97 @@ namespace Torch.Managers
             }
 
             _log.Info($"Loading plugin '{manifest.Name}' ({manifest.Version})");
-            var plugin = (TorchPluginBase)Activator.CreateInstance(pluginType);
 
+            TorchPluginBase plugin;
+            try
+            {
+                plugin = (TorchPluginBase)Activator.CreateInstance(pluginType);
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, $"Plugin {manifest.Name} threw an exception during instantiation! Not loading!");
+                return;
+            }
             plugin.Manifest = manifest;
             plugin.StoragePath = Torch.Config.InstancePath;
             plugin.Torch = Torch;
             _plugins.Add(manifest.Guid, plugin);
+        }
+        
+        private PluginManifest GetManifestFromZip(string path)
+        {
+            try
+            {
+                using (var zipFile = ZipFile.OpenRead(path))
+                {
+                    foreach (var entry in zipFile.Entries)
+                    {
+                        if (!entry.Name.Equals(MANIFEST_NAME, StringComparison.CurrentCultureIgnoreCase))
+                            continue;
+
+                        using (var stream = new StreamReader(entry.Open()))
+                        {
+                            return PluginManifest.Load(stream);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, $"Error opening zip! File is likely corrupt. File at {path} will be deleted and re-acquired on the next restart!");
+                File.Delete(path);
+            }
+
+            return null;
+        }
+
+        private bool TryValidatePluginDependencies(List<PluginItem> items, ref PluginItem item, out List<Guid> missingDependencies)
+        {
+            var dependencies = new List<PluginItem>();
+            missingDependencies = new List<Guid>();
+            
+            foreach (var pluginDependency in item.Manifest.Dependencies)
+            {
+                var dependency = items
+                    .FirstOrDefault(pi => pi?.Manifest.Guid == pluginDependency.Plugin);
+                if (dependency == null)
+                {
+                    missingDependencies.Add(pluginDependency.Plugin);
+                    continue;
+                }
+
+                if (!string.IsNullOrEmpty(pluginDependency.MinVersion)
+                    && dependency.Manifest.Version.TryExtractVersion(out var dependencyVersion)
+                    && pluginDependency.MinVersion.TryExtractVersion(out var minVersion))
+                {
+                    // really only care about version if it is defined.
+                    if (dependencyVersion < minVersion)
+                    {
+                        // If dependency version is too low, we can try to update. Otherwise
+                        // it's a missing dependency.
+                        
+                        // For now let's just warn the user. bitMuse is lazy.
+                        _log.Warn($"{dependency.Manifest.Name} is below the requested version for {item.Manifest.Name}."
+                        + Environment.NewLine
+                        + $" Desired version: {pluginDependency.MinVersion}, Available version: {dependency.Manifest.Version}");
+                        missingDependencies.Add(pluginDependency.Plugin);
+                        continue;
+                    }
+                }
+
+                dependencies.Add(dependency);
+            }
+
+            item.ResolvedDependencies = dependencies;
+            if (missingDependencies.Count > 0)
+                return false;
+            return true;
+        }
+
+        private PluginManifest GetManifestFromDirectory(string directory)
+        {
+            var path = Path.Combine(directory, MANIFEST_NAME);
+            return !File.Exists(path) ? null : PluginManifest.Load(path);
         }
 
         /// <inheritdoc cref="IEnumerable.GetEnumerator"/>

@@ -10,6 +10,7 @@ using Torch.Mod.Messages;
 using VRage;
 using VRage.Collections;
 using VRage.Game.ModAPI;
+using VRage.Network;
 using VRage.Utils;
 using Task = ParallelTasks.Task;
 
@@ -50,6 +51,10 @@ namespace Torch.Mod
         {
             var m = _messagePool.Get();
             m.CompressedData = bytes;
+#if TORCH
+            m.SenderId = MyEventContext.Current.Sender.Value;
+#endif
+
             _processing.Add(m);
         }
 
@@ -59,10 +64,19 @@ namespace Torch.Mod
             {
                 try
                 {
-                    var m = _processing.Take();
+                    MessageBase m;
+                    try
+                    {
+                        m = _processing.Take();
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+
                     MyLog.Default.WriteLineAndConsole($"Processing message: {m.GetType().Name}");
 
-                    if (m is IncomingMessage)
+                    if (m is IncomingMessage) //process incoming messages
                     {
                         MessageBase i;
                         try
@@ -78,50 +92,55 @@ namespace Torch.Mod
                             continue;
                         }
 
+                        if (TorchModCore.Debug)
+                            MyAPIGateway.Utilities.ShowMessage("Torch", $"Received message of type {i.GetType().Name}");
+
                         if (MyAPIGateway.Multiplayer.IsServer)
                             i.ProcessServer();
                         else
                             i.ProcessClient();
                     }
-                    else
+                    else //process outgoing messages
                     {
+                        if (TorchModCore.Debug)
+                            MyAPIGateway.Utilities.ShowMessage("Torch", $"Sending message of type {m.GetType().Name}");
+
                         var b = MyAPIGateway.Utilities.SerializeToBinary(m);
                         m.CompressedData = MyCompression.Compress(b);
 
-                        MyAPIGateway.Utilities.InvokeOnGameThread(() =>
+                        switch (m.TargetType)
                         {
+                            case MessageTarget.Single:
+                                MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, m.CompressedData, m.Target);
+                                break;
+                            case MessageTarget.Server:
+                                MyAPIGateway.Multiplayer.SendMessageToServer(NET_ID, m.CompressedData);
+                                break;
+                            case MessageTarget.AllClients:
+                                MyAPIGateway.Players.GetPlayers(_playerCache);
+                                foreach (var p in _playerCache)
+                                {
+                                    if (p.SteamUserId == MyAPIGateway.Multiplayer.MyId)
+                                        continue;
+                                    MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, m.CompressedData, p.SteamUserId);
+                                }
 
-                            switch (m.TargetType)
-                            {
-                                case MessageTarget.Single:
-                                    MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, m.CompressedData, m.Target);
-                                    break;
-                                case MessageTarget.Server:
-                                    MyAPIGateway.Multiplayer.SendMessageToServer(NET_ID, m.CompressedData);
-                                    break;
-                                case MessageTarget.AllClients:
-                                    MyAPIGateway.Players.GetPlayers(_playerCache);
-                                    foreach (var p in _playerCache)
-                                    {
-                                        if (p.SteamUserId == MyAPIGateway.Multiplayer.MyId)
-                                            continue;
-                                        MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, m.CompressedData, p.SteamUserId);
-                                    }
-                                    break;
-                                case MessageTarget.AllExcept:
-                                    MyAPIGateway.Players.GetPlayers(_playerCache);
-                                    foreach (var p in _playerCache)
-                                    {
-                                        if (p.SteamUserId == MyAPIGateway.Multiplayer.MyId || m.Ignore.Contains(p.SteamUserId))
-                                            continue;
-                                        MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, m.CompressedData, p.SteamUserId);
-                                    }
-                                    break;
-                                default:
-                                    throw new Exception();
-                            }
-                            _playerCache.Clear();
-                        });
+                                break;
+                            case MessageTarget.AllExcept:
+                                MyAPIGateway.Players.GetPlayers(_playerCache);
+                                foreach (var p in _playerCache)
+                                {
+                                    if (p.SteamUserId == MyAPIGateway.Multiplayer.MyId || m.Ignore.Contains(p.SteamUserId))
+                                        continue;
+                                    MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, m.CompressedData, p.SteamUserId);
+                                }
+
+                                break;
+                            default:
+                                throw new Exception();
+                        }
+
+                        _playerCache.Clear();
                     }
                 }
                 catch (Exception ex)
@@ -130,7 +149,7 @@ namespace Torch.Mod
                 }
             }
 
-            MyLog.Default.WriteLineAndConsole("TORCH MOD: COMMUNICATION THREAD: EXIT SIGNAL RECEIVED!");
+            MyLog.Default.WriteLineAndConsole("TORCH MOD: INFO: Communication thread shut down successfully! THIS IS NOT AN ERROR");
             //exit signal received. Clean everything and GTFO
             _processing?.Dispose();
             _processing = null;

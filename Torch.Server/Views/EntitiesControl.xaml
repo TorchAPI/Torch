@@ -22,10 +22,11 @@
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition />
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <TreeView Grid.Row="0" Margin="3" DockPanel.Dock="Top" SelectedItemChanged="TreeView_OnSelectedItemChanged"
-                      TreeViewItem.Expanded="TreeViewItem_OnExpanded">
+                      TreeViewItem.Expanded="TreeViewItem_OnExpanded" Name="EntityTree">
                 <TreeView.Resources>
                     <HierarchicalDataTemplate DataType="{x:Type entities:GridViewModel}"
                                               ItemsSource="{Binding Path=Blocks}">
@@ -46,46 +47,47 @@
                     </HierarchicalDataTemplate>
                     <HierarchicalDataTemplate DataType="{x:Type entities:VoxelMapViewModel}"
                                               ItemsSource="{Binding AttachedGrids}">
-                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock Text="{Binding DescriptiveName}" />
                     </HierarchicalDataTemplate>
                 </TreeView.Resources>
-                <TreeViewItem ItemsSource="{Binding Path=Grids.Values}">
+                <TreeViewItem ItemsSource="{Binding Path=SortedGrids}">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding Grids.Count, StringFormat=Grids ({0})}" />
                     </TreeViewItem.Header>
                 </TreeViewItem>
-                <TreeViewItem ItemsSource="{Binding Characters.Values}">
+                <TreeViewItem ItemsSource="{Binding SortedCharacters}">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding Characters.Count, StringFormat=Characters ({0})}" />
                     </TreeViewItem.Header>
                     <TreeViewItem.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Name}" />
+                            <TextBlock Text="{Binding DescriptiveName}" />
                         </DataTemplate>
                     </TreeViewItem.ItemTemplate>
                 </TreeViewItem>
-                <TreeViewItem ItemsSource="{Binding VoxelMaps.Values}">
+                <TreeViewItem ItemsSource="{Binding SortedVoxelMaps}">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding VoxelMaps.Count, StringFormat=Voxel Maps ({0})}" />
                     </TreeViewItem.Header>
                     <TreeViewItem.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Name}" />
+                            <TextBlock Text="{Binding DescriptiveName}" />
                         </DataTemplate>
                     </TreeViewItem.ItemTemplate>
                 </TreeViewItem>
-                <TreeViewItem ItemsSource="{Binding FloatingObjects.Values}">
+                <TreeViewItem ItemsSource="{Binding SortedFloatingObjects}">
                     <TreeViewItem.Header>
                         <TextBlock Text="{Binding FloatingObjects.Count, StringFormat=Floating Objects ({0})}" />
                     </TreeViewItem.Header>
                     <TreeViewItem.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Name}" />
+                            <TextBlock Text="{Binding DescriptiveName}" />
                         </DataTemplate>
                     </TreeViewItem.ItemTemplate>
                 </TreeViewItem>
             </TreeView>
-            <StackPanel Grid.Row="1" DockPanel.Dock="Bottom">
+            <ComboBox Grid.Row="1" Margin="3" Name="SortCombo" SelectionChanged="SortCombo_SelectionChanged"/>
+            <StackPanel Grid.Row="2" DockPanel.Dock="Bottom">
                 <Button Content="Delete" Click="Delete_OnClick" IsEnabled="{Binding CurrentEntity.CanDelete}"
                         Margin="3" />
                 <Button Content="Stop" Click="Stop_OnClick" IsEnabled="{Binding CurrentEntity.CanStop}" Margin="3" />

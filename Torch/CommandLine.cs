@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using NLog;
 
 namespace Torch
 {
@@ -12,6 +13,7 @@ namespace Torch
     {
         private readonly string _argPrefix;
         private readonly Dictionary<ArgAttribute, PropertyInfo> _args = new Dictionary<ArgAttribute, PropertyInfo>();
+        private readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         protected CommandLine(string argPrefix = "-")
         {
@@ -89,6 +91,24 @@ namespace Torch
 
                             if (property.Value.PropertyType == typeof(string))
                                 property.Value.SetValue(this, args[++i]);
+
+                            if (property.Value.PropertyType == typeof(List<Guid>))
+                            {
+                                i++;
+                                var l = new List<Guid>(16);
+                                while (i < args.Length && !args[i].StartsWith(_argPrefix))
+                                {
+                                    if (Guid.TryParse(args[i], out Guid g))
+                                    {
+                                        l.Add(g);
+                                        _log.Info($"added plugin {g}");
+                                    }
+                                    else
+                                        _log.Warn($"Failed to parse GUID {args[i]}");
+                                    i++;
+                                }
+                                property.Value.SetValue(this, l);
+                            }
                         }
                     }
                     catch

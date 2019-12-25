@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -123,10 +124,10 @@ namespace Torch.Collections
         private readonly Timer _flushEventQueue;
         private const int _eventRaiseDelay = 50;
 
-        private readonly Queue<NotifyCollectionChangedEventArgs> _collectionEventQueue =
-            new Queue<NotifyCollectionChangedEventArgs>();
+        private readonly ConcurrentQueue<NotifyCollectionChangedEventArgs> _collectionEventQueue =
+            new ConcurrentQueue<NotifyCollectionChangedEventArgs>();
 
-        private readonly Queue<string> _propertyEventQueue = new Queue<string>();
+        private readonly ConcurrentQueue<string> _propertyEventQueue = new ConcurrentQueue<string>();
 
         private void FlushEventQueue(object data)
         {
@@ -137,7 +138,8 @@ namespace Torch.Collections
             // :/, but works better
             bool reset = _collectionEventQueue.Count > 0;
             if (reset)
-                _collectionEventQueue.Clear();
+                while (_collectionEventQueue.Count > 0)
+                    _collectionEventQueue.TryDequeue(out _);
             else
                 while (_collectionEventQueue.TryDequeue(out NotifyCollectionChangedEventArgs e))
                     _collectionChangedEvent.Raise(this, e);

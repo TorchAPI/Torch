@@ -10,8 +10,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
-using Octokit;
 using Torch.API;
+using Torch.API.WebAPI;
 
 namespace Torch.Managers
 {
@@ -21,12 +21,11 @@ namespace Torch.Managers
     public class UpdateManager : Manager
     {
         private Timer _updatePollTimer;
-        private GitHubClient _gitClient = new GitHubClient(new ProductHeaderValue("Torch"));
         private string _torchDir = new FileInfo(typeof(UpdateManager).Assembly.Location).DirectoryName;
         private Logger _log = LogManager.GetCurrentClassLogger();
         [Dependency]
         private FilesystemManager _fsManager;
-
+        
         public UpdateManager(ITorchBase torchInstance) : base(torchInstance)
         {
             //_updatePollTimer = new Timer(TimerElapsed, this, TimeSpan.Zero, TimeSpan.FromMinutes(5));
@@ -42,49 +41,34 @@ namespace Torch.Managers
         {
             CheckAndUpdateTorch();
         }
-
-        private async Task<Tuple<Version, string>> TryGetLatestArchiveUrl(string owner, string name)
-        {
-            try
-            {
-                var latest = await _gitClient.Repository.Release.GetLatest(owner, name).ConfigureAwait(false);
-                if (latest == null)
-                    return new Tuple<Version, string>(new Version(), null);
-
-                var zip = latest.Assets.FirstOrDefault(x => x.Name.Contains(".zip"));
-                if (zip == null)
-                    _log.Error($"Latest release of {owner}/{name} does not contain a zip archive.");
-                if (!latest.TagName.TryExtractVersion(out Version version))
-                    _log.Error($"Unable to parse version tag for {owner}/{name}");
-                return new Tuple<Version, string>(version, zip?.BrowserDownloadUrl);
-            }
-            catch (Exception e)
-            {
-                _log.Error($"An error occurred getting release information for '{owner}/{name}'");
-                _log.Error(e);
-                return default(Tuple<Version, string>);
-            }
-        }
-
+        
         private async void CheckAndUpdateTorch()
         {
-            // Doesn't work properly or reliably, TODO update when Jenkins is fully configured
-            return;
-
-            if (!Torch.Config.GetTorchUpdates)
+            if (Torch.Config.NoUpdate || !Torch.Config.GetTorchUpdates)
                 return;
 
             try
             {
-                var releaseInfo = await TryGetLatestArchiveUrl("TorchAPI", "Torch").ConfigureAwait(false);
-                if (releaseInfo.Item1 > Torch.TorchVersion)
+                var job = await JenkinsQuery.Instance.GetLatestVersion(Torch.TorchVersion.Branch);
+                if (job == null)
                 {
-                    _log.Warn($"Updating Torch from version {Torch.TorchVersion} to version {releaseInfo.Item1}");
+                    _log.Info("Failed to fetch latest version.");
+                    return;
+                }
+                
+                if (job.Version > Torch.TorchVersion)
+                {
+                    _log.Warn($"Updating Torch from version {Torch.TorchVersion} to version {job.Version}");
                     var updateName = Path.Combine(_fsManager.TempDirectory, "torchupdate.zip");
-                    new WebClient().DownloadFile(new Uri(releaseInfo.Item2), updateName);
+                    //new WebClient().DownloadFile(new Uri(releaseInfo.Item2), updateName);
+                    if (!await JenkinsQuery.Instance.DownloadRelease(job, updateName))
+                    {
+                        _log.Warn("Failed to download new release!");
+                        return;
+                    }
                     UpdateFromZip(updateName, _torchDir);
                     File.Delete(updateName);
-                    _log.Warn($"Torch version {releaseInfo.Item1} has been installed, please restart Torch to finish the process.");
+                    _log.Warn($"Torch version {job.Version} has been installed, please restart Torch to finish the process.");
                 }
                 else
                 {
@@ -104,12 +88,16 @@ namespace Torch.Managers
             {
                 foreach (var file in zip.Entries)
                 {
+                    if(file.Name == "NLog-user.config" && File.Exists(Path.Combine(extractPath, file.FullName)))
+                        continue;
+
                     _log.Debug($"Unzipping {file.FullName}");
                     var targetFile = Path.Combine(extractPath, file.FullName);
-                    _fsManager.SoftDelete(targetFile);
+                    _fsManager.SoftDelete(extractPath, file.FullName);
+                    file.ExtractToFile(targetFile, true);
                 }
 
-                zip.ExtractToDirectory(extractPath);
+                //zip.ExtractToDirectory(extractPath); //throws exceptions sometimes?
             }
         }
 

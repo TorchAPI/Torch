@@ -16,7 +16,6 @@ using NLog.Targets;
 using Sandbox.Engine.Utils;
 using Torch.Utils;
 using VRage.FileSystem;
-using VRage.Library.Exceptions;
 
 namespace Torch.Server
 {
@@ -55,6 +54,15 @@ quit";
             AppDomain.CurrentDomain.UnhandledException += HandleException;
 #endif
 
+#if DEBUG
+            //enables logging debug messages when built in debug mode. Amazing.
+            LogManager.Configuration.AddRule(LogLevel.Debug, LogLevel.Debug, "main");
+            LogManager.Configuration.AddRule(LogLevel.Debug, LogLevel.Debug, "console");
+            LogManager.Configuration.AddRule(LogLevel.Debug, LogLevel.Debug, "wpf");
+            LogManager.ReconfigExistingLoggers();
+            Log.Debug("Debug logging enabled.");
+#endif
+
             // This is what happens when Keen is bad and puts extensions into the System namespace.
             if (!Enumerable.Contains(args, "-noupdate"))
                 RunSteamCmd();
@@ -62,10 +70,30 @@ quit";
             var basePath = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
             var apiSource = Path.Combine(basePath, "DedicatedServer64", "steam_api64.dll");
             var apiTarget = Path.Combine(basePath, "steam_api64.dll");
-            
+
             if (!File.Exists(apiTarget))
+            {
                 File.Copy(apiSource, apiTarget);
+            }
+            else if (File.GetLastWriteTime(apiTarget) < File.GetLastWriteTime(apiSource))
+            {
+                File.Delete(apiTarget);
+                File.Copy(apiSource, apiTarget);
+            }
             
+            var havokSource = Path.Combine(basePath, "DedicatedServer64", "Havok.dll");
+            var havokTarget = Path.Combine(basePath, "Havok.dll");
+
+            if (!File.Exists(havokTarget))
+            {
+                File.Copy(havokSource, havokTarget);   
+            }
+            else if (File.GetLastWriteTime(havokTarget) < File.GetLastWriteTime(havokSource))
+            {   
+                File.Delete(havokTarget);
+                File.Copy(havokSource, havokTarget);
+            }
+
             _config = InitConfig();
             if (!_config.Parse(args))
                 return false;
@@ -97,28 +125,34 @@ quit";
         public void Run()
         {
             _server = new TorchServer(_config);
-            var init = Task.Run(() => _server.Init()).ContinueWith(x =>
-            {
-                if (!x.IsFaulted)
-                    return;
 
-                Log.Error("Error initializing server.");
-                LogException(x.Exception);
-            });
-            if (!_config.NoGui)
+            if (_config.NoGui)
             {
-                if (_config.Autostart)
-                    init.ContinueWith(x => _server.Start());
-
-                Log.Info("Showing UI");
-                Console.SetOut(TextWriter.Null);
-                NativeMethods.FreeConsole();
-                new TorchUI(_server).ShowDialog();
+                _server.Init();
+                _server.Start();
             }
             else
             {
-                init.Wait();
-                _server.Start();
+#if !DEBUG
+                if (!_config.IndependentConsole)
+                {
+                    Console.SetOut(TextWriter.Null);
+                    NativeMethods.FreeConsole();
+                }
+#endif
+                
+                var gameThread = new Thread(() =>
+                {
+                    _server.Init();
+                    
+                    if (_config.Autostart)
+                        _server.Start();
+                });
+                
+                gameThread.Start();
+                
+                var ui = new TorchUI(_server);
+                ui.ShowDialog();
             }
         }
 
@@ -164,9 +198,10 @@ quit";
                     File.Delete(STEAMCMD_ZIP);
                     log.Info("SteamCMD downloaded successfully!");
                 }
-                catch
+                catch (Exception e)
                 {
                     log.Error("Failed to download SteamCMD, unable to update the DS.");
+                    log.Error(e);
                     return;
                 }
             }
@@ -180,43 +215,53 @@ quit";
                 StandardOutputEncoding = Encoding.ASCII
             };
             var cmd = Process.Start(steamCmdProc);
-
+            
             // ReSharper disable once PossibleNullReferenceException
             while (!cmd.HasExited)
             {
-                log.Info(cmd.StandardOutput.ReadLine());
+                log.Info(cmd.StandardOutput.ReadToEnd());
                 Thread.Sleep(100);
             }
         }
 
         private void LogException(Exception ex)
-        {         
+        {
+            if (ex is AggregateException ag)
+            {
+                foreach (var e in ag.InnerExceptions)
+                    LogException(e);
+
+                return;
+            }
+            
+            Log.Fatal(ex);
+            
+            if (ex is ReflectionTypeLoadException extl)
+            {
+                foreach (var exl in extl.LoaderExceptions)
+                    LogException(exl);
+
+                return;
+            }
+            
             if (ex.InnerException != null)
             {
                 LogException(ex.InnerException);
             }
-
-            Log.Fatal(ex);
-            
-            if (ex is ReflectionTypeLoadException exti)
-                foreach (Exception exl in exti.LoaderExceptions)
-                    LogException(exl);
-            
-            if (ex is AggregateException ag)
-                foreach (Exception e in ag.InnerExceptions)
-                    LogException(e);
         }
 
         private void HandleException(object sender, UnhandledExceptionEventArgs e)
         {
+            _server.FatalException = true;
             var ex = (Exception)e.ExceptionObject;
             LogException(ex);
             if (MyFakes.ENABLE_MINIDUMP_SENDING)
             {
                 string path = Path.Combine(MyFileSystem.UserDataPath, "Minidump.dmp");
                 Log.Info($"Generating minidump at {path}");
-                MyMiniDump.Options options = MyMiniDump.Options.WithProcessThreadData | MyMiniDump.Options.WithThreadInfo;
-                MyMiniDump.Write(path, options, MyMiniDump.ExceptionInfo.Present);
+                Log.Error("Keen broke the minidump, sorry.");
+                //MyMiniDump.Options options = MyMiniDump.Options.WithProcessThreadData | MyMiniDump.Options.WithThreadInfo;
+                //MyMiniDump.Write(path, options, MyMiniDump.ExceptionInfo.Present);
             }
             LogManager.Flush();
             if (_config.RestartOnCrash)

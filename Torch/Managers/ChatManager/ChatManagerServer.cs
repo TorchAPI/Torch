@@ -13,38 +13,72 @@ using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Torch.API;
 using Torch.API.Managers;
+using Torch.Managers.PatchManager;
 using Torch.Utils;
 using VRage;
+using VRage.Collections;
 using VRage.Library.Collections;
 using VRage.Network;
 
 namespace Torch.Managers.ChatManager
 {
+    [PatchShim]
+    internal static class ChatInterceptPatch
+    {
+        private static ChatManagerServer _chatManager;
+        private static ChatManagerServer ChatManager => _chatManager ?? (_chatManager = TorchBase.Instance.CurrentSession.Managers.GetManager<ChatManagerServer>());
+            
+        internal static void Patch(PatchContext context)
+        {
+            var target = typeof(MyMultiplayerBase).GetMethod("OnChatMessageReceived_Server", BindingFlags.Static | BindingFlags.NonPublic);
+            var patchMethod = typeof(ChatInterceptPatch).GetMethod(nameof(PrefixMessageProcessing), BindingFlags.Static | BindingFlags.NonPublic);
+            context.GetPattern(target).Prefixes.Add(patchMethod);
+        }
+
+        private static bool PrefixMessageProcessing(ref ChatMsg msg)
+        {
+            var consumed = false;
+            ChatManager.RaiseMessageRecieved(msg, ref consumed);
+            return !consumed;
+        }
+    }
+    
     public class ChatManagerServer : ChatManagerClient, IChatManagerServer
     {
-        [Dependency(Optional = true)]
-        private INetworkManager _networkManager;
-
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private static readonly Logger _chatLog = LogManager.GetLogger("Chat");
 
-        private readonly ChatIntercept _chatIntercept;
+        private readonly HashSet<ulong> _muted = new HashSet<ulong>();
+        /// <inheritdoc />
+        public HashSetReader<ulong> MutedUsers => _muted;
 
         /// <inheritdoc />
         public ChatManagerServer(ITorchBase torchInstance) : base(torchInstance)
         {
-            _chatIntercept = new ChatIntercept(this);
+            
         }
 
         /// <inheritdoc />
         public event MessageProcessingDel MessageProcessing;
 
         /// <inheritdoc />
+        public bool MuteUser(ulong steamId)
+        {
+            return _muted.Add(steamId);
+        }
+
+        /// <inheritdoc />
+        public bool UnmuteUser(ulong steamId)
+        {
+            return _muted.Remove(steamId);
+        }
+
+        /// <inheritdoc />
         public void SendMessageAsOther(ulong authorId, string message, ulong targetSteamId = 0)
         {
             if (targetSteamId == Sync.MyId)
             {
-                RaiseMessageRecieved(new TorchChatMessage(authorId, message));
+                RaiseMessageRecieved(new TorchChatMessage(authorId, message, ChatChannel.Global, 0));
                 return;
             }
             if (MyMultiplayer.Static == null)
@@ -89,42 +123,13 @@ namespace Torch.Managers.ChatManager
             }
             var scripted = new ScriptedChatMsg()
             {
-                Author = author,
+                Author = author ?? Torch.Config.ChatName,
                 Text = message,
-                Font = font,
+                Font = font ?? Torch.Config.ChatColor,
                 Target = Sync.Players.TryGetIdentityId(targetSteamId)
             };
             _chatLog.Info($"{author} (to {GetMemberName(targetSteamId)}): {message}");
             MyMultiplayerBase.SendScriptedChatMessage(ref scripted);
-        }
-
-
-        /// <inheritdoc/>
-        public override void Attach()
-        {
-            base.Attach();
-            if (_networkManager != null)
-                try
-                {
-                    _networkManager.RegisterNetworkHandler(_chatIntercept);
-                    _log.Debug("Initialized network intercept for chat messages");
-                    return;
-                }
-                catch
-                {
-                    // Discard exception and use second method
-                }
-
-            if (MyMultiplayer.Static != null)
-            {
-                MyMultiplayer.Static.ChatMessageReceived += MpStaticChatMessageReceived;
-                _log.Warn(
-                    "Failed to initialize network intercept, we can't discard chat messages! Falling back to another method.");
-            }
-            else
-            {
-                _log.Debug("Using offline message processor");
-            }
         }
 
         /// <inheritdoc />
@@ -137,84 +142,25 @@ namespace Torch.Managers.ChatManager
             return consumed;
         }
 
-        private void MpStaticChatMessageReceived(ulong a, string b)
-        {
-            var tmp = false;
-            RaiseMessageRecieved(new ChatMsg()
-            {
-                Author = a,
-                Text = b
-            }, ref tmp);
-        }
-
-        /// <inheritdoc/>
-        public override void Detach()
-        {
-            if (MyMultiplayer.Static != null)
-                MyMultiplayer.Static.ChatMessageReceived -= MpStaticChatMessageReceived;
-            _networkManager?.UnregisterNetworkHandler(_chatIntercept);
-            base.Detach();
-        }
-
         internal void RaiseMessageRecieved(ChatMsg message, ref bool consumed)
         {
-            var torchMsg = new TorchChatMessage(GetMemberName(message.Author), message.Author, message.Text);
+            var torchMsg = new TorchChatMessage(GetMemberName(message.Author), message.Author, message.Text, (ChatChannel)message.Channel, message.TargetId);
+            if (_muted.Contains(message.Author))
+            {
+                consumed = true;
+                _chatLog.Warn($"MUTED USER: [{torchMsg.Channel}:{torchMsg.Target}] {torchMsg.Author}: {torchMsg.Message}");
+                return;
+            }
+
             MessageProcessing?.Invoke(torchMsg, ref consumed);
 
             if (!consumed)
-                _chatLog.Info($"{torchMsg.Author}: {torchMsg.Message}");
+                _chatLog.Info($"[{torchMsg.Channel}:{torchMsg.Target}] {torchMsg.Author}: {torchMsg.Message}");
         }
 
         public static string GetMemberName(ulong steamId)
         {
             return MyMultiplayer.Static?.GetMemberName(steamId) ?? $"user_{steamId}";
-        }
-
-        internal class ChatIntercept : NetworkHandlerBase, INetworkHandler
-        {
-            private readonly ChatManagerServer _chatManager;
-            private bool? _unitTestResult;
-
-            public ChatIntercept(ChatManagerServer chatManager)
-            {
-                _chatManager = chatManager;
-            }
-
-            /// <inheritdoc/>
-            public override bool CanHandle(CallSite site)
-            {
-                if (site.MethodInfo.Name != "OnChatMessageRecieved")
-                    return false;
-
-                if (_unitTestResult.HasValue)
-                    return _unitTestResult.Value;
-
-                ParameterInfo[] parameters = site.MethodInfo.GetParameters();
-                if (parameters.Length != 1)
-                {
-                    _unitTestResult = false;
-                    return false;
-                }
-
-                if (parameters[0].ParameterType != typeof(ChatMsg))
-                    _unitTestResult = false;
-
-                _unitTestResult = true;
-
-                return _unitTestResult.Value;
-            }
-
-            /// <inheritdoc/>
-            public override bool Handle(ulong remoteUserId, CallSite site, BitStream stream, object obj, MyPacket packet)
-            {
-                var msg = new ChatMsg();
-                Serialize(site.MethodInfo, stream, ref msg);
-
-                var consumed = false;
-                _chatManager.RaiseMessageRecieved(msg, ref consumed);
-
-                return consumed;
-            }
         }
     }
 }

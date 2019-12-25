@@ -25,12 +25,12 @@ using SpaceEngineers.Game.GUI;
 using Torch.Utils;
 using VRage;
 using VRage.Audio;
+using VRage.Dedicated;
 using VRage.FileSystem;
 using VRage.Game;
 using VRage.Game.ObjectBuilder;
 using VRage.Game.SessionComponents;
 using VRage.GameServices;
-using VRage.Network;
 using VRage.Plugins;
 using VRage.Steam;
 using VRage.Utils;
@@ -137,7 +137,10 @@ namespace Torch
         {
             bool dedicated = Sandbox.Engine.Platform.Game.IsDedicated;
             Environment.SetEnvironmentVariable("SteamAppId", _appSteamId.ToString());
-            MyServiceManager.Instance.AddService<IMyGameService>(new MySteamService(dedicated, _appSteamId));
+            var service = MySteamServiceWrapper.Init(dedicated, _appSteamId);
+            MyServiceManager.Instance.AddService<IMyGameService>(service);
+            var serviceInstance = MySteamUgcService.Create(_appSteamId, service);
+            MyServiceManager.Instance.AddService<IMyUGCService>(serviceInstance);
             if (dedicated && !MyGameService.HasGameServer)
             {
                 _log.Warn("Steam service is not running! Please reinstall dedicated server.");
@@ -177,7 +180,7 @@ namespace Torch
                 else
                 {
                     MyPerformanceSettings preset = MyGuiScreenOptionsGraphics.GetPreset(MyRenderQualityEnum.NORMAL);
-                    MyRenderProxy.Settings.User = MyVideoSettingsManager.GetGraphicsSettingsFromConfig(ref preset)
+                    MyRenderProxy.Settings.User = MyVideoSettingsManager.GetGraphicsSettingsFromConfig(ref preset, false)
                         .PerformanceSettings.RenderSettings;
                     MyStringId graphicsRenderer = MySandboxGame.Config.GraphicsRenderer;
                     if (graphicsRenderer == MySandboxGame.DirectX11RendererKey)
@@ -200,7 +203,8 @@ namespace Torch
                 }
                 MyRenderProxy.Initialize(renderer);
                 MyRenderProfiler.SetAutocommit(false);
-                MyRenderProfiler.InitMemoryHack("MainEntryPoint");
+                //This broke services?
+                //MyRenderProfiler.InitMemoryHack("MainEntryPoint");
             }
 
             // Loads object builder serializers. Intuitive, right?
@@ -233,7 +237,7 @@ namespace Torch
 
             if (MySandboxGame.FatalErrorDuringInit)
             {
-                throw new InvalidOperationException("Failed to start sandbox game: fatal error during init");
+                throw new InvalidOperationException("Failed to start sandbox game: see Keen log for details");
             }
             try
             {
@@ -273,8 +277,7 @@ namespace Torch
                 MySessionLoader.LoadSingleplayerSession(sessionPath);
                 return;
             }
-            ulong checkpointSize;
-            MyObjectBuilder_Checkpoint checkpoint = MyLocalCache.LoadCheckpoint(sessionPath, out checkpointSize);
+            MyObjectBuilder_Checkpoint checkpoint = MyLocalCache.LoadCheckpoint(sessionPath, out ulong checkpointSize);
             if (MySession.IsCompatibleVersion(checkpoint))
             {
                 if (MyWorkshop.DownloadWorldModsBlocking(checkpoint.Mods, null).Success)

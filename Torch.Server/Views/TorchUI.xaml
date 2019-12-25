@@ -57,7 +57,7 @@
             </Label>
             <Label x:Name="LabelPlayers">
                 <Label.Content>
-                    <TextBlock ></TextBlock>
+                    <TextBlock Text="{Binding OnlinePlayers, StringFormat=Players: {0}}"/>
                 </Label.Content>
             </Label>
         </StackPanel>
@@ -66,7 +66,7 @@
                 <RichTextBox x:Name="ConsoleText" VerticalScrollBarVisibility="Visible" FontFamily="Consolas" IsReadOnly="True"/>
             </TabItem>
             <TabItem Header="Configuration">
-                <Grid IsEnabled="{Binding CanRun}">
+                <Grid IsEnabled="{Binding Path=HasRun, Converter={StaticResource InverseBool}}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition/>
@@ -79,6 +79,9 @@
                     </Grid>
                     <views:ConfigControl Grid.Row="1" x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom" IsEnabled="{Binding CanRun}"/>
                 </Grid>
+            </TabItem>
+            <TabItem Header="Mods">
+                <views:ModListControl/>
             </TabItem>
             <TabItem Header="Chat/Players">
                 <Grid>

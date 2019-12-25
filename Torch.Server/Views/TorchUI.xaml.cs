@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -31,8 +32,13 @@ namespace Torch.Server
         private TorchServer _server;
         private TorchConfig _config;
 
+        private bool _autoscrollLog = true;
+
         public TorchUI(TorchServer server)
         {
+            WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            Width = 800;
+            Height = 600;
             _config = (TorchConfig)server.Config;
             _server = server;
             //TODO: data binding for whole server
@@ -41,10 +47,10 @@ namespace Torch.Server
 
             AttachConsole();
 
-            Left = _config.WindowPosition.X;
-            Top = _config.WindowPosition.Y;
-            Width = _config.WindowSize.X;
-            Height = _config.WindowSize.Y;
+            //Left = _config.WindowPosition.X;
+            //Top = _config.WindowPosition.Y;
+            //Width = _config.WindowSize.X;
+            //Height = _config.WindowSize.Y;
 
             Chat.BindServer(server);
             PlayerList.BindServer(server);
@@ -54,6 +60,14 @@ namespace Torch.Server
             Themes.uiSource = this;
             Themes.SetConfig(_config);
             Title = $"{_config.InstanceName} - Torch {server.TorchVersion}, SE {server.GameVersion}";
+            
+            Loaded += TorchUI_Loaded;
+        }
+
+        private void TorchUI_Loaded(object sender, RoutedEventArgs e)
+        {
+            var scrollViewer = FindDescendant<ScrollViewer>(ConsoleText);
+            scrollViewer.ScrollChanged += ConsoleText_OnScrollChanged;
         }
 
         private void AttachConsole()
@@ -66,7 +80,52 @@ namespace Torch.Server
                 doc = (wrapped?.WrappedTarget as FlowDocumentTarget)?.Document;
             }
             ConsoleText.Document = doc ?? new FlowDocument(new Paragraph(new Run("No target!")));
-            ConsoleText.TextChanged += (sender, args) => ConsoleText.ScrollToEnd();
+            ConsoleText.TextChanged += ConsoleText_OnTextChanged;
+        }
+
+        public static T FindDescendant<T>(DependencyObject obj) where T : DependencyObject
+        {
+            if (obj == null) return default(T);
+            int numberChildren = VisualTreeHelper.GetChildrenCount(obj);
+            if (numberChildren == 0) return default(T);
+
+            for (int i = 0; i < numberChildren; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
+                if (child is T)
+                {
+                    return (T)child;
+                }
+            }
+
+            for (int i = 0; i < numberChildren; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
+                var potentialMatch = FindDescendant<T>(child);
+                if (potentialMatch != default(T))
+                {
+                    return potentialMatch;
+                }
+            }
+
+            return default(T);
+        }
+
+        private void ConsoleText_OnTextChanged(object sender, TextChangedEventArgs args)
+        {
+            var textBox = (RichTextBox) sender;
+            if (_autoscrollLog)
+                ConsoleText.ScrollToEnd();
+        }
+        
+        private void ConsoleText_OnScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            var scrollViewer = (ScrollViewer) sender;
+            if (e.ExtentHeightChange == 0)
+            {
+                // User change.
+                _autoscrollLog = scrollViewer.VerticalOffset == scrollViewer.ScrollableHeight;
+            }
         }
 
         public void LoadConfig(TorchConfig config)
@@ -97,10 +156,14 @@ namespace Torch.Server
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            var newSize = new Point((int)Width, (int)Height);
-            _config.WindowSize = newSize;
-            var newPos = new Point((int)Left, (int)Top);
-            _config.WindowPosition = newPos;
+            // Can't save here or you'll persist all the command line arguments
+            //
+            //var newSize = new Point((int)Width, (int)Height);
+            //_config.WindowSize = newSize;
+            //var newPos = new Point((int)Left, (int)Top);
+            //_config.WindowPosition = newPos;
+
+            //_config.Save(); //you idiot
 
             if (_server?.State == ServerState.Running)
                 _server.Stop();

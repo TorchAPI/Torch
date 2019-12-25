@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox.Engine.Multiplayer;
+using Sandbox.Game.Gui;
 using Sandbox.Game.Multiplayer;
 using VRage.Game;
 using VRage.Network;
@@ -28,6 +29,8 @@ namespace Torch.API.Managers
             AuthorSteamId = null;
             Author = author;
             Message = message;
+            Channel = ChatChannel.Global;
+            Target = 0;
             Font = font;
         }
 
@@ -38,12 +41,14 @@ namespace Torch.API.Managers
         /// <param name="authorSteamId">Author's steam ID</param>
         /// <param name="message">Message</param>
         /// <param name="font">Font</param>
-        public TorchChatMessage(string author, ulong authorSteamId, string message, string font = MyFontEnum.Blue)
+        public TorchChatMessage(string author, ulong authorSteamId, string message, ChatChannel channel, long target, string font = MyFontEnum.Blue)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = authorSteamId;
             Author = author;
             Message = message;
+            Channel = channel;
+            Target = target;
             Font = font;
         }
 
@@ -53,12 +58,14 @@ namespace Torch.API.Managers
         /// <param name="authorSteamId">Author's steam ID</param>
         /// <param name="message">Message</param>
         /// <param name="font">Font</param>
-        public TorchChatMessage(ulong authorSteamId, string message, string font = MyFontEnum.Blue)
+        public TorchChatMessage(ulong authorSteamId, string message, ChatChannel channel, long target, string font = MyFontEnum.Blue)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = authorSteamId;
             Author = MyMultiplayer.Static?.GetMemberName(authorSteamId) ?? "Player";
             Message = message;
+            Channel = channel;
+            Target = target;
             Font = font;
         }
 
@@ -78,6 +85,14 @@ namespace Torch.API.Managers
         /// The message contents.
         /// </summary>
         public readonly string Message;
+        /// <summary>
+        /// The chat channel the message is part of.
+        /// </summary>
+        public readonly ChatChannel Channel;
+        /// <summary>
+        /// The intended recipient of the message.
+        /// </summary>
+        public readonly long Target;
         /// <summary>
         /// The font, or null if default.
         /// </summary>

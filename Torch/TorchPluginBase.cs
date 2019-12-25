@@ -28,6 +28,7 @@ namespace Torch
         }
 
         public virtual void Update() { }
+        public PluginState State { get; }
 
         public virtual void Dispose() { }
     }

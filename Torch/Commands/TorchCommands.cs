@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using NLog;
 using Sandbox.Game.Multiplayer;
 using Sandbox.ModAPI;
 using Steamworks;
@@ -28,6 +29,9 @@ namespace Torch.Commands
     {
         private static bool _restartPending = false;
         private static bool _cancelRestart = false;
+        private bool _stopPending = false;
+        private bool _cancelStop = false;
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         
         [Command("whatsmyip")]
         [Permission(MyPromoteLevel.None)]
@@ -35,9 +39,9 @@ namespace Torch.Commands
         {
             if (steamId == 0)
                 steamId = Context.Player.SteamUserId;
-
+            
             VRage.GameServices.MyP2PSessionState statehack = new VRage.GameServices.MyP2PSessionState();
-            VRage.Steam.MySteamService.Static.Peer2Peer.GetSessionState(steamId, ref statehack);
+            MySteamServiceWrapper.Static.Peer2Peer.GetSessionState(steamId, ref statehack);
             var ip = new IPAddress(BitConverter.GetBytes(statehack.RemoteIP).Reverse().ToArray());
             Context.Respond($"Your IP is {ip}");
         }
@@ -57,9 +61,15 @@ namespace Torch.Commands
             if (node != null)
             {
                 var command = node.Command;
-                var children = node.Subcommands.Select(x => x.Key);
+                var children = node.Subcommands.Where(e => Context.Player == null || e.Value.Command?.MinimumPromoteLevel <= Context.Player.PromoteLevel).Select(x => x.Key);
 
                 var sb = new StringBuilder();
+
+                if (Context.Player != null && command?.MinimumPromoteLevel > Context.Player.PromoteLevel)
+                {
+                    Context.Respond("You are not authorized to use this command.");
+                    return;
+                }
 
                 if (command != null)
                 {
@@ -94,11 +104,11 @@ namespace Torch.Commands
             if (node != null)
             {
                 var command = node.Command;
-                var children = node.Subcommands.Select(x => x.Key);
+                var children = node.Subcommands.Where(e => e.Value.Command?.MinimumPromoteLevel <= Context.Player.PromoteLevel).Select(x => x.Key);
 
                 var sb = new StringBuilder();
 
-                if (command != null)
+                if (command != null && (Context.Player == null || command.MinimumPromoteLevel <= Context.Player.PromoteLevel))
                 {
                     sb.AppendLine($"Syntax: {command.SyntaxHelp}");
                     sb.Append(command.HelpText);
@@ -114,7 +124,7 @@ namespace Torch.Commands
                 var sb = new StringBuilder();
                 foreach (var command in commandManager.Commands.WalkTree())
                 {
-                    if (command.IsCommand)
+                    if (command.IsCommand && (Context.Player == null || command.Command.MinimumPromoteLevel <= Context.Player.PromoteLevel))
                         sb.AppendLine($"{command.Command.SyntaxHelp}\n    {command.Command.HelpText}");
                 }
 
@@ -146,9 +156,25 @@ namespace Torch.Commands
         }
 
         [Command("stop", "Stops the server.")]
-        public void Stop(bool save = true)
+        public void Stop(bool save = true, int countdownSeconds = 0)
         {
-            Context.Respond("Stopping server.");
+            if (_stopPending)
+            {
+                Context.Respond("A stop is already pending.");
+                return;
+            }
+        
+            _stopPending = true;
+            Task.Run(() =>
+            {
+                var countdown = StopCountdown(countdownSeconds, save).GetEnumerator();
+                while (countdown.MoveNext())
+                {
+                    Thread.Sleep(1000);
+                }
+            });
+
+           /*Context.Respond("Stopping server.");
             if (save)
                 DoSave()?.ContinueWith((a, mod) =>
                 {
@@ -157,7 +183,7 @@ namespace Torch.Commands
                     torch.Stop();
                 }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
             else
-                Context.Torch.Stop();
+                Context.Torch.Stop();*/
         }
 
         [Command("restart", "Restarts the server.")]
@@ -170,6 +196,7 @@ namespace Torch.Commands
             }
         
             _restartPending = true;
+            
             Task.Run(() =>
             {
                 var countdown = RestartCountdown(countdownSeconds, save).GetEnumerator();
@@ -194,6 +221,68 @@ namespace Torch.Commands
                 _cancelRestart = true;
             else
                 Context.Respond("A restart is not pending.");
+        }
+        
+        [Command("stop cancel", "Cancel a pending stop.")]
+        public void CancelStop()
+        {
+            if (_restartPending)
+                _cancelStop = true;
+            else
+                Context.Respond("Server Stop is not pending.");
+        }
+
+        private IEnumerable StopCountdown(int countdown, bool save)
+        {
+            for (var i = countdown; i >= 0; i--)
+            {
+                if (_cancelStop)
+                {
+                    Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                        .SendMessageAsSelf($"Stop cancelled.");
+
+                    _stopPending = false;
+                    _cancelStop = false;
+                    yield break;
+                }
+                    
+                if (i >= 60 && i % 60 == 0)
+                {
+                    Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                        .SendMessageAsSelf($"Stopping server in {i / 60} minute{Pluralize(i / 60)}.");
+                    yield return null;
+                }
+                else if (i > 0)
+                {
+                    if (i < 11)
+                        Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                            .SendMessageAsSelf($"Stopping server in {i} second{Pluralize(i)}.");
+                    yield return null;
+                }
+                else
+                {
+                    if (save)
+                    {
+                        Log.Info("Saving game before stop.");
+                        Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                            .SendMessageAsSelf($"Saving game before stop.");
+                        DoSave()?.ContinueWith((a, mod) =>
+                        {
+                            ITorchBase torch = (mod as CommandModule)?.Context?.Torch;
+                            Debug.Assert(torch != null);
+                            torch.Stop();
+                        }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
+                    }
+                    else
+                    {
+                        Log.Info("Stopping server.");
+                        Context.Torch.Invoke(() => Context.Torch.Stop());
+                    }
+
+                        
+                    yield break;
+                }
+            }
         }
 
         private IEnumerable RestartCountdown(int countdown, bool save)
@@ -226,15 +315,18 @@ namespace Torch.Commands
                 else
                 {
                     if (save)
-                        Context.Torch.Save().ContinueWith(x => Restart());
-                    else
-                        Restart();
+                    {
+                        Log.Info("Savin game before restart.");
+                        Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                           .SendMessageAsSelf($"Saving game before restart.");
+                    }
+
+                    Log.Info("Restarting server.");
+                    Context.Torch.Invoke(() => Context.Torch.Restart(save));
                         
                     yield break;
                 }
             }
-
-            void Restart() => Context.Torch.Invoke(() => Context.Torch.Restart());
         }
 
         private string Pluralize(int num)
@@ -255,7 +347,7 @@ namespace Torch.Commands
 
         private Task DoSave()
         {
-            Task<GameSaveResult> task = Context.Torch.Save(60 * 1000, true);
+            Task<GameSaveResult> task = Context.Torch.Save(300 * 1000, true);
             if (task == null)
             {
                 Context.Respond("Save failed, a save is already in progress");
@@ -289,6 +381,12 @@ namespace Torch.Commands
                         throw new ArgumentOutOfRangeException();
                 }
             }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
+        }
+
+        [Command("uptime", "Check how long the server has been online.")]
+        public void Uptime()
+        {
+            Context.Respond(((ITorchServer)Context.Torch).ElapsedPlayTime.ToString());
         }
     }
 }

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using NLog;
 
 namespace Torch
 {
@@ -17,6 +18,7 @@ namespace Torch
     /// <typeparam name="T">Data class type</typeparam>
     public sealed class Persistent<T> : IDisposable where T : new()
     {
+        private static Logger _log = LogManager.GetCurrentClassLogger();
         public string Path { get; set; }
         private T _data;
         public T Data
@@ -78,10 +80,18 @@ namespace Torch
 
             if (File.Exists(path))
             {
-                var ser = new XmlSerializer(typeof(T));
-                using (var f = File.OpenText(path))
+                try
                 {
-                    config = new Persistent<T>(path, (T)ser.Deserialize(f));
+                    var ser = new XmlSerializer(typeof(T));
+                    using (var f = File.OpenText(path))
+                    {
+                        config = new Persistent<T>(path, (T)ser.Deserialize(f));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log.Error(ex);
+                    config = null;
                 }
             }
             if (config == null)

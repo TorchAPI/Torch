@@ -31,12 +31,17 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <DocumentationFile>$(SolutionDir)\bin\x64\Release\Torch.API.xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HavokWrapper, Version=1.0.6278.22649, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\HavokWrapper.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
@@ -188,6 +193,8 @@
     <Compile Include="Session\ITorchSessionManager.cs" />
     <Compile Include="Session\TorchSessionState.cs" />
     <Compile Include="TorchGameState.cs" />
+    <Compile Include="WebAPI\JenkinsQuery.cs" />
+    <Compile Include="WebAPI\PluginQuery.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

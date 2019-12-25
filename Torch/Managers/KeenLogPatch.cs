@@ -76,7 +76,21 @@ namespace Torch.Managers
 
         private static StringBuilder PrepareLog(MyLog log)
         {
-            return _tmpStringBuilder.Value.Clear().Append(' ', _getIndentByThread(log, _getThreadId(log)) * 3);
+            try
+            {
+                var v = _tmpStringBuilder.Value;
+                v.Clear();
+                var i = _getThreadId(log);
+                var t = _getIndentByThread(log, i);
+                v.Append(' ', t * 3);
+                return v;
+            }
+            catch (Exception e)
+            {
+                _log.Error(e);
+                return _tmpStringBuilder.Value.Clear();
+            }
+            //return _tmpStringBuilder.Value.Clear().Append(' ', _getIndentByThread(log, _getThreadId(log)) * 3);
         }
 
         private static bool PrefixWriteLine(MyLog __instance, string msg)
@@ -117,7 +131,15 @@ namespace Torch.Managers
 
         private static bool PrefixLogFormatted(MyLog __instance, MyLogSeverity severity, string format, object[] args)
         {
-            _log.Log(LogLevelFor(severity), PrepareLog(__instance).AppendFormat(format, args));
+            // Sometimes this is called with a pre-formatted string and no args
+            // and causes a crash when the format string contains braces
+            var sb = PrepareLog(__instance);
+            if (args != null && args.Length > 0)
+                sb.AppendFormat(format, args);
+            else
+                sb.Append(format);
+
+            _log.Log(LogLevelFor(severity), sb);
             return false;
         }
 
