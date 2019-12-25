@@ -371,12 +371,12 @@ namespace Torch.Managers.PatchManager
                             if (fieldDef == null) throw new Exception($"Could not find field {fieldName}");
                             if (fieldDef.IsStatic)
                                 yield return new MsilInstruction(param.ParameterType.IsByRef ? OpCodes.Ldsflda : OpCodes.Ldsfld)
-                        .InlineValue(fieldDef);
+                                    .InlineValue(fieldDef);
                             else
                             {
                                 yield return new MsilInstruction(OpCodes.Ldarg_0);
                                 yield return new MsilInstruction(param.ParameterType.IsByRef ? OpCodes.Ldflda : OpCodes.Ldfld)
-                        .InlineValue(fieldDef);
+                                    .InlineValue(fieldDef);
                             }
                             break;
                         }
