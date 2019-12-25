@@ -364,7 +364,24 @@ namespace Torch.Managers.PatchManager
                             break;
                         }
 
-                        ParameterInfo declParam = _method.GetParameters().FirstOrDefault(x => x.Name == param.Name);
+                        if (param.Name.StartsWith("__field_"))
+                        {
+                            var fieldName = param.Name.Substring(8);
+                            var fieldDef = _method.DeclaringType.GetFields().FirstOrDefault(x => x.Name == fieldName);
+                            if (fieldDef == null) throw new Exception($"Could not find field {fieldName}");
+                            if (fieldDef.IsStatic)
+                                yield return new MsilInstruction(param.ParameterType.IsByRef ? OpCodes.Ldsflda : OpCodes.Ldsfld)
+                        .InlineValue(fieldDef);
+                            else
+                            {
+                                yield return new MsilInstruction(OpCodes.Ldarg_0);
+                                yield return new MsilInstruction(param.ParameterType.IsByRef ? OpCodes.Ldflda : OpCodes.Ldfld)
+                        .InlineValue(fieldDef);
+                            }
+                            break;
+                        }
+
+                            ParameterInfo declParam = _method.GetParameters().FirstOrDefault(x => x.Name == param.Name);
                         if (declParam == null)
                             throw new Exception($"Parameter name {param.Name} not found");
                         int paramIdx = (_method.IsStatic ? 0 : 1) + declParam.Position;
