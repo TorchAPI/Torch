@@ -381,7 +381,8 @@ namespace Torch.Managers.PatchManager
                             break;
                         }
 
-                            ParameterInfo declParam = _method.GetParameters().FirstOrDefault(x => x.Name == param.Name);
+                        ParameterInfo declParam = _method.GetParameters().FirstOrDefault(x => x.Name == param.Name);
+
                         if (declParam == null)
                             throw new Exception($"Parameter name {param.Name} not found");
                         int paramIdx = (_method.IsStatic ? 0 : 1) + declParam.Position;
