@@ -32,7 +32,7 @@ namespace Torch.Server.Views.Converters
         {
             //if (targetType != typeof(int))
             //    throw new NotSupportedException("ModToIdConverter can only convert mods into int values or vise versa!");
-            if (values[0] is ModItemInfo mod || values[1] is MtObservableList<ModItemInfo> modList)
+            if (values[0] is ModItemInfo mod && values[1] is MtObservableList<ModItemInfo> modList)
             {
                 return modList.IndexOf(mod);
             }
