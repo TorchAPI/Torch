@@ -367,7 +367,7 @@ namespace Torch.Managers.PatchManager
                         if (param.Name.StartsWith("__field_"))
                         {
                             var fieldName = param.Name.Substring(8);
-                            var fieldDef = _method.DeclaringType.GetFields().FirstOrDefault(x => x.Name == fieldName);
+                            var fieldDef = _method.DeclaringType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static).FirstOrDefault(x => x.Name == fieldName);
                             if (fieldDef == null) throw new Exception($"Could not find field {fieldName}");
                             if (fieldDef.IsStatic)
                                 yield return new MsilInstruction(param.ParameterType.IsByRef ? OpCodes.Ldsflda : OpCodes.Ldsfld)
