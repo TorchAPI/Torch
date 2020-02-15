@@ -189,5 +189,15 @@ namespace Torch.Collections
 
         /// <inheritdoc/>
         bool IList.IsFixedSize => false;
+        
+        /// <inheritdoc/>
+        public void Move(int newIndex, object value)
+        {
+            if (value is T t)
+            {
+                base.Remove(t);
+            }
+            Insert(newIndex, (T)value);
+        }
     }
 }
