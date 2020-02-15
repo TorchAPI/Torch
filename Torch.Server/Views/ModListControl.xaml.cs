@@ -205,9 +205,9 @@ namespace Torch.Server.Views
             {
                 _hasOrderChanged = true;
                 var modList = (MtObservableList<ModItemInfo>)DataContext;
-                //modList.Move(modList.IndexOf(_draggedMod), modList.IndexOf(targetMod));
-                modList.RemoveAt(modList.IndexOf(_draggedMod));
-                modList.Insert(modList.IndexOf(targetMod), _draggedMod);
+                modList.Move(modList.IndexOf(targetMod), _draggedMod);
+                //modList.RemoveAt(modList.IndexOf(_draggedMod));
+                //modList.Insert(modList.IndexOf(targetMod), _draggedMod);
                 ModList.Items.Refresh();
                 ModList.SelectedItem = _draggedMod;
             }
