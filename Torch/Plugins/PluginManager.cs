@@ -158,26 +158,27 @@ namespace Torch.Managers
                 pluginsToLoad.Add(pluginItem);
             }
 
-            // Download any plugin updates.
-            bool updatesGotten = DownloadPluginUpdates(pluginsToLoad);
 
-            if (updatesGotten)
+            if (Torch.Config.ShouldUpdatePlugins)
             {
-                // Resort the plugins just in case updates changed load hints.
-                pluginItems = GetLocalPlugins(PluginDir);
-                pluginsToLoad.Clear();
-                foreach (var item in pluginItems)
+                if (DownloadPluginUpdates(pluginsToLoad))
                 {
-                    var pluginItem = item;
-                    if (!TryValidatePluginDependencies(pluginItems, ref pluginItem, out var missingPlugins))
+                    // Resort the plugins just in case updates changed load hints.
+                    pluginItems = GetLocalPlugins(PluginDir);
+                    pluginsToLoad.Clear();
+                    foreach (var item in pluginItems)
                     {
-                        foreach (var missingPlugin in missingPlugins)
-                            _log.Warn($"{item.Manifest.Name} is missing dependency {missingPlugin}. Skipping plugin.");
-                        continue;
-                    }
+                        var pluginItem = item;
+                        if (!TryValidatePluginDependencies(pluginItems, ref pluginItem, out var missingPlugins))
+                        {
+                            foreach (var missingPlugin in missingPlugins)
+                                _log.Warn($"{item.Manifest.Name} is missing dependency {missingPlugin}. Skipping plugin.");
+                            continue;
+                        }
 
-                    pluginsToLoad.Add(pluginItem);
-                }
+                        pluginsToLoad.Add(pluginItem);
+                    }
+                }   
             }
 
             // Sort based on dependencies.
