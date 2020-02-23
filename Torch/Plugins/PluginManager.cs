@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -27,11 +28,15 @@ namespace Torch.Managers
     {
         private class PluginItem
         {
-            public string Filename { get; set; }
             public string Path { get; set; }
             public PluginManifest Manifest { get; set; }
-            public bool IsZip { get; set; }
             public List<PluginItem> ResolvedDependencies { get; set; }
+            public PluginState State { get; set; }
+
+            public override int GetHashCode()
+            {
+                return Manifest.Guid.GetHashCode();
+            }
         }
         
         private static Logger _log = LogManager.GetCurrentClassLogger();
@@ -57,7 +62,7 @@ namespace Torch.Managers
             if (!Directory.Exists(PluginDir))
                 Directory.CreateDirectory(PluginDir);
         }
-        
+
         /// <summary>
         /// Updates loaded plugins in parallel.
         /// </summary>
@@ -67,7 +72,8 @@ namespace Torch.Managers
             {
                 try
                 {
-                    plugin.Update();
+                    if(plugin.State == PluginState.Enabled || plugin.State == PluginState.UninstallRequested)
+                        plugin.Update();
                 }
                 catch (Exception ex)
                 {
@@ -81,6 +87,24 @@ namespace Torch.Managers
         {
             base.Attach();
             _sessionManager.SessionStateChanged += SessionManagerOnSessionStateChanged;
+        }
+
+        public void InsertDummy(string pluginName, Guid guid)
+        {
+            var manifest = new PluginManifest()
+                           {
+                               Guid = guid,
+                               Name = pluginName
+                           };
+            var item = new PluginItem()
+                       {
+                           Manifest = manifest,
+                           State = PluginState.NotInstalled
+                       };
+
+            RegisterEmpty(item);
+
+            PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
         }
 
         private void SessionManagerOnSessionStateChanged(ITorchSession session, TorchSessionState newState)
@@ -140,95 +164,94 @@ namespace Torch.Managers
                 return;
             }
 
+            //first scan for plugins on disk
             var pluginItems = GetLocalPlugins(PluginDir);
+            //update what we have before resolving dependencies
+            bool updateSuccess = Torch.Config.ShouldUpdatePlugins && DownloadPluginUpdates(pluginItems);
+
             var pluginsToLoad = new List<PluginItem>();
-            foreach (var item in pluginItems)
+            bool downloadDependencies = Torch.Config.DownloadDependencies;
+
+            //resolve dependencies for all plugins. Will download dependencies if enabled by config
+            Parallel.ForEach(pluginItems, async item =>
+                                          {
+                                              var missing = await ResolveDependencies(pluginItems, item, downloadDependencies);
+
+                                              //found some dependencies we couldn't resolve
+                                              //only happens if user sets DownloadDependencies false, or a plugin depends
+                                              //on a plugin not published on Torch website (or plugin author fat-fingered dependency ID)
+                                              foreach (var missingPlugin in missing)
+                                                  _log.Warn($"{item.Manifest.Name} is missing dependency {missingPlugin}. Skipping plugin.");
+                                              if (missing.Any())
+                                                  item.State = PluginState.MissingDependency;
+                                          });
+
+            //sort plugins by load order in torch config
+            foreach (var id in Torch.Config.Plugins)
             {
-                var pluginItem = item;
-                if (!TryValidatePluginDependencies(pluginItems, ref pluginItem, out var missingPlugins))
+                int idx = pluginItems.FindIndex(p => p.Manifest.Guid == id);
+                if (idx != -1)
                 {
-                    // We have some missing dependencies.
-                    // Future fix would be to download them, but instead for now let's
-                    // just warn the user it's missing
-                    foreach(var missingPlugin in missingPlugins)
-                        _log.Warn($"{item.Manifest.Name} is missing dependency {missingPlugin}. Skipping plugin.");
-                    continue;
-                }
-                
-                pluginsToLoad.Add(pluginItem);
-            }
-
-            // Download any plugin updates.
-            bool updatesGotten = DownloadPluginUpdates(pluginsToLoad);
-
-            if (updatesGotten)
-            {
-                // Resort the plugins just in case updates changed load hints.
-                pluginItems = GetLocalPlugins(PluginDir);
-                pluginsToLoad.Clear();
-                foreach (var item in pluginItems)
-                {
-                    var pluginItem = item;
-                    if (!TryValidatePluginDependencies(pluginItems, ref pluginItem, out var missingPlugins))
-                    {
-                        foreach (var missingPlugin in missingPlugins)
-                            _log.Warn($"{item.Manifest.Name} is missing dependency {missingPlugin}. Skipping plugin.");
-                        continue;
-                    }
-
-                    pluginsToLoad.Add(pluginItem);
+                    pluginsToLoad.Add(pluginItems[idx]);
+                    pluginItems.RemoveAtFast(idx);
                 }
             }
+
+            //add any plugins not listed in config (dependencies)
+            pluginsToLoad.AddList(pluginItems);
 
             // Sort based on dependencies.
             try
             {
-                pluginsToLoad = pluginsToLoad.TSort(item => item.ResolvedDependencies)
-                    .ToList();
+                pluginsToLoad = DependencySort(pluginsToLoad);
             }
             catch (Exception e)
             {
-                // This will happen on cylic dependencies.
+                // This will happen on cyclic dependencies.
                 _log.Error(e);
             }
             
             // Actually load the plugins now.
-            foreach (var item in pluginsToLoad)
+            //reverse order to load dependencies top-down
+            for (int i = pluginsToLoad.Count - 1; i >= 0; i--)
             {
-                LoadPlugin(item);
-            } 
+                LoadPlugin(pluginsToLoad[i]);
+            }
             
             foreach (var plugin in _plugins.Values)
             {
-                plugin.Init(Torch);
+                if(plugin.State == PluginState.Enabled)
+                    plugin.Init(Torch);
             }
             _log.Info($"Loaded {_plugins.Count} plugins.");
             PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
         }
-
+        
         //debug flag is set when the user asks us to run with a specific plugin for plugin development debug
         //please do not change references to this arg unless you are very sure you know what you're doing
         private List<PluginItem> GetLocalPlugins(string pluginDir, bool debug = false)
         {
             var firstLoad = Torch.Config.Plugins.Count == 0;
             
-            var pluginItems = Directory.EnumerateFiles(pluginDir, "*.zip")
-                .Union(Directory.EnumerateDirectories(pluginDir));
+            //unzip legacy plugins because we don't support loading straight from zip anymore
+            var zips = Directory.EnumerateFiles(pluginDir, "*.zip");
+            foreach(var zip in zips)
+                UnzipLegacyPlugin(zip);
+
+            var pluginItems = Directory.EnumerateDirectories(pluginDir);
             if (debug)
                 pluginItems = pluginItems.Union(new List<string> {pluginDir});
-            var results = new List<PluginItem>();
+            var results = new ConcurrentQueue<PluginItem>();
 
-            foreach (var item in pluginItems)
+            foreach (var path in pluginItems)
             {
-                var path = Path.Combine(pluginDir, item);
-                var isZip = item.EndsWith(".zip", StringComparison.CurrentCultureIgnoreCase);
-                var manifest = isZip ? GetManifestFromZip(path) : GetManifestFromDirectory(path);
+                var manifest = GetManifestFromDirectory(path);
 
                 if (manifest == null)
                 {
                     if (!debug)
                     {
-                        _log.Warn($"Item '{item}' is missing a manifest, skipping.");
+                        _log.Warn($"Item '{path}' is missing a manifest, skipping.");
                         continue;
                     }
                     manifest = new PluginManifest()
@@ -242,18 +265,17 @@ namespace Torch.Managers
                 var duplicatePlugin = results.FirstOrDefault(r => r.Manifest.Guid == manifest.Guid);
                 if (duplicatePlugin != null)
                 {
-                    _log.Warn(
-                        $"The GUID provided by {manifest.Name} ({item}) is already in use by {duplicatePlugin.Manifest.Name}.");
+                    _log.Warn($"The GUID provided by {manifest.Name} ({path}) is already in use by {duplicatePlugin.Manifest.Name}.");
                     continue;
                 }
                 
                 if (!Torch.Config.LocalPlugins && !debug)
                 {
-                    if (isZip && !Torch.Config.Plugins.Contains(manifest.Guid))
+                    if (!Torch.Config.Plugins.Contains(manifest.Guid) && !Torch.Config.DisabledPlugins.Contains(manifest.Guid))
                     {
                         if (!firstLoad)
                         {
-                            _log.Warn($"Plugin {manifest.Name} ({item}) exists in the plugin directory, but is not listed in torch.cfg. Skipping load!");
+                            _log.Warn($"Plugin {manifest.Name} ({path}) exists in the plugin directory, but is not listed in torch.cfg. Skipping load!");
                             continue;
                         }
                         _log.Info($"First-time load: Plugin {manifest.Name} added to torch.cfg.");
@@ -261,20 +283,81 @@ namespace Torch.Managers
                     }
                 }
                 
-                results.Add(new PluginItem
+                results.Enqueue(new PluginItem
                 {
-                    Filename = item,
-                    IsZip = isZip,
                     Manifest = manifest,
                     Path = path
                 });
             }
 
+            //foreach (var req in Torch.Config.Plugins)
+            Parallel.ForEach(Torch.Config.Plugins, async req =>
+            {
+                if (!results.Any(p => p.Manifest.Guid == req))
+                {
+                    if (Torch.Config.ShouldUpdatePlugins)
+                    {
+                        string path = Path.Combine(pluginDir, req.ToString());
+                        bool success = await PluginQuery.Instance.DownloadPlugin(req, path);
+                        if(!success)
+                            _log.Error($"Failed to download plugin {req}! Either Torch website is unavaible, or this plugin is not published on Torch website");
+                        else
+                            results.Enqueue(new PluginItem()
+                                            {
+                                                Manifest = GetManifestFromDirectory(path),
+                                                Path = path
+                                            });
+                    }
+                    else
+                    {
+                        _log.Error($"Plugin {req} is listed in Torch config, but is not on disk! Skipping load!");
+                    }
+                }
+            });
+
             if (!Torch.Config.LocalPlugins && firstLoad)
                 Torch.Config.Save();
             
-            return results;
-        } 
+            return results.ToList();
+        }
+
+        private void UnzipLegacyPlugin(string path)
+        {
+            try
+            {
+                using (var zip = ZipFile.OpenRead(path))
+                {
+                    PluginManifest manifest = null;
+                    foreach (var entry in zip.Entries)
+                    {
+                        if (!entry.Name.Equals(MANIFEST_NAME, StringComparison.CurrentCultureIgnoreCase))
+                            continue;
+
+                        using (var stream = new StreamReader(entry.Open()))
+                        {
+                            manifest = PluginManifest.Load(stream);
+                            break;
+                        }
+                    }
+
+                    if (manifest == null)
+                    {
+                        _log.Warn($"Zip file {path} does not contain a manifest!");
+                        return;
+                    }
+
+                    zip.ExtractToDirectory(Path.Combine(PluginDir, manifest.Guid.ToString()));
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Failed to unzip plugin at {path}. Zip file is likely corrupt!");
+                _log.Error(ex);
+                return;
+            }
+
+            File.Delete(path);
+        }
         
         private bool DownloadPluginUpdates(List<PluginItem> plugins)
         {
@@ -284,11 +367,6 @@ namespace Torch.Managers
             {
                 try
                 {
-                    if (!item.IsZip)
-                    {
-                        _log.Warn($"Unzipped plugins cannot be auto-updated. Skipping plugin {item}");
-                        return;
-                    }
                     item.Manifest.Version.TryExtractVersion(out Version currentVersion);
                     var latest = await PluginQuery.Instance.QueryOne(item.Manifest.Guid);
 
@@ -326,91 +404,38 @@ namespace Torch.Managers
             _log.Info($"Updated {count} plugins.");
             return count > 0;
         }
-        
+
         private void LoadPlugin(PluginItem item)
         {
+            if (item.State != PluginState.NotInitialized)
+            {
+                RegisterEmpty(item);
+                return;
+            }
+
+            if (Torch.Config.DisabledPlugins.Contains(item.Manifest.Guid))
+            {
+                item.State = PluginState.DisabledUser;
+                RegisterEmpty(item);
+                return;
+            }
+            
             var assemblies = new List<Assembly>();
 
-            var loaded = AppDomain.CurrentDomain.GetAssemblies();
-            
-            if (item.IsZip)
+            var files = Directory.EnumerateFiles(item.Path, "*.*", SearchOption.AllDirectories).ToList();
+
+            foreach (var file in files)
             {
-                using (var zipFile = ZipFile.OpenRead(item.Path))
-                {
-                    foreach (var entry in zipFile.Entries)
-                    {
-                        if (!entry.Name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
-                            continue;
-
-                        //if (loaded.Any(a => entry.Name.Contains(a.GetName().Name)))
-                        //    continue;
-
-
-                        using (var stream = entry.Open())
-                        {
-                            var data = stream.ReadToEnd((int) entry.Length);
-                            byte[] symbol = null;
-                            var symbolEntryName =
-                                entry.FullName.Substring(0, entry.FullName.Length - "dll".Length) + "pdb";
-                            var symbolEntry = zipFile.GetEntry(symbolEntryName);
-                            if (symbolEntry != null)
-                                try
-                                {
-                                    using (var symbolStream = symbolEntry.Open())
-                                        symbol = symbolStream.ReadToEnd((int) symbolEntry.Length);
-                                }
-                                catch (Exception e)
-                                {
-                                    _log.Warn(e, $"Failed to read debugging symbols from {item.Filename}:{symbolEntryName}");
-                                }
-
-                            assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
-                        }
-                    }
-                }
-            }
-            else
-            {
-                var files = Directory
-                    .EnumerateFiles(item.Path, "*.*", SearchOption.AllDirectories)
-                    .ToList();
+                if (!file.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
+                    continue;
                 
-                foreach (var file in files)
-                {
-                    if (!file.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
-                        continue;
-
-                    //if (loaded.Any(a => file.Contains(a.GetName().Name)))
-                    //    continue;
-
-                    using (var stream = File.OpenRead(file))
-                    {
-                        var data = stream.ReadToEnd();
-                        byte[] symbol = null;
-                        var symbolPath = Path.Combine(Path.GetDirectoryName(file) ?? ".",
-                            Path.GetFileNameWithoutExtension(file) + ".pdb");
-                        if (File.Exists(symbolPath))
-                            try
-                            {
-                                using (var symbolStream = File.OpenRead(symbolPath))
-                                    symbol = symbolStream.ReadToEnd();
-                            }
-                            catch (Exception e)
-                            {
-                                _log.Warn(e, $"Failed to read debugging symbols from {symbolPath}");
-                            }
-                        
-                        assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
-                    }
-                }
-
-                
+                assemblies.Add(Assembly.LoadFrom(file));
             }
-            
+
             RegisterAllAssemblies(assemblies);
-            InstantiatePlugin(item.Manifest, assemblies);
+            InstantiatePlugin(item, assemblies);
         }
-        
+
         private void RegisterAllAssemblies(IReadOnlyCollection<Assembly> assemblies)
         {
             Assembly ResolveDependentAssembly(object sender, ResolveEventArgs args)
@@ -444,10 +469,12 @@ namespace Torch.Managers
             return a.Name == b.Name && a.Version.Major == b.Version.Major && a.Version.Minor == b.Version.Minor;
         }
         
-        private void InstantiatePlugin(PluginManifest manifest, IEnumerable<Assembly> assemblies)
+        private void InstantiatePlugin(PluginItem item, IEnumerable<Assembly> assemblies)
         {
             Type pluginType = null;
             bool mult = false;
+            var manifest = item.Manifest;
+            
             foreach (var asm in assemblies)
             {
                 foreach (var type in asm.GetExportedTypes())
@@ -475,12 +502,16 @@ namespace Torch.Managers
             if (mult)
             {
                 _log.Error($"The plugin '{manifest.Name}' has multiple implementations of {nameof(ITorchPlugin)}, not loading.");
+                item.State = PluginState.DisabledError;
+                RegisterEmpty(item);
                 return;
             }
 
             if (pluginType == null)
             {
                 _log.Error($"The plugin '{manifest.Name}' does not have an implementation of {nameof(ITorchPlugin)}, not loading.");
+                item.State = PluginState.DisabledError;
+                RegisterEmpty(item);
                 return;
             }
 
@@ -505,54 +536,70 @@ namespace Torch.Managers
             catch (Exception ex)
             {
                 _log.Error(ex, $"Plugin {manifest.Name} threw an exception during instantiation! Not loading!");
+                item.State = PluginState.DisabledError;
+                RegisterEmpty(item);
                 return;
             }
+
+            item.State = PluginState.Enabled;
             plugin.Manifest = manifest;
+            plugin.State = PluginState.Enabled;
             plugin.StoragePath = Torch.Config.InstancePath;
             plugin.Torch = Torch;
             _plugins.Add(manifest.Guid, plugin);
         }
-        
-        private PluginManifest GetManifestFromZip(string path)
+
+        private void RegisterEmpty(PluginItem item)
         {
-            try
-            {
-                using (var zipFile = ZipFile.OpenRead(path))
-                {
-                    foreach (var entry in zipFile.Entries)
-                    {
-                        if (!entry.Name.Equals(MANIFEST_NAME, StringComparison.CurrentCultureIgnoreCase))
-                            continue;
-
-                        using (var stream = new StreamReader(entry.Open()))
-                        {
-                            return PluginManifest.Load(stream);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _log.Error(ex, $"Error opening zip! File is likely corrupt. File at {path} will be deleted and re-acquired on the next restart!");
-                File.Delete(path);
-            }
-
-            return null;
+            var plugin = new EmptyPlugin {Manifest = item.Manifest, State = item.State, Torch = Torch};
+            _plugins.Add(item.Manifest.Guid, plugin);
         }
-
-        private bool TryValidatePluginDependencies(List<PluginItem> items, ref PluginItem item, out List<Guid> missingDependencies)
+       
+        private async Task<List<Guid>> ResolveDependencies(List<PluginItem> items, PluginItem item, bool downloadMissing)
         {
             var dependencies = new List<PluginItem>();
-            missingDependencies = new List<Guid>();
+            var missingDependencies = new List<Guid>();
             
             foreach (var pluginDependency in item.Manifest.Dependencies)
             {
-                var dependency = items
-                    .FirstOrDefault(pi => pi?.Manifest.Guid == pluginDependency.Plugin);
+                //top-level search through plugins already on disk
+                var dependency = items.FirstOrDefault(pi => pi?.Manifest.Guid == pluginDependency.Plugin);
+                //search through already-resolved dependencies
+                if (dependency == null)
+                    dependency = RecurseDependencies(items, pluginDependency.Plugin);
+                //either acquire the dependency or fail
                 if (dependency == null)
                 {
-                    missingDependencies.Add(pluginDependency.Plugin);
-                    continue;
+                    if (downloadMissing)
+                    {
+                        string path = Path.Combine(PluginDir, pluginDependency.Plugin.ToString());
+                        bool success = await PluginQuery.Instance.DownloadPlugin(pluginDependency.Plugin, path);
+
+                        if (success)
+                        {
+                            dependency = new PluginItem()
+                                      {
+                                          Path = path,
+                                          Manifest = GetManifestFromDirectory(path)
+                                      };
+
+                            //resolve dependencies recursively
+                            var missing = await ResolveDependencies(items, dependency, downloadMissing);
+                            missingDependencies.AddList(missing);
+                            dependencies.Add(dependency);
+                        }
+                        else
+                        {
+                            _log.Error($"Failed to download dependency {pluginDependency.Plugin}. Either Torch website is unavailable, or this dependency is not published on Torch website.");
+                            missingDependencies.Add(pluginDependency.Plugin);
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        missingDependencies.Add(pluginDependency.Plugin);
+                        continue;
+                    }
                 }
 
                 if (!string.IsNullOrEmpty(pluginDependency.MinVersion)
@@ -566,6 +613,8 @@ namespace Torch.Managers
                         // it's a missing dependency.
                         
                         // For now let's just warn the user. bitMuse is lazy.
+
+                        //this should only hit if we aren't downloading deps anyway. Just leave the message here
                         _log.Warn($"{dependency.Manifest.Name} is below the requested version for {item.Manifest.Name}."
                         + Environment.NewLine
                         + $" Desired version: {pluginDependency.MinVersion}, Available version: {dependency.Manifest.Version}");
@@ -578,15 +627,69 @@ namespace Torch.Managers
             }
 
             item.ResolvedDependencies = dependencies;
-            if (missingDependencies.Count > 0)
-                return false;
-            return true;
+            return missingDependencies;
         }
+
+        private PluginItem RecurseDependencies(List<PluginItem> items, Guid search)
+        {
+            foreach (var item in items)
+            {
+                if (item.ResolvedDependencies == null)
+                    continue;
+
+                foreach (var dep in item.ResolvedDependencies)
+                {
+                    if (dep.Manifest.Guid == search)
+                        return dep;
+                }
+
+                var found = RecurseDependencies(item.ResolvedDependencies, search);
+                if (found != null)
+                    return found;
+            }
+
+            return null;
+        }
+
+        private List<PluginItem> DependencySort(List<PluginItem> source, bool silent = false)
+        {
+            var sorted = new List<PluginItem>(source.Count * 2);
+            var visited = new HashSet<PluginItem>();
+
+            foreach (var item in source)
+                Visit(item);
+
+            return sorted;
+
+            void Visit(PluginItem item)
+            {
+                if (visited.Add(item))
+                {
+                    if (item.ResolvedDependencies != null)
+                    {
+                        foreach (var dep in item.ResolvedDependencies)
+                            Visit(dep);
+                    }
+
+                    sorted.Add(item);
+                }
+                else
+                {
+                    if(!silent && !sorted.Contains(item))
+                        throw new Exception("Cyclic dependency detected!");
+                }
+            }
+        }
+
+
 
         private PluginManifest GetManifestFromDirectory(string directory)
         {
             var path = Path.Combine(directory, MANIFEST_NAME);
-            return !File.Exists(path) ? null : PluginManifest.Load(path);
+            var ret = !File.Exists(path) ? null : PluginManifest.Load(path);
+            if (ret == null) 
+                _log.Error($"NullManifest: {path}");
+            return ret;
         }
 
         /// <inheritdoc cref="IEnumerable.GetEnumerator"/>
@@ -599,5 +702,7 @@ namespace Torch.Managers
         {
             return GetEnumerator();
         }
+
+        private class EmptyPlugin : TorchPluginBase { }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -79,25 +80,31 @@ namespace Torch.API.WebAPI
             return response;
         }
 
-        public async Task<bool> DownloadPlugin(Guid guid, string path = null)
+        public async Task<bool> DownloadPlugin(Guid guid, string path)
         {
             return await DownloadPlugin(guid.ToString(), path);
         }
 
-        public async Task<bool> DownloadPlugin(string guid, string path = null)
+        public async Task<bool> DownloadPlugin(string guid, string path)
         {
             var item = await QueryOne(guid);
             return await DownloadPlugin(item, path);
         }
 
-        public async Task<bool> DownloadPlugin(PluginFullItem item, string path = null)
+        public async Task<bool> DownloadPlugin(PluginFullItem item, string path)
         {
             try
             {
-                path = path ?? $"Plugins\\{item.Name}.zip";
-                string relpath = Path.GetDirectoryName(path);
+                if(string.IsNullOrEmpty(path))
+                    throw new ArgumentException("Path cannot be null or empty!", nameof(path));
+                
+                var dir = Directory.CreateDirectory(path);
 
-                Directory.CreateDirectory(relpath);
+                foreach(var file in dir.EnumerateFiles())
+                    file.Delete();
+
+                foreach(var d in dir.EnumerateDirectories())
+                    d.Delete(true);
 
                 var h = await _client.GetAsync(string.Format(PLUGIN_QUERY, item.ID));
                 string res = await h.Content.ReadAsStringAsync();
@@ -115,13 +122,9 @@ namespace Torch.API.WebAPI
                 }
                 var s = await _client.GetStreamAsync(version.URL);
 
-                if(File.Exists(path))
-                    File.Delete(path);
-
-                using (var f = File.Create(path))
+                using (var gz = new ZipArchive(s, ZipArchiveMode.Read))
                 {
-                    await s.CopyToAsync(f);
-                    await f.FlushAsync();
+                    gz.ExtractToDirectory(path);
                 }
             }
             catch (Exception ex)
@@ -131,6 +134,7 @@ namespace Torch.API.WebAPI
 
             return true;
         }
+
     }
 
     public class PluginResponse

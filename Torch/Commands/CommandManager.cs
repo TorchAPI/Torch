@@ -74,6 +74,9 @@ namespace Torch.Commands
 
         public void RegisterPluginCommands(ITorchPlugin plugin)
         {
+            if (plugin.State != PluginState.Enabled)
+                return;
+
             var assembly = plugin.GetType().Assembly;
             foreach (var type in assembly.ExportedTypes)
             {
