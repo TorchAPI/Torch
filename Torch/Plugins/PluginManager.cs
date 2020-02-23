@@ -280,7 +280,7 @@ namespace Torch.Managers
         {
             _log.Info("Checking for plugin updates...");
             var count = 0;
-            Task.WhenAll(plugins.Select(async item =>
+            Task.WaitAll(plugins.Select(async item =>
             {
                 try
                 {
@@ -321,7 +321,7 @@ namespace Torch.Managers
                     _log.Warn($"An error occurred updating the plugin {item.Manifest.Name}.");
                     _log.Warn(e);
                 }
-            }));
+            }).ToArray());
 
             _log.Info($"Updated {count} plugins.");
             return count > 0;
