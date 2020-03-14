@@ -97,9 +97,8 @@ namespace Torch.Server.Views
             TorchBase.Instance.Config.Save();
             Task.Run(async () =>
                      {
-                         //TODO: MAJOR YIKES
-                         var result = await PluginQuery.Instance.DownloadPlugin(item.ID, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins", item.ID));
-                         MessageBox.Show(result ? "Plugin downloaded successfully! Please restart the server to load changes."
+                         var result = await PluginQuery.Instance.DownloadPlugin(item.ID);
+                         MessageBox.Show(result.Item1 ? "Plugin downloaded successfully! Please restart the server to load changes."
                                                 : "Plugin failed to download! See log for details.", 
                                                 "Plugin Downloader",
                                                 MessageBoxButton.OK);

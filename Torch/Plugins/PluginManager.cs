@@ -61,6 +61,7 @@ namespace Torch.Managers
         {
             if (!Directory.Exists(PluginDir))
                 Directory.CreateDirectory(PluginDir);
+            PluginQuery.SetPluginPath(PluginDir);
         }
 
         /// <summary>
@@ -172,23 +173,34 @@ namespace Torch.Managers
             var pluginsToLoad = new List<PluginItem>();
             bool downloadDependencies = Torch.Config.DownloadDependencies;
 
-            //resolve dependencies for all plugins. Will download dependencies if enabled by config
-            Parallel.ForEach(pluginItems, async item =>
-                                          {
-                                              var missing = await ResolveDependencies(pluginItems, item, downloadDependencies);
+            if(!downloadDependencies)
+                _log.Warn("Dependency download is disabled. Some plugins may fail to load without dependencies!");
 
-                                              //found some dependencies we couldn't resolve
-                                              //only happens if user sets DownloadDependencies false, or a plugin depends
-                                              //on a plugin not published on Torch website (or plugin author fat-fingered dependency ID)
-                                              foreach (var missingPlugin in missing)
-                                                  _log.Warn($"{item.Manifest.Name} is missing dependency {missingPlugin}. Skipping plugin.");
-                                              if (missing.Any())
-                                                  item.State = PluginState.MissingDependency;
-                                          });
+            //resolve dependencies for all plugins. Will download dependencies if enabled by config
+            Task.WaitAll(pluginItems.Select( async item =>
+                                          {
+                                              try
+                                              {
+                                                  var missing = await ResolveDependencies(pluginItems, item, downloadDependencies);
+
+                                                  //found some dependencies we couldn't resolve
+                                                  //only happens if user sets DownloadDependencies false, or a plugin depends
+                                                  //on a plugin not published on Torch website (or plugin author fat-fingered dependency ID)
+                                                  foreach (var missingPlugin in missing)
+                                                      _log.Warn($"{item.Manifest.Name} is missing dependency {missingPlugin}. Skipping plugin.");
+                                                  if (missing.Any())
+                                                      item.State = PluginState.MissingDependency;
+                                              }
+                                              catch (Exception ex)
+                                              {
+                                                  _log.Error(ex, $"Error resolving plugin dependencies! Failed item: {item.Manifest.Name}");
+                                              }
+                                          }).ToArray());
 
             //sort plugins by load order in torch config
-            foreach (var id in Torch.Config.Plugins)
+            for(int i = 0; i < Torch.Config.Plugins.Count; i++)
             {
+                var id = Torch.Config.Plugins[i];
                 int idx = pluginItems.FindIndex(p => p.Manifest.Guid == id);
                 if (idx != -1)
                 {
@@ -196,11 +208,12 @@ namespace Torch.Managers
                     pluginItems.RemoveAtFast(idx);
                 }
             }
-
+            
             //add any plugins not listed in config (dependencies)
             pluginsToLoad.AddList(pluginItems);
 
             // Sort based on dependencies.
+            //inserts in top-down order
             try
             {
                 pluginsToLoad = DependencySort(pluginsToLoad);
@@ -210,10 +223,9 @@ namespace Torch.Managers
                 // This will happen on cyclic dependencies.
                 _log.Error(e);
             }
-            
+
             // Actually load the plugins now.
-            //reverse order to load dependencies top-down
-            for (int i = pluginsToLoad.Count - 1; i >= 0; i--)
+            for(int i = 0; i < pluginsToLoad.Count; i++)
             {
                 LoadPlugin(pluginsToLoad[i]);
             }
@@ -231,7 +243,7 @@ namespace Torch.Managers
         //please do not change references to this arg unless you are very sure you know what you're doing
         private List<PluginItem> GetLocalPlugins(string pluginDir, bool debug = false)
         {
-            var firstLoad = Torch.Config.Plugins.Count == 0;
+            var firstLoad = Torch.Config.Plugins.Count + Torch.Config.DisabledPlugins.Count == 0;
             
             //unzip legacy plugins because we don't support loading straight from zip anymore
             var zips = Directory.EnumerateFiles(pluginDir, "*.zip");
@@ -297,8 +309,8 @@ namespace Torch.Managers
                 {
                     if (Torch.Config.ShouldUpdatePlugins)
                     {
-                        string path = Path.Combine(pluginDir, req.ToString());
-                        bool success = await PluginQuery.Instance.DownloadPlugin(req, path);
+                        (bool success, string path) = await PluginQuery.Instance.DownloadPlugin(req);
+
                         if(!success)
                             _log.Error($"Failed to download plugin {req}! Either Torch website is unavaible, or this plugin is not published on Torch website");
                         else
@@ -346,7 +358,7 @@ namespace Torch.Managers
                         return;
                     }
 
-                    zip.ExtractToDirectory(Path.Combine(PluginDir, manifest.Guid.ToString()));
+                    zip.ExtractToDirectory(Path.Combine(PluginDir, $"{manifest.Name} - {manifest.Guid}"));
                 }
             }
             catch (Exception ex)
@@ -358,51 +370,61 @@ namespace Torch.Managers
 
             File.Delete(path);
         }
-        
+
         private bool DownloadPluginUpdates(List<PluginItem> plugins)
         {
-            _log.Info("Checking for plugin updates...");
-            var count = 0;
+            int count = 0;
             Task.WaitAll(plugins.Select(async item =>
-            {
-                try
-                {
-                    item.Manifest.Version.TryExtractVersion(out Version currentVersion);
-                    var latest = await PluginQuery.Instance.QueryOne(item.Manifest.Guid);
+                                        {
+                                            bool res = await DownloadPluginUpdate(item);
+                                            if (res)
+                                                Interlocked.Increment(ref count);
+                                        }).ToArray());
 
-                    if (latest?.LatestVersion == null)
-                    {
-                        _log.Warn($"Plugin {item.Manifest.Name} does not have any releases on torchapi.net. Cannot update.");
-                        return;
-                    }
+            _log.Info($"Updated {count} plugins");
 
-                    latest.LatestVersion.TryExtractVersion(out Version newVersion);
-
-                    if (currentVersion == null || newVersion == null)
-                    {
-                        _log.Error($"Error parsing version from manifest or website for plugin '{item.Manifest.Name}.'");
-                        return;
-                    }
-
-                    if (newVersion <= currentVersion)
-                    {
-                        _log.Debug($"{item.Manifest.Name} {item.Manifest.Version} is up to date.");
-                        return;
-                    }
-
-                    _log.Info($"Updating plugin '{item.Manifest.Name}' from {currentVersion} to {newVersion}.");
-                    await PluginQuery.Instance.DownloadPlugin(latest, item.Path);
-                    Interlocked.Increment(ref count);
-                }
-                catch (Exception e)
-                {
-                    _log.Warn($"An error occurred updating the plugin {item.Manifest.Name}.");
-                    _log.Warn(e);
-                }
-            }).ToArray());
-
-            _log.Info($"Updated {count} plugins.");
             return count > 0;
+        }
+
+        private async Task<bool> DownloadPluginUpdate(PluginItem item)
+        {
+            _log.Info("Checking for plugin updates...");
+            try
+            {
+                item.Manifest.Version.TryExtractVersion(out Version currentVersion);
+                var latest = await PluginQuery.Instance.QueryOne(item.Manifest.Guid);
+
+                if (latest?.LatestVersion == null)
+                {
+                    _log.Warn($"Plugin {item.Manifest.Name} does not have any releases on torchapi.net. Cannot update.");
+                    return false;
+                }
+
+                latest.LatestVersion.TryExtractVersion(out Version newVersion);
+
+                if (currentVersion == null || newVersion == null)
+                {
+                    _log.Error($"Error parsing version from manifest or website for plugin '{item.Manifest.Name}.'");
+                    return false;
+                }
+
+                if (newVersion <= currentVersion)
+                {
+                    _log.Debug($"{item.Manifest.Name} {item.Manifest.Version} is up to date.");
+                    return false;
+                }
+
+                _log.Info($"Updating plugin '{item.Manifest.Name}' from {currentVersion} to {newVersion}.");
+                var res = await PluginQuery.Instance.DownloadPlugin(latest);
+
+                return res.Item1;
+            }
+            catch (Exception e)
+            {
+                _log.Warn($"An error occurred updating the plugin {item.Manifest.Name}.");
+                _log.Warn(e);
+                return false;
+            }
         }
 
         private void LoadPlugin(PluginItem item)
@@ -572,8 +594,8 @@ namespace Torch.Managers
                 {
                     if (downloadMissing)
                     {
-                        string path = Path.Combine(PluginDir, pluginDependency.Plugin.ToString());
-                        bool success = await PluginQuery.Instance.DownloadPlugin(pluginDependency.Plugin, path);
+                        _log.Info($"Downloading dependency {pluginDependency.Plugin}");
+                        (bool success, string path) = await PluginQuery.Instance.DownloadPlugin(pluginDependency.Plugin);
 
                         if (success)
                         {
@@ -676,7 +698,7 @@ namespace Torch.Managers
                 else
                 {
                     if(!silent && !sorted.Contains(item))
-                        throw new Exception("Cyclic dependency detected!");
+                        throw new Exception($"Cyclic dependency detected! Failing plugin: {item.Manifest.Name} - {item.Manifest.Guid}");
                 }
             }
         }
