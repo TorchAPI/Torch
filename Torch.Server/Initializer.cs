@@ -219,7 +219,7 @@ quit";
             // ReSharper disable once PossibleNullReferenceException
             while (!cmd.HasExited)
             {
-                log.Info(cmd.StandardOutput.ReadToEnd());
+                log.Info(cmd.StandardOutput.ReadLine());
                 Thread.Sleep(100);
             }
         }
