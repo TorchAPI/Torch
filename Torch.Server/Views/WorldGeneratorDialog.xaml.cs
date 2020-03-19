@@ -44,7 +44,7 @@ namespace Torch.Server
             _instanceManager = instanceManager;
             InitializeComponent();
             _loadLocalization();
-            var scenarios = MyLocalCache.GetAvailableWorldInfos(Path.Combine(MyFileSystem.ContentPath, "CustomWorlds"));
+            var scenarios = MyLocalCache.GetAvailableWorldInfos(new List<string> {Path.Combine(MyFileSystem.ContentPath, "CustomWorlds")});
             foreach (var tup in scenarios)
             {
                 string directory = tup.Item1;

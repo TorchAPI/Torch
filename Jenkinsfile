@@ -22,7 +22,8 @@ node {
 	stage('Acquire SE') {
 		bat 'powershell -File Jenkins/jenkins-grab-se.ps1'
 		bat 'IF EXIST GameBinaries RMDIR GameBinaries'
-		bat 'mklink /J GameBinaries "C:/Steam/Data-playtest/DedicatedServer64/"'		
+		bat 'mklink /J GameBinaries "C:/Steam/Data/DedicatedServer64/"'
+		bat 'dir GameBinaries'
 	}
 
 	stage('Acquire NuGet Packages') {
