@@ -1,6 +1,6 @@
 pushd
 
-$steamData = "C:/Steam/Data-playtest/"
+$steamData = "C:/Steam/Data/"
 $steamCMDPath = "C:/Steam/steamcmd/"
 $steamCMDZip = "C:/Steam/steamcmd.zip"
 

@@ -62,7 +62,7 @@ namespace Torch.Patches
 
                 if (!Game.IsDedicated)
                     TakeSaveScreenshot();
-                tmpSnapshot.SaveParallel(() => true, () =>
+                tmpSnapshot.SaveParallel(null, null, () =>
                 {
                     if (!Game.IsDedicated && MySession.Static != null)
                         ShowWorldSaveResult(tmpSnapshot.SavingSuccess);
@@ -99,6 +99,7 @@ namespace Torch.Patches
                 {
                     File.Delete(thumbPath);
                 }
+
                 MyGuiSandbox.TakeScreenshot(1200, 672, thumbPath, true, false);
             }
             catch (Exception ex)
