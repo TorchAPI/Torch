@@ -179,7 +179,7 @@ namespace Torch
                 }
                 else
                 {
-                    MyPerformanceSettings preset = MyGuiScreenOptionsGraphics.GetPreset(MyRenderQualityEnum.NORMAL);
+                    MyPerformanceSettings preset = MyGuiScreenOptionsGraphics.GetPreset(MyRenderPresetEnum.NORMAL);
                     MyRenderProxy.Settings.User = MyVideoSettingsManager.GetGraphicsSettingsFromConfig(ref preset, false)
                         .PerformanceSettings.RenderSettings;
                     MyStringId graphicsRenderer = MySandboxGame.Config.GraphicsRenderer;
