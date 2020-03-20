@@ -167,6 +167,7 @@ namespace Torch.Managers
 
             //first scan for plugins on disk
             var pluginItems = GetLocalPlugins(PluginDir);
+
             //update what we have before resolving dependencies
             bool updateSuccess = Torch.Config.ShouldUpdatePlugins && DownloadPluginUpdates(pluginItems);
 
@@ -301,7 +302,7 @@ namespace Torch.Managers
                     Path = path
                 });
             }
-
+            
             //foreach (var req in Torch.Config.Plugins)
             Task.WaitAll(Torch.Config.Plugins.Select( async req =>
             {

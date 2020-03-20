@@ -161,6 +161,7 @@ namespace Torch
 
             MyFileSystem.Reset();
             MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _userDataPath);
+            MySandboxGame.InitMultithreading();
             // MyInitializer.InitCheckSum();
 
 
