@@ -11,7 +11,7 @@ using Torch.Managers.PatchManager;
 using Torch.Utils;
 using VRage.Utils;
 
-namespace Torch.Managers
+namespace Torch.Patches
 {
     [PatchShim]
     internal static class KeenLogPatch

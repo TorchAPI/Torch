@@ -120,6 +120,9 @@ namespace Torch.Server
         [Arg("testplugin", "Path to a plugin to debug. For development use only.")]
         public string TestPlugin { get; set; }
 
+        [Arg("asserts", "Enable Keen's assert logging.")]
+        public bool EnableAsserts { get; set; } = false;
+
         [XmlIgnore]
         private string _path;
 

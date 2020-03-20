@@ -53,7 +53,7 @@ namespace Torch.Server
         internal bool FatalException { get; set; }
 
         /// <inheritdoc />
-       public TorchServer(TorchConfig config = null)
+        public TorchServer(TorchConfig config = null)
         {
             DedicatedInstance = new InstanceManager(this);
             AddManager(DedicatedInstance);
@@ -63,6 +63,11 @@ namespace Torch.Server
 
             var sessionManager = Managers.GetManager<ITorchSessionManager>();
             sessionManager.AddFactory(x => new MultiplayerManagerDedicated(this));
+            
+            // Needs to be done at some point after MyVRageWindows.Init
+            // where the debug listeners are registered
+            if (!((TorchConfig)Config).EnableAsserts)
+                MyDebug.Listeners.Clear();
         }
         
         public bool HasRun { get => _hasRun; set => SetValue(ref _hasRun, value); }
