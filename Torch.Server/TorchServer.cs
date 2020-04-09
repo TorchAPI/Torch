@@ -52,6 +52,9 @@ namespace Torch.Server
         
         internal bool FatalException { get; set; }
 
+        private System.Timers.Timer _simUpdateTimer = new System.Timers.Timer(200);
+        private bool _simDirty;
+
         /// <inheritdoc />
         public TorchServer(TorchConfig config = null)
         {
@@ -68,12 +71,36 @@ namespace Torch.Server
             // where the debug listeners are registered
             if (!((TorchConfig)Config).EnableAsserts)
                 MyDebug.Listeners.Clear();
+            _simUpdateTimer.Elapsed += SimUpdateElapsed;
+            _simUpdateTimer.Start();
         }
-        
+
+        private void SimUpdateElapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (_simDirty)
+            {
+                OnPropertyChanged(nameof(SimulationRatio));
+                _simDirty = false;
+            }
+        }
+
         public bool HasRun { get => _hasRun; set => SetValue(ref _hasRun, value); }
+
         
         /// <inheritdoc />
-        public float SimulationRatio { get => _simRatio; set => SetValue(ref _simRatio, value); }
+        public float SimulationRatio
+        {
+            get => _simRatio;
+            set
+            {
+                if (_simRatio.IsEqual(value, 0.01f))
+                    return;
+
+                _simRatio = value;
+                _simDirty = true;
+                //SetValue(ref _simRatio, value);
+            }
+        }
 
         /// <inheritdoc />
         public TimeSpan ElapsedPlayTime { get => _elapsedPlayTime; set => SetValue(ref _elapsedPlayTime, value); }
