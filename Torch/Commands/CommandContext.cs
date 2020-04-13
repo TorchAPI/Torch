@@ -68,7 +68,7 @@ namespace Torch.Commands
             if (font == null)
                 font = MyFontEnum.White;
 
-            chat?.SendMessageAsOther(sender, message, color, font: font);
+            chat?.SendMessageAsOther(sender, message, color, _steamIdSender, font);
         }
 
         public virtual void Respond(string message, string sender = null, string font = null)
