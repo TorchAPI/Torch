@@ -12,6 +12,7 @@
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -193,6 +194,8 @@
     <Compile Include="Session\ITorchSessionManager.cs" />
     <Compile Include="Session\TorchSessionState.cs" />
     <Compile Include="TorchGameState.cs" />
+    <Compile Include="Utils\ColorUtils.cs" />
+    <Compile Include="Utils\StringUtils.cs" />
     <Compile Include="WebAPI\JenkinsQuery.cs" />
     <Compile Include="WebAPI\PluginQuery.cs" />
   </ItemGroup>
@@ -202,7 +205,6 @@
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\TransformOnBuild.targets" />
 </Project>
