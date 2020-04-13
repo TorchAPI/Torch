@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VRage.Collections;
+using VRage.Game;
 using VRage.Network;
+using VRageMath;
 
 namespace Torch.API.Managers
 {
@@ -34,14 +36,18 @@ namespace Torch.API.Managers
         void SendMessageAsOther(ulong authorId, string message, ulong targetSteamId = 0);
 
 
+        [Obsolete("Use the other overload with a Color parameter.")]
+        void SendMessageAsOther(string author, string message, string font, ulong targetSteamId = 0);
+        
         /// <summary>
         /// Sends a scripted message with the given author and message to the given player, or all players by default.
         /// </summary>
         /// <param name="author">Author name</param>
         /// <param name="message">The message to send</param>
+        /// <param name="color">Name color</param>
         /// <param name="font">Font to use</param>
         /// <param name="targetSteamId">Player to send the message to, or everyone by default</param>
-        void SendMessageAsOther(string author, string message, string font, ulong targetSteamId = 0);
+        void SendMessageAsOther(string author, string message, Color color = default, ulong targetSteamId = 0, string font = MyFontEnum.White);
 
         /// <summary>
         /// Mute user from global chat.

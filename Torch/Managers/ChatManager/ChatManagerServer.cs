@@ -17,8 +17,10 @@ using Torch.Managers.PatchManager;
 using Torch.Utils;
 using VRage;
 using VRage.Collections;
+using VRage.Game;
 using VRage.Library.Collections;
 using VRage.Network;
+using VRageMath;
 
 namespace Torch.Managers.ChatManager
 {
@@ -107,8 +109,7 @@ namespace Torch.Managers.ChatManager
         private static MethodInfo _dedicatedServerBaseOnChatMessage;
 #pragma warning restore 649
 
-        /// <inheritdoc />
-        public void SendMessageAsOther(string author, string message, string font, ulong targetSteamId = 0)
+        public void SendMessageAsOther(string author, string message, Color color = default, ulong targetSteamId = 0, string font = MyFontEnum.White)
         {
             if (targetSteamId == Sync.MyId)
             {
@@ -125,11 +126,21 @@ namespace Torch.Managers.ChatManager
             {
                 Author = author ?? Torch.Config.ChatName,
                 Text = message,
-                Font = font ?? Torch.Config.ChatColor,
+                Font = font,
+                Color = color == default ? ColorUtils.TranslateColor(Torch.Config.ChatColor) : color,
                 Target = Sync.Players.TryGetIdentityId(targetSteamId)
             };
             _chatLog.Info($"{author} (to {GetMemberName(targetSteamId)}): {message}");
             MyMultiplayerBase.SendScriptedChatMessage(ref scripted);
+        }
+        
+        /// <summary>
+        /// Backwards compatibility
+        /// </summary>
+        [Obsolete("Use the other overload with a Color parameter.")]
+        public void SendMessageAsOther(string author, string message, string font, ulong targetSteamId = 0)
+        {
+            SendMessageAsOther(author, message, ColorUtils.TranslateColor(font), targetSteamId, font);
         }
 
         /// <inheritdoc />
