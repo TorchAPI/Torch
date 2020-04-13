@@ -12,6 +12,7 @@ using Sandbox.Game.Gui;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
+using SteamKit2.Unified.Internal;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Utils;
@@ -49,11 +50,12 @@ namespace Torch.Managers.ChatManager
                     };
                     
                     var color = Torch.Config.ChatColor;
-                    if (!StringUtils.IsFontEnum(color))
-                    {
+                    if (StringUtils.IsFontEnum(color))
+                        scripted.Font = color;
+                    else
                         scripted.Font = MyFontEnum.White;
-                        scripted.Color = ColorUtils.TranslateColor(color);
-                    }
+
+                    scripted.Color = ColorUtils.TranslateColor(color);
                     
                     MyMultiplayerBase.SendScriptedChatMessage(ref scripted);
                 }
