@@ -22,13 +22,29 @@ namespace Torch.API.Managers
     {
         private const string DEFAULT_FONT = MyFontEnum.Blue;
 
+        #region Backwards compatibility
+
+        [Obsolete]
+        public TorchChatMessage(string author, string message, string font = DEFAULT_FONT) 
+            : this(author, message, default, font) { }
+
+        [Obsolete]
+        public TorchChatMessage(string author, ulong authorSteamId, string message, ChatChannel channel, long target, string font = DEFAULT_FONT)
+            : this(author, authorSteamId, message, channel, target, default, font) { }
+
+        [Obsolete]
+        public TorchChatMessage(ulong authorSteamId, string message, ChatChannel channel, long target, string font = DEFAULT_FONT)
+            : this(authorSteamId, message, channel, target, default, font) { }
+
+        #endregion
+        
         /// <summary>
         /// Creates a new torch chat message with the given author and message.
         /// </summary>
         /// <param name="author">Author's name</param>
         /// <param name="message">Message</param>
         /// <param name="font">Font</param>
-        public TorchChatMessage(string author, string message, string font = DEFAULT_FONT, Color color = default)
+        public TorchChatMessage(string author, string message, Color color, string font = DEFAULT_FONT)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = null;
@@ -47,7 +63,7 @@ namespace Torch.API.Managers
         /// <param name="authorSteamId">Author's steam ID</param>
         /// <param name="message">Message</param>
         /// <param name="font">Font</param>
-        public TorchChatMessage(string author, ulong authorSteamId, string message, ChatChannel channel, long target, string font = DEFAULT_FONT, Color color = default)
+        public TorchChatMessage(string author, ulong authorSteamId, string message, ChatChannel channel, long target, Color color, string font = DEFAULT_FONT)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = authorSteamId;
@@ -65,7 +81,7 @@ namespace Torch.API.Managers
         /// <param name="authorSteamId">Author's steam ID</param>
         /// <param name="message">Message</param>
         /// <param name="font">Font</param>
-        public TorchChatMessage(ulong authorSteamId, string message, ChatChannel channel, long target, string font = DEFAULT_FONT, Color color = default)
+        public TorchChatMessage(ulong authorSteamId, string message, ChatChannel channel, long target, Color color, string font = DEFAULT_FONT)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = authorSteamId;
