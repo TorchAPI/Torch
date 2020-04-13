@@ -28,7 +28,7 @@ namespace Torch.API.Managers
         /// <param name="author">Author's name</param>
         /// <param name="message">Message</param>
         /// <param name="font">Font</param>
-        public TorchChatMessage(string author, string message, string font = DEFAULT_FONT, Color color = new Color())
+        public TorchChatMessage(string author, string message, string font = DEFAULT_FONT, Color color = default)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = null;
@@ -37,7 +37,7 @@ namespace Torch.API.Managers
             Channel = ChatChannel.Global;
             Target = 0;
             Font = font;
-            Color = color == new Color() ? ColorUtils.TranslateColor(font) : color;
+            Color = color == default ? ColorUtils.TranslateColor(font) : color;
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace Torch.API.Managers
         /// <param name="authorSteamId">Author's steam ID</param>
         /// <param name="message">Message</param>
         /// <param name="font">Font</param>
-        public TorchChatMessage(string author, ulong authorSteamId, string message, ChatChannel channel, long target, string font = DEFAULT_FONT, Color color = new Color())
+        public TorchChatMessage(string author, ulong authorSteamId, string message, ChatChannel channel, long target, string font = DEFAULT_FONT, Color color = default)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = authorSteamId;
@@ -56,7 +56,7 @@ namespace Torch.API.Managers
             Channel = channel;
             Target = target;
             Font = font;
-            Color = color == new Color() ? ColorUtils.TranslateColor(font) : color;
+            Color = color == default ? ColorUtils.TranslateColor(font) : color;
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Torch.API.Managers
         /// <param name="authorSteamId">Author's steam ID</param>
         /// <param name="message">Message</param>
         /// <param name="font">Font</param>
-        public TorchChatMessage(ulong authorSteamId, string message, ChatChannel channel, long target, string font = DEFAULT_FONT, Color color = new Color())
+        public TorchChatMessage(ulong authorSteamId, string message, ChatChannel channel, long target, string font = DEFAULT_FONT, Color color = default)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = authorSteamId;
@@ -74,7 +74,7 @@ namespace Torch.API.Managers
             Channel = channel;
             Target = target;
             Font = font;
-            Color = color == new Color() ? ColorUtils.TranslateColor(font) : color;
+            Color = color == default ? ColorUtils.TranslateColor(font) : color;
         }
 
         /// <summary>
