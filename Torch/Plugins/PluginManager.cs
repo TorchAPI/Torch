@@ -146,6 +146,9 @@ namespace Torch.Managers
         {
             _log.Info("Loading plugins...");
 
+            Torch.Config.Plugins = Torch.Config.Plugins.Distinct().ToList();
+            Torch.Config.DisabledPlugins = Torch.Config.DisabledPlugins.Distinct().ToList();
+
             if (!string.IsNullOrEmpty(Torch.Config.TestPlugin))
             {
                 _log.Info($"Loading plugin for debug at {Torch.Config.TestPlugin}");
