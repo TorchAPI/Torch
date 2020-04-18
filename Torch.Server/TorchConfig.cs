@@ -62,9 +62,16 @@ namespace Torch.Server
         [XmlIgnore, Arg("forceupdate", "Manually check for and install updates.")]
         public bool ForceUpdate { get; set; }
 
-        /// <inheritdoc />
-        [Arg("autostart", "Start the server immediately.")]
+        /// <summary>
+        /// Permanent flag to ALWAYS automatically start the server
+        /// </summary>
         public bool Autostart { get; set; }
+
+        /// <summary>
+        /// Temporary flag to automatically start the server only on the next run
+        /// </summary>
+        [Arg("autostart", "Start the server immediately.")]
+        public bool TempAutostart { get; set; }
 
         /// <inheritdoc />
         [Arg("restartoncrash", "Automatically restart the server if it crashes.")]
