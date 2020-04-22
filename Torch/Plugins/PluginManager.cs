@@ -596,7 +596,7 @@ namespace Torch.Managers
                 //either acquire the dependency or fail
                 if (dependency == null)
                 {
-                    if (downloadMissing)
+                    if (downloadMissing && !pluginDependency.Optional)
                     {
                         _log.Info($"Downloading dependency {pluginDependency.Plugin}");
                         (bool success, string path) = await PluginQuery.Instance.DownloadPlugin(pluginDependency.Plugin);
@@ -621,8 +621,15 @@ namespace Torch.Managers
                             continue;
                         }
                     }
+                    else if (pluginDependency.Optional)
+                    {
+                        missingDependencies.Add(pluginDependency.Plugin);
+                        _log.Warn($"Dependency {pluginDependency.Plugin} is marked as optional, but is not installed. Some features of plugin {item.Manifest.Name} may not work correctly!");
+                        continue;
+                    }
                     else
                     {
+                        _log.Warn($"Plugin {item.Manifest.Name} depends on plugin {pluginDependency.Plugin}, but it is not installed, and dependency downloading is disabled. Some features may not work correctly!");
                         missingDependencies.Add(pluginDependency.Plugin);
                         continue;
                     }
@@ -637,8 +644,6 @@ namespace Torch.Managers
                     {
                         // If dependency version is too low, we can try to update. Otherwise
                         // it's a missing dependency.
-                        
-                        // For now let's just warn the user. bitMuse is lazy.
 
                         //this should only hit if we aren't downloading deps anyway. Just leave the message here
                         _log.Warn($"{dependency.Manifest.Name} is below the requested version for {item.Manifest.Name}."
