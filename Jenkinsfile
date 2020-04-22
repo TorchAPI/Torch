@@ -6,6 +6,11 @@ def packageAndArchive(buildMode, packageName, exclude) {
 	bat "IF EXIST ${packageDir} RMDIR /S /Q ${packageDir}"
 
 	bat "xcopy bin\\x64\\${buildMode} ${packageDir}"
+
+	bat "del ${packageDir}VRage.*"
+    bat "del ${packageDir}Sandbox.*"
+    bat "del ${packageDir}SpaceEngineers.*"
+    
 	if (exclude.length() > 0) {
 		bat "del ${packageDir}${exclude}"
 	}
