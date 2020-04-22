@@ -161,16 +161,9 @@
       <HintPath>..\GameBinaries\VRage.Math.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="VRage.Native">
-      <HintPath>..\GameBinaries\VRage.Native.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.OpenVRWrapper">
-      <HintPath>..\GameBinaries\VRage.OpenVRWrapper.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="VRage.Platform.Windows, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\GameBinaries\VRage.Platform.Windows.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Platform.Windows, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\GameBinaries\VRage.Platform.Windows.dll</HintPath>
