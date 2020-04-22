@@ -6,6 +6,11 @@ def packageAndArchive(buildMode, packageName, exclude) {
 	bat "IF EXIST ${packageDir} RMDIR /S /Q ${packageDir}"
 
 	bat "xcopy bin\\x64\\${buildMode} ${packageDir}"
+
+	bat "del ${packageDir}VRage.*"
+    bat "del ${packageDir}Sandbox.*"
+    bat "del ${packageDir}SpaceEngineers.*"
+    
 	if (exclude.length() > 0) {
 		bat "del ${packageDir}${exclude}"
 	}
@@ -46,7 +51,7 @@ node {
 	stage('Archive') {
 		archiveArtifacts artifacts: "bin/x64/${buildMode}/Torch*", caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
 
-		packageAndArchive(buildMode, "torch-server", "Torch.Client*")
+		packageAndArchive(buildMode, "torch-server", "System*")
 
 		/*packageAndArchive(buildMode, "torch-client", "Torch.Server*")*/
 	}
