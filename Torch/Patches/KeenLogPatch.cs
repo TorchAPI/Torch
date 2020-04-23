@@ -66,31 +66,32 @@ namespace Torch.Patches
             return typeof(KeenLogPatch).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
         }
 
-        [ReflectedMethod(Name = "GetThreadId")]
-        private static Func<MyLog, int> _getThreadId;
-
         [ReflectedMethod(Name = "GetIdentByThread")]
         private static Func<MyLog, int, int> _getIndentByThread;
 
-        private static readonly ThreadLocal<StringBuilder> _tmpStringBuilder = new ThreadLocal<StringBuilder>(() => new StringBuilder(32));
-
+        [ThreadStatic]
+        private static StringBuilder _tmpStringBuilder;
+        
         private static StringBuilder PrepareLog(MyLog log)
         {
+            if (_tmpStringBuilder == null)
+                _tmpStringBuilder = new StringBuilder();
+            
+            _tmpStringBuilder.Clear();
+            var i = Thread.CurrentThread.ManagedThreadId;
+            int t = 0;
+            
             try
             {
-                var v = _tmpStringBuilder.Value;
-                v.Clear();
-                var i = _getThreadId(log);
-                var t = _getIndentByThread(log, i);
-                v.Append(' ', t * 3);
-                return v;
+                t = _getIndentByThread(log, i);
             }
             catch (Exception e)
             {
-                _log.Error(e);
-                return _tmpStringBuilder.Value.Clear();
+                _log.Debug(e, "Failed to get thread indent");
             }
-            //return _tmpStringBuilder.Value.Clear().Append(' ', _getIndentByThread(log, _getThreadId(log)) * 3);
+            
+            _tmpStringBuilder.Append(' ', t * 3);
+            return _tmpStringBuilder;
         }
 
         private static bool PrefixWriteLine(MyLog __instance, string msg)
