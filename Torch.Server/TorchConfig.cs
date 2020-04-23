@@ -71,6 +71,7 @@ namespace Torch.Server
         /// Temporary flag to automatically start the server only on the next run
         /// </summary>
         [Arg("autostart", "Start the server immediately.")]
+        [XmlIgnore]
         public bool TempAutostart { get; set; }
 
         /// <inheritdoc />
