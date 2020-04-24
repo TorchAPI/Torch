@@ -1,13 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 using Sandbox.Engine.Networking;
 using Sandbox.Game.Multiplayer;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
+using Torch.Utils;
 using VRage.Game;
 using VRage.Game.ModAPI;
+using VRageMath;
 
 namespace Torch.Commands
 {
@@ -55,6 +58,19 @@ namespace Torch.Commands
             Args = args ?? new List<string>();
         }
 
+        public void Respond(string message, Color color, string sender = null, string font = null)
+        {
+            var chat = Torch.CurrentSession.Managers.GetManager<IChatManagerServer>();
+            
+            if (color == default && font != null)
+                color = ColorUtils.TranslateColor(font);
+            
+            if (font == null)
+                font = MyFontEnum.White;
+
+            chat?.SendMessageAsOther(sender, message, color, _steamIdSender, font);
+        }
+
         public virtual void Respond(string message, string sender = null, string font = null)
         {
             //hack: Backwards compatibility 20190416
@@ -64,8 +80,7 @@ namespace Torch.Commands
                 font = null;
             }
             
-            var chat = Torch.CurrentSession.Managers.GetManager<IChatManagerServer>();
-            chat?.SendMessageAsOther(sender, message, font, _steamIdSender);
+            Respond(message, default, sender, font);
         }
     }
 }

@@ -212,7 +212,7 @@ namespace Torch.Server
                 string exe = Assembly.GetExecutingAssembly().Location;
                 Debug.Assert(exe != null);
                 config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
-                config.Autostart = true;
+                config.TempAutostart = true;
                 Process.Start(exe, config.ToString());
 
                 Process.GetCurrentProcess().Kill();

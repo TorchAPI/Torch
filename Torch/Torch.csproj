@@ -12,6 +12,7 @@
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -160,16 +161,9 @@
       <HintPath>..\GameBinaries\VRage.Math.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="VRage.Native">
-      <HintPath>..\GameBinaries\VRage.Native.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.OpenVRWrapper">
-      <HintPath>..\GameBinaries\VRage.OpenVRWrapper.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="VRage.Platform.Windows, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\GameBinaries\VRage.Platform.Windows.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Platform.Windows, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\GameBinaries\VRage.Platform.Windows.dll</HintPath>
@@ -285,7 +279,6 @@
     <Compile Include="Utils\Reflected\ReflectedStaticMethodAttribute.cs" />
     <Compile Include="Utils\Reflection.cs" />
     <Compile Include="Utils\SteamWorkshopTools\WebAPI.cs" />
-    <Compile Include="Utils\StringUtils.cs" />
     <Compile Include="Utils\SynchronizationExtensions.cs" />
     <Compile Include="Utils\TorchAssemblyResolver.cs" />
     <Compile Include="Utils\Reflected\ReflectedManager.cs" />

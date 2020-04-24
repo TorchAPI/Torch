@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using NLog;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Engine.Networking;
@@ -11,11 +12,13 @@ using Sandbox.Game.Gui;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
+using SteamKit2.Unified.Internal;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Utils;
 using VRage.Game;
 using VRageMath;
+using Color = VRageMath.Color;
 
 namespace Torch.Managers.ChatManager
 {
@@ -31,7 +34,7 @@ namespace Torch.Managers.ChatManager
 
         /// <inheritdoc />
         public event MessageSendingDel MessageSending;
-
+        
         /// <inheritdoc />
         public void SendMessageAsSelf(string message)
         {
@@ -39,21 +42,21 @@ namespace Torch.Managers.ChatManager
             {
                 if (Sandbox.Engine.Platform.Game.IsDedicated)
                 {
-                    // Sending invalid color to clients will crash them. KEEEN
-                    var color = Torch.Config.ChatColor;
-                    if (!StringUtils.IsFontEnum(Torch.Config.ChatColor))
-                    {
-                        _log.Warn("Invalid chat font color! Defaulting to 'Red'");
-                        color = MyFontEnum.Red;
-                    }
-                    
                     var scripted = new ScriptedChatMsg()
                     {
                         Author = Torch.Config.ChatName,
-                        Font = color,
                         Text = message,
                         Target = 0
                     };
+                    
+                    var color = Torch.Config.ChatColor;
+                    if (StringUtils.IsFontEnum(color))
+                        scripted.Font = color;
+                    else
+                        scripted.Font = MyFontEnum.White;
+
+                    scripted.Color = ColorUtils.TranslateColor(color);
+                    
                     MyMultiplayerBase.SendScriptedChatMessage(ref scripted);
                 }
                 else

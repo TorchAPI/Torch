@@ -97,7 +97,7 @@ namespace Torch.Views
             var curRow = 0;
             foreach (var c in categories.OrderBy(x => x.Key))
             {
-                grid.RowDefinitions.Add(new RowDefinition());
+                grid.RowDefinitions.Add(new RowDefinition(){Height = new GridLength(1, GridUnitType.Auto)});
                 var cl = new TextBlock
                          {
                              Text = c.Key,
@@ -124,7 +124,7 @@ namespace Torch.Views
                     if (property.GetGetMethod() == null)
                         continue;
 
-                    var def = new RowDefinition();
+                    var def = new RowDefinition(){Height = new GridLength(1, GridUnitType.Auto)};
                     grid.RowDefinitions.Add(def);
 
                     var descriptor = descriptors[property];

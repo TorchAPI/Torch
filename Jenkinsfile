@@ -1,4 +1,4 @@
-def packageAndArchive(buildMode, packageName, exclude) {
+def packageAndArchive(buildMode, packageName) {
 	zipFile = "bin\\${packageName}.zip"
 	packageDir = "bin\\${packageName}\\"
 
@@ -6,9 +6,11 @@ def packageAndArchive(buildMode, packageName, exclude) {
 	bat "IF EXIST ${packageDir} RMDIR /S /Q ${packageDir}"
 
 	bat "xcopy bin\\x64\\${buildMode} ${packageDir}"
-	if (exclude.length() > 0) {
-		bat "del ${packageDir}${exclude}"
-	}
+
+	bat "del ${packageDir}VRage.*"
+	bat "del ${packageDir}Sandbox.*"
+	bat "del ${packageDir}SpaceEngineers.*"
+    
 	powershell "Add-Type -Assembly System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory(\"\$PWD\\${packageDir}\", \"\$PWD\\${zipFile}\")"
 	archiveArtifacts artifacts: zipFile, caseSensitive: false, onlyIfSuccessful: true
 }
@@ -46,7 +48,7 @@ node {
 	stage('Archive') {
 		archiveArtifacts artifacts: "bin/x64/${buildMode}/Torch*", caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
 
-		packageAndArchive(buildMode, "torch-server", "Torch.Client*")
+		packageAndArchive(buildMode, "torch-server")
 
 		/*packageAndArchive(buildMode, "torch-client", "Torch.Server*")*/
 	}

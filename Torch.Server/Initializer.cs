@@ -144,9 +144,12 @@ quit";
                 var gameThread = new Thread(() =>
                 {
                     _server.Init();
-                    
-                    if (_config.Autostart)
+
+                    if (_config.Autostart || _config.TempAutostart)
+                    {
+                        _config.TempAutostart = false;
                         _server.Start();
+                    }
                 });
                 
                 gameThread.Start();

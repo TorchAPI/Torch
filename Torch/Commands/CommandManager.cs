@@ -10,6 +10,7 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
 using Torch.Managers;
+using Torch.Utils;
 using VRage.Game;
 using VRage.Game.ModAPI;
 using VRage.Network;
@@ -133,7 +134,7 @@ namespace Torch.Commands
                 if (!HasPermission(steamId, command))
                 {
                     _log.Info($"{player.DisplayName} tried to use command {cmdPath} without permission");
-                    _chatManager.SendMessageAsOther(Torch.Config.ChatName, $"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", Torch.Config.ChatColor, steamId);
+                    _chatManager.SendMessageAsOther(null, $"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", targetSteamId: steamId);
                     return;
                 }
 
