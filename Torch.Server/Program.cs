@@ -24,8 +24,6 @@ namespace Torch.Server
         [STAThread]
         public static void Main(string[] args)
         {
-            
-            
             Target.Register<FlowDocumentTarget>("FlowDocument");
             //Ensures that all the files are downloaded in the Torch directory.
             var workingDir = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
@@ -36,6 +34,7 @@ namespace Torch.Server
             var badDlls = new[]
             {
                 "System.Security.Principal.Windows.dll",
+                "VRage.Platform.Windows.dll"
             };
 
             try
