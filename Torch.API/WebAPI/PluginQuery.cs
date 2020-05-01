@@ -104,18 +104,18 @@ namespace Torch.API.WebAPI
             return response;
         }
 
-        public async Task<(bool, string)> DownloadPlugin(Guid guid, string path = null)
+        public async Task<(bool, string)> DownloadPlugin(Guid guid, bool beta = false, string path = null)
         {
-            return await DownloadPlugin(guid.ToString(), path);
+            return await DownloadPlugin(guid.ToString(), beta, path);
         }
 
-        public async Task<(bool, string)> DownloadPlugin(string guid, string path = null)
+        public async Task<(bool, string)> DownloadPlugin(string guid, bool beta = false, string path = null)
         {
             var item = await QueryOne(guid);
-            return await DownloadPlugin(item, path);
+            return await DownloadPlugin(item, beta, path);
         }
 
-        public async Task<(bool, string)> DownloadPlugin(PluginFullItem item, string path = null)
+        public async Task<(bool, string)> DownloadPlugin(PluginFullItem item, bool beta = false, string path = null)
         {
             try
             {
@@ -130,7 +130,9 @@ namespace Torch.API.WebAPI
                     Log.Error($"Selected plugin {item.Name} does not have any versions to download!");
                     return (false, path);
                 }
-                var version = response.Versions.FirstOrDefault(v => v.Version == response.LatestVersion);
+
+                //find latest version, skipping betas unless the user wants them
+                var version = response.Versions.FirstOrDefault(v => !v.IsBeta || beta);
                 if (version == null)
                 {
                     Log.Error($"Could not find latest version for selected plugin {item.Name}");

@@ -26,6 +26,7 @@ namespace Torch
         string TestPlugin { get; set; }
         bool DisconnectOnRestart { get; set; }
         bool DownloadDependencies { get; set; }
+        bool BetaPlugins { get; set; }
 
         bool Save(string path = null);
     }

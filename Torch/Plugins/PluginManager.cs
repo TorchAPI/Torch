@@ -172,7 +172,7 @@ namespace Torch.Managers
             var pluginItems = GetLocalPlugins(PluginDir);
 
             //update what we have before resolving dependencies
-            bool updateSuccess = Torch.Config.ShouldUpdatePlugins && DownloadPluginUpdates(pluginItems);
+            bool updateSuccess = Torch.Config.ShouldUpdatePlugins && DownloadPluginUpdates(pluginItems, Torch.Config.BetaPlugins);
 
             var pluginsToLoad = new List<PluginItem>();
             bool downloadDependencies = Torch.Config.DownloadDependencies;
@@ -198,6 +198,7 @@ namespace Torch.Managers
                                               catch (Exception ex)
                                               {
                                                   _log.Error(ex, $"Error resolving plugin dependencies! Failed item: {item.Manifest.Name}");
+                                                  item.State = PluginState.DisabledError;
                                               }
                                           }).ToArray());
 
@@ -313,7 +314,7 @@ namespace Torch.Managers
                 {
                     if (Torch.Config.ShouldUpdatePlugins)
                     {
-                        (bool success, string path) = await PluginQuery.Instance.DownloadPlugin(req);
+                        (bool success, string path) = await PluginQuery.Instance.DownloadPlugin(req, Torch.Config.BetaPlugins);
 
                         if(!success)
                             _log.Error($"Failed to download plugin {req}! Either Torch website is unavaible, or this plugin is not published on Torch website");
@@ -375,12 +376,12 @@ namespace Torch.Managers
             File.Delete(path);
         }
 
-        private bool DownloadPluginUpdates(List<PluginItem> plugins)
+        private bool DownloadPluginUpdates(List<PluginItem> plugins, bool beta)
         {
             int count = 0;
             Task.WaitAll(plugins.Select(async item =>
                                         {
-                                            bool res = await DownloadPluginUpdate(item);
+                                            bool res = await DownloadPluginUpdate(item, beta);
                                             if (res)
                                                 Interlocked.Increment(ref count);
                                         }).ToArray());
@@ -390,21 +391,29 @@ namespace Torch.Managers
             return count > 0;
         }
 
-        private async Task<bool> DownloadPluginUpdate(PluginItem item)
+        private async Task<bool> DownloadPluginUpdate(PluginItem item, bool beta)
         {
             _log.Info("Checking for plugin updates...");
             try
             {
                 item.Manifest.Version.TryExtractVersion(out Version currentVersion);
-                var latest = await PluginQuery.Instance.QueryOne(item.Manifest.Guid);
+                var pgi = await PluginQuery.Instance.QueryOne(item.Manifest.Guid);
 
-                if (latest?.LatestVersion == null)
+                if (pgi?.Versions == null)
                 {
                     _log.Warn($"Plugin {item.Manifest.Name} does not have any releases on torchapi.net. Cannot update.");
                     return false;
                 }
 
-                latest.LatestVersion.TryExtractVersion(out Version newVersion);
+                var latest = pgi.Versions.FirstOrDefault(v => !v.IsBeta || beta);
+
+                if (latest == null)
+                {
+                    _log.Warn($"Could not find latest release for plugin {item.Manifest.Name}");
+                    return false;
+                }
+                
+                latest.Version.TryExtractVersion(out Version newVersion);
 
                 if (currentVersion == null || newVersion == null)
                 {
@@ -419,7 +428,7 @@ namespace Torch.Managers
                 }
 
                 _log.Info($"Updating plugin '{item.Manifest.Name}' from {currentVersion} to {newVersion}.");
-                var res = await PluginQuery.Instance.DownloadPlugin(latest);
+                var res = await PluginQuery.Instance.DownloadPlugin(pgi, Torch.Config.BetaPlugins);
 
                 return res.Item1;
             }
@@ -599,7 +608,7 @@ namespace Torch.Managers
                     if (downloadMissing && !pluginDependency.Optional)
                     {
                         _log.Info($"Downloading dependency {pluginDependency.Plugin}");
-                        (bool success, string path) = await PluginQuery.Instance.DownloadPlugin(pluginDependency.Plugin);
+                        (bool success, string path) = await PluginQuery.Instance.DownloadPlugin(pluginDependency.Plugin, Torch.Config.BetaPlugins);
 
                         if (success)
                         {

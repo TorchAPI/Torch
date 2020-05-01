@@ -106,6 +106,8 @@ namespace Torch.Server
         
         public bool DownloadDependencies { get; set; } = true;
 
+        public bool BetaPlugins { get; set; }
+
         [Arg("disconnect", "When server restarts, all clients are rejected to main menu to prevent auto rejoin")]
         public bool DisconnectOnRestart { get; set; }
 
