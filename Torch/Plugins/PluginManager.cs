@@ -421,7 +421,7 @@ namespace Torch.Managers
                     return false;
                 }
 
-                if (newVersion <= currentVersion)
+                if (newVersion == currentVersion)
                 {
                     _log.Debug($"{item.Manifest.Name} {item.Manifest.Version} is up to date.");
                     return false;
