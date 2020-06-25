@@ -47,9 +47,13 @@ namespace Torch.Server
             var scenarios = MyLocalCache.GetAvailableWorldInfos(new List<string> {Path.Combine(MyFileSystem.ContentPath, "CustomWorlds")});
             foreach (var tup in scenarios)
             {
+                if (tup.Item2 == null)
+                    continue;
+                
                 string directory = tup.Item1;
                 MyWorldInfo info = tup.Item2;
-                string localizedName = MyTexts.GetString(MyStringId.GetOrCompute(info.SessionName));
+                var sessionNameId = MyStringId.GetOrCompute(info.SessionName);
+                string localizedName = MyTexts.GetString(sessionNameId);
                 var checkpoint = MyLocalCache.LoadCheckpoint(directory, out _);
                 checkpoint.OnlineMode = MyOnlineModeEnum.PUBLIC;
                 _checkpoints.Add(new PremadeCheckpointItem { Name = localizedName, Icon = Path.Combine(directory, "thumb.jpg"), Path = directory, Checkpoint = checkpoint});
