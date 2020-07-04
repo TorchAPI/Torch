@@ -177,15 +177,11 @@ namespace Torch.Server
                 InsertMessage(new TorchChatMessage(TorchBase.Instance.Config.ChatName, text, TorchBase.Instance.Config.ChatColor));
                 _server.Invoke(() =>
                 {
-                    var responses = commands.HandleCommandFromServer(text);
-                    if (responses == null)
+                    if (!commands.HandleCommandFromServer(text, InsertMessage))
                     {
                         InsertMessage(new TorchChatMessage(TorchBase.Instance.Config.ChatName, "Invalid command.", TorchBase.Instance.Config.ChatColor));
                         return;
                     }
-                    
-                    foreach (var response in responses)
-                        InsertMessage(response);
                 });
             }
             else

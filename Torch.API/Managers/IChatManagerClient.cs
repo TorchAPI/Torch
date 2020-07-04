@@ -18,7 +18,7 @@ namespace Torch.API.Managers
     /// <summary>
     /// Represents a scripted or user chat message.
     /// </summary>
-    public struct TorchChatMessage
+    public readonly struct TorchChatMessage
     {
         private const string DEFAULT_FONT = MyFontEnum.Blue;
 

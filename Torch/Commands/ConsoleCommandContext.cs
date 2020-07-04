@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Torch.API;
@@ -9,6 +10,8 @@ namespace Torch.Commands
     public class ConsoleCommandContext : CommandContext
     {
         public List<TorchChatMessage> Responses = new List<TorchChatMessage>();
+        public event Action<TorchChatMessage> OnResponse;
+
         private bool _flag;
         
         /// <inheritdoc />
@@ -23,8 +26,10 @@ namespace Torch.Commands
                 sender = null;
                 font = null;
             }
-            
-            Responses.Add(new TorchChatMessage(sender ?? TorchBase.Instance.Config.ChatName, message, font ?? TorchBase.Instance.Config.ChatColor));
+
+            var msg = new TorchChatMessage(sender ?? TorchBase.Instance.Config.ChatName, message, font ?? TorchBase.Instance.Config.ChatColor);
+            Responses.Add(msg);
+            OnResponse?.Invoke(msg);
         }
     }
 }
