@@ -82,7 +82,7 @@ namespace Torch.Commands
             }
         }
 
-        public List<TorchChatMessage> HandleCommandFromServer(string message)
+        private List<TorchChatMessage> HandleCommandFromServerInternal(string message, Action<TorchChatMessage> subscriber = null)
         {
             var cmdText = new string(message.Skip(1).ToArray());
             var command = Commands.GetCommand(cmdText, out string argText);
@@ -93,11 +93,27 @@ namespace Torch.Commands
             var splitArgs = Regex.Matches(argText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
             _log.Trace($"Invoking {cmdPath} for server.");
             var context = new ConsoleCommandContext(Torch, command.Plugin, Sync.MyId, argText, splitArgs);
+            if (subscriber != null)
+                context.OnResponse += subscriber;
             if (command.TryInvoke(context))
                 _log.Info($"Server ran command '{message}'");
             else
                 context.Respond($"Invalid Syntax: {command.SyntaxHelp}");
             return context.Responses;
+        }
+
+        /// <summary>
+        /// Invokes the given command string as the server, subscribing to responses using the given callback.
+        /// </summary>
+        /// <returns>true if the command was run, false if not</returns>
+        public bool HandleCommandFromServer(string message, Action<TorchChatMessage> subscriber)
+        {
+            return HandleCommandFromServerInternal(message, subscriber) != null;
+        }
+
+        public List<TorchChatMessage> HandleCommandFromServer(string message)
+        {
+            return HandleCommandFromServerInternal(message, null);
         }
 
         public void HandleCommand(TorchChatMessage msg, ref bool consumed)

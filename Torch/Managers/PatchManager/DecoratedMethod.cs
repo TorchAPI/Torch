@@ -173,6 +173,8 @@ namespace Torch.Managers.PatchManager
                         LogTarget(PrintModeEnum.Emitted, false, "========== Desired method ==========");
                         MethodTranspiler.IntegrityAnalysis((a, b) => LogTarget(PrintModeEnum.Emitted, a, b), il);
                         LogTarget(PrintModeEnum.Emitted, false, gap);
+                        // If the method is invalid the program is likely to hard crash in EmitMethod or Compile, so flush the log
+                        LogManager.Flush();
                     }
                 }
 
@@ -182,15 +184,16 @@ namespace Torch.Managers.PatchManager
                 {
                     PatchUtilities.Compile(method);
                 }
-                catch
+                catch (Exception failure)
                 {
                     lock (_log)
                     {
+                        _log.Error(failure, $"Failed to patch method {_method}");
                         var ctx = new MethodContext(method);
                         ctx.Read();
                         MethodTranspiler.IntegrityAnalysis((err, msg) => _log.Warn(msg), ctx.Instructions);
+                        LogManager.Flush();
                     }
-
                     throw;
                 }
 
