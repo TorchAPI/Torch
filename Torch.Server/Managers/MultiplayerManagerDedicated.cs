@@ -228,7 +228,7 @@ namespace Torch.Server.Managers
 
             if (IsProfiling(steamId))
             {
-                UserRejected(arg1, JoinResult.ProfilingNotAllowed);
+                UserRejected(steamId, JoinResult.ProfilingNotAllowed);
             }
             
             if (Players.ContainsKey(steamId))
