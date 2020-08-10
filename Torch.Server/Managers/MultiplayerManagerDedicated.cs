@@ -112,6 +112,10 @@ namespace Torch.Server.Managers
         public bool IsBanned(ulong steamId) => _isClientBanned.Invoke(MyMultiplayer.Static, steamId) ||
                                                MySandboxGame.ConfigDedicated.Banned.Contains(steamId);
 
+
+
+        public bool IsProfiling(ulong steamId) => _Profiling.Invoke((MyDedicatedServerBase)MyMultiplayer.Static, steamId);
+
         /// <inheritdoc />
         public event Action<ulong> PlayerKicked;
 
@@ -173,6 +177,9 @@ namespace Torch.Server.Managers
         [ReflectedStaticMethod(Type = typeof(MyGameService), Name = "GetServerAccountType")]
         private static Func<ulong, MyGameServiceAccountType> _getServerAccountType;
 
+        [ReflectedMethod(Name = "ClientIsProfiling")]
+        private static Func<MyDedicatedServerBase, ulong, bool> _Profiling;
+
         [ReflectedMethod(Name = "UserAccepted")]
         private static Action<MyDedicatedServerBase, ulong> _userAcceptedImpl;
 
@@ -218,6 +225,11 @@ namespace Torch.Server.Managers
             _log.Debug($"ValidateAuthTicketResponse(user={steamId}, response={response}, owner={steamOwner}, permissions={promoteLevel})");
 
             _log.Info($"Connection attempt by {steamId} from {ip}");
+
+            if (IsProfiling(steamId))
+            {
+                UserRejected(arg1, JoinResult.ProfilingNotAllowed);
+            }
             
             if (Players.ContainsKey(steamId))
             {
