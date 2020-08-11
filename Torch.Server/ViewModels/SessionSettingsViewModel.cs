@@ -303,6 +303,18 @@ namespace Torch.Server.ViewModels
         [Torch.Views.Display(Description = "Allows super gridding exploit to be used.", Name = "Enable Supergridding", GroupName = "Others")]
         public bool EnableSupergridding { get => _settings.EnableSupergridding; set => SetValue(ref _settings.EnableSupergridding, value); }
         
+        [Torch.Views.Display(Description = "Enables Selective Physics", Name = "Enable Selective Physics", GroupName = "Others")]
+        public bool EnableSelectivePhysics { get => _settings.EnableSelectivePhysicsUpdates; set => SetValue(ref _settings.EnableSelectivePhysicsUpdates, value); }
+
+        [Torch.Views.Display(Description = "Allows steam's family sharing", Name = "Enable Family Sharing", GroupName = "Players")]
+        public bool EnableFamilySharing { get => _settings.FamilySharing; set => SetValue(ref _settings.FamilySharing, value); }
+
+        [Torch.Views.Display(Description = "Enables PCU trading", Name = "Enable PCU Trading", GroupName = "Block Limits")]
+        public bool EnablePCUTrading { get => _settings.EnablePcuTrading; set => SetValue(ref _settings.EnablePcuTrading, value); }
+
+        [Torch.Views.Display(Description = "Enables system for weather", Name = "Enable Weather System", GroupName = "Others")]
+        public bool EnableWeatherSystem { get => _settings.WeatherSystem; set => SetValue(ref _settings.WeatherSystem, value); }
+
         public SessionSettingsViewModel(MyObjectBuilder_SessionSettings settings)
         {
             _settings = settings;
