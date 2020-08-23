@@ -228,6 +228,7 @@ namespace Torch.Server.Managers
 
             if (IsProfiling(steamId))
             {
+                _log.Warn($"Rejecting user {steamId} for using Profiler/ModSDK!");
                 UserRejected(steamId, JoinResult.ProfilingNotAllowed);
             }
             
