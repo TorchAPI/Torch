@@ -94,7 +94,10 @@ namespace Torch.Server.ViewModels
                         FloatingObjects.Remove(floating.EntityId);
                         break;
                     case MyVoxelBase voxel:
-                        VoxelMaps.Remove(voxel.EntityId);
+                        if (voxel is MyPlanet || voxel is MyVoxelMap)
+                        {
+                            VoxelMaps.Remove(voxel.EntityId);
+                        }
                         break;
                 }
             }
@@ -121,7 +124,10 @@ namespace Torch.Server.ViewModels
                         FloatingObjects.Add(floating.EntityId, new FloatingObjectViewModel(floating, this));
                         break;
                     case MyVoxelBase voxel:
-                        VoxelMaps.Add(voxel.EntityId, new VoxelMapViewModel(voxel, this));
+                        if (voxel is MyPlanet || voxel is MyVoxelMap)
+                        {
+                            VoxelMaps.Add(voxel.EntityId, new VoxelMapViewModel(voxel, this));
+                        }
                         break;
                 }
             }
