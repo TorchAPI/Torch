@@ -17,11 +17,13 @@ using VRage.Network;
 
 namespace Torch.Commands
 {
+    public delegate void CommandExecutingDel(Command command, IMyPlayer player, bool hasPermission, ref bool? hasPermissionOverride);
+    
     public class CommandManager : Manager
     {
         public char Prefix { get; set; }
-
         public CommandTree Commands { get; set; } = new CommandTree();
+        public event CommandExecutingDel OnCommandExecuting;
         private Logger _log = LogManager.GetCurrentClassLogger();
         [Dependency]
         private IChatManagerServer _chatManager;
@@ -124,7 +126,6 @@ namespace Torch.Commands
 
         public void HandleCommand(string message, ulong steamId, ref bool consumed, bool serverConsole = false)
         {
-
             if (message.Length < 1 || message[0] != Prefix)
                 return;
 
@@ -144,11 +145,23 @@ namespace Torch.Commands
             {
                 var cmdPath = string.Join(".", command.Path);
 
-                if (!HasPermission(steamId, command))
+                var defaultPermission = HasPermission(steamId, command);
+                bool? cancel = null;
+                OnCommandExecuting?.Invoke(command, player, defaultPermission, ref cancel);
+
+                if (cancel.HasValue)
                 {
-                    _log.Info($"{player.DisplayName} tried to use command {cmdPath} without permission");
-                    _chatManager.SendMessageAsOther(null, $"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", targetSteamId: steamId);
-                    return;
+                    if (!cancel.Value)
+                        return;
+                }
+                else
+                {
+                    if (!defaultPermission)
+                    {
+                        _log.Info($"{player.DisplayName} tried to use command {cmdPath} without permission");
+                        _chatManager.SendMessageAsOther(null, $"You need to be a {command.MinimumPromoteLevel} or higher to use that command.", targetSteamId: steamId);
+                        return;
+                    }
                 }
 
                 var splitArgs = Regex.Matches(argText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
