@@ -151,7 +151,7 @@ namespace Torch.Commands
 
                 if (cancel.HasValue)
                 {
-                    if (cancel.Value)
+                    if (!cancel.Value)
                         return;
                 }
                 else
