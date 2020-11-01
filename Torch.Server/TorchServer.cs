@@ -21,6 +21,7 @@ using Torch.Commands;
 using Torch.Mod;
 using Torch.Mod.Messages;
 using Torch.Server.Commands;
+using Torch.Server.InfluxDb;
 using Torch.Server.Managers;
 using Torch.Utils;
 using VRage;
@@ -62,6 +63,7 @@ namespace Torch.Server
             AddManager(DedicatedInstance);
             AddManager(new EntityControlManager(this));
             AddManager(new RemoteAPIManager(this));
+            AddManager(new InfluxDbManager(this));
             Config = config ?? new TorchConfig();
 
             var sessionManager = Managers.GetManager<ITorchSessionManager>();
