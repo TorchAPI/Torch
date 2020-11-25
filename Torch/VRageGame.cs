@@ -32,6 +32,7 @@ using VRage.Game.ObjectBuilder;
 using VRage.Game.SessionComponents;
 using VRage.GameServices;
 using VRage.Plugins;
+using VRage.Scripting;
 using VRage.Steam;
 using VRage.Utils;
 using VRageRender;
@@ -154,6 +155,7 @@ namespace Torch
             MyPerGameSettings.SendLogToKeen = false;
             // SpaceEngineersGame.SetupAnalytics();
 
+            MyVRage.Platform.InitScripting(MyVRageScripting.Create());
             MyFileSystem.ExePath = Path.GetDirectoryName(typeof(SpaceEngineersGame).Assembly.Location);
 
             _tweakGameSettings();

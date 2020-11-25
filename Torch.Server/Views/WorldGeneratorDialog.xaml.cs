@@ -56,7 +56,7 @@ namespace Torch.Server
                 string localizedName = MyTexts.GetString(sessionNameId);
                 var checkpoint = MyLocalCache.LoadCheckpoint(directory, out _);
                 checkpoint.OnlineMode = MyOnlineModeEnum.PUBLIC;
-                _checkpoints.Add(new PremadeCheckpointItem { Name = localizedName, Icon = Path.Combine(directory, "thumb.jpg"), Path = directory, Checkpoint = checkpoint});
+                _checkpoints.Add(new PremadeCheckpointItem { Name = localizedName, Icon = Path.Combine(directory.Replace("Sandbox.sbc", ""), "thumb.jpg"), Path = directory, Checkpoint = checkpoint});
             }
 
             /*

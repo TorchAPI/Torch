@@ -137,7 +137,7 @@ namespace Torch.Server.Managers
             _gameServerValidateAuthTicketReplacer = _gameServerValidateAuthTicketFactory.Invoke();
             _gameServerUserGroupStatusReplacer = _gameServerUserGroupStatusFactory.Invoke();
             _gameServerValidateAuthTicketReplacer.Replace(
-                new Action<ulong, JoinResult, ulong>(ValidateAuthTicketResponse), MyGameService.GameServer);
+                new Action<ulong, JoinResult, ulong, string>(ValidateAuthTicketResponse), MyGameService.GameServer);
             _gameServerUserGroupStatusReplacer.Replace(new Action<ulong, ulong, bool, bool>(UserGroupStatusResponse),
                 MyGameService.GameServer);
             _log.Info("Inserted steam authentication intercept");
@@ -214,7 +214,7 @@ namespace Torch.Server.Managers
         }
 
         //Largely copied from SE
-        private void ValidateAuthTicketResponse(ulong steamId, JoinResult response, ulong steamOwner)
+        private void ValidateAuthTicketResponse(ulong steamId, JoinResult response, ulong steamOwner, string serviceName)
         {
             var state = new MyP2PSessionState();
             MySteamServiceWrapper.Static.Peer2Peer.GetSessionState(steamId, ref state);
