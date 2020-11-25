@@ -136,13 +136,15 @@ namespace Torch
 
         private void Create()
         {
-            bool dedicated = Sandbox.Engine.Platform.Game.IsDedicated;
+            bool dedicated = true;
             Environment.SetEnvironmentVariable("SteamAppId", _appSteamId.ToString());
-            var service = MySteamServiceWrapper.Init(dedicated, _appSteamId);
+            var service = MySteamGameService.Create(true, _appSteamId);
             MyServiceManager.Instance.AddService<IMyGameService>(service);
             var serviceInstance = MySteamUgcService.Create(_appSteamId, service);
             MyServiceManager.Instance.AddService<IMyUGCService>(serviceInstance);
-            if (dedicated && !MyGameService.HasGameServer)
+            MyServiceManager.Instance.AddService(new MyNullMicrophone());
+            MySteamGameService.InitNetworking(dedicated, service);
+            if (!MyGameService.HasGameServer)
             {
                 _log.Warn("Steam service is not running! Please reinstall dedicated server.");
                 return;

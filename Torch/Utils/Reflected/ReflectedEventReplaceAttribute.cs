@@ -47,5 +47,14 @@ namespace Torch.Utils
             TargetDeclaringType = targetDeclaringType;
             TargetName = targetName;
         }
+        
+        public ReflectedEventReplaceAttribute(string eventDeclaringType, string eventName, Type targetDeclaringType,
+                                              string targetName)
+        {
+            EventDeclaringType = Type.GetType(eventDeclaringType);
+            EventName = eventName;
+            TargetDeclaringType = targetDeclaringType;
+            TargetName = targetName;
+        }
     }
 }

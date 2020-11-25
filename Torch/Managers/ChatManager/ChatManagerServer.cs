@@ -24,10 +24,12 @@ using VRageMath;
 
 namespace Torch.Managers.ChatManager
 {
+    public delegate void ChatReceivedDel(ref ChatMsg msg);
     [PatchShim]
     internal static class ChatInterceptPatch
     {
         private static ChatManagerServer _chatManager;
+        public static event ChatReceivedDel OnChatRecvAccess;
         private static ChatManagerServer ChatManager => _chatManager ?? (_chatManager = TorchBase.Instance.CurrentSession.Managers.GetManager<ChatManagerServer>());
             
         internal static void Patch(PatchContext context)
@@ -40,6 +42,7 @@ namespace Torch.Managers.ChatManager
         private static bool PrefixMessageProcessing(ref ChatMsg msg)
         {
             var consumed = false;
+            OnChatRecvAccess?.Invoke(ref msg);
             ChatManager.RaiseMessageRecieved(msg, ref consumed);
             return !consumed;
         }
