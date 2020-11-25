@@ -115,14 +115,6 @@ namespace Torch.Server.ViewModels
 
         public DateTime InGameTime { get => _checkpoint.InGameTime; set => SetValue(ref _checkpoint.InGameTime, value); }
 
-        public MyObjectBuilder_SessionComponentMission MissionTriggers { get => _checkpoint.MissionTriggers; set => SetValue(ref _checkpoint.MissionTriggers, value); }
-
-        public string Briefing { get => _checkpoint.Briefing; set => SetValue(ref _checkpoint.Briefing, value); }
-
-        public string BriefingVideo { get => _checkpoint.BriefingVideo; set => SetValue(ref _checkpoint.BriefingVideo, value); }
-
-        public string CustomLoadingScreenImage { get => _checkpoint.CustomLoadingScreenImage; set => SetValue(ref _checkpoint.BriefingVideo, value); }
-
         public string CustomLoadingScreenText { get => _checkpoint.CustomLoadingScreenText; set => SetValue(ref _checkpoint.CustomLoadingScreenText, value); }
 
         public string CustomSkybox { get => _checkpoint.CustomSkybox; set => SetValue(ref _checkpoint.CustomSkybox, value); }

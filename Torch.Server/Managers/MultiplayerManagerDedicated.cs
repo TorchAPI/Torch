@@ -156,11 +156,11 @@ namespace Torch.Server.Managers
 
 
 #pragma warning disable 649
-        [ReflectedEventReplace(typeof(MySteamGameServer), nameof(MySteamGameServer.ValidateAuthTicketResponse),
+        [ReflectedEventReplace("VRage.Steam.MySteamGameServer, VRage.Steam", "ValidateAuthTicketResponse",
             typeof(MyDedicatedServerBase), "GameServer_ValidateAuthTicketResponse")]
         private static Func<ReflectedEventReplacer> _gameServerValidateAuthTicketFactory;
 
-        [ReflectedEventReplace(typeof(MySteamGameServer), nameof(MySteamGameServer.UserGroupStatusResponse),
+        [ReflectedEventReplace("VRage.Steam.MySteamGameServer, VRage.Steam", "UserGroupStatusResponse",
             typeof(MyDedicatedServerBase), "GameServer_UserGroupStatus")]
         private static Func<ReflectedEventReplacer> _gameServerUserGroupStatusFactory;
 
@@ -216,15 +216,16 @@ namespace Torch.Server.Managers
         //Largely copied from SE
         private void ValidateAuthTicketResponse(ulong steamId, JoinResult response, ulong steamOwner)
         {
-            var state = new MyP2PSessionState();
-            MySteamServiceWrapper.Static.Peer2Peer.GetSessionState(steamId, ref state);
-            var ip = new IPAddress(BitConverter.GetBytes(state.RemoteIP).Reverse().ToArray());
+            // TODO: Find another way to do this
+            //var state = new MyP2PSessionState();
+            //MySteamServiceWrapper.Static.Peer2Peer.GetSessionState(steamId, ref state);
+            //var ip = new IPAddress(BitConverter.GetBytes(state.RemoteIP).Reverse().ToArray());
 
             Torch.CurrentSession.KeenSession.PromotedUsers.TryGetValue(steamId, out MyPromoteLevel promoteLevel);
 
             _log.Debug($"ValidateAuthTicketResponse(user={steamId}, response={response}, owner={steamOwner}, permissions={promoteLevel})");
 
-            _log.Info($"Connection attempt by {steamId} from {ip}");
+            _log.Info($"Connection attempt by {steamId}");
 
             if (IsProfiling(steamId))
             {
