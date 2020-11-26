@@ -252,6 +252,7 @@
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Initializer.cs" />
     <Compile Include="Patches\PromotePatch.cs" />
+    <Compile Include="Patches\ServerResponsePatch.cs" />
     <Compile Include="Patches\WorldLoadExceptionPatch.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

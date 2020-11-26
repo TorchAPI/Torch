@@ -22,6 +22,7 @@ using Sandbox.Game.World;
 using Sandbox.Graphics.GUI;
 using SpaceEngineers.Game;
 using SpaceEngineers.Game.GUI;
+using Steamworks;
 using Torch.Utils;
 using VRage;
 using VRage.Audio;
@@ -138,18 +139,6 @@ namespace Torch
         {
             bool dedicated = true;
             Environment.SetEnvironmentVariable("SteamAppId", _appSteamId.ToString());
-            var service = MySteamGameService.Create(true, _appSteamId);
-            MyServiceManager.Instance.AddService<IMyGameService>(service);
-            var serviceInstance = MySteamUgcService.Create(_appSteamId, service);
-            MyServiceManager.Instance.AddService<IMyUGCService>(serviceInstance);
-            MyServiceManager.Instance.AddService(new MyNullMicrophone());
-            MySteamGameService.InitNetworking(dedicated, service);
-            if (!MyGameService.HasGameServer)
-            {
-                _log.Warn("Steam service is not running! Please reinstall dedicated server.");
-                return;
-            }
-
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
             MyFinalBuildConstants.APP_VERSION = MyPerGameSettings.BasicGameInfo.GameVersion;
@@ -164,6 +153,22 @@ namespace Torch
 
             MyFileSystem.Reset();
             MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _userDataPath);
+
+            _log.Info("Initializing services");
+            var service = MySteamGameService.Create(true, _appSteamId);
+            //Type.GetType("VRage.Steam.MySteamService, VRage.Steam").GetProperty("IsActive").GetSetMethod(true).Invoke(service, new object[] {SteamAPI.Init()});
+            MyServiceManager.Instance.AddService<IMyGameService>(service);
+            var serviceInstance = MySteamUgcService.Create(_appSteamId, service);
+            MyServiceManager.Instance.AddService<IMyUGCService>(serviceInstance);
+            MyServiceManager.Instance.AddService(new MyNullMicrophone());
+            MySteamGameService.InitNetworking(dedicated, service);
+            if (!MyGameService.HasGameServer)
+            {
+                _log.Warn("Steam service is not running! Please reinstall dedicated server.");
+                return;
+            }
+
+            _log.Info("Services initialized");
             MySandboxGame.InitMultithreading();
             // MyInitializer.InitCheckSum();
 

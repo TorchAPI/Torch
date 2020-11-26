@@ -18,6 +18,7 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Session;
 using Torch.Commands;
+using Torch.Managers.PatchManager;
 using Torch.Mod;
 using Torch.Mod.Messages;
 using Torch.Server.Commands;
@@ -164,6 +165,7 @@ namespace Torch.Server
             IsRunning = true;
             HasRun = true;
             CanRun = false;
+            PatchManager.CommitInternal();
             Log.Info("Starting server.");
             MySandboxGame.ConfigDedicated = DedicatedInstance.DedicatedConfig.Model;
 

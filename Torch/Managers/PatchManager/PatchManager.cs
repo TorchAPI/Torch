@@ -169,7 +169,7 @@ namespace Torch.Managers.PatchManager
         }
 
         /// <inheritdoc cref="Commit"/>
-        internal static void CommitInternal()
+        public static void CommitInternal()
         {
             lock (_rewritePatterns)
             {
