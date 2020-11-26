@@ -215,17 +215,16 @@ namespace Torch.Server.Managers
 
         //Largely copied from SE
         private void ValidateAuthTicketResponse(ulong steamId, JoinResult response, ulong steamOwner, string serviceName)
-        {
-            // TODO: Find another way to do this
-            //var state = new MyP2PSessionState();
-            //MySteamServiceWrapper.Static.Peer2Peer.GetSessionState(steamId, ref state);
-            //var ip = new IPAddress(BitConverter.GetBytes(state.RemoteIP).Reverse().ToArray());
+        {           
+            var state = new MyP2PSessionState();
+            Sandbox.Engine.Networking.MyGameService.Peer2Peer.GetSessionState(steamId, ref state);
+            var ip = new IPAddress(BitConverter.GetBytes(state.RemoteIP).Reverse().ToArray());
 
             Torch.CurrentSession.KeenSession.PromotedUsers.TryGetValue(steamId, out MyPromoteLevel promoteLevel);
 
             _log.Debug($"ValidateAuthTicketResponse(user={steamId}, response={response}, owner={steamOwner}, permissions={promoteLevel})");
 
-            _log.Info($"Connection attempt by {steamId}");
+            _log.Info($"Connection attempt by {steamId} from {ip}");
 
             if (IsProfiling(steamId))
             {
