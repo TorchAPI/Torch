@@ -91,7 +91,10 @@ namespace Torch.Server
             Directory.CreateDirectory(worldPath);
             foreach (var file in Directory.EnumerateFiles(_currentItem.Path, "*", SearchOption.AllDirectories))
             {
-                File.Copy(file, Path.Combine(worldPath, file.Replace($"{_currentItem.Path}\\", "")));
+                // Trash code to work around inconsistent path formats.
+                var fileRelPath = file.Replace($"{_currentItem.Path.TrimEnd('\\')}\\", "");
+                var destPath = Path.Combine(worldPath, fileRelPath);
+                File.Copy(file, destPath);
             }
 
             checkpoint.SessionName = worldName;
