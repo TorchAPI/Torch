@@ -15,7 +15,7 @@ def packageAndArchive(buildMode, packageName) {
 	archiveArtifacts artifacts: zipFile, caseSensitive: false, onlyIfSuccessful: true
 }
 
-node {
+node('windows') {
 	stage('Checkout') {
 		checkout scm
 		bat 'git pull --tags'
