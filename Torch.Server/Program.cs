@@ -18,6 +18,11 @@ namespace Torch.Server
 {
     internal static class Program
     {
+        /// <summary>
+        /// It's hack. Do not use it!
+        /// </summary>
+        internal static Initializer Initializer { get; private set; }
+
         /// <remarks>
         /// This method must *NOT* load any types/assemblies from the vanilla game, otherwise automatic updates will fail.
         /// </remarks>
@@ -67,11 +72,11 @@ namespace Torch.Server
                 return;
             }
 
-            var initializer = new Initializer(workingDir);
-            if (!initializer.Initialize(args))
+            Initializer = new Initializer(workingDir);
+            if (!Initializer.Initialize(args))
                 return;
 
-            initializer.Run();
+            Initializer.Run();
         }
     }
 }

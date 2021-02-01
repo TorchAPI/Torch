@@ -81,6 +81,9 @@ namespace Torch.Views
                 //If not found and IgnoreDisplay is not set, fall back to system DisplayAttribute
                 if (a == null && !IgnoreDisplay)
                     a = property.GetCustomAttribute<System.ComponentModel.DataAnnotations.DisplayAttribute>();
+                //If any display attribute not found and IgnoreDisplay is not set, skip it
+                if (a == null && !IgnoreDisplay)
+                    continue;
                 if (a?.Visible == false)
                     continue;
                 descriptors[property] = a;

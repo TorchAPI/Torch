@@ -23,7 +23,8 @@
             </Grid>
 
         </StackPanel>
-        <ListView x:Name="PlayerList" ItemsSource="{Binding Players}" DockPanel.Dock="Top" Margin="5,5,5,5">
+        <DataGrid x:Name="PlayerList" AutoGenerateColumns="False" ItemsSource="{Binding Players}" DockPanel.Dock="Top" Margin="5,5,5,5">
+            <!--
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel>
@@ -34,6 +35,11 @@
                     </WrapPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
-        </ListView>
+            -->
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" Binding="{Binding Value.PromotedName}" FontWeight="Bold" Width="6*"/>
+                <DataGridTextColumn Header="Promote" Binding="{Binding Value.PromotedName}" Width="4*"/>
+            </DataGrid.Columns>
+        </DataGrid>
     </DockPanel>
 </UserControl>

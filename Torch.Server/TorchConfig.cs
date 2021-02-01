@@ -1,57 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
 using NLog;
+using Torch.Views;
 using VRage.Game;
 
 namespace Torch.Server
 {
     // TODO: redesign this gerbage
-    public class TorchConfig : CommandLine, ITorchConfig
+    public class TorchConfig : CommandLine, ITorchConfig, INotifyPropertyChanged
     {
         private static Logger _log = LogManager.GetLogger("Config");
 
         public bool ShouldUpdatePlugins => (GetPluginUpdates && !NoUpdate) || ForceUpdate;
         public bool ShouldUpdateTorch => (GetTorchUpdates && !NoUpdate) || ForceUpdate;
 
+        private string _instancePath = Path.GetFullPath("Instance");
+        private string _instanceName = "Instance";
+        private bool _autostart;
+        private bool _restartOnCrash;
+        private bool _noGui;
+        private bool _getPluginUpdates = true;
+        private bool _getTorchUpdates = true;
+        private int _tickTimeout = 60;
+        private bool _localPlugins;
+        private bool _disconnectOnRestart;
+        private string _chatName = "Server";
+        private string _chatColor = "Red";
+        private bool _enableWhitelist = false;
+        private List<ulong> _whitelist = new List<ulong>();
+        private int _windowWidth = 980;
+        private int _windowHeight = 588;
+        private bool _independentConsole = false;
+        private bool _enableAsserts = false;
+        private int _fontSize = 16;
+
+
         /// <inheritdoc />
         [Arg("instancename", "The name of the Torch instance.")]
-        public string InstanceName { get; set; }
-
-
-        private string _instancePath;
+        [Display(Name = "Instance Name", Description = "The name of the Torch instance.", GroupName = "Server")]
+        public string InstanceName { get => _instanceName; set => Set(value, ref _instanceName); }
 
         /// <inheritdoc />
         [Arg("instancepath", "Server data folder where saves and mods are stored.")]
+        [Display(Name = "Instance Path", Description = "Server data folder where saves and mods are stored.", GroupName = "Server")]
         public string InstancePath
         {
             get => _instancePath;
-            set
-            {
-                if(String.IsNullOrEmpty(value))
-                {
-                    _instancePath = value;
-                    return;
-                }
-                try
-                {
-                    if(value.Contains("\""))
-                        throw new InvalidOperationException();
-
-                    var s = Path.GetFullPath(value);
-                    Console.WriteLine(s); //prevent compiler opitmization - just in case
-                }
-                catch (Exception ex)
-                {
-                    _log.Error(ex, "Invalid path assigned to InstancePath! Please report this immediately! Value: " + value);
-                    //throw;
-                }
-
-                _instancePath = value;
-            }
+            set => Set(value, ref _instancePath);
         }
 
         /// <inheritdoc />
@@ -65,7 +66,8 @@ namespace Torch.Server
         /// <summary>
         /// Permanent flag to ALWAYS automatically start the server
         /// </summary>
-        public bool Autostart { get; set; }
+        [Display(Name = "Auto Start", Description = "Permanent flag to ALWAYS automatically start the server.", GroupName = "Server")]
+        public bool Autostart { get => _autostart; set => Set(value, ref _autostart); }
 
         /// <summary>
         /// Temporary flag to automatically start the server only on the next run
@@ -76,44 +78,62 @@ namespace Torch.Server
 
         /// <inheritdoc />
         [Arg("restartoncrash", "Automatically restart the server if it crashes.")]
-        public bool RestartOnCrash { get; set; }
+        [Display(Name = "Restart On Crash", Description = "Automatically restart the server if it crashes.", GroupName = "Server")]
+        public bool RestartOnCrash { get => _restartOnCrash; set => Set(value, ref _restartOnCrash); }
 
         /// <inheritdoc />
         [Arg("nogui", "Do not show the Torch UI.")]
-        public bool NoGui { get; set; }
+        [Display(Name = "No GUI", Description = "Do not show the Torch UI.", GroupName = "Window")]
+        public bool NoGui { get => _noGui; set => Set(value, ref _noGui); }
 
         /// <inheritdoc />
         [XmlIgnore, Arg("waitforpid", "Makes Torch wait for another process to exit.")]
         public string WaitForPID { get; set; }
 
         /// <inheritdoc />
-        public bool GetTorchUpdates { get; set; } = true;
+        [Display(Name = "Update Torch", Description = "Check every start for new versions of torch.", GroupName = "Server")]
+        public bool GetTorchUpdates { get => _getTorchUpdates; set => Set(value, ref _getTorchUpdates); }
 
         /// <inheritdoc />
-        public bool GetPluginUpdates { get; set; } = true;
+        [Display(Name = "Update Plugins", Description = "Check every start for new versions of plugins.", GroupName = "Server")]
+        public bool GetPluginUpdates { get => _getPluginUpdates; set => Set(value, ref _getPluginUpdates); }
 
         /// <inheritdoc />
-        public int TickTimeout { get; set; } = 60;
+        [Display(Name = "Watchdog Timeout", Description = "Watchdog timeout (in seconds).", GroupName = "Server")]
+        public int TickTimeout { get => _tickTimeout; set => Set(value, ref _tickTimeout); }
 
         /// <inheritdoc />
         [Arg("plugins", "Starts Torch with the given plugin GUIDs (space delimited).")]
         public List<Guid> Plugins { get; set; } = new List<Guid>();
 
         [Arg("localplugins", "Loads all pluhins from disk, ignores the plugins defined in config.")]
-        public bool LocalPlugins { get; set; }
+        [Display(Name = "Local Plugins", Description = "Loads all pluhins from disk, ignores the plugins defined in config.", GroupName = "In-Game")]
+        public bool LocalPlugins { get => _localPlugins; set => Set(value, ref _localPlugins); }
 
-        [Arg("disconnect", "When server restarts, all clients are rejected to main menu to prevent auto rejoin")]
-        public bool DisconnectOnRestart { get; set; }
+        [Arg("disconnect", "When server restarts, all clients are rejected to main menu to prevent auto rejoin.")]
+        [Display(Name = "Auto Disconnect", Description = "When server restarts, all clients are rejected to main menu to prevent auto rejoin.", GroupName = "In-Game")]
+        public bool DisconnectOnRestart { get => _disconnectOnRestart; set => Set(value, ref _disconnectOnRestart); }
 
-        public string ChatName { get; set; } = "Server";
+        [Display(Name = "Chat Name", Description = "Default name for chat from gui, broadcasts etc..", GroupName = "In-Game")]
+        public string ChatName { get => _chatName; set => Set(value, ref _chatName); }
 
-        public string ChatColor { get; set; } = "Red";
+        [Display(Name = "Chat Color", Description = "Default color for chat from gui, broadcasts etc.. (Red, Blue, White, Green)", GroupName = "In-Game")]
+        public string ChatColor { get => _chatColor; set => Set(value, ref _chatColor); }
 
-        public bool EnableWhitelist { get; set; } = false;
-        public HashSet<ulong> Whitelist { get; set; } = new HashSet<ulong>();
+        [Display(Name = "Enable Whitelist", Description = "Enable Whitelist to prevent random players join while maintance, tests or other.", GroupName = "In-Game")]
+        public bool EnableWhitelist { get => _enableWhitelist; set => Set(value, ref _enableWhitelist); }
 
-        public Point WindowSize { get; set; } = new Point(800, 600);
-        public Point WindowPosition { get; set; } = new Point();
+        [Display(Name = "Whitelist", Description = "Collection of whitelisted steam ids.", GroupName = "In-Game")]
+        public List<ulong> Whitelist { get => _whitelist; set => Set(value, ref _whitelist); }
+
+        [Display(Name = "Width", Description = "Default window width.", GroupName = "Window")]
+        public int WindowWidth { get => _windowWidth; set => Set(value, ref _windowWidth); }
+
+        [Display(Name = "Height", Description = "Default window height", GroupName = "Window")]
+        public int WindowHeight { get => _windowHeight; set => Set(value, ref _windowHeight); }
+
+        [Display(Name = "Font Size", Description = "Font size for logging text box. (default is 16)", GroupName = "Window")]
+        public int FontSize { get => _fontSize; set => Set(value, ref _fontSize); }
 
         public string LastUsedTheme { get; set; } = "Torch Theme";
 
@@ -122,64 +142,33 @@ namespace Torch.Server
         private bool ShouldSerializeReservedPlayers() => false;
 
         [Arg("console", "Keeps a separate console window open after the main UI loads.")]
-        public bool IndependentConsole { get; set; } = false;
+        [Display(Name = "Independent Console", Description = "Keeps a separate console window open after the main UI loads.", GroupName = "Window")]
+        public bool IndependentConsole { get => _independentConsole; set => Set(value, ref _independentConsole); }
 
         [XmlIgnore]
         [Arg("testplugin", "Path to a plugin to debug. For development use only.")]
         public string TestPlugin { get; set; }
 
         [Arg("asserts", "Enable Keen's assert logging.")]
-        public bool EnableAsserts { get; set; } = false;
+        [Display(Name = "Enable Asserts", Description = "Enable Keen's assert logging.", GroupName = "Server")]
+        public bool EnableAsserts { get => _enableAsserts; set => Set(value, ref _enableAsserts); }
 
-        [XmlIgnore]
-        private string _path;
+        public event PropertyChangedEventHandler PropertyChanged;
 
-        public TorchConfig() : this("Torch") { }
+        public TorchConfig() { }
 
-        public TorchConfig(string instanceName = "Torch", string instancePath = null)
+        protected void Set<T>(T value, ref T field, [CallerMemberName] string callerName = default)
         {
-            InstanceName = instanceName;
-            InstancePath = instancePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpaceEngineersDedicated");
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(callerName));
         }
 
-        public static TorchConfig LoadFrom(string path)
+        public PropertyGrid GetControl() => new PropertyGrid()
         {
-            try
-            {
-                var ser = new XmlSerializer(typeof(TorchConfig));
-                using (var f = File.OpenRead(path))
-                {
-                    var config = (TorchConfig)ser.Deserialize(f);
-                    config._path = path;
-                    return config;
-                }
-            }
-            catch (Exception e)
-            {
-                _log.Error(e);
-                return null;
-            }
-        }
+            DataContext = this
+        };
 
-        public bool Save(string path = null)
-        {
-            if (path == null)
-                path = _path;
-            else
-                _path = path;
-
-            try
-            {
-                var ser = new XmlSerializer(typeof(TorchConfig));
-                using (var f = File.Create(path))
-                    ser.Serialize(f, this);
-                return true;
-            }
-            catch (Exception e)
-            {
-                _log.Error(e);
-                return false;
-            }
-        }
+        // for backward compatibility
+        public void Save(string path = null) => Program.Initializer.ConfigPersistent.Save(path);
     }
 }

@@ -35,7 +35,7 @@ namespace Torch.Server.Views
             _instanceManager = TorchBase.Instance.Managers.GetManager<InstanceManager>();
             _instanceManager.InstanceLoaded += _instanceManager_InstanceLoaded;
             DataContext = _instanceManager.DedicatedConfig;
-
+            TorchSettings.DataContext = (TorchConfig)TorchBase.Instance.Config;
             // Gets called once all children are loaded
             Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(ApplyStyles));
         }

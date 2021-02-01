@@ -43,12 +43,12 @@ namespace Torch.Server
 
         private static readonly Dictionary<LogLevel, SolidColorBrush> LogLevelColors = new Dictionary<LogLevel, SolidColorBrush>
         {
-            [LogLevel.Trace] = new SolidColorBrush(Colors.DimGray),
-            [LogLevel.Debug] = new SolidColorBrush(Colors.DarkGray),
-            [LogLevel.Info] = new SolidColorBrush(Colors.White),
-            [LogLevel.Warn] = new SolidColorBrush(Colors.Magenta),
-            [LogLevel.Error] = new SolidColorBrush(Colors.Yellow),
-            [LogLevel.Fatal] = new SolidColorBrush(Colors.Red),
+            [LogLevel.Trace] = new SolidColorBrush(Color.FromRgb(204, 204, 204)),
+            [LogLevel.Debug] = new SolidColorBrush(Color.FromRgb(118, 118, 118)),
+            [LogLevel.Info] = new SolidColorBrush(Color.FromRgb(242, 242, 242)),
+            [LogLevel.Warn] = new SolidColorBrush(Color.FromRgb(180, 0, 158)),
+            [LogLevel.Error] = new SolidColorBrush(Color.FromRgb(249, 241, 165)),
+            [LogLevel.Fatal] = new SolidColorBrush(Color.FromRgb(197, 15, 31)),
         };
     }
 }
