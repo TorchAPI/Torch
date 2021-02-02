@@ -163,12 +163,7 @@ namespace Torch.Server
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(callerName));
         }
 
-        public PropertyGrid GetControl() => new PropertyGrid()
-        {
-            DataContext = this
-        };
-
         // for backward compatibility
-        public void Save(string path = null) => Program.Initializer.ConfigPersistent.Save(path);
+        public void Save(string path = null) => Initializer.Instance.ConfigPersistent.Save(path);
     }
 }

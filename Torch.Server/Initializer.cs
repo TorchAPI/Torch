@@ -21,6 +21,9 @@ namespace Torch.Server
 {
     public class Initializer
     {
+        [Obsolete("It's hack. Do not use it!")]
+        internal static Initializer Instance { get; private set; }
+
         private static readonly Logger Log = LogManager.GetLogger(nameof(Initializer));
         private bool _init;
         private const string STEAMCMD_DIR = "steamcmd";
