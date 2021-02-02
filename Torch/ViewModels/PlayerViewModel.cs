@@ -19,17 +19,7 @@ namespace Torch.ViewModels
         public ConnectionState State { get => _state; set { _state = value; OnPropertyChanged(); } }
         public MyPromoteLevel PromoteLevel => MySession.Static.GetUserPromoteLevel(SteamId);
 
-        public string PromotedName
-        {
-            get
-            {
-                var p = PromoteLevel;
-                if (p <= MyPromoteLevel.None)
-                    return Name;
-                else
-                    return $"{Name} ({p})";
-            }
-        }
+        public string PromotedName => PromoteLevel.ToString();
 
         public PlayerViewModel(ulong steamId, string name = null)
         {
