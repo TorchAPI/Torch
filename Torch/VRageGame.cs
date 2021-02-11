@@ -145,8 +145,11 @@ namespace Torch
             MySessionComponentExtDebug.ForceDisable = true;
             MyPerGameSettings.SendLogToKeen = false;
             // SpaceEngineersGame.SetupAnalytics();
-
-            MyVRage.Platform.InitScripting(MyVRageScripting.Create());
+            
+            //not implemented by keen.. removed in cross-play update
+            //MyVRage.Platform.InitScripting(MyVRageScripting.Create());
+            _ = MyVRage.Platform.Scripting;
+            
             MyFileSystem.ExePath = Path.GetDirectoryName(typeof(SpaceEngineersGame).Assembly.Location);
 
             _tweakGameSettings();
@@ -161,7 +164,7 @@ namespace Torch
             var serviceInstance = MySteamUgcService.Create(_appSteamId, service);
             MyServiceManager.Instance.AddService<IMyUGCService>(serviceInstance);
             MyServiceManager.Instance.AddService(new MyNullMicrophone());
-            MySteamGameService.InitNetworking(dedicated, service);
+            MySteamGameService.InitNetworking(dedicated, service, (MyServerDiscoveryAggregator) MyGameService.ServerDiscovery);
             if (!MyGameService.HasGameServer)
             {
                 _log.Warn("Steam service is not running! Please reinstall dedicated server.");
@@ -290,14 +293,24 @@ namespace Torch
             MyObjectBuilder_Checkpoint checkpoint = MyLocalCache.LoadCheckpoint(sessionPath, out ulong checkpointSize);
             if (MySession.IsCompatibleVersion(checkpoint))
             {
-                if (MyWorkshop.DownloadWorldModsBlocking(checkpoint.Mods, null).Success)
+                var downloadResult = MyWorkshop.DownloadWorldModsBlocking(checkpoint.Mods.Select(b =>
                 {
+                    b.PublishedServiceName = ModItemUtils.GetDefaultServiceName(); 
+                    return b;
+                }).ToList(), null);
+                if (downloadResult.Success)
+                {
+                    MyLog.Default.WriteLineAndConsole("Mods Downloaded");
                     // MySpaceAnalytics.Instance.SetEntry(MyGameEntryEnum.Load);
                     MySession.Load(sessionPath, checkpoint, checkpointSize);
                     _hostServerForSession(MySession.Static, MyMultiplayer.Static);
                 }
                 else
+                {
                     MyLog.Default.WriteLineAndConsole("Unable to download mods");
+                    MyLog.Default.WriteLineAndConsole("Missing Mods:");
+                    downloadResult.MismatchMods?.ForEach(b => MyLog.Default.WriteLineAndConsole($"\t{b.Title} ({b.Id})"));
+                }
             }
             else
                 MyLog.Default.WriteLineAndConsole(MyTexts.Get(MyCommonTexts.DialogTextIncompatibleWorldVersion)

@@ -20,11 +20,13 @@ using System.Runtime.CompilerServices;
 using System.Windows.Threading;
 using VRage.Game;
 using NLog;
+using Sandbox.Engine.Networking;
 using Torch.Server.Managers;
 using Torch.API.Managers;
 using Torch.Server.ViewModels;
 using Torch.Server.Annotations;
 using Torch.Collections;
+using Torch.Utils;
 using Torch.Views;
 
 namespace Torch.Server.Views
@@ -96,7 +98,7 @@ namespace Torch.Server.Views
         {
             if (TryExtractId(AddModIDTextBox.Text, out ulong id))
             {
-                var mod = new ModItemInfo(new MyObjectBuilder_Checkpoint.ModItem(id));
+                var mod = new ModItemInfo(new MyObjectBuilder_Checkpoint.ModItem(id, MyGameService.GetDefaultUGC().ServiceName));
                 //mod.PublishedFileId = id;
                 _instanceManager.DedicatedConfig.Mods.Add(mod);
                 Task.Run(mod.UpdateModInfoAsync)
@@ -262,7 +264,7 @@ namespace Torch.Server.Views
             {
                 if (!modList.Any(m => m.PublishedFileId == id))
                 {
-                    var mod = new ModItemInfo(new MyObjectBuilder_Checkpoint.ModItem(id));
+                    var mod = new ModItemInfo(ModItemUtils.Create(id));
                     tasks.Add(Task.Run(mod.UpdateModInfoAsync));
                     modList.Add(mod);
                 }
