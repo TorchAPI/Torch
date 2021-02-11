@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NLog;
+using Sandbox.Engine.Networking;
 using Sandbox.Game.World;
 using Torch.API;
 using Torch.API.Managers;
@@ -12,6 +13,7 @@ using Torch.API.Session;
 using Torch.Managers;
 using Torch.Mod;
 using Torch.Session;
+using Torch.Utils;
 using VRage.Game;
 
 namespace Torch.Session
@@ -44,7 +46,7 @@ namespace Torch.Session
         public TorchSessionManager(ITorchBase torchInstance) : base(torchInstance)
         {
             _overrideMods = new Dictionary<ulong, MyObjectBuilder_Checkpoint.ModItem>();
-            _overrideMods.Add(TorchModCore.MOD_ID, new MyObjectBuilder_Checkpoint.ModItem(TorchModCore.MOD_ID));
+            _overrideMods.Add(TorchModCore.MOD_ID, ModItemUtils.Create(TorchModCore.MOD_ID));
         }
 
         /// <inheritdoc/>
@@ -68,7 +70,7 @@ namespace Torch.Session
         {
             if (_overrideMods.ContainsKey(modId))
                 return false;
-            var item = new MyObjectBuilder_Checkpoint.ModItem(modId);
+            var item = ModItemUtils.Create(modId);
             _overrideMods.Add(modId, item);
 
             OverrideModsChanged?.Invoke(new CollectionChangeEventArgs(CollectionChangeAction.Add, item));

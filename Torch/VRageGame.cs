@@ -145,8 +145,10 @@ namespace Torch
             MySessionComponentExtDebug.ForceDisable = true;
             MyPerGameSettings.SendLogToKeen = false;
             // SpaceEngineersGame.SetupAnalytics();
-
-            MyVRage.Platform.InitScripting(MyVRageScripting.Create());
+            
+            //not implemented by keen.. removed in cross-play update
+            //MyVRage.Platform.InitScripting(MyVRageScripting.Create());
+            
             MyFileSystem.ExePath = Path.GetDirectoryName(typeof(SpaceEngineersGame).Assembly.Location);
 
             _tweakGameSettings();
@@ -161,7 +163,7 @@ namespace Torch
             var serviceInstance = MySteamUgcService.Create(_appSteamId, service);
             MyServiceManager.Instance.AddService<IMyUGCService>(serviceInstance);
             MyServiceManager.Instance.AddService(new MyNullMicrophone());
-            MySteamGameService.InitNetworking(dedicated, service);
+            MySteamGameService.InitNetworking(dedicated, service, (MyServerDiscoveryAggregator) MyGameService.ServerDiscovery);
             if (!MyGameService.HasGameServer)
             {
                 _log.Warn("Steam service is not running! Please reinstall dedicated server.");

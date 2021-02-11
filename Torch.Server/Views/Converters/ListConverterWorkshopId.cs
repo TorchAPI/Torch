@@ -7,7 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
+using Sandbox.Engine.Networking;
 using Torch.Server.ViewModels;
+using Torch.Utils;
 using VRage.Game;
 
 namespace Torch.Server.Views.Converters
@@ -67,7 +69,7 @@ namespace Torch.Server.Views.Converters
                     if (mod != null)
                         list.Add(mod);
                     else
-                        list.Add(new MyObjectBuilder_Checkpoint.ModItem(id));
+                        list.Add(ModItemUtils.Create(id));
                 }
             }
 
