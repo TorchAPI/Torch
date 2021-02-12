@@ -21,6 +21,9 @@ namespace Torch.Server
 {
     public class Initializer
     {
+        [Obsolete("It's hack. Do not use it!")]
+        internal static Initializer Instance { get; private set; }
+
         private static readonly Logger Log = LogManager.GetLogger(nameof(Initializer));
         private bool _init;
         private const string STEAMCMD_DIR = "steamcmd";
@@ -32,17 +35,17 @@ namespace Torch.Server
 login anonymous
 app_update 298740
 quit";
-
-        private TorchConfig _config;
         private TorchServer _server;
         private string _basePath;
 
-        public TorchConfig Config => _config;
+        internal Persistent<TorchConfig> ConfigPersistent { get; private set; }
+        public TorchConfig Config => ConfigPersistent?.Data;
         public TorchServer Server => _server;
 
         public Initializer(string basePath)
         {
             _basePath = basePath;
+            Instance = this;
         }
 
         public bool Initialize(string[] args)
@@ -94,15 +97,15 @@ quit";
                 File.Copy(havokSource, havokTarget);
             }
 
-            _config = InitConfig();
-            if (!_config.Parse(args))
+            InitConfig();
+            if (!Config.Parse(args))
                 return false;
 
-            if (!string.IsNullOrEmpty(_config.WaitForPID))
+            if (!string.IsNullOrEmpty(Config.WaitForPID))
             {
                 try
                 {
-                    var pid = int.Parse(_config.WaitForPID);
+                    var pid = int.Parse(Config.WaitForPID);
                     var waitProc = Process.GetProcessById(pid);
                     Log.Info("Continuing in 5 seconds.");
                     Log.Warn($"Waiting for process {pid} to close");
@@ -124,9 +127,9 @@ quit";
 
         public void Run()
         {
-            _server = new TorchServer(_config);
+            _server = new TorchServer(Config);
 
-            if (_config.NoGui)
+            if (Config.NoGui)
             {
                 _server.Init();
                 _server.Start();
@@ -134,7 +137,7 @@ quit";
             else
             {
 #if !DEBUG
-                if (!_config.IndependentConsole)
+                if (!Config.IndependentConsole)
                 {
                     Console.SetOut(TextWriter.Null);
                     NativeMethods.FreeConsole();
@@ -145,9 +148,9 @@ quit";
                 {
                     _server.Init();
 
-                    if (_config.Autostart || _config.TempAutostart)
+                    if (Config.Autostart || Config.TempAutostart)
                     {
-                        _config.TempAutostart = false;
+                        Config.TempAutostart = false;
                         _server.Start();
                     }
                 });
@@ -159,22 +162,19 @@ quit";
             }
         }
 
-        private TorchConfig InitConfig()
+        private void InitConfig()
         {
             var configName = "Torch.cfg";
             var configPath = Path.Combine(Directory.GetCurrentDirectory(), configName);
             if (File.Exists(configName))
             {
-                Log.Info($"Loading config {configPath}");
-                return TorchConfig.LoadFrom(configPath);
+                Log.Info($"Loading config {configName}");
             }
             else
             {
                 Log.Info($"Generating default config at {configPath}");
-                var config = new TorchConfig {InstancePath = Path.GetFullPath("Instance")};
-                config.Save(configPath);
-                return config;
             }
+            ConfigPersistent = Persistent<TorchConfig>.Load(configPath);
         }
 
         public static void RunSteamCmd()
@@ -267,13 +267,13 @@ quit";
                 //MyMiniDump.Write(path, options, MyMiniDump.ExceptionInfo.Present);
             }
             LogManager.Flush();
-            if (_config.RestartOnCrash)
+            if (Config.RestartOnCrash)
             {
                 Console.WriteLine("Restarting in 5 seconds.");
                 Thread.Sleep(5000);
                 var exe = typeof(Program).Assembly.Location;
-                _config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
-                Process.Start(exe, _config.ToString());
+                Config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
+                Process.Start(exe, Config.ToString());
             }
             else
             {

@@ -184,8 +184,8 @@
     <Compile Include="Session\ITorchSessionManager.cs" />
     <Compile Include="Session\TorchSessionState.cs" />
     <Compile Include="TorchGameState.cs" />
+    <Compile Include="UGCServiceType.cs" />
     <Compile Include="Utils\ColorUtils.cs" />
-    <Compile Include="Utils\ModItemUtils.cs" />
     <Compile Include="Utils\StringUtils.cs" />
     <Compile Include="WebAPI\JenkinsQuery.cs" />
     <Compile Include="WebAPI\PluginQuery.cs" />

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Torch.API;
 
 namespace Torch
 {
@@ -24,7 +25,11 @@ namespace Torch
         string ChatColor { get; set; }
         string TestPlugin { get; set; }
         bool DisconnectOnRestart { get; set; }
+        int WindowWidth { get; set; }
+        int WindowHeight { get; set; }
+        int FontSize { get; set; }
+        UGCServiceType UgcServiceType { get; set; }
 
-        bool Save(string path = null);
+        void Save(string path = null);
     }
 }

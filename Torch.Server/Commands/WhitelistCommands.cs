@@ -41,8 +41,9 @@ namespace Torch.Server.Commands
         [Command("add", "Add a Steam ID to the whitelist.")]
         public void Add(ulong steamId)
         {
-            if (Config.Whitelist.Add(steamId))
+            if (!Config.Whitelist.Contains(steamId))
             {
+                Config.Whitelist.Add(steamId);
                 Context.Respond($"Added {steamId} to the whitelist.");
                 Config.Save();
             }

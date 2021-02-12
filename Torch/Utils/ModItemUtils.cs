@@ -11,6 +11,16 @@ namespace Torch.Utils
         }
 
         //because KEEEN! 
-        public static string GetDefaultServiceName() => "Steam";
+        public static string GetDefaultServiceName()
+        {
+            try
+            {
+                return MyGameService.GetDefaultUGC().ServiceName;
+            }
+            catch
+            {
+                return TorchBase.Instance.Config.UgcServiceType.ToString();
+            }
+        }
     }
 }

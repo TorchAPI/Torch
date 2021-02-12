@@ -131,7 +131,15 @@
                 </ScrollViewer>
                 <Button Grid.Row="1" Content="Save Config" Margin="3" Click="Save_OnClick" />
             </Grid>
-            <views:PropertyGrid Grid.Column="1" Margin="3" DataContext="{Binding SessionSettings}" IgnoreDisplay ="True" />
+            <TabControl Grid.Column="1" Margin="3">
+                <TabItem Header="World">
+                    <views:PropertyGrid DataContext="{Binding SessionSettings}" IgnoreDisplay ="True" />
+                </TabItem>
+                <TabItem Header="Torch">
+                    <views:PropertyGrid x:Name="TorchSettings" />
+                </TabItem>
+            </TabControl>
+            
             <GridSplitter Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" ShowsPreview="True"
                           Width="2" />
         </Grid>

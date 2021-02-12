@@ -131,13 +131,14 @@ namespace Torch
         /// 
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if a TorchBase instance already exists.</exception>
-        protected TorchBase()
+        protected TorchBase(ITorchConfig config)
         {
             RegisterCoreAssembly(GetType().Assembly);
             if (Instance != null)
                 throw new InvalidOperationException("A TorchBase instance already exists.");
 
             Instance = this;
+            Config = config;
 
             var versionString = Assembly.GetEntryAssembly()
                                       .GetCustomAttribute<AssemblyInformationalVersionAttribute>()

@@ -23,15 +23,18 @@ using Sandbox.Graphics.GUI;
 using SpaceEngineers.Game;
 using SpaceEngineers.Game.GUI;
 using Steamworks;
+using Torch.API;
 using Torch.Utils;
 using VRage;
 using VRage.Audio;
 using VRage.Dedicated;
+using VRage.EOS;
 using VRage.FileSystem;
 using VRage.Game;
 using VRage.Game.ObjectBuilder;
 using VRage.Game.SessionComponents;
 using VRage.GameServices;
+using VRage.Mod.Io;
 using VRage.Plugins;
 using VRage.Scripting;
 using VRage.Steam;
@@ -156,18 +159,45 @@ namespace Torch
 
             MyFileSystem.Reset();
             MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _userDataPath);
-
-            _log.Info("Initializing services");
-            var service = MySteamGameService.Create(true, _appSteamId);
+            
             //Type.GetType("VRage.Steam.MySteamService, VRage.Steam").GetProperty("IsActive").GetSetMethod(true).Invoke(service, new object[] {SteamAPI.Init()});
+            _log.Info("Initializing UGC services");
+            IMyGameService service;
+            IMyUGCService serviceInstance;
+            if (TorchBase.Instance.Config.UgcServiceType == UGCServiceType.Steam)
+            {
+                service = MySteamGameService.Create(dedicated, _appSteamId);
+                serviceInstance = MySteamUgcService.Create(_appSteamId, service);
+                MySteamGameService.InitNetworking(dedicated, service, (MyServerDiscoveryAggregator) MyGameService.ServerDiscovery);
+            }
+            else
+            {
+                service = MyEOSService.Create();
+
+                serviceInstance = MyModIoService.Create(service, "spaceengineers", "264",
+                    "1fb4489996a5e8ffc6ec1135f9985b5b", "331", "f2b64abe55452252b030c48adc0c1f0e",
+                    MyPlatformGameSettings.UGC_TEST_ENVIRONMENT);
+                
+                MyEOSService.InitNetworking(dedicated,
+                    dedicated ? MyPerServerSettings.GameDSName : MyPerServerSettings.GameNameSafe, service,
+                    "xyza7891A4WeGrpP85BTlBa3BSfUEABN", "ZdHZVevSVfIajebTnTmh5MVi3KPHflszD9hJB7mRkgg",
+                    "24b1cd652a18461fa9b3d533ac8d6b5b", "1958fe26c66d4151a327ec162e4d49c8",
+                    "07c169b3b641401496d352cad1c905d6", "https://retail.epicgames.com/", MyEOSService.CreatePlatform(),
+                    MySandboxGame.ConfigDedicated.VerboseNetworkLogging, null, null, null);
+                
+                var mockingInventory = new MyMockingInventory(service);
+                MyServiceManager.Instance.AddService<IMyInventoryService>(mockingInventory);
+            }
             MyServiceManager.Instance.AddService<IMyGameService>(service);
-            var serviceInstance = MySteamUgcService.Create(_appSteamId, service);
             MyServiceManager.Instance.AddService<IMyUGCService>(serviceInstance);
+            MyGameService.WorkshopService.AddAggregate(serviceInstance);
+            
+            _log.Info("Initializing services");
             MyServiceManager.Instance.AddService(new MyNullMicrophone());
-            MySteamGameService.InitNetworking(dedicated, service, (MyServerDiscoveryAggregator) MyGameService.ServerDiscovery);
+            
             if (!MyGameService.HasGameServer)
             {
-                _log.Warn("Steam service is not running! Please reinstall dedicated server.");
+                _log.Warn("Network service is not running! Please reinstall dedicated server.");
                 return;
             }
 
@@ -182,7 +212,7 @@ namespace Torch
             if (!MySandboxGame.IsReloading)
                 MyFileSystem.InitUserSpecific(dedicated ? null : MyGameService.UserId.ToString());
             MySandboxGame.IsReloading = dedicated;
-
+            
             // render init
             {
                 IMyRender renderer = null;
@@ -291,7 +321,7 @@ namespace Torch
                 return;
             }
             MyObjectBuilder_Checkpoint checkpoint = MyLocalCache.LoadCheckpoint(sessionPath, out ulong checkpointSize);
-            if (MySession.IsCompatibleVersion(checkpoint))
+            /*if (MySession.IsCompatibleVersion(checkpoint))
             {
                 var downloadResult = MyWorkshop.DownloadWorldModsBlocking(checkpoint.Mods.Select(b =>
                 {
@@ -314,7 +344,7 @@ namespace Torch
             }
             else
                 MyLog.Default.WriteLineAndConsole(MyTexts.Get(MyCommonTexts.DialogTextIncompatibleWorldVersion)
-                    .ToString());
+                    .ToString());*/
         }
 
         private void DoJoinSession(ulong lobbyId)
