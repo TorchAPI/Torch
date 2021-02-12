@@ -183,7 +183,7 @@ namespace Torch
                     "xyza7891A4WeGrpP85BTlBa3BSfUEABN", "ZdHZVevSVfIajebTnTmh5MVi3KPHflszD9hJB7mRkgg",
                     "24b1cd652a18461fa9b3d533ac8d6b5b", "1958fe26c66d4151a327ec162e4d49c8",
                     "07c169b3b641401496d352cad1c905d6", "https://retail.epicgames.com/", MyEOSService.CreatePlatform(),
-                    MySandboxGame.ConfigDedicated.VerboseNetworkLogging, null, null, null);
+                    MySandboxGame.ConfigDedicated.VerboseNetworkLogging, null, Enumerable.Empty<string>(), null);
                 
                 var mockingInventory = new MyMockingInventory(service);
                 MyServiceManager.Instance.AddService<IMyInventoryService>(mockingInventory);

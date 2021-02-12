@@ -98,7 +98,7 @@ namespace Torch.Server.Views
         {
             if (TryExtractId(AddModIDTextBox.Text, out ulong id))
             {
-                var mod = new ModItemInfo(new MyObjectBuilder_Checkpoint.ModItem(id, MyGameService.GetDefaultUGC().ServiceName));
+                var mod = new ModItemInfo(ModItemUtils.Create(id));
                 //mod.PublishedFileId = id;
                 _instanceManager.DedicatedConfig.Mods.Add(mod);
                 Task.Run(mod.UpdateModInfoAsync)
