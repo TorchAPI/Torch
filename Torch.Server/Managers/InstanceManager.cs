@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -19,6 +19,7 @@ using Torch.Collections;
 using Torch.Managers;
 using Torch.Mod;
 using Torch.Server.ViewModels;
+using Torch.Utils;
 using VRage;
 using VRage.FileSystem;
 using VRage.Game;
@@ -217,8 +218,11 @@ namespace Torch.Server.Managers
 
                 foreach (var mod in DedicatedConfig.Mods)
                 {
-                    var savedMod = new MyObjectBuilder_Checkpoint.ModItem(mod.Name, mod.PublishedFileId, mod.FriendlyName);
+                    var savedMod = ModItemUtils.Create(mod.PublishedFileId);
                     savedMod.IsDependency = mod.IsDependency;
+                    savedMod.Name = mod.Name;
+                    savedMod.FriendlyName = mod.FriendlyName;
+                    
                     world.WorldConfiguration.Mods.Add(savedMod);
                 }
                 Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
