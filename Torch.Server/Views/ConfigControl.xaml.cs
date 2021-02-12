@@ -14,6 +14,7 @@ using Torch.Server.Managers;
 using Torch.Server.ViewModels;
 using Torch.Views;
 using VRage.Game.ModAPI;
+using VRage.Serialization;
 
 namespace Torch.Server.Views
 {
@@ -35,7 +36,7 @@ namespace Torch.Server.Views
             _instanceManager = TorchBase.Instance.Managers.GetManager<InstanceManager>();
             _instanceManager.InstanceLoaded += _instanceManager_InstanceLoaded;
             DataContext = _instanceManager.DedicatedConfig;
-
+            TorchSettings.DataContext = (TorchConfig)TorchBase.Instance.Config;
             // Gets called once all children are loaded
             Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(ApplyStyles));
         }
@@ -93,6 +94,7 @@ namespace Torch.Server.Views
         private void Save_OnClick(object sender, RoutedEventArgs e)
         {
             _instanceManager.SaveConfig();
+            ((ITorchConfig)TorchSettings.DataContext).Save();
         }
 
         private void ImportConfig_OnClick(object sender, RoutedEventArgs e)
@@ -137,7 +139,9 @@ namespace Torch.Server.Views
                 MessageBox.Show("A world is not selected.");
                 return;
             }
-            
+
+            if (w.Checkpoint.PromotedUsers == null)
+                w.Checkpoint.PromotedUsers = new SerializableDictionary<ulong, MyPromoteLevel>();
             d.Edit(w.Checkpoint.PromotedUsers.Dictionary);
             _instanceManager.DedicatedConfig.Administrators = w.Checkpoint.PromotedUsers.Dictionary.Where(k => k.Value >= MyPromoteLevel.Admin).Select(k => k.Key.ToString()).ToList();
         }

@@ -141,6 +141,10 @@
       <HintPath>..\GameBinaries\VRage.Dedicated.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="VRage.EOS, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\GameBinaries\VRage.EOS.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="VRage.Game">
       <HintPath>..\GameBinaries\VRage.Game.dll</HintPath>
       <Private>False</Private>
@@ -159,6 +163,10 @@
     </Reference>
     <Reference Include="VRage.Math">
       <HintPath>..\GameBinaries\VRage.Math.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Mod.Io, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\GameBinaries\VRage.Mod.Io.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Platform.Windows, Culture=neutral, PublicKeyToken=null">
@@ -238,6 +246,7 @@
     <Compile Include="Patches\GameAnalyticsPatch.cs" />
     <Compile Include="Patches\GameStatePatchShim.cs" />
     <Compile Include="Patches\KeenLogPatch.cs" />
+    <Compile Include="Patches\ModsDownloadingPatch.cs" />
     <Compile Include="Patches\ObjectFactoryInitPatch.cs" />
     <Compile Include="Patches\PhysicsMemoryPatch.cs" />
     <Compile Include="Patches\SessionDownloadPatch.cs" />
@@ -265,6 +274,7 @@
     <Compile Include="Managers\UpdateManager.cs" />
     <Compile Include="Persistent.cs" />
     <Compile Include="Plugins\PluginManifest.cs" />
+    <Compile Include="Utils\ModItemUtils.cs" />
     <Compile Include="Utils\SteamWorkshopTools\KeyValueExtensions.cs" />
     <Compile Include="Utils\MiscExtensions.cs" />
     <Compile Include="Utils\Reflected\ReflectedEventReplaceAttribute.cs" />

@@ -36,10 +36,10 @@ namespace Torch.Server
 
         public TorchUI(TorchServer server)
         {
-            WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            Width = 800;
-            Height = 600;
+            WindowStartupLocation = WindowStartupLocation.Manual;
             _config = (TorchConfig)server.Config;
+            Width = _config.WindowWidth;
+            Height = _config.WindowHeight;
             _server = server;
             //TODO: data binding for whole server
             DataContext = server;
@@ -79,6 +79,7 @@ namespace Torch.Server
                 var wrapped = LogManager.Configuration.FindTargetByName<WrapperTargetBase>(target);
                 doc = (wrapped?.WrappedTarget as FlowDocumentTarget)?.Document;
             }
+            ConsoleText.FontSize = _config.FontSize;
             ConsoleText.Document = doc ?? new FlowDocument(new Paragraph(new Run("No target!")));
             ConsoleText.TextChanged += ConsoleText_OnTextChanged;
         }
