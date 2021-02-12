@@ -57,13 +57,12 @@ namespace Torch.Server
         private bool _simDirty;
 
         /// <inheritdoc />
-        public TorchServer(TorchConfig config = null)
+        public TorchServer(TorchConfig config) : base(config)
         {
             DedicatedInstance = new InstanceManager(this);
             AddManager(DedicatedInstance);
             AddManager(new EntityControlManager(this));
             AddManager(new RemoteAPIManager(this));
-            Config = config ?? new TorchConfig();
 
             var sessionManager = Managers.GetManager<ITorchSessionManager>();
             sessionManager.AddFactory(x => new MultiplayerManagerDedicated(this));

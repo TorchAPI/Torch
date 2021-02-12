@@ -81,7 +81,7 @@ namespace Torch.Views
                 //If not found and IgnoreDisplay is not set, fall back to system DisplayAttribute
                 if (a == null && !IgnoreDisplay)
                     a = property.GetCustomAttribute<System.ComponentModel.DataAnnotations.DisplayAttribute>();
-                if (a?.Visible == false)
+                if (IgnoreDisplay && a == null || a?.Visible == false)
                     continue;
                 descriptors[property] = a;
                 string category = a?.GroupName ?? "Misc";
