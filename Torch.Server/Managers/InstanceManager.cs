@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -222,6 +222,7 @@ namespace Torch.Server.Managers
                     savedMod.IsDependency = mod.IsDependency;
                     savedMod.Name = mod.Name;
                     savedMod.FriendlyName = mod.FriendlyName;
+                    
                     world.WorldConfiguration.Mods.Add(savedMod);
                 }
                 Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());

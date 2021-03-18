@@ -25,17 +25,15 @@ namespace Torch.Patches
         public static void Patch(PatchContext ctx)
         {
             _log.Info("Patching mods downloading");
+
             ctx.GetPattern(_downloadWorldModsBlockingMethod).Suffixes
                 .Add(typeof(ModsDownloadingPatch).GetMethod(nameof(Postfix)));
-            var pattern = ctx.GetPattern(_downloadWorldModsBlockingMethod);
         }
-
-        
         public static void Postfix(MyWorkshop.ResultData __result)
         {
             if (__result.Success) return;
             _log.Warn("Missing Mods:");
-            __result.MismatchMods.ForEach(b => _log.Info($"\t{b.Title} : {b.Id}"));
+            __result.MismatchMods?.ForEach(b => _log.Info($"\t{b}"));
         }
     }
 }

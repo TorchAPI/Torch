@@ -232,7 +232,7 @@ namespace Torch.Commands
         [Command("stop cancel", "Cancel a pending stop.")]
         public void CancelStop()
         {
-            if (_restartPending)
+            if (_stopPending)
                 _cancelStop = true;
             else
                 Context.Respond("Server Stop is not pending.");

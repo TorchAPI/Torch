@@ -176,7 +176,7 @@ namespace Torch
 
                 serviceInstance = MyModIoService.Create(service, "spaceengineers", "264",
                     "1fb4489996a5e8ffc6ec1135f9985b5b", "331", "f2b64abe55452252b030c48adc0c1f0e",
-                    MyPlatformGameSettings.UGC_TEST_ENVIRONMENT);
+                    MyPlatformGameSettings.UGC_TEST_ENVIRONMENT, true);
                 
                 MyEOSService.InitNetworking(dedicated,
                     dedicated ? MyPerServerSettings.GameDSName : MyPerServerSettings.GameNameSafe, service,
