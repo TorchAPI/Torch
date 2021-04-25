@@ -164,14 +164,15 @@ namespace Torch
             _log.Info("Initializing UGC services");
             IMyGameService service;
             IMyUGCService serviceInstance;
+            var aggregator = new MyServerDiscoveryAggregator();
             if (TorchBase.Instance.Config.UgcServiceType == UGCServiceType.Steam)
             {
                 service = MySteamGameService.Create(dedicated, _appSteamId);
                 serviceInstance = MySteamUgcService.Create(_appSteamId, service);
                 MySteamGameService.InitNetworking(dedicated,
                     service,
-                    dedicated ? MyPerServerSettings.GameDSName : MyPerServerSettings.GameNameSafe,
-                    (MyServerDiscoveryAggregator) MyGameService.ServerDiscovery);
+                    "Space Engineers",
+                    aggregator);
             }
             else
             {
