@@ -164,11 +164,15 @@ namespace Torch
             _log.Info("Initializing UGC services");
             IMyGameService service;
             IMyUGCService serviceInstance;
+            var aggregator = new MyServerDiscoveryAggregator();
             if (TorchBase.Instance.Config.UgcServiceType == UGCServiceType.Steam)
             {
                 service = MySteamGameService.Create(dedicated, _appSteamId);
                 serviceInstance = MySteamUgcService.Create(_appSteamId, service);
-                MySteamGameService.InitNetworking(dedicated, service, (MyServerDiscoveryAggregator) MyGameService.ServerDiscovery);
+                MySteamGameService.InitNetworking(dedicated,
+                    service,
+                    "Space Engineers",
+                    aggregator);
             }
             else
             {
@@ -179,11 +183,19 @@ namespace Torch
                     MyPlatformGameSettings.UGC_TEST_ENVIRONMENT, true);
                 
                 MyEOSService.InitNetworking(dedicated,
-                    dedicated ? MyPerServerSettings.GameDSName : MyPerServerSettings.GameNameSafe, service,
-                    "xyza7891A4WeGrpP85BTlBa3BSfUEABN", "ZdHZVevSVfIajebTnTmh5MVi3KPHflszD9hJB7mRkgg",
-                    "24b1cd652a18461fa9b3d533ac8d6b5b", "1958fe26c66d4151a327ec162e4d49c8",
-                    "07c169b3b641401496d352cad1c905d6", "https://retail.epicgames.com/", MyEOSService.CreatePlatform(),
-                    MySandboxGame.ConfigDedicated.VerboseNetworkLogging, null, Enumerable.Empty<string>(), (MyServerDiscoveryAggregator) MyGameService.ServerDiscovery, null);
+                    dedicated ? MyPerServerSettings.GameDSName : MyPerServerSettings.GameNameSafe,
+                    service,
+                    "xyza7891A4WeGrpP85BTlBa3BSfUEABN",
+                    "ZdHZVevSVfIajebTnTmh5MVi3KPHflszD9hJB7mRkgg",
+                    "24b1cd652a18461fa9b3d533ac8d6b5b",
+                    "1958fe26c66d4151a327ec162e4d49c8",
+                    "07c169b3b641401496d352cad1c905d6",
+                    "https://retail.epicgames.com/",
+                    MyEOSService.CreatePlatform(),
+                    MySandboxGame.ConfigDedicated.VerboseNetworkLogging,
+                    Enumerable.Empty<string>(),
+                    (MyServerDiscoveryAggregator) MyGameService.ServerDiscovery,
+                    null);
                 
                 var mockingInventory = new MyMockingInventory(service);
                 MyServiceManager.Instance.AddService<IMyInventoryService>(mockingInventory);
