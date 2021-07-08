@@ -159,6 +159,11 @@ namespace Torch
 
             MyFileSystem.Reset();
             MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _userDataPath);
+
+            _log.Info("Loading Dedicated Config");
+            // object created in SpaceEngineersGame.SetupPerGameSettings()
+            MySandboxGame.ConfigDedicated.Load();
+            MyPlatformGameSettings.CONSOLE_COMPATIBLE = MySandboxGame.ConfigDedicated.ConsoleCompatibility;
             
             //Type.GetType("VRage.Steam.MySteamService, VRage.Steam").GetProperty("IsActive").GetSetMethod(true).Invoke(service, new object[] {SteamAPI.Init()});
             _log.Info("Initializing network services");
@@ -192,7 +197,7 @@ namespace Torch
                     MySandboxGame.ConfigDedicated.VerboseNetworkLogging,
                     Enumerable.Empty<string>(),
                     aggregator,
-                    Array.Empty<byte>());
+                    MyMultiplayer.Channels);
 
                 var mockingInventory = new MyMockingInventory(service);
                 MyServiceManager.Instance.AddService<IMyInventoryService>(mockingInventory);
