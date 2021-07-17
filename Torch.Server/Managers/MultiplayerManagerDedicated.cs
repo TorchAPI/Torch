@@ -231,12 +231,6 @@ namespace Torch.Server.Managers
                 _log.Warn($"Rejecting user {steamId} for using Profiler/ModSDK!");
                 UserRejected(steamId, JoinResult.ProfilingNotAllowed);
             }
-            
-            if (Players.ContainsKey(steamId))
-            {
-                _log.Warn($"Player {steamId} has already joined!");
-                UserRejected(steamId, JoinResult.AlreadyJoined);
-            }
             else if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE &&
                      promoteLevel < MyPromoteLevel.Admin)
             {
@@ -310,6 +304,11 @@ namespace Torch.Server.Managers
                 {
                     _log.Error(task.Exception, $"Future validation verdict faulted");
                     verdict = JoinResult.TicketCanceled;
+                }
+                else if (Players.ContainsKey(info.SteamID))
+                {
+                    _log.Warn($"Player {info.SteamID} has already joined!");
+                    verdict = JoinResult.AlreadyJoined;
                 }
                 else
                     verdict = task.Result;
