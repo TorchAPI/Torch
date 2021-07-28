@@ -76,7 +76,8 @@ namespace Torch.Server.Views
 
         private void BrowsPlugins_OnClick(object sender, RoutedEventArgs e)
         {
-            var browser = new PluginBrowser();
+            _plugins = _server.Managers.GetManager<PluginManager>();
+            var browser = new PluginBrowser(_plugins);
             browser.Show();
         }
     }

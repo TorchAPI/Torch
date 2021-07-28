@@ -159,7 +159,7 @@ namespace Torch.Managers.ChatManager
             return consumed;
         }
 
-        private const string _hudChatMessageReceivedName = "Multiplayer_ChatMessageReceived";
+        private const string _hudChatMessageReceivedName = "OnMultiplayer_ChatMessageReceived";
         private const string _hudChatScriptedMessageReceivedName = "multiplayer_ScriptedChatMessageReceived";
         
         protected static bool HasHud => !Sandbox.Engine.Platform.Game.IsDedicated;

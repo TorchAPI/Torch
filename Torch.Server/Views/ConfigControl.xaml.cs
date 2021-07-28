@@ -133,6 +133,10 @@ namespace Torch.Server.Views
             var d = new RoleEditor();
             var w = _instanceManager.DedicatedConfig.SelectedWorld;
 
+            if(w.Checkpoint.PromotedUsers == null) {
+                w.Checkpoint.PromotedUsers = new VRage.Serialization.SerializableDictionary<ulong, MyPromoteLevel>();
+            }
+
             if (w == null)
             {
                 MessageBox.Show("A world is not selected.");
