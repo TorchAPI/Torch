@@ -7,7 +7,7 @@
         xmlns:system="clr-namespace:System;assembly=mscorlib"
         xmlns:views="clr-namespace:Torch.Server.Views"
         mc:Ignorable="d"
-        Title="PluginBrowser" Height="400" Width="600"
+        Title="PluginBrowser" Height="557.5" Width="1161"
         DataContext="{Binding RelativeSource={RelativeSource Self}}">
     
     <Window.Resources>
@@ -105,19 +105,38 @@ Markdown="{StaticResource Markdown}"/>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto" MinWidth="293"/>
         </Grid.ColumnDefinitions>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition />
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <ListView Name="PluginsList" Width="150" Height="Auto" Margin="3" ItemsSource="{Binding Plugins}" SelectionChanged="PluginsList_SelectionChanged">
-                
+            <ListView Name="PluginsList" Height="Auto" Margin="3,32,3,3" ItemsSource="{Binding Plugins}" SelectionChanged="PluginsList_SelectionChanged">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Width="220" Header="Name">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Margin="5, 0" Text="{Binding Name}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Installed?">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox Margin="5, 0" IsChecked="{Binding Installed}" IsHitTestVisible="False"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
             </ListView>
-            <Button Name="DownloadButton" Grid.Row ="1" Content="Download" Margin="3" Height="30" Click="DownloadButton_OnClick" IsEnabled="False"/>
+            <Button Name="DownloadButton" Grid.Row ="1" Content="Install" Margin="0,3,3,3" Height="30" Click="DownloadButton_OnClick" IsEnabled="False" HorizontalAlignment="Right" Width="144"/>
+            <Button Name="UninstallButton" Grid.Row ="1" Content="Uninstall" Margin="3,3,0,3" Height="30" Click="UninstallButton_OnClick" IsEnabled="False" HorizontalAlignment="Left" Width="144"/>
+            <TextBox x:Name="txtPluginsSearch" Height="23" Margin="3,4,3,0" TextWrapping="Wrap" Text="Plugins search..." VerticalAlignment="Top" GotFocus="TxtPluginsSearch_GotFocus" LostFocus="TxtPluginsSearch_LostFocus" Foreground="Gray" TextChanged="TxtPluginsSearch_TextChanged"/>
         </Grid>
-        <FlowDocumentScrollViewer Grid.Column="1" Name="MarkdownFlow" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="3" Document="{Binding CurrentDescription, Converter={StaticResource TextToFlowDocumentConverter}}"/>
+        <FlowDocumentScrollViewer Name="MarkdownFlow" VerticalAlignment="Stretch" Margin="0,3,3,3" Document="{Binding CurrentDescription, Converter={StaticResource TextToFlowDocumentConverter}}" Grid.Column="1"/>
     </Grid>
 </Window>
     
