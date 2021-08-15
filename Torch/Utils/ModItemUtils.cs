@@ -16,7 +16,8 @@ namespace Torch.Utils
         public static MyObjectBuilder_Checkpoint.ModItem Create(string str)
         {
             var arr = str.Split('-');
-            return new MyObjectBuilder_Checkpoint.ModItem(ulong.Parse(arr[0]), arr[1]);
+            // backward compat
+            return new MyObjectBuilder_Checkpoint.ModItem(ulong.Parse(arr[0]), arr.Length > 1 ? arr[1] : GetDefaultServiceName());
         }
 
         //because KEEEN! 
