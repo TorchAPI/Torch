@@ -245,6 +245,7 @@
     <Compile Include="MySteamServiceWrapper.cs" />
     <Compile Include="Patches\GameAnalyticsPatch.cs" />
     <Compile Include="Patches\GameStatePatchShim.cs" />
+    <Compile Include="Patches\KeenAutoUpdatePatch.cs" />
     <Compile Include="Patches\KeenLogPatch.cs" />
     <Compile Include="Patches\ModsDownloadingPatch.cs" />
     <Compile Include="Patches\ObjectFactoryInitPatch.cs" />

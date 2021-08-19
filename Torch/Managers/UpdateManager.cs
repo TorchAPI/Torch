@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -10,8 +11,11 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
+using Sandbox;
 using Torch.API;
+using Torch.API.Managers;
 using Torch.API.WebAPI;
+using Torch.Managers.ChatManager;
 
 namespace Torch.Managers
 {
@@ -20,26 +24,92 @@ namespace Torch.Managers
     /// </summary>
     public class UpdateManager : Manager
     {
+        public bool IsGoingToUpdate { get; private set; }
+        
         private Timer _updatePollTimer;
         private string _torchDir = new FileInfo(typeof(UpdateManager).Assembly.Location).DirectoryName;
         private Logger _log = LogManager.GetCurrentClassLogger();
         [Dependency]
         private FilesystemManager _fsManager;
+        private ChatManagerServer _chatManager;
         
         public UpdateManager(ITorchBase torchInstance) : base(torchInstance)
         {
-            //_updatePollTimer = new Timer(TimerElapsed, this, TimeSpan.Zero, TimeSpan.FromMinutes(5));
+            _updatePollTimer = new Timer(TimerElapsed);
         }
 
         /// <inheritdoc />
         public override void Attach()
         {
-            CheckAndUpdateTorch();
+            //CheckAndUpdateTorch();
+            Torch.GameStateChanged += (_, state) =>
+            {
+                if (state != TorchGameState.Loaded || IsGoingToUpdate ||
+                    !MySandboxGame.ConfigDedicated.AutoUpdateEnabled || Torch.Config.NoUpdate || !Torch.Config.GetTorchUpdates) return;
+
+                _chatManager = Torch.CurrentSession.Managers.GetManager<ChatManagerServer>();
+                var delay = TimeSpan.FromMinutes(MySandboxGame.ConfigDedicated.AutoUpdateCheckIntervalInMin);
+                _updatePollTimer.Change(delay, delay);
+            };
         }
 
         private void TimerElapsed(object state)
         {
             CheckAndUpdateTorch();
+            if (!IsGoingToUpdate) return;
+            _updatePollTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+            Task.Run(async () =>
+            {
+                _log.Info("Starting countdown for restart");
+                foreach (var delay in RestartCountdown())
+                {
+                    await Task.Delay(delay);
+                }
+
+                await Torch.InvokeAsync(() => Torch.Restart());
+            });
+        }
+
+        private IEnumerable<TimeSpan> RestartCountdown()
+        {
+            var delay = TimeSpan.FromMinutes(MySandboxGame.ConfigDedicated.AutoUpdateRestartDelayInMin);
+
+            void ReportDelay()
+            {
+                _chatManager.SendMessageAsSelf(delay.TotalMinutes > 0
+                    ? $"Restarting for update in {delay.TotalMinutes:N0} min"
+                    : $"Restarting for update in {delay.TotalSeconds:N0} sec");
+            }
+            
+            if (delay.TotalMinutes > 10)
+            {
+                for (; delay.TotalMinutes > 10; delay -= TimeSpan.FromMinutes(5))
+                {
+                    ReportDelay();
+                    yield return TimeSpan.FromMinutes(5);
+                }
+            }
+
+            if (delay.TotalMinutes > 1)
+            {
+                for (; delay.TotalMinutes > 2; delay -= TimeSpan.FromMinutes(1))
+                {
+                    ReportDelay();
+                    yield return TimeSpan.FromMinutes(1);
+                }
+            }
+            
+            yield return delay - TimeSpan.FromSeconds(10);
+            delay = TimeSpan.FromSeconds(10);
+
+            for (; delay > TimeSpan.Zero; delay -= TimeSpan.FromSeconds(1))
+            {
+                ReportDelay();
+                yield return TimeSpan.FromSeconds(1);
+            }
+            
+            _chatManager.SendMessageAsSelf("Restarting for update.");
         }
         
         private async void CheckAndUpdateTorch()
@@ -69,6 +139,7 @@ namespace Torch.Managers
                     UpdateFromZip(updateName, _torchDir);
                     File.Delete(updateName);
                     _log.Warn($"Torch version {job.Version} has been installed, please restart Torch to finish the process.");
+                    IsGoingToUpdate = true;
                 }
                 else
                 {
