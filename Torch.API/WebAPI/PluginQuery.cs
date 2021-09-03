@@ -142,10 +142,11 @@ namespace Torch.API.WebAPI
     public class PluginItem
     {
         public string ID;
-        public string Name;
+        public string Name { get; set; }
         public string Author;
         public string Description;
         public string LatestVersion;
+        public bool Installed { get; set; } = false;
 
         public override string ToString()
         {

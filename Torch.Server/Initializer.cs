@@ -55,6 +55,8 @@ quit";
 
 #if !DEBUG
             AppDomain.CurrentDomain.UnhandledException += HandleException;
+            LogManager.Configuration.AddRule(LogLevel.Info, LogLevel.Fatal, "console");
+            LogManager.ReconfigExistingLoggers();
 #endif
 
 #if DEBUG

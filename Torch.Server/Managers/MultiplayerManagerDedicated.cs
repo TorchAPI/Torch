@@ -134,13 +134,21 @@ namespace Torch.Server.Managers
         public override void Attach()
         {
             base.Attach();
-            _gameServerValidateAuthTicketReplacer = _gameServerValidateAuthTicketFactory.Invoke();
-            _gameServerUserGroupStatusReplacer = _gameServerUserGroupStatusFactory.Invoke();
+            if (Torch.Config.UgcServiceType == UGCServiceType.Steam)
+            {
+                _gameServerValidateAuthTicketReplacer = _gameServerValidateAuthTicketFactory.Invoke();
+                _gameServerUserGroupStatusReplacer = _gameServerUserGroupStatusFactory.Invoke();
+            }
+            else
+            {
+                _gameServerValidateAuthTicketReplacer = _eosServerValidateAuthTicketFactory.Invoke();
+                _gameServerUserGroupStatusReplacer = _eosServerUserGroupStatusFactory.Invoke();
+            }
             _gameServerValidateAuthTicketReplacer.Replace(
                 new Action<ulong, JoinResult, ulong, string>(ValidateAuthTicketResponse), MyGameService.GameServer);
             _gameServerUserGroupStatusReplacer.Replace(new Action<ulong, ulong, bool, bool>(UserGroupStatusResponse),
                 MyGameService.GameServer);
-            _log.Info("Inserted steam authentication intercept");
+            _log.Info("Inserted authentication intercept");
         }
 
         /// <inheritdoc/>
@@ -150,7 +158,7 @@ namespace Torch.Server.Managers
                 _gameServerValidateAuthTicketReplacer.Restore(MyGameService.GameServer);
             if (_gameServerUserGroupStatusReplacer != null && _gameServerUserGroupStatusReplacer.Replaced)
                 _gameServerUserGroupStatusReplacer.Restore(MyGameService.GameServer);
-            _log.Info("Removed steam authentication intercept");
+            _log.Info("Removed authentication intercept");
             base.Detach();
         }
 
@@ -163,6 +171,14 @@ namespace Torch.Server.Managers
         [ReflectedEventReplace("VRage.Steam.MySteamGameServer, VRage.Steam", "UserGroupStatusResponse",
             typeof(MyDedicatedServerBase), "GameServer_UserGroupStatus")]
         private static Func<ReflectedEventReplacer> _gameServerUserGroupStatusFactory;
+        
+        [ReflectedEventReplace("VRage.EOS.MyEOSGameServer, VRage.EOS", "ValidateAuthTicketResponse",
+            typeof(MyDedicatedServerBase), "GameServer_ValidateAuthTicketResponse")]
+        private static Func<ReflectedEventReplacer> _eosServerValidateAuthTicketFactory;
+
+        [ReflectedEventReplace("VRage.EOS.MyEOSGameServer, VRage.EOS", "UserGroupStatusResponse",
+            typeof(MyDedicatedServerBase), "GameServer_UserGroupStatus")]
+        private static Func<ReflectedEventReplacer> _eosServerUserGroupStatusFactory;
 
         private ReflectedEventReplacer _gameServerValidateAuthTicketReplacer;
         private ReflectedEventReplacer _gameServerUserGroupStatusReplacer;
@@ -230,12 +246,6 @@ namespace Torch.Server.Managers
             {
                 _log.Warn($"Rejecting user {steamId} for using Profiler/ModSDK!");
                 UserRejected(steamId, JoinResult.ProfilingNotAllowed);
-            }
-            
-            if (Players.ContainsKey(steamId))
-            {
-                _log.Warn($"Player {steamId} has already joined!");
-                UserRejected(steamId, JoinResult.AlreadyJoined);
             }
             else if (Torch.CurrentSession.KeenSession.OnlineMode == MyOnlineModeEnum.OFFLINE &&
                      promoteLevel < MyPromoteLevel.Admin)
@@ -310,6 +320,11 @@ namespace Torch.Server.Managers
                 {
                     _log.Error(task.Exception, $"Future validation verdict faulted");
                     verdict = JoinResult.TicketCanceled;
+                }
+                else if (Players.ContainsKey(info.SteamID))
+                {
+                    _log.Warn($"Player {info.SteamID} has already joined!");
+                    verdict = JoinResult.AlreadyJoined;
                 }
                 else
                     verdict = task.Result;
