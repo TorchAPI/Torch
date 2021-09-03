@@ -40,6 +40,7 @@ namespace Torch.Server.Views
         private string PreviousSearchQuery = "";
 
         private string _description = "Loading data from server, please wait..";
+        private static object _syncLock = new object();
         public string CurrentDescription
         {
             get { return _description; }
@@ -55,18 +56,21 @@ namespace Torch.Server.Views
             InitializeComponent();
 
             var installedPlugins = pluginManager.Plugins;
+            BindingOperations.EnableCollectionSynchronization(Plugins,_syncLock);
             Task.Run(async () =>
                      {
                          var res = await PluginQuery.Instance.QueryAll();
                          if (res == null)
                              return;
                          foreach (var item in res.Plugins.OrderBy(i => i.Name)) {
-                             if (installedPlugins.Keys.Contains(Guid.Parse(item.ID)))
-                                 item.Installed = true;
-
-                             Plugins.Add(item);
-                         PluginsList.Dispatcher.Invoke(() => PluginsList.SelectedIndex = 0);
-                             PluginsSource.Add(item);
+                             lock (_syncLock)
+                             {
+                                 if (installedPlugins.Keys.Contains(Guid.Parse(item.ID)))
+                                     item.Installed = true;
+                                 Plugins.Add(item);
+                                 PluginsList.Dispatcher.Invoke(() => PluginsList.SelectedIndex = 0);
+                                 PluginsSource.Add(item);
+                             }
                          }
                          CurrentDescription = "Please select a plugin...";
                      });
