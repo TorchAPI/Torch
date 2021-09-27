@@ -25,7 +25,7 @@ namespace Torch.Server.ViewModels
 
         public PluginManagerViewModel(IPluginManager pluginManager)
         {
-            foreach (var plugin in pluginManager)
+            foreach (var plugin in pluginManager.OrderBy(x=>x.Name))
                 Plugins.Add(new PluginViewModel(plugin));
             pluginManager.PluginsLoaded += PluginManager_PluginsLoaded;
         }
