@@ -13,7 +13,7 @@ namespace Torch.API.WebAPI
     public class PluginQuery
     {
         private const string ALL_QUERY = "https://torchapi.com/api/plugins";
-        private const string PLUGIN_QUERY = "https://torchapi.net/api/plugins/{0}";
+        private const string PLUGIN_QUERY = "https://torchapi.com/api/plugins/item/{0}";
         private readonly HttpClient _client;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
@@ -87,6 +87,7 @@ namespace Torch.API.WebAPI
         public async Task<bool> DownloadPlugin(string guid, string path = null)
         {
             var item = await QueryOne(guid);
+            if (item == null) return false;
             return await DownloadPlugin(item, path);
         }
 
