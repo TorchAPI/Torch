@@ -21,5 +21,5 @@ Torch is the successor to SE Server Extender and gives server admins the tools t
 # Building
 To build Torch you must first have a complete SE Dedicated installation somewhere. Before you open the solution, run the Setup batch file and enter the path of that installation's DedicatedServer64 folder. The script will make a symlink to that folder so the Torch solution can find the DLL references it needs.
 
-If you have a more enjoyable server experience because of Torch, please consider supporting us on Patreon.
+If you have a more enjoyable server experience because of Torch, please consider supporting us on Patreon. (https://www.patreon.com/TorchSE)
 
