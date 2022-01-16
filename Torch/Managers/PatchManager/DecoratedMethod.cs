@@ -51,6 +51,7 @@ namespace Torch.Managers.PatchManager
 
                 _revertAddress = AssemblyMemory.GetMethodBodyStart(_method);
                 var newAddress = AssemblyMemory.GetMethodBodyStart(patch);
+                AssemblyMemory.UnprotectMemoryPage(_revertAddress);
                 _revertData = AssemblyMemory.WriteJump(_revertAddress, newAddress);
                 _pinnedPatch = GCHandle.Alloc(patch);
                 _log.Log(PrintMode != 0 ? LogLevel.Info : LogLevel.Debug,
