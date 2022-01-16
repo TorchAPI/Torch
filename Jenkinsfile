@@ -18,7 +18,7 @@ def packageAndArchive(buildMode, packageName) {
 node('windows') {
 	stage('Checkout') {
 		checkout scm
-		bat 'git pull https://github.com/TorchAPI/Torch/ master --tags'
+		bat 'git pull --tags'
 	}
 
 	stage('Acquire SE') {
@@ -29,8 +29,7 @@ node('windows') {
 	}
 
 	stage('Acquire NuGet Packages') {
-	    bat 'cd C:\\Program Files\\Jenkins'
-		bat '"C:\\Program Files\\Jenkins\\nuget.exe" restore Torch.sln'
+		bat 'nuget restore Torch.sln'
 	}
 
 	stage('Build') {
