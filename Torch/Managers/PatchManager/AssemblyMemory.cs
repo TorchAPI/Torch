@@ -30,6 +30,17 @@ namespace Torch.Managers.PatchManager
             return handle.GetFunctionPointer().ToInt64();
         }
 
+        internal static void UnprotectMemoryPage(long memory) {
+            if (NativeLibrary.IsWindows) {
+                var succ = NativeLibrary.VirtualProtect(
+                    new IntPtr(memory), new UIntPtr(1),
+                    NativeLibrary.Protection.PAGE_EXECUTE_READWRITE, out var _ignored);
+
+                if (!succ) {
+                    throw new System.ComponentModel.Win32Exception();
+                }
+            }
+        }
 
 
         // x64 ISA format:
