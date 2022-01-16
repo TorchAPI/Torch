@@ -13,7 +13,7 @@ namespace Torch.API.WebAPI
 {
     public class JenkinsQuery
     {
-        private const string BRANCH_QUERY = "https://build.torchapi.net/job/Torch/job/Torch/job/{0}/" + API_PATH;
+        private const string BRANCH_QUERY = "http://136.243.80.164:2690/job/Torch/job/{0}/" + API_PATH;
         private const string ARTIFACT_PATH = "artifact/bin/torch-server.zip";
         private const string API_PATH = "api/json";
 
@@ -33,7 +33,7 @@ namespace Torch.API.WebAPI
             var h = await _client.GetAsync(string.Format(BRANCH_QUERY, branch));
             if (!h.IsSuccessStatusCode)
             {
-                Log.Error($"Branch query failed with code {h.StatusCode}");
+                Log.Error($"'{branch}' Branch query failed with code {h.StatusCode}");
                 if(h.StatusCode == HttpStatusCode.NotFound)
                     Log.Error("This likely means you're trying to update a branch that is not public on Jenkins. Sorry :(");
                 return null;
