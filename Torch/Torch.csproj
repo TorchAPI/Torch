@@ -1,76 +1,380 @@
-def packageAndArchive(buildMode, packageName) {
-	zipFile = "bin\\${packageName}.zip"
-	packageDir = "bin\\${packageName}\\"
-
-	bat "IF EXIST ${zipFile} DEL ${zipFile}"
-	bat "IF EXIST ${packageDir} RMDIR /S /Q ${packageDir}"
-
-	bat "xcopy bin\\x64\\${buildMode} ${packageDir}"
-
-	bat "del ${packageDir}VRage.*"
-	bat "del ${packageDir}Sandbox.*"
-	bat "del ${packageDir}SpaceEngineers.*"
-    
-	powershell "Add-Type -Assembly System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory(\"\$PWD\\${packageDir}\", \"\$PWD\\${zipFile}\")"
-	archiveArtifacts artifacts: zipFile, caseSensitive: false, onlyIfSuccessful: true
-}
-
-node('windows') {
-	stage('Checkout') {
-		checkout scm
-		bat 'git pull --tags'
-	}
-
-	stage('Acquire SE') {
-		bat 'powershell -File Jenkins/jenkins-grab-se.ps1'
-		bat 'IF EXIST GameBinaries RMDIR GameBinaries'
-		bat 'mklink /J GameBinaries "C:/Steam/Data/DedicatedServer64/"'
-		bat 'dir GameBinaries'
-	}
-
-	stage('Acquire NuGet Packages') {
-		bat 'nuget restore Torch.sln'
-	}
-
-	stage('Build') {
-		currentBuild.description = bat(returnStdout: true, script: '@powershell -File Versioning/version.ps1').trim()
-		if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "Patron" || env.BRANCH_NAME == "publictest") {
-			buildMode = "Release"
-		} else {
-			buildMode = "Debug"
-		}
-		bat "IF EXIST \"bin\" rmdir /Q /S \"bin\""
-		bat "IF EXIST \"bin-test\" rmdir /Q /S \"bin-test\""
-		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=${buildMode} /p:Platform=x64 /t:Clean"
-		bat "\"${tool 'MSBuild'}msbuild\" Torch.sln /p:Configuration=${buildMode} /p:Platform=x64"
-	}
-
-	stage('Archive') {
-		archiveArtifacts artifacts: "bin/x64/${buildMode}/Torch*", caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
-
-		packageAndArchive(buildMode, "torch-server")
-
-		/*packageAndArchive(buildMode, "torch-client", "Torch.Server*")*/
-	}
-
-	/* Disabled because they fail builds more often than they detect actual problems
-	stage('Test') {
-		bat 'IF NOT EXIST reports MKDIR reports'
-		bat "\"packages/xunit.runner.console.2.2.0/tools/xunit.console.exe\" \"bin-test/x64/${buildMode}/Torch.Tests.dll\" \"bin-test/x64/${buildMode}/Torch.Server.Tests.dll\" \"bin-test/x64/${buildMode}/Torch.Client.Tests.dll\" -parallel none -xml \"reports/Torch.Tests.xml\""
-
-	    step([
-	        $class: 'XUnitBuilder',
-	        thresholdMode: 1,
-	        thresholds: [[$class: 'FailedThreshold', failureThreshold: '1']],
-	        tools: [[
-	            $class: 'XUnitDotNetTestType',
-	            deleteOutputFiles: true,
-	            failIfNotNew: true,
-	            pattern: 'reports/*.xml',
-	            skipNoTestFiles: false,
-	            stopProcessingIfError: true
-	        ]]
-	    ])
-	}
-	*/
-}
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <ProjectGuid>{7E01635C-3B67-472E-BCD6-C5539564F214}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Torch</RootNamespace>
+    <AssemblyName>Torch</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>$(SolutionDir)\bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>$(SolutionDir)\bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>$(SolutionDir)\bin\x64\Release\Torch.xml</DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <!-- I don't know why this needs to exist -->
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="netstandard" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="ControlzEx, Version=3.0.2.4, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ControlzEx.3.0.2.4\lib\net45\ControlzEx.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="HavokWrapper, Version=1.0.6278.22649, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GameBinaries\HavokWrapper.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MahApps.Metro, Version=1.6.1.4, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MahApps.Metro.1.6.1\lib\net45\MahApps.Metro.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Win32.Registry, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Win32.Registry.4.4.0\lib\net461\Microsoft.Win32.Registry.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GameBinaries\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="protobuf-net, Version=2.4.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\packages\protobuf-net.2.4.0\lib\net40\protobuf-net.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.Common">
+      <HintPath>..\GameBinaries\Sandbox.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Sandbox.Game">
+      <HintPath>..\GameBinaries\Sandbox.Game.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Sandbox.Graphics">
+      <HintPath>..\GameBinaries\Sandbox.Graphics.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SpaceEngineers.Game">
+      <HintPath>..\GameBinaries\SpaceEngineers.Game.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SpaceEngineers.ObjectBuilders">
+      <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SpaceEngineers.ObjectBuilders.XmlSerializers">
+      <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.XmlSerializers.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SteamKit2, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SteamKit2.2.1.0\lib\netstandard2.0\SteamKit2.dll</HintPath>
+    </Reference>
+    <Reference Include="Steamworks.NET">
+      <HintPath>..\GameBinaries\Steamworks.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\System.ComponentModel.Annotations.4.5.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security.AccessControl, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.AccessControl.4.4.0\lib\net461\System.Security.AccessControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Principal.Windows.4.4.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\ControlzEx.3.0.2.4\lib\net45\System.Windows.Interactivity.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="VRage">
+      <HintPath>..\GameBinaries\VRage.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Audio">
+      <HintPath>..\GameBinaries\VRage.Audio.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Dedicated">
+      <HintPath>..\GameBinaries\VRage.Dedicated.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.EOS, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\GameBinaries\VRage.EOS.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Game">
+      <HintPath>..\GameBinaries\VRage.Game.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Game.XmlSerializers">
+      <HintPath>..\GameBinaries\VRage.Game.XmlSerializers.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Input">
+      <HintPath>..\GameBinaries\VRage.Input.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Library">
+      <HintPath>..\GameBinaries\VRage.Library.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Math">
+      <HintPath>..\GameBinaries\VRage.Math.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Mod.Io, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\GameBinaries\VRage.Mod.Io.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Platform.Windows, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\GameBinaries\VRage.Platform.Windows.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Platform.Windows, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\GameBinaries\VRage.Platform.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Render">
+      <HintPath>..\GameBinaries\VRage.Render.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Render11">
+      <HintPath>..\GameBinaries\VRage.Render11.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Scripting">
+      <HintPath>..\GameBinaries\VRage.Scripting.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Steam">
+      <HintPath>..\GameBinaries\VRage.Steam.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Versioning\AssemblyVersion.cs">
+      <Link>Properties\AssemblyVersion.cs</Link>
+    </Compile>
+    <Compile Include="Collections\BinaryMinHeap.cs" />
+    <Compile Include="Collections\MtObservableCollection.cs" />
+    <Compile Include="Collections\MtObservableCollectionBase.cs" />
+    <Compile Include="Collections\MtObservableSortedDictionary.cs" />
+    <Compile Include="Collections\MtObservableEvent.cs" />
+    <Compile Include="Collections\MtObservableList.cs" />
+    <Compile Include="Collections\SortedView.cs" />
+    <Compile Include="Collections\SystemSortedView.cs" />
+    <Compile Include="Collections\TransformComparer.cs" />
+    <Compile Include="Collections\TransformEnumerator.cs" />
+    <Compile Include="Commands\ConsoleCommandContext.cs" />
+    <Compile Include="Event\EventShimAttribute.cs" />
+    <Compile Include="Extensions\LinqExtensions.cs" />
+    <Compile Include="Managers\ChatManager\ChatManagerClient.cs" />
+    <Compile Include="Managers\ChatManager\ChatManagerServer.cs" />
+    <Compile Include="Extensions\DispatcherExtensions.cs" />
+    <Compile Include="Extensions\ICollectionExtensions.cs" />
+    <Compile Include="Managers\DependencyManager.cs" />
+    <Compile Include="Event\EventList.cs" />
+    <Compile Include="Event\EventManager.cs" />
+    <Compile Include="Event\IEventList.cs" />
+    <Compile Include="Managers\PatchManager\AssemblyMemory.cs" />
+    <Compile Include="Managers\PatchManager\DecoratedMethod.cs" />
+    <Compile Include="Managers\PatchManager\EmitExtensions.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\ITokenResolver.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilInstruction.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilInstructionExtensions.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilLabel.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilArgument.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilLocal.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilOperand.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilOperandBrTarget.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilOperandInline.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilOperandSwitch.cs" />
+    <Compile Include="Managers\PatchManager\MethodRewritePattern.cs" />
+    <Compile Include="Managers\PatchManager\MSIL\MsilTryCatchOperation.cs" />
+    <Compile Include="Managers\PatchManager\PatchShimAttribute.cs" />
+    <Compile Include="Managers\PatchManager\PatchContext.cs" />
+    <Compile Include="Managers\PatchManager\PatchManager.cs" />
+    <Compile Include="Managers\PatchManager\PatchPriorityAttribute.cs" />
+    <Compile Include="Managers\PatchManager\PatchUtilities.cs" />
+    <Compile Include="Managers\PatchManager\Transpile\LoggingILGenerator.cs" />
+    <Compile Include="Managers\PatchManager\Transpile\MethodContext.cs" />
+    <Compile Include="Managers\PatchManager\Transpile\MethodTranspiler.cs" />
+    <Compile Include="MySteamServiceWrapper.cs" />
+    <Compile Include="Patches\GameAnalyticsPatch.cs" />
+    <Compile Include="Patches\GameStatePatchShim.cs" />
+    <Compile Include="Patches\KeenLogPatch.cs" />
+    <Compile Include="Patches\ModsDownloadingPatch.cs" />
+    <Compile Include="Patches\ObjectFactoryInitPatch.cs" />
+    <Compile Include="Patches\PhysicsMemoryPatch.cs" />
+    <Compile Include="Patches\SessionDownloadPatch.cs" />
+    <Compile Include="Patches\TorchAsyncSaving.cs" />
+    <Compile Include="Plugins\PluginDependency.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Collections\KeyTree.cs" />
+    <Compile Include="Collections\RollingAverage.cs" />
+    <Compile Include="CommandLine.cs" />
+    <Compile Include="Commands\CategoryAttribute.cs" />
+    <Compile Include="Commands\Command.cs" />
+    <Compile Include="Commands\CommandAttribute.cs" />
+    <Compile Include="Commands\CommandModule.cs" />
+    <Compile Include="Commands\CommandContext.cs" />
+    <Compile Include="Commands\CommandManager.cs" />
+    <Compile Include="Commands\CommandTree.cs" />
+    <Compile Include="Commands\Permissions\PermissionAttribute.cs" />
+    <Compile Include="Commands\Permissions\PermissonsSystem.cs" />
+    <Compile Include="Commands\TorchCommands.cs" />
+    <Compile Include="Managers\EntityManager.cs" />
+    <Compile Include="Managers\FilesystemManager.cs" />
+    <Compile Include="Managers\Manager.cs" />
+    <Compile Include="Managers\NetworkManager\NetworkManager.cs" />
+    <Compile Include="Managers\MultiplayerManagerBase.cs" />
+    <Compile Include="Managers\UpdateManager.cs" />
+    <Compile Include="Persistent.cs" />
+    <Compile Include="Plugins\PluginManifest.cs" />
+    <Compile Include="Utils\ModItemUtils.cs" />
+    <Compile Include="Utils\SteamWorkshopTools\KeyValueExtensions.cs" />
+    <Compile Include="Utils\MiscExtensions.cs" />
+    <Compile Include="Utils\Reflected\ReflectedEventReplaceAttribute.cs" />
+    <Compile Include="Utils\Reflected\ReflectedEventReplacer.cs" />
+    <Compile Include="Utils\Reflected\ReflectedFieldInfoAttribute.cs" />
+    <Compile Include="Utils\Reflected\ReflectedGetterAttribute.cs" />
+    <Compile Include="Utils\Reflected\ReflectedLazyAttribute.cs" />
+    <Compile Include="Utils\Reflected\ReflectedMemberAttribute.cs" />
+    <Compile Include="Utils\Reflected\ReflectedMethodAttribute.cs" />
+    <Compile Include="Utils\Reflected\ReflectedMethodInfoAttribute.cs" />
+    <Compile Include="Utils\Reflected\ReflectedPropertyInfoAttribute.cs" />
+    <Compile Include="Utils\Reflected\ReflectedSetterAttribute.cs" />
+    <Compile Include="Utils\Reflected\ReflectedStaticMethodAttribute.cs" />
+    <Compile Include="Utils\Reflection.cs" />
+    <Compile Include="Utils\SteamWorkshopTools\WebAPI.cs" />
+    <Compile Include="Utils\SynchronizationExtensions.cs" />
+    <Compile Include="Utils\TorchAssemblyResolver.cs" />
+    <Compile Include="Utils\Reflected\ReflectedManager.cs" />
+    <Compile Include="Session\TorchSessionManager.cs" />
+    <Compile Include="TorchBase.cs" />
+    <Compile Include="TorchPluginBase.cs" />
+    <Compile Include="Session\TorchSession.cs" />
+    <Compile Include="Utils\TorchLauncher.cs" />
+    <Compile Include="Utils\SteamWorkshopTools\PublishedItemDetails.cs" />
+    <Compile Include="ViewModels\ModViewModel.cs" />
+    <Compile Include="Extensions\MyPlayerCollectionExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="ViewModels\PlayerViewModel.cs" />
+    <Compile Include="ViewModels\ViewModel.cs" />
+    <Compile Include="Plugins\PluginManager.cs" />
+    <Compile Include="ViewModels\PluginViewModel.cs" />
+    <Compile Include="Views\CollectionEditor.xaml.cs">
+      <DependentUpon>CollectionEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DictionaryEditor.xaml.cs">
+      <DependentUpon>DictionaryEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DisplayAttribute.cs" />
+    <Compile Include="Views\EmbeddedCollectionEditor.xaml.cs">
+      <DependentUpon>EmbeddedCollectionEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\FlagsEditor.xaml.cs">
+      <DependentUpon>FlagsEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ObjectCollectionEditor.xaml.cs">
+      <DependentUpon>ObjectCollectionEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ObjectEditor.xaml.cs">
+      <DependentUpon>ObjectEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\PropertyGrid.xaml.cs">
+      <DependentUpon>PropertyGrid.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="VRageGame.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Torch.API\Torch.API.csproj">
+      <Project>{fba5d932-6254-4a1e-baf4-e229fa94e3c2}</Project>
+      <Name>Torch.API</Name>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Views\CollectionEditor.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\DictionaryEditor.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\EmbeddedCollectionEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\FlagsEditor.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\ObjectCollectionEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ObjectEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\PropertyGrid.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <Import Project="..\Torch.Mod\Torch.Mod.projitems" Label="Shared" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\TransformOnBuild.targets" />
+</Project>
