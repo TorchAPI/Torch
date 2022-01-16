@@ -18,7 +18,7 @@ def packageAndArchive(buildMode, packageName) {
 node('windows') {
 	stage('Checkout') {
 		checkout scm
-		bat 'git pull https://github.com/TorchAPI/Torch/ master --tags'
+		bat 'git pull --tags'
 	}
 
 	stage('Acquire SE') {
@@ -29,8 +29,7 @@ node('windows') {
 	}
 
 	stage('Acquire NuGet Packages') {
-	    bat 'cd C:\\Program Files\\Jenkins'
-		bat '"C:\\Program Files\\Jenkins\\nuget.exe" restore Torch.sln'
+		bat 'nuget restore Torch.sln'
 	}
 
 	stage('Build') {
@@ -38,7 +37,7 @@ node('windows') {
 		if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "Patron" || env.BRANCH_NAME == "publictest") {
 			buildMode = "Release"
 		} else {
-			buildMode = "Release"
+			buildMode = "Debug"
 		}
 		bat "IF EXIST \"bin\" rmdir /Q /S \"bin\""
 		bat "IF EXIST \"bin-test\" rmdir /Q /S \"bin-test\""
@@ -58,7 +57,6 @@ node('windows') {
 	stage('Test') {
 		bat 'IF NOT EXIST reports MKDIR reports'
 		bat "\"packages/xunit.runner.console.2.2.0/tools/xunit.console.exe\" \"bin-test/x64/${buildMode}/Torch.Tests.dll\" \"bin-test/x64/${buildMode}/Torch.Server.Tests.dll\" \"bin-test/x64/${buildMode}/Torch.Client.Tests.dll\" -parallel none -xml \"reports/Torch.Tests.xml\""
-
 	    step([
 	        $class: 'XUnitBuilder',
 	        thresholdMode: 1,
