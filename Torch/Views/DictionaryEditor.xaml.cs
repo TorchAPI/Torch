@@ -82,11 +82,11 @@ namespace Torch.Views
             private TKey _key;
             private TValue _value;
 
-            object IDictionaryItem.Key { get => _key; set => SetValue(ref _key, (TKey)value); }
-            object IDictionaryItem.Value { get => _value; set => SetValue(ref _value, (TValue)value); }
+            object IDictionaryItem.Key { get; set; }
+            object IDictionaryItem.Value { get; set; }
 
-            public TKey Key { get => _key; set => SetValue(ref _key, value); }
-            public TValue Value { get => _value; set => SetValue(ref _value, value); }
+            public TKey Key { get; set; }
+            public TValue Value { get; set; }
 
             public DictionaryItem()
             {

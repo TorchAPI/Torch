@@ -20,14 +20,15 @@ namespace Torch.Managers
     /// </summary>
     public class UpdateManager : Manager
     {
-        private Timer _updatePollTimer;
+        private readonly Timer _updatePollTimer;
         private string _torchDir = new FileInfo(typeof(UpdateManager).Assembly.Location).DirectoryName;
         private Logger _log = LogManager.GetCurrentClassLogger();
         [Dependency]
-        private FilesystemManager _fsManager;
+        private FilesystemManager _fsManager = null!;
         
         public UpdateManager(ITorchBase torchInstance) : base(torchInstance)
         {
+            _updatePollTimer = null;
             //_updatePollTimer = new Timer(TimerElapsed, this, TimeSpan.Zero, TimeSpan.FromMinutes(5));
         }
 

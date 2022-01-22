@@ -319,9 +319,6 @@ namespace Torch.Server.Managers
                 checkpoint.Mods = null;
                 checkpoint.Settings = null;
             }
-            
-            OnPropertyChanged(nameof(Checkpoint));
-            OnPropertyChanged(nameof(WorldConfiguration));
         }
     }
 }

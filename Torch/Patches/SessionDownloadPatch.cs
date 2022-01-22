@@ -19,7 +19,9 @@ namespace Torch.Patches
     internal static class SessionDownloadPatch
     {
         private static ITorchSessionManager _sessionManager;
-        private static ITorchSessionManager SessionManager => _sessionManager ?? (_sessionManager = TorchBase.Instance.Managers.GetManager<ITorchSessionManager>());
+#pragma warning disable CS0618
+        private static ITorchSessionManager SessionManager => _sessionManager ??= TorchBase.Instance.Managers.GetManager<ITorchSessionManager>();
+#pragma warning restore CS0618
 
 
         internal static void Patch(PatchContext context)

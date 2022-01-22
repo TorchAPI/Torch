@@ -7,8 +7,14 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using System.Windows.Documents;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
+using MonoMod.Utils;
 using Torch.Managers.PatchManager.Transpile;
 using Torch.Utils;
+using OpCode = System.Reflection.Emit.OpCode;
+using OpCodes = System.Reflection.Emit.OpCodes;
+using OperandType = System.Reflection.Emit.OperandType;
 
 namespace Torch.Managers.PatchManager.MSIL
 {
@@ -79,6 +85,132 @@ namespace Torch.Managers.PatchManager.MSIL
 #pragma warning restore 618
                 default:
                     throw new ArgumentOutOfRangeException();
+            }
+        }
+        
+        public MsilInstruction(Instruction instruction)
+        {
+            Label CreateLabel(int pos)
+            {
+                var instance = Activator.CreateInstance(typeof(Label),
+                    BindingFlags.CreateInstance | BindingFlags.Instance | BindingFlags.NonPublic, null,
+                    new object[] {pos}, null);
+                if (instance == null)
+                    return default;
+                return (Label) instance;
+            }
+            
+            if (!MethodContext.OpCodeLookup.TryGetValue(instruction.OpCode.Value, out var opCode))
+                return;
+            OpCode = opCode;
+
+            var opType = opCode.OperandType;
+            if (opType == OperandType.InlineNone)
+            {
+                Operand = null;
+                return;
+            }
+            switch (instruction.Operand)
+            {
+                case OperandType.InlineNone:
+                    break;
+                case Instruction targetInstruction when opType == OperandType.InlineBrTarget || opType == OperandType.ShortInlineBrTarget:
+                    Operand = new MsilOperandBrTarget(this)
+                    {
+                        Target = new MsilLabel(CreateLabel(targetInstruction.Offset))
+                    };
+                    break;
+                case FieldReference reference when opType == OperandType.InlineField:
+                    Operand = new MsilOperandInline.MsilOperandReflected<FieldInfo>(this)
+                    {
+                        Value = reference.ResolveReflection()
+                    };
+                    break;
+                case int int32 when opType == OperandType.InlineI || opType == OperandType.ShortInlineI:
+                    Operand = new MsilOperandInline.MsilOperandInt32(this)
+                    {
+                        Value = int32
+                    };
+                    break;
+                case long int64 when opType == OperandType.InlineI8:
+                    Operand = new MsilOperandInline.MsilOperandInt64(this)
+                    {
+                        Value = int64
+                    };
+                    break;
+                case MethodReference methodReference when opType == OperandType.InlineMethod:
+                    Operand = new MsilOperandInline.MsilOperandReflected<MethodBase>(this)
+                    {
+                        Value = methodReference.ResolveReflection()
+                    };
+                    break;
+                case double @double when opType == OperandType.InlineR:
+                    Operand = new MsilOperandInline.MsilOperandDouble(this)
+                    {
+                        Value = @double
+                    };
+                    break;
+                case null when opType == OperandType.InlineSig:
+                    throw new NotSupportedException("InlineSignature is not supported by instruction converter");
+                case string @string when opType == OperandType.InlineString:
+                    Operand = new MsilOperandInline.MsilOperandString(this)
+                    {
+                        Value = @string
+                    };
+                    break;
+                case Instruction[] targetInstructions when opType == OperandType.InlineSwitch:
+                    Operand = new MsilOperandSwitch(this)
+                    {
+                        Labels = targetInstructions.Select(b => new MsilLabel(CreateLabel(b.Offset))).ToArray()
+                    };
+                    break;
+                case MemberReference memberReference when opType == OperandType.InlineTok:
+                    Operand = new MsilOperandInline.MsilOperandReflected<MemberInfo>(this)
+                    {
+                        Value = memberReference.ResolveReflection()
+                    };
+                    break;
+                case TypeReference typeReference when opType == OperandType.InlineType:
+                    Operand = new MsilOperandInline.MsilOperandReflected<Type>(this)
+                    {
+                        Value = typeReference.ResolveReflection()
+                    };
+                    break;
+                case VariableDefinition variableDefinition when opType == OperandType.InlineVar || opType == OperandType.ShortInlineVar:
+                    if (OpCode.IsLocalStore() || OpCode.IsLocalLoad() || OpCode.IsLocalLoadByRef())
+                        Operand = new MsilOperandInline.MsilOperandLocal(this)
+                        {
+                            Value = new MsilLocal(variableDefinition.Index)
+                        };
+                    else
+                        Operand = new MsilOperandInline.MsilOperandArgument(this)
+                        {
+                            Value = new MsilArgument(variableDefinition.Index)
+                        };
+                    break;
+                case ParameterDefinition parameterDefinition when opType == OperandType.InlineVar || opType == OperandType.ShortInlineVar:
+                    if (OpCode.IsLocalStore() || OpCode.IsLocalLoad() || OpCode.IsLocalLoadByRef())
+                        Operand = new MsilOperandInline.MsilOperandLocal(this)
+                        {
+                            Value = new MsilLocal(parameterDefinition.Index)
+                        };
+                    else
+                        Operand = new MsilOperandInline.MsilOperandArgument(this)
+                        {
+                            Value = new MsilArgument(parameterDefinition.Index)
+                        };
+                    break;
+                case float @float when opType == OperandType.ShortInlineR:
+                    Operand = new MsilOperandInline.MsilOperandSingle(this)
+                    {
+                        Value = @float
+                    };
+                    break;
+#pragma warning disable 618
+                case null when opType == OperandType.InlinePhi:
+#pragma warning restore 618
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(instruction.Operand), instruction.Operand, "Invalid operand type");
             }
         }
 

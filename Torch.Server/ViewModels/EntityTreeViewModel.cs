@@ -41,21 +41,11 @@ namespace Torch.Server.ViewModels
         public SortedView<EntityViewModel> SortedFloatingObjects { get; }
         public SortedView<VoxelMapViewModel> SortedVoxelMaps { get; }
 
-        private EntityViewModel _currentEntity;
-        private SortEnum _currentSort;
         private UserControl _control;
 
-        public EntityViewModel CurrentEntity
-        {
-            get => _currentEntity;
-            set { _currentEntity = value; OnPropertyChanged(nameof(CurrentEntity)); }
-        }
+        public EntityViewModel CurrentEntity { get; set; }
 
-        public SortEnum CurrentSort
-        {
-            get => _currentSort;
-            set => SetValue(ref _currentSort, value);
-        }
+        public SortEnum CurrentSort { get; set; }
 
         // I hate you today WPF
         public EntityTreeViewModel() : this(null)
@@ -65,7 +55,7 @@ namespace Torch.Server.ViewModels
         public EntityTreeViewModel(UserControl control)
         {
             _control = control;
-            var comparer = new EntityViewModel.Comparer(_currentSort);
+            var comparer = new EntityViewModel.Comparer(CurrentSort);
             SortedGrids = new SortedView<GridViewModel>(Grids.Values, comparer);
             SortedCharacters = new SortedView<CharacterViewModel>(Characters.Values, comparer);
             SortedFloatingObjects = new SortedView<EntityViewModel>(FloatingObjects.Values, comparer);

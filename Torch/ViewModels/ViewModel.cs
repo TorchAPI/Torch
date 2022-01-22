@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using PropertyChanged;
 
 namespace Torch
 {
@@ -27,6 +28,7 @@ namespace Torch
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
         }
 
+        [SuppressPropertyChangedWarnings]
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             NotifyCollectionChangedEventHandler collectionChanged = CollectionChanged;

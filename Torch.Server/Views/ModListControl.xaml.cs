@@ -80,11 +80,16 @@ namespace Torch.Server.Views
 
         private void _instanceManager_InstanceLoaded(ConfigDedicatedViewModel obj)
         {
-            Log.Info("Instance loaded.");
             Dispatcher.Invoke(() => {
                 DataContext = obj?.Mods ?? new MtObservableList<ModItemInfo>();
                 UpdateLayout();
                 ((MtObservableList<ModItemInfo>)DataContext).CollectionChanged += OnModlistUpdate;
+                if (obj is { })
+                    Task.Run(async () =>
+                    {
+                        await obj.UpdateAllModInfosAsync();
+                        Log.Info("Instance loaded.");
+                    });
             });
         }
 
@@ -281,14 +286,11 @@ namespace Torch.Server.Views
             foreach (var mod in modList)
                 _instanceManager.DedicatedConfig.Mods.Add(mod);
 
-            if (tasks.Any())
-                Task.WaitAll(tasks.ToArray());
-            
-            Dispatcher.Invoke(() =>
-                              {
-                                  _instanceManager.DedicatedConfig.Save();
-                              });
-
+            Task.Run(async () =>
+            {
+                await Task.WhenAll(tasks);
+                _instanceManager.DedicatedConfig.Save();
+            });
         }
 
         private void UgcServiceTypeBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

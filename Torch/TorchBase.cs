@@ -2,30 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Runtime;
 using System.Runtime.CompilerServices;
-using System.Security.Principal;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
-using ProtoBuf.Meta;
 using Sandbox;
-using Sandbox.Engine.Multiplayer;
-using Sandbox.Engine.Networking;
-using Sandbox.Engine.Platform.VideoMode;
-using Sandbox.Engine.Utils;
 using Sandbox.Game;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
-using Sandbox.Game.World;
-using Sandbox.Graphics.GUI;
-using Sandbox.ModAPI;
 using SpaceEngineers.Game;
-using SpaceEngineers.Game.GUI;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.ModAPI;
@@ -38,23 +24,9 @@ using Torch.Managers.PatchManager;
 using Torch.Patches;
 using Torch.Utils;
 using Torch.Session;
-using VRage;
-using VRage.Collections;
-using VRage.FileSystem;
-using VRage.Game;
-using VRage.Game.Common;
-using VRage.Game.Components;
-using VRage.Game.ObjectBuilder;
-using VRage.Game.SessionComponents;
-using VRage.GameServices;
-using VRage.Library;
-using VRage.ObjectBuilders;
 using VRage.Platform.Windows;
 using VRage.Plugins;
-using VRage.Scripting;
-using VRage.Steam;
 using VRage.Utils;
-using VRageRender;
 
 namespace Torch
 {
@@ -71,6 +43,7 @@ namespace Torch
             PatchManager.AddPatchShim(typeof(GameStatePatchShim));
             PatchManager.AddPatchShim(typeof(GameAnalyticsPatch));
             PatchManager.AddPatchShim(typeof(KeenLogPatch));
+            PatchManager.AddPatchShim(typeof(XmlRootWriterPatch));
             PatchManager.CommitInternal();
             RegisterCoreAssembly(typeof(ITorchBase).Assembly);
             RegisterCoreAssembly(typeof(TorchBase).Assembly);
@@ -134,10 +107,12 @@ namespace Torch
         protected TorchBase(ITorchConfig config)
         {
             RegisterCoreAssembly(GetType().Assembly);
+#pragma warning disable CS0618
             if (Instance != null)
                 throw new InvalidOperationException("A TorchBase instance already exists.");
 
             Instance = this;
+#pragma warning restore CS0618
             Config = config;
 
             var versionString = Assembly.GetEntryAssembly()
@@ -153,7 +128,9 @@ namespace Torch
 
             Managers = new DependencyManager();
 
+#pragma warning disable CS0618
             Plugins = new PluginManager(this);
+#pragma warning restore CS0618
 
             var sessionManager = new TorchSessionManager(this);
             sessionManager.AddFactory((x) => Sync.IsServer ? new ChatManagerServer(this) : new ChatManagerClient(this));
@@ -165,7 +142,9 @@ namespace Torch
             Managers.AddManager(new FilesystemManager(this));
             Managers.AddManager(new UpdateManager(this));
             Managers.AddManager(new EventManager(this));
+#pragma warning disable CS0618
             Managers.AddManager(Plugins);
+#pragma warning restore CS0618
             TorchAPI.Instance = this;
 
             GameStateChanged += (game, state) =>

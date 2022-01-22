@@ -15,8 +15,7 @@ namespace Torch.ViewModels
     {
         public ulong SteamId { get; }
         public string Name { get; }
-        private ConnectionState _state;
-        public ConnectionState State { get => _state; set { _state = value; OnPropertyChanged(); } }
+        public ConnectionState State { get; set; }
         public MyPromoteLevel PromoteLevel => MySession.Static.GetUserPromoteLevel(SteamId);
 
         public string PromotedName
@@ -24,10 +23,7 @@ namespace Torch.ViewModels
             get
             {
                 var p = PromoteLevel;
-                if (p <= MyPromoteLevel.None)
-                    return Name;
-                else
-                    return $"{Name} ({p})";
+                return p <= MyPromoteLevel.None ? Name : $"{Name} ({p})";
             }
         }
 

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using PropertyChanged;
 using Torch.Utils;
 
 namespace Torch.Collections
@@ -112,6 +113,7 @@ namespace Torch.Collections
             _flushEventQueue?.Change(_eventRaiseDelay, -1);
         }
 
+        [SuppressPropertyChangedWarnings]
         protected void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             if (!NotificationsEnabled)

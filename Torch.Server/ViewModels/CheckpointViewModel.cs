@@ -15,7 +15,7 @@ namespace Torch.Server.ViewModels
 {
     public class CheckpointViewModel : ViewModel
     {
-        private MyObjectBuilder_Checkpoint _checkpoint;
+        private readonly MyObjectBuilder_Checkpoint _checkpoint;
         //private SessionSettingsViewModel _sessionSettings;
 
         public CheckpointViewModel(MyObjectBuilder_Checkpoint checkpoint)

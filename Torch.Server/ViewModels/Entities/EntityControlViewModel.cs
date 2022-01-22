@@ -18,21 +18,9 @@ namespace Torch.Server.ViewModels.Entities
             OnPropertyChanged(SignalPropertyInvalidateControl);
         }
 
-        private bool _hide;
-
         /// <summary>
         /// Should this element be forced into the <see cref="Visibility.Collapsed"/>
         /// </summary>
-        public bool Hide
-        {
-            get => _hide;
-            protected set
-            {
-                if (_hide == value)
-                    return;
-                _hide = value;
-                OnPropertyChanged();
-            }
-        }
+        public bool Hide { get; set; }
     }
 }

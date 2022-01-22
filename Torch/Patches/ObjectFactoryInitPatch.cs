@@ -26,7 +26,7 @@ namespace Torch.Patches
     {
 #pragma warning disable 649
         [ReflectedGetter(Name = "m_objectFactory", TypeName = "Sandbox.Game.Entities.MyEntityFactory, Sandbox.Game")]
-        private static readonly Func<MyObjectFactory<MyEntityTypeAttribute, MyEntity>> _entityFactoryObjectFactory;
+        private static Func<MyObjectFactory<MyEntityTypeAttribute, MyEntity>> EntityFactoryObjectFactory;
 #pragma warning restore 649
 
         internal static void ForceRegisterAssemblies()
@@ -35,7 +35,7 @@ namespace Torch.Patches
             // static MyEntities() called by MySandboxGame.ForceStaticCtor
             RuntimeHelpers.RunClassConstructor(typeof(MyEntities).TypeHandle);
             {
-                MyObjectFactory<MyEntityTypeAttribute, MyEntity> factory = _entityFactoryObjectFactory();
+                MyObjectFactory<MyEntityTypeAttribute, MyEntity> factory = EntityFactoryObjectFactory();
                 ObjectFactory_RegisterFromAssemblySafe(factory, typeof(MySandboxGame).Assembly); // calling assembly
                 ObjectFactory_RegisterFromAssemblySafe(factory, MyPlugins.GameAssembly);
                 ObjectFactory_RegisterFromAssemblySafe(factory, MyPlugins.SandboxAssembly);
@@ -105,11 +105,11 @@ namespace Torch.Patches
         #region MyComponentTypeFactory Adders
 
         [ReflectedGetter(Name = "m_idToType", Type = typeof(MyComponentTypeFactory))]
-        private static Func<Dictionary<MyStringId, Type>> _componentTypeFactoryIdToType;
+        private static Func<Dictionary<MyStringId, Type>> ComponentTypeFactoryIdToType = null!;
         [ReflectedGetter(Name = "m_typeToId", Type = typeof(MyComponentTypeFactory))]
-        private static Func<Dictionary<Type, MyStringId>> _componentTypeFactoryTypeToId;
+        private static Func<Dictionary<Type, MyStringId>> ComponentTypeFactoryTypeToId = null!;
         [ReflectedGetter(Name = "m_typeToContainerComponentType", Type = typeof(MyComponentTypeFactory))]
-        private static Func<Dictionary<Type, Type>> _componentTypeFactoryContainerComponentType;
+        private static Func<Dictionary<Type, Type>> ComponentTypeFactoryContainerComponentType = null!;
 
         private static void ComponentTypeFactory_RegisterFromAssemblySafe(Assembly assembly)
         {
@@ -127,13 +127,13 @@ namespace Torch.Patches
         {
             Type componentType = type.GetCustomAttribute<MyComponentTypeAttribute>(true)?.ComponentType;
             if (componentType != null)
-                _componentTypeFactoryContainerComponentType()[type] = componentType;
+                ComponentTypeFactoryContainerComponentType()[type] = componentType;
         }
 
         private static void ComponentTypeFactory_AddIdSafe(Type type, MyStringId id)
         {
-            _componentTypeFactoryIdToType()[id] = type;
-            _componentTypeFactoryTypeToId()[type] = id;
+            ComponentTypeFactoryIdToType()[id] = type;
+            ComponentTypeFactoryTypeToId()[type] = id;
         }
         #endregion
     }

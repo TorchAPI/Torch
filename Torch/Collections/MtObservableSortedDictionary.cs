@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using PropertyChanged;
 using Torch.Utils;
 
 namespace Torch.Collections
@@ -185,6 +186,7 @@ namespace Torch.Collections
         }
 
         /// <inheritdoc/>
+        [SuppressPropertyChangedWarnings]
         public TV this[TK key]
         {
             get

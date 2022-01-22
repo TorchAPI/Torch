@@ -1,81 +1,68 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
-    <ProjectGuid>{E36DF745-260B-4956-A2E8-09F08B2E7161}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Torch.Client</RootNamespace>
-    <AssemblyName>Torch.Client</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>net461</TargetFramework>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <AssemblyTitle>Torch Client</AssemblyTitle>
+    <Product>Torch</Product>
+    <Copyright>Copyright © Torch API 2017</Copyright>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <OutputPath>$(SolutionDir)\bin\$(Platform)\$(Configuration)\</OutputPath>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseWPF>true</UseWPF>
+    <PostBuildEvent>copy "$(SolutionDir)NLog.config" "$(TargetDir)"
+    </PostBuildEvent>
+    <PostBuildEvent>copy "$(SolutionDir)NLog.config" "$(TargetDir)"
+    </PostBuildEvent>
+    <PostBuildEvent>copy "$(SolutionDir)NLog.config" "$(TargetDir)"
+    </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>$(SolutionDir)\bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>$(SolutionDir)\bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
-    <DocumentationFile>$(SolutionDir)\bin\x64\Release\Torch.Client.xml</DocumentationFile>
+    <DocumentationFile>$(SolutionDir)\bin\$(Platform)\$(Configuration)\Torch.Client.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>torchicon.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>copy "$(SolutionDir)NLog.config" "$(TargetDir)"
+    </PostBuildEvent>
+  </PropertyGroup>
+  <Import Project="$(SolutionDir)\TransformOnBuild.targets" />
   <ItemGroup>
-    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
+    <PackageReference Include="Mono.TextTransform" Version="1.0.0" />
+    <PackageReference Include="NLog" Version="4.4.12" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="Sandbox.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\Sandbox.Common.dll</HintPath>
       <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="Sandbox.Game">
       <HintPath>..\GameBinaries\Sandbox.Game.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Sandbox.Graphics, Version=0.1.6108.20417, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\Sandbox.Graphics.dll</HintPath>
       <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="SpaceEngineers.Game">
       <HintPath>..\GameBinaries\SpaceEngineers.Game.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xaml">
-      <RequiredTargetFramework>4.0</RequiredTargetFramework>
-    </Reference>
+    <Reference Include="System.Xaml" />
     <Reference Include="VRage">
       <HintPath>..\GameBinaries\VRage.dll</HintPath>
       <Private>False</Private>
@@ -89,18 +76,18 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Input, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Input.dll</HintPath>
       <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="VRage.Library">
       <HintPath>..\GameBinaries\VRage.Library.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Math, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameBinaries\VRage.Math.dll</HintPath>
       <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="VRage.Render">
       <HintPath>..\GameBinaries\VRage.Render.dll</HintPath>
@@ -119,65 +106,17 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Versioning\AssemblyVersion.cs">
-      <Link>Properties\AssemblyVersion.cs</Link>
-    </Compile>
-    <Compile Include="Manager\MultiplayerManagerClient.cs" />
-    <Compile Include="Manager\MultiplayerManagerLobby.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TorchClient.cs" />
-    <Compile Include="TorchClientConfig.cs" />
-    <Compile Include="TorchConsoleScreen.cs" />
-    <Compile Include="TorchSettingsScreen.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <Compile Include="UI\TorchMainMenuScreen.cs" />
-    <Compile Include="UI\TorchNavScreen.cs" />
-    <Compile Include="UI\TorchSettingsScreen.cs" />
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <None Include="app.config" />
-    <None Include="packages.config" />
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <AppDesigner Include="Properties\" />
+    <Compile Include="..\Versioning\AssemblyVersion.cs" Link="Properties\AssemblyVersion.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Torch.API\Torch.API.csproj">
-      <Project>{fba5d932-6254-4a1e-baf4-e229fa94e3c2}</Project>
-      <Name>Torch.API</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\Torch\Torch.csproj">
-      <Project>{7E01635C-3B67-472E-BCD6-C5539564F214}</Project>
-      <Name>Torch</Name>
-      <Private>False</Private>
-    </ProjectReference>
+    <ProjectReference Include="..\Torch.API\Torch.API.csproj" />
+    <ProjectReference Include="..\Torch\Torch.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="torchicon.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+    <Compile Remove="obj\x64\Debug\.NETFramework,Version=v4.6.1.AssemblyAttributes.cs" />
+    <Compile Remove="obj\x64\Release\.NETFramework,Version=v4.6.1.AssemblyAttributes.cs" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\TransformOnBuild.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>copy "$(SolutionDir)NLog.config" "$(TargetDir)"
-    </PostBuildEvent>
-  </PropertyGroup>
 </Project>

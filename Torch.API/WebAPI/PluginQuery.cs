@@ -1,82 +1,45 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using NLog;
 
 namespace Torch.API.WebAPI
 {
     public class PluginQuery
     {
-        private const string ALL_QUERY = "https://torchapi.com/api/plugins";
-        private const string PLUGIN_QUERY = "https://torchapi.com/api/plugins/item/{0}";
+        private const string ALL_QUERY = "https://torchapi.com/api/plugins/";
+        private const string PLUGIN_QUERY = "https://torchapi.com/api/plugins/item/{0}/";
         private readonly HttpClient _client;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         private static PluginQuery _instance;
-        public static PluginQuery Instance => _instance ?? (_instance = new PluginQuery());
+        public static PluginQuery Instance => _instance ??= new();
 
         private PluginQuery()
         {
-            _client = new HttpClient();
+            _client = new();
         }
 
-        public async Task<PluginResponse> QueryAll()
+        public async Task<PluginsResponse> QueryAll()
         {
-            var h = await _client.GetAsync(ALL_QUERY);
-            if (!h.IsSuccessStatusCode)
-            {
-                Log.Error($"Plugin query returned response {h.StatusCode}");
-                return null;
-            }
-
-            var r = await h.Content.ReadAsStringAsync();
-
-            PluginResponse response;
-            try
-            {
-                response = JsonConvert.DeserializeObject<PluginResponse>(r);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to deserialize plugin query response!");
-                return null;
-            }
-            return response;
+            return (PluginsResponse) await _client.GetFromJsonAsync(ALL_QUERY, typeof(PluginsResponse), CancellationToken.None);
         }
 
-        public async Task<PluginFullItem> QueryOne(Guid guid)
+        public Task<PluginItem> QueryOne(Guid guid)
         {
-            return await QueryOne(guid.ToString());
+            return QueryOne(guid.ToString());
         }
 
-        public async Task<PluginFullItem> QueryOne(string guid)
+        public async Task<PluginItem> QueryOne(string guid)
         {
-
-            var h = await _client.GetAsync(string.Format(PLUGIN_QUERY, guid));
-            if (!h.IsSuccessStatusCode)
-            {
-                Log.Error($"Plugin query returned response {h.StatusCode}");
-                return null;
-            }
-
-            var r = await h.Content.ReadAsStringAsync();
-
-            PluginFullItem response;
-            try
-            {
-                response = JsonConvert.DeserializeObject<PluginFullItem>(r);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to deserialize plugin query response!");
-                return null;
-            }
-            return response;
+            return (PluginItem) await _client.GetFromJsonAsync(string.Format(PLUGIN_QUERY, guid), typeof(PluginItem),
+                CancellationToken.None);
         }
 
         public async Task<bool> DownloadPlugin(Guid guid, string path = null)
@@ -91,39 +54,31 @@ namespace Torch.API.WebAPI
             return await DownloadPlugin(item, path);
         }
 
-        public async Task<bool> DownloadPlugin(PluginFullItem item, string path = null)
+        public async Task<bool> DownloadPlugin(PluginItem item, string path = null)
         {
             try
             {
-                path = path ?? $"Plugins\\{item.Name}.zip";
-                string relpath = Path.GetDirectoryName(path);
+                path ??= Path.Combine(Directory.GetCurrentDirectory(), "Plugins", $"{item.Name}.zip");
 
-                Directory.CreateDirectory(relpath);
-
-                var h = await _client.GetAsync(string.Format(PLUGIN_QUERY, item.ID));
-                string res = await h.Content.ReadAsStringAsync();
-                var response = JsonConvert.DeserializeObject<PluginFullItem>(res);
+                var response = await QueryOne(item.Id);
                 if (response.Versions.Length == 0)
                 {
                     Log.Error($"Selected plugin {item.Name} does not have any versions to download!");
                     return false;
                 }
                 var version = response.Versions.FirstOrDefault(v => v.Version == response.LatestVersion);
-                if (version == null)
+                if (version is null)
                 {
                     Log.Error($"Could not find latest version for selected plugin {item.Name}");
                     return false;
                 }
-                var s = await _client.GetStreamAsync(version.URL);
+                var s = await _client.GetStreamAsync(version.Url);
 
                 if(File.Exists(path))
                     File.Delete(path);
 
-                using (var f = File.Create(path))
-                {
-                    await s.CopyToAsync(f);
-                    await f.FlushAsync();
-                }
+                await using var f = File.Create(path);
+                await s.CopyToAsync(f);
             }
             catch (Exception ex)
             {
@@ -134,37 +89,15 @@ namespace Torch.API.WebAPI
         }
     }
 
-    public class PluginResponse
+    public record PluginsResponse(PluginItem[] Plugins);
+
+    public record PluginItem(Guid Id, string Name, string Author, string Description, string LatestVersion,
+        VersionItem[] Versions)
     {
-        public PluginItem[] Plugins;
-        public int Count;
+        [JsonIgnore]
+        public bool Installed { get; set; }
     }
 
-    public class PluginItem
-    {
-        public string ID;
-        public string Name { get; set; }
-        public string Author;
-        public string Description;
-        public string LatestVersion;
-        public bool Installed { get; set; } = false;
-
-        public override string ToString()
-        {
-            return Name;
-        }
-    }
-
-    public class PluginFullItem : PluginItem
-    {
-        public VersionItem[] Versions;
-    }
-
-    public class VersionItem
-    {
-        public string Version;
-        public string Note;
-        public bool IsBeta;
-        public string URL;
-    }
+    public record VersionItem(string Version, string Note, [property: JsonPropertyName("is_beta")] bool IsBeta,
+        string Url);
 }

@@ -53,25 +53,27 @@ namespace Torch.Managers.PatchManager
         }
 
 #pragma warning disable 649
-        [ReflectedStaticMethod(Type = typeof(RuntimeHelpers), Name = "_CompileMethod", OverrideTypeNames = new[] {"System.IRuntimeMethodInfo"})]
-        private static Action<object> _compileDynamicMethod;
-
-        [ReflectedMethod(Name = "GetMethodInfo")]
-        private static Func<RuntimeMethodHandle, object> _getMethodInfo;
-
-        [ReflectedMethod(Name = "GetMethodDescriptor")]
-        private static Func<DynamicMethod, RuntimeMethodHandle> _getMethodHandle;
+        // [ReflectedStaticMethod(Type = typeof(RuntimeHelpers), Name = "_CompileMethod", OverrideTypeNames = new[] {"System.IRuntimeMethodInfo"})]
+        // private static Action<object> _compileDynamicMethod;
+        //
+        // [ReflectedMethod(Name = "GetMethodInfo")]
+        // private static Func<RuntimeMethodHandle, object> _getMethodInfo;
+        //
+        // [ReflectedMethod(Name = "GetMethodDescriptor")]
+        // private static Func<DynamicMethod, RuntimeMethodHandle> _getMethodHandle;
 #pragma warning restore 649
         /// <summary>
         /// Forces the given dynamic method to be compiled
         /// </summary>
         /// <param name="method"></param>
+        [Obsolete]
         public static void Compile(DynamicMethod method)
         {
+            throw new NotSupportedException();
             // Force it to compile
-            RuntimeMethodHandle handle = _getMethodHandle.Invoke(method);
-            object runtimeMethodInfo = _getMethodInfo.Invoke(handle);
-            _compileDynamicMethod.Invoke(runtimeMethodInfo);
+            // RuntimeMethodHandle handle = _getMethodHandle.Invoke(method);
+            // object runtimeMethodInfo = _getMethodInfo.Invoke(handle);
+            // _compileDynamicMethod.Invoke(runtimeMethodInfo);
         }
     }
 }

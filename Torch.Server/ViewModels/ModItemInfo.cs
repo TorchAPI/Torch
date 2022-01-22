@@ -1,17 +1,9 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Threading;
-using System.Runtime.CompilerServices;
 using NLog;
-using Sandbox.Engine.Networking;
 using VRage.Game;
-using Torch.Server.Annotations;
 using Torch.Utils;
-using Torch.Utils.SteamWorkshopTools;
+using VRage.GameServices;
 
 namespace Torch.Server.ViewModels
 {
@@ -30,10 +22,8 @@ namespace Torch.Server.ViewModels
         /// </summary>
         public string FriendlyName
         {
-            get { return _modItem.FriendlyName;  }
-            set {
-                SetValue(ref _modItem.FriendlyName, value);
-            }
+            get => _modItem.FriendlyName;
+            set => SetValue(ref _modItem.FriendlyName, value);
         }
 
         /// <summary>
@@ -41,11 +31,8 @@ namespace Torch.Server.ViewModels
         /// </summary>
         public ulong PublishedFileId
         {
-            get { return _modItem.PublishedFileId; }
-            set
-            {
-                SetValue(ref _modItem.PublishedFileId, value);
-            }
+            get => _modItem.PublishedFileId;
+            set => SetValue(ref _modItem.PublishedFileId, value);
         }
 
         /// <summary>
@@ -53,11 +40,8 @@ namespace Torch.Server.ViewModels
         /// </summary>
         public string Name
         {
-            get { return _modItem.Name; }
-            set
-            {
-                SetValue(ref _modItem.FriendlyName, value);
-            }
+            get => _modItem.Name;
+            set => SetValue(ref _modItem.FriendlyName, value);
         }
 
         /// <summary>
@@ -66,11 +50,8 @@ namespace Torch.Server.ViewModels
         /// </summary>
         public bool IsDependency
         {
-            get { return _modItem.IsDependency; }
-            set
-            {
-                SetValue(ref _modItem.IsDependency, value);
-            }
+            get => _modItem.IsDependency;
+            set => SetValue(ref _modItem.IsDependency, value);
         }
 
         private string _description;
@@ -79,20 +60,14 @@ namespace Torch.Server.ViewModels
         /// </summary>
         public string Description
         {
-            get { return _description; }
-            set
-            {
-                SetValue(ref _description, value);
-            }
+            get => _description;
+            set => SetValue(ref _description, value);
         }
 
         public string UgcService
         {
-            get { return _modItem.PublishedServiceName; }
-            set
-            {
-                SetValue(ref _modItem.PublishedServiceName, value);
-            }
+            get => _modItem.PublishedServiceName;
+            set => SetValue(ref _modItem.PublishedServiceName, value);
         }
 
         /// <summary>
@@ -112,34 +87,24 @@ namespace Torch.Server.ViewModels
         /// <returns></returns>
         public async Task<bool> UpdateModInfoAsync()
         {
-            if (UgcService.ToLower() == "mod.io")
+            /*if (UgcService.ToLower() == "mod.io")
                 return true;
-            
-            var msg = "";
-            var workshopService = WebAPI.Instance;
-            PublishedItemDetails modInfo = null;
+
+            MyWorkshopItem modInfo;
             try
             {
-                modInfo = (await workshopService.GetPublishedFileDetails(new ulong[] { PublishedFileId }))?[PublishedFileId];
+                modInfo = await WorkshopQueryUtils.GetModInfo(_modItem);
             }
             catch( Exception e ) 
             {
-                Log.Error(e.Message);
-            }
-            if (modInfo == null)
-            {
-                Log.Error($"Failed to retrieve mod with workshop id '{PublishedFileId}'!");
+                Log.Error(e);
                 return false;
             }
-            //else if (!modInfo.Tags.Contains(""))
-            else
-            {
-                Log.Info($"Mod Info successfully retrieved!");
-                FriendlyName = modInfo.Title;
-                Description = modInfo.Description;
-                //Name = modInfo.FileName;
-                return true;
-            }
+            
+            Log.Info("Mod Info successfully retrieved!");
+            FriendlyName = modInfo.Title;
+            Description = modInfo.Description;*/
+            return true;
         }
 
         public override string ToString()

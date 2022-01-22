@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if TORCH_SERVICE
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -51,3 +52,4 @@ namespace Torch.Server
         }
     }
 }
+#endif

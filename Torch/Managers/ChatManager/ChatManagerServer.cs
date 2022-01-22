@@ -30,7 +30,9 @@ namespace Torch.Managers.ChatManager
     {
         private static ChatManagerServer _chatManager;
         public static event ChatReceivedDel OnChatRecvAccess;
-        private static ChatManagerServer ChatManager => _chatManager ?? (_chatManager = TorchBase.Instance.CurrentSession.Managers.GetManager<ChatManagerServer>());
+#pragma warning disable CS0618
+        private static ChatManagerServer ChatManager => _chatManager ??= TorchBase.Instance.CurrentSession.Managers.GetManager<ChatManagerServer>();
+#pragma warning restore CS0618
             
         internal static void Patch(PatchContext context)
         {
@@ -83,7 +85,9 @@ namespace Torch.Managers.ChatManager
         {
             if (targetSteamId == Sync.MyId)
             {
+#pragma warning disable CS0612
                 RaiseMessageRecieved(new TorchChatMessage(authorId, message, ChatChannel.Global, 0));
+#pragma warning restore CS0612
                 return;
             }
             if (MyMultiplayer.Static == null)
@@ -97,7 +101,7 @@ namespace Torch.Managers.ChatManager
             {
                 var msg = new ChatMsg() { Author = authorId, Text = message };
                 _dedicatedServerBaseSendChatMessage.Invoke(ref msg);
-                _dedicatedServerBaseOnChatMessage.Invoke(dedicated, new object[] { msg });
+                _dedicatedServerOnChatMessage.Invoke(dedicated, new object[] { msg });
             }
         }
 
@@ -108,15 +112,15 @@ namespace Torch.Managers.ChatManager
         private static MultiplayerBaseSendChatMessageDel _dedicatedServerBaseSendChatMessage;
 
         // [ReflectedMethod] doesn't play well with instance methods and refs.
-        [ReflectedMethodInfo(typeof(MyDedicatedServerBase), "OnChatMessage")]
-        private static MethodInfo _dedicatedServerBaseOnChatMessage;
+        [ReflectedMethodInfo(typeof(MyDedicatedServer), "OnChatMessage")]
+        private static MethodInfo _dedicatedServerOnChatMessage;
 #pragma warning restore 649
 
         public void SendMessageAsOther(string author, string message, Color color = default, ulong targetSteamId = 0, string font = MyFontEnum.White)
         {
             if (targetSteamId == Sync.MyId)
             {
-                RaiseMessageRecieved(new TorchChatMessage(author, message, font));
+                RaiseMessageRecieved(new TorchChatMessage(author, message, color, font));
                 return;
             }
             if (MyMultiplayer.Static == null)
@@ -158,7 +162,9 @@ namespace Torch.Managers.ChatManager
 
         internal void RaiseMessageRecieved(ChatMsg message, ref bool consumed)
         {
+#pragma warning disable CS0612
             var torchMsg = new TorchChatMessage(GetMemberName(message.Author), message.Author, message.Text, (ChatChannel)message.Channel, message.TargetId);
+#pragma warning restore CS0612
             if (_muted.Contains(message.Author))
             {
                 consumed = true;

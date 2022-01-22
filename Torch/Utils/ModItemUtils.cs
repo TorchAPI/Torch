@@ -28,7 +28,9 @@ namespace Torch.Utils
             }
             catch
             {
+#pragma warning disable CS0618
                 return TorchBase.Instance.Config.UgcServiceType.ToString();
+#pragma warning restore CS0618
             }
         }
     }

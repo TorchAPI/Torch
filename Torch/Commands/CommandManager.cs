@@ -26,7 +26,7 @@ namespace Torch.Commands
         public event CommandExecutingDel OnCommandExecuting;
         private Logger _log = LogManager.GetCurrentClassLogger();
         [Dependency]
-        private IChatManagerServer _chatManager;
+        private IChatManagerServer _chatManager = null!;
 
         public CommandManager(ITorchBase torch, char prefix = '!') : base(torch)
         {

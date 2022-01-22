@@ -72,7 +72,7 @@ namespace Torch.Server.ViewModels
                     case PluginState.Enabled:
                         return Brushes.Transparent;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new InvalidOperationException();
                 }
             }
         }

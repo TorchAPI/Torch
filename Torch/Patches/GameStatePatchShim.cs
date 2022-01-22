@@ -4,6 +4,7 @@ using Sandbox;
 using Torch.API;
 using Torch.Managers.PatchManager;
 using Torch.Utils;
+#pragma warning disable CS0618
 
 namespace Torch.Patches
 {

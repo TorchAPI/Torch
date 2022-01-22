@@ -40,15 +40,7 @@ namespace Torch.Server.Managers
 
             protected abstract EntityControlViewModel Create(EntityViewModel evm);
 
-#pragma warning disable 649
-            [ReflectedGetter(Name = "Keys")]
-            private static readonly Func<ConditionalWeakTable<EntityViewModel, EntityControlViewModel>, ICollection<EntityViewModel>> _weakTableKeys;
-#pragma warning restore 649
-
-            /// <summary>
-            /// Warning: Creates a giant list, avoid if possible.
-            /// </summary>
-            internal ICollection<EntityViewModel> Keys => _weakTableKeys(_models);
+            internal IEnumerable<EntityViewModel> Keys => _models.Select(b => b.Key);
 
             internal EntityControlViewModel GetOrCreate(EntityViewModel evm)
             {

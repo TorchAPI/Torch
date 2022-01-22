@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if TORCH_SERVICE
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,21 +18,8 @@ namespace Torch.Server
 
         public TorchServiceInstaller()
         {
-            var serviceProcessInstaller = new ServiceProcessInstaller();
-            _serviceInstaller = new ServiceInstaller();
-
-            serviceProcessInstaller.Account = ServiceAccount.LocalSystem;
-            serviceProcessInstaller.Username = null;
-            serviceProcessInstaller.Password = null;
-
             _serviceInstaller.DisplayName = "Torch (SEDS)";
             _serviceInstaller.Description = "Service for Torch (SE Dedicated Server)";
-            _serviceInstaller.StartType = ServiceStartMode.Manual;
-
-            _serviceInstaller.ServiceName = TorchService.Name;
-
-            Installers.Add(serviceProcessInstaller);
-            Installers.Add(_serviceInstaller);
         }
 
         /// <inheritdoc />
@@ -59,3 +47,4 @@ namespace Torch.Server
         }
     }
 }
+#endif

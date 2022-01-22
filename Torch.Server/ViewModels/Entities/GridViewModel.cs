@@ -101,7 +101,9 @@ namespace Torch.Server.ViewModels.Entities
                 return;
 
             _load = true;
+#pragma warning disable CS0618
             TorchBase.Instance.Invoke(() =>
+#pragma warning restore CS0618
             {
                 Blocks.Clear();
                 foreach (var block in Grid.GetFatBlocks().OfType<MyTerminalBlock>())

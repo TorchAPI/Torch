@@ -4,11 +4,12 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
+#if TORCH_SERVICE
 using Microsoft.VisualBasic.Devices;
+#endif
 using NLog;
 using NLog.Fluent;
 using NLog.Targets;
@@ -26,46 +27,27 @@ namespace Torch.Server
         {
             Target.Register<FlowDocumentTarget>("FlowDocument");
             //Ensures that all the files are downloaded in the Torch directory.
-            var workingDir = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
+            var workingDir = new FileInfo(typeof(Program).Assembly.Location).Directory!.FullName;
             var binDir = Path.Combine(workingDir, "DedicatedServer64");
             Directory.SetCurrentDirectory(workingDir);
-
-            //HACK for block skins update
-            var badDlls = new[]
-            {
-                "System.Security.Principal.Windows.dll",
-                "VRage.Platform.Windows.dll"
-            };
-
-            try
-            {
-                foreach (var file in badDlls)
+            
+            if (Directory.Exists(binDir))
+                foreach (var file in Directory.GetFiles(binDir, "System.*.dll"))
                 {
-                    if (File.Exists(file))
-                        File.Delete(file);
+                    File.Delete(file);
                 }
-            }
-            catch (Exception e)
-            {
-                var log = LogManager.GetCurrentClassLogger();
-                log.Error($"Error updating. Please delete the following files from the Torch root folder manually:\r\n{string.Join("\r\n", badDlls)}");
-                log.Error(e);
-                return;
-            }
 
-            if (!TorchLauncher.IsTorchWrapped())
-            {
-                TorchLauncher.Launch(Assembly.GetEntryAssembly().FullName, args, binDir);
-                return;
-            }
-
+            TorchLauncher.Launch(workingDir, binDir);
+            
             // Breaks on Windows Server 2019
+#if TORCH_SERVICE
             if (!new ComputerInfo().OSFullName.Contains("Server 2019") && !Environment.UserInteractive)
             {
                 using (var service = new TorchService(args))
                     ServiceBase.Run(service);
                 return;
             }
+#endif
 
             var initializer = new Initializer(workingDir);
             if (!initializer.Initialize(args))

@@ -20,7 +20,7 @@ namespace Torch.Server.ViewModels.Entities
     {
         protected EntityTreeViewModel Tree { get; }
 
-        private static Logger Log = LogManager.GetCurrentClassLogger();
+        private static Logger _log = LogManager.GetCurrentClassLogger();
 
         private IMyEntity _backing;
         public IMyEntity Entity
@@ -30,7 +30,9 @@ namespace Torch.Server.ViewModels.Entities
             {
                 _backing = value;
                 OnPropertyChanged();
+#pragma warning disable CS0618
                 EntityControls = TorchBase.Instance?.Managers.GetManager<EntityControlManager>()?.BoundModels(this);
+#pragma warning restore CS0618
                 // ReSharper disable once ExplicitCallerInfoArgument
                 OnPropertyChanged(nameof(EntityControls));
             }
@@ -46,7 +48,9 @@ namespace Torch.Server.ViewModels.Entities
             set
             {
                 if (Entity!=null)
+#pragma warning disable CS0618
                     TorchBase.Instance.InvokeBlocking(() => Entity.DisplayName = value);
+#pragma warning restore CS0618
                 OnPropertyChanged();
             }
         }
@@ -54,7 +58,7 @@ namespace Torch.Server.ViewModels.Entities
         private string _descriptiveName;
         public string DescriptiveName
         {
-            get => _descriptiveName ?? (_descriptiveName = GetSortedName(EntityTreeViewModel.SortEnum.Name));
+            get => _descriptiveName ??= GetSortedName(EntityTreeViewModel.SortEnum.Name);
             set => _descriptiveName = value;
         }
 
@@ -140,7 +144,9 @@ namespace Torch.Server.ViewModels.Entities
                     return;
 
                 if (Entity != null)
+#pragma warning disable CS0618
                     TorchBase.Instance.InvokeBlocking(() => Entity.SetPosition(v));
+#pragma warning restore CS0618
                 OnPropertyChanged();
             }
         }
@@ -176,7 +182,7 @@ namespace Torch.Server.ViewModels.Entities
 
             public int Compare(EntityViewModel x, EntityViewModel y)
             {
-                return x.CompareToSort(y, _sort);
+                return x?.CompareToSort(y, _sort) ?? default;
             }
         }
     }

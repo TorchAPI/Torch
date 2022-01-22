@@ -19,7 +19,9 @@ namespace Torch.Server.ViewModels.Blocks
             get => _prop.GetValue(Block.Block);
             set
             {
+#pragma warning disable CS0618
                 TorchBase.Instance.Invoke(() =>
+#pragma warning restore CS0618
                 {
                     _prop.SetValue(Block.Block, value);
                     OnPropertyChanged();

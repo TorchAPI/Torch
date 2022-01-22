@@ -12,8 +12,6 @@ namespace Torch.Commands
         public List<TorchChatMessage> Responses = new List<TorchChatMessage>();
         public event Action<TorchChatMessage> OnResponse;
 
-        private bool _flag;
-        
         /// <inheritdoc />
         public ConsoleCommandContext(ITorchBase torch, ITorchPlugin plugin, ulong steamIdSender, string rawArgs = null, List<string> args = null) 
             : base(torch, plugin, steamIdSender, rawArgs, args) { }
@@ -27,7 +25,11 @@ namespace Torch.Commands
                 font = null;
             }
 
+#pragma warning disable CS0618
+#pragma warning disable CS0612
             var msg = new TorchChatMessage(sender ?? TorchBase.Instance.Config.ChatName, message, font ?? TorchBase.Instance.Config.ChatColor);
+#pragma warning restore CS0612
+#pragma warning restore CS0618
             Responses.Add(msg);
             OnResponse?.Invoke(msg);
         }

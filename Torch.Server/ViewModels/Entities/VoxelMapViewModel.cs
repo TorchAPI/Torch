@@ -18,12 +18,12 @@ namespace Torch.Server.ViewModels.Entities
 
         public MtObservableList<GridViewModel> AttachedGrids { get; } = new MtObservableList<GridViewModel>();
 
-        public async Task UpdateAttachedGrids()
+        public Task UpdateAttachedGrids()
         {
+            return Task.CompletedTask;
             //TODO: fix
-            return;
 
-            AttachedGrids.Clear();
+            /*AttachedGrids.Clear();
             var box = Entity.WorldAABB;
             var entities = new List<MyEntity>();
             await TorchBase.Instance.InvokeAsync(() => MyEntities.GetTopMostEntitiesInBox(ref box, entities)).ConfigureAwait(false);
@@ -36,7 +36,7 @@ namespace Torch.Server.ViewModels.Entities
                 }
 
                 AttachedGrids.Add(gridModel);
-            }
+            }*/
         }
 
         public VoxelMapViewModel(MyVoxelBase e, EntityTreeViewModel tree) : base(e, tree)

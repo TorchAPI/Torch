@@ -20,6 +20,7 @@ using Sandbox;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Server.Managers;
+using Torch.Server.Views;
 using MessageBoxResult = System.Windows.MessageBoxResult;
 
 namespace Torch.Server
@@ -137,7 +138,11 @@ namespace Torch.Server
             _config = config;
             Dispatcher.Invoke(() =>
             {
-                //InstancePathBox.Text = config.InstancePath;
+                EntityManagerTab.IsEnabled = _config.EntityManagerEnabled;
+                if (_config.EntityManagerEnabled)
+                {
+                    EntityManagerTab.Content = new EntitiesControl();
+                }
             });
         }
 

@@ -3,15 +3,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using Microsoft.Diagnostics.Runtime;
 using NLog;
 using Sandbox;
-using Sandbox.Engine.Networking;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Torch.API;
@@ -21,15 +20,11 @@ using Torch.Commands;
 using Torch.Managers.PatchManager;
 using Torch.Mod;
 using Torch.Mod.Messages;
+using Torch.Patches;
 using Torch.Server.Commands;
 using Torch.Server.Managers;
 using Torch.Utils;
 using VRage;
-using VRage.Dedicated;
-using VRage.Dedicated.RemoteAPI;
-using VRage.GameServices;
-using VRage.Scripting;
-using VRage.Steam;
 using Timer = System.Threading.Timer;
 
 #endregion
@@ -62,7 +57,8 @@ namespace Torch.Server
         {
             DedicatedInstance = new InstanceManager(this);
             AddManager(DedicatedInstance);
-            AddManager(new EntityControlManager(this));
+            if (config.EntityManagerEnabled)
+                AddManager(new EntityControlManager(this));
             AddManager(new RemoteAPIManager(this));
 
             var sessionManager = Managers.GetManager<ITorchSessionManager>();
@@ -299,7 +295,7 @@ namespace Torch.Server
             var totalSize = 0;
             for (var i = 0; i < traces; i++)
             {
-                string dump = DumpStack(thread).ToString();
+                string dump = DumpStack(thread);
                 totalSize += dump.Length;
                 stacks.Add(dump);
                 Thread.Sleep(pause);
@@ -322,28 +318,71 @@ namespace Torch.Server
             return result.ToString();
         }
 
-        private static StackTrace DumpStack(Thread thread)
+        private static string DumpStack(Thread thread)
         {
-            try
-            {
-                thread.Suspend();
-            }
-            catch
-            {
-                // ignored
-            }
+            // Deprecated in .NET Core and later
+            // try
+            // {
+            //     thread.Suspend();
+            // }
+            // catch
+            // {
+            //     // ignored
+            // }
+            //
+            // var stack = new StackTrace(thread, true);
+            // try
+            // {
+            //     thread.Resume();
+            // }
+            // catch
+            // {
+            //     // ignored
+            // }
+            //
+            // return stack.ToString();
 
-            var stack = new StackTrace(thread, true);
-            try
+            // Modified from https://www.examplefiles.net/cs/579311
+            using (var target = DataTarget.CreateSnapshotAndAttach(Environment.ProcessId))
             {
-                thread.Resume();
-            }
-            catch
-            {
-                // ignored
-            }
+                var runtime = target.ClrVersions[0].CreateRuntime();
 
-            return stack;
+                var clrThread = runtime.Threads.First(b => b.ManagedThreadId == thread.ManagedThreadId);
+
+                var sb = new StringBuilder();
+
+                sb.AppendFormat(
+                        "ManagedThreadId: {0}, Name: {1}, OSThreadId: {2}, Thread: IsAlive: {3}, IsBackground: {4}, IsThreadPool: {5}",
+                        thread.ManagedThreadId, 
+                        thread.Name, 
+                        clrThread.OSThreadId, 
+                        thread.IsAlive, 
+                        thread.IsBackground,
+                        thread.IsThreadPoolThread)
+                    .AppendLine();
+
+                sb.AppendLine("Stack trace:");
+                foreach (var frame in clrThread.EnumerateStackTrace())
+                {
+                    sb.Append('\t');
+                    switch (frame.Kind)
+                    {
+                        case ClrStackFrameKind.Unknown:
+                            sb.AppendLine("[Unknown]");
+                            break;
+                        case ClrStackFrameKind.ManagedMethod:
+                            sb.AppendLine(frame.Method?.Signature ?? "[Unable to get method signature]");
+                            break;
+                        case ClrStackFrameKind.Runtime:
+                            sb.AppendLine("[CLR Runtime]");
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(frame.Kind), frame.Kind, "Incorrect value in EnumerateStackTrace");
+                    }
+                }
+
+                return sb.ToString();
+            }
         }
 
         #endregion

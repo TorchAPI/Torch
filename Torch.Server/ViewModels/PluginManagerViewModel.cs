@@ -13,13 +13,7 @@ namespace Torch.Server.ViewModels
     public class PluginManagerViewModel : ViewModel
     {
         public MtObservableList<PluginViewModel> Plugins { get; } = new MtObservableList<PluginViewModel>();
-
-        private PluginViewModel _selectedPlugin;
-        public PluginViewModel SelectedPlugin
-        {
-            get => _selectedPlugin;
-            set { _selectedPlugin = value; OnPropertyChanged(nameof(SelectedPlugin)); }
-        }
+        public PluginViewModel SelectedPlugin { get; set; }
 
         public PluginManagerViewModel() { }
 

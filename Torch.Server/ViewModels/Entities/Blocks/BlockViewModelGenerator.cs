@@ -3,18 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
+using NLog;
 using Sandbox.Game.Entities.Cube;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using NLog;
-using Sandbox.ModAPI.Interfaces.Terminal;
 
-namespace Torch.Server.ViewModels.Blocks
+namespace Torch.Server.ViewModels.Entities.Blocks
 {
     public static class BlockViewModelGenerator
     {
@@ -27,8 +21,8 @@ namespace Torch.Server.ViewModels.Blocks
         static BlockViewModelGenerator()
         {
             _asmName = new AssemblyName("Torch.Server.ViewModels.Generated");
-            _ab = AppDomain.CurrentDomain.DefineDynamicAssembly(_asmName, AssemblyBuilderAccess.RunAndSave);
-            _mb = _ab.DefineDynamicModule(_asmName.Name);
+            _ab = AssemblyBuilder.DefineDynamicAssembly(_asmName, AssemblyBuilderAccess.RunAndCollect);
+            _mb = _ab.DefineDynamicModule(_asmName.Name ?? "Torch.Server.ViewModels.Generated");
         }
 
         public static void GenerateModels()
@@ -40,7 +34,6 @@ namespace Torch.Server.ViewModels.Blocks
                     GenerateModel(type);
                 }
             }
-            _ab.Save("Generated.dll", PortableExecutableKinds.ILOnly, ImageFileMachine.AMD64);
         }
 
         public static Type GenerateModel(Type blockType, bool force = false)

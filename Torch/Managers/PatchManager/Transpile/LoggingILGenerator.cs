@@ -3,8 +3,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using Mono.Cecil.Cil;
+using MonoMod.Utils.Cil;
 using NLog;
 using Torch.Utils;
+using OpCode = System.Reflection.Emit.OpCode;
 
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
 #pragma warning disable 162 // unreachable code
@@ -22,15 +25,15 @@ namespace Torch.Managers.PatchManager.Transpile
         /// <summary>
         /// Backing generator
         /// </summary>
-        public ILGenerator Backing { get; }
-
+        public ILGeneratorShim Backing { get; }
+        
         private readonly LogLevel _level;
 
         /// <summary>
         /// Creates a new logging IL generator backed by the given generator.
         /// </summary>
         /// <param name="backing">Backing generator</param>
-        public LoggingIlGenerator(ILGenerator backing, LogLevel level)
+        public LoggingIlGenerator(ILGeneratorShim backing, LogLevel level)
         {
             Backing = backing;
             _level = level;
@@ -45,7 +48,7 @@ namespace Torch.Managers.PatchManager.Transpile
         }
 
 
-        /// <inheritdoc cref="ILGenerator.Emit(OpCode)"/>
+        /// <inheritdoc cref="ILGenerator.Emit(System.Reflection.Emit.OpCode)"/>
         public void Emit(OpCode op)
         {
             _log?.Log(_level, $"Emit\t{op,_opcodePadding}");

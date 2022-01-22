@@ -3,109 +3,17 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Markdown.Xaml;assembly=Markdown.Xaml"
+        xmlns:mdxam="clr-namespace:MdXaml;assembly=MdXaml"
         xmlns:system="clr-namespace:System;assembly=mscorlib"
         xmlns:views="clr-namespace:Torch.Server.Views"
         mc:Ignorable="d"
         Title="PluginBrowser" Height="557.5" Width="1161"
         DataContext="{Binding RelativeSource={RelativeSource Self}}">
     
-    <Window.Resources>
-        <Style TargetType="FlowDocument" x:Key="DocumentStyle">
-        <Setter Property="FontFamily"
-                Value="Calibri" />
-        <Setter Property="TextAlignment"
-                Value="Left" />
-        </Style>
-
-        <Style x:Key="H1Style"
-               TargetType="Paragraph">
-            <Setter Property="FontSize"
-                    Value="42" />
-            <Setter Property="Foreground"
-                    Value="#ff000000" />
-            <Setter Property="FontWeight"
-                    Value="Light" />
-        </Style>
-
-        <Style x:Key="H2Style"
-               TargetType="Paragraph">
-            <Setter Property="FontSize"
-                    Value="20" />
-            <Setter Property="Foreground"
-                    Value="#ff000000" />
-            <Setter Property="FontWeight"
-                    Value="Light" />
-        </Style>
-
-        <Style x:Key="H3Style"
-               TargetType="Paragraph">
-            <Setter Property="FontSize"
-                    Value="20" />
-            <Setter Property="Foreground"
-                    Value="#99000000" />
-            <Setter Property="FontWeight"
-                    Value="Light" />
-        </Style>
-
-        <Style x:Key="H4Style"
-               TargetType="Paragraph">
-            <Setter Property="FontSize"
-                    Value="14" />
-            <Setter Property="Foreground"
-                    Value="#99000000" />
-            <Setter Property="FontWeight"
-                    Value="Light" />
-        </Style>
-
-        <Style x:Key="LinkStyle"
-               TargetType="Hyperlink">
-            <Setter Property="TextDecorations"
-                    Value="None" />
-        </Style>
-
-        <Style x:Key="ImageStyle"
-               TargetType="Image">
-          <Setter Property="RenderOptions.BitmapScalingMode"
-                  Value="NearestNeighbor" />
-          <Style.Triggers>
-              <Trigger Property="Tag"
-                       Value="imageright">
-                  <Setter Property="Margin" 
-                          Value="20,0,0,0" />
-              </Trigger>
-          </Style.Triggers>
-      </Style>
-
-      <Style x:Key="SeparatorStyle"
-             TargetType="Line">
-          <Setter Property="X2"
-                  Value="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=FlowDocumentScrollViewer}}" />
-          <Setter Property="Stroke"
-                  Value="#99000000" />
-          <Setter Property="StrokeThickness"
-                  Value="2" />
-      </Style>
-    <local:Markdown x:Key="Markdown"
-                        DocumentStyle="{StaticResource DocumentStyle}"
-                        Heading1Style="{StaticResource H1Style}"
-                        Heading2Style="{StaticResource H2Style}"
-                        Heading3Style="{StaticResource H3Style}"
-                        Heading4Style="{StaticResource H4Style}"
-                        LinkStyle="{StaticResource LinkStyle}"
-                        ImageStyle="{StaticResource ImageStyle}"
-                        SeparatorStyle="{StaticResource SeparatorStyle}"
-                        AssetPathRoot="{x:Static system:Environment.CurrentDirectory}"/>
-    
-            <local:TextToFlowDocumentConverter x:Key="TextToFlowDocumentConverter" 
-Markdown="{StaticResource Markdown}"/>
-    
-    </Window.Resources>
-    
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto" MinWidth="293"/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="3*"/>
         </Grid.ColumnDefinitions>
         <Grid>
             <Grid.RowDefinitions>
@@ -115,7 +23,7 @@ Markdown="{StaticResource Markdown}"/>
             <ListView Name="PluginsList" Height="Auto" Margin="3,32,3,3" ItemsSource="{Binding Plugins}" SelectionChanged="PluginsList_SelectionChanged">
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Width="220" Header="Name">
+                        <GridViewColumn Header="Name">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Margin="5, 0" Text="{Binding Name}"/>
@@ -132,11 +40,18 @@ Markdown="{StaticResource Markdown}"/>
                     </GridView>
                 </ListView.View>
             </ListView>
-            <Button Name="DownloadButton" Grid.Row ="1" Content="Install" Margin="0,3,3,3" Height="30" Click="DownloadButton_OnClick" IsEnabled="False" HorizontalAlignment="Right" Width="144"/>
-            <Button Name="UninstallButton" Grid.Row ="1" Content="Uninstall" Margin="3,3,0,3" Height="30" Click="UninstallButton_OnClick" IsEnabled="False" HorizontalAlignment="Left" Width="144"/>
-            <TextBox x:Name="txtPluginsSearch" Height="23" Margin="3,4,3,0" TextWrapping="Wrap" Text="Plugins search..." VerticalAlignment="Top" GotFocus="TxtPluginsSearch_GotFocus" LostFocus="TxtPluginsSearch_LostFocus" Foreground="Gray" TextChanged="TxtPluginsSearch_TextChanged"/>
+            <Grid Grid.Row="1" Margin="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+                <Button Name="DownloadButton" Content="Install" Height="30" Margin="3" Click="DownloadButton_OnClick" IsEnabled="False"/>
+                <Button Grid.Column="1" Name="UninstallButton" Content="Uninstall" Height="30" Margin="3" Click="UninstallButton_OnClick" IsEnabled="False" />
+            </Grid>
+            <TextBox Grid.Row="0" x:Name="TxtPluginsSearch" Height="23" Margin="3,4,3,0" TextWrapping="Wrap" Text="Plugins search..." VerticalAlignment="Top" GotFocus="TxtPluginsSearch_GotFocus" LostFocus="TxtPluginsSearch_LostFocus" Foreground="Gray" TextChanged="TxtPluginsSearch_TextChanged"/>
         </Grid>
-        <FlowDocumentScrollViewer Name="MarkdownFlow" VerticalAlignment="Stretch" Margin="0,3,3,3" Document="{Binding CurrentDescription, Converter={StaticResource TextToFlowDocumentConverter}}" Grid.Column="1"/>
+        <!-- <FlowDocumentScrollViewer Name="MarkdownFlow" VerticalAlignment="Stretch" Margin="0,3,3,3" Document="{Binding CurrentDescription, Converter={StaticResource TextToFlowDocumentConverter}}" Grid.Column="1"/> -->
+        <mdxam:MarkdownScrollViewer Name="MarkdownFlow" VerticalAlignment="Stretch" Margin="0,3,3,3" Markdown="{Binding CurrentDescription}" Grid.Column="1" />
     </Grid>
 </Window>
     

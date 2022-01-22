@@ -41,6 +41,7 @@ namespace Torch.Server
         private bool _enableAsserts = false;
         private int _fontSize = 16;
         private UGCServiceType _ugcServiceType = UGCServiceType.Steam;
+        private bool _entityManagerEnabled = true;
 
 
         /// <inheritdoc />
@@ -161,6 +162,14 @@ namespace Torch.Server
         [Arg("asserts", "Enable Keen's assert logging.")]
         [Display(Name = "Enable Asserts", Description = "Enable Keen's assert logging.", GroupName = "Server")]
         public bool EnableAsserts { get => _enableAsserts; set => Set(value, ref _enableAsserts); }
+
+        [Display(Name = "Enable Entity Manager", Description = "Enable Entity Manager tab. (can affect performance)",
+            GroupName = "Server")]
+        public bool EntityManagerEnabled
+        {
+            get => _entityManagerEnabled;
+            set => Set(value, ref _entityManagerEnabled);
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

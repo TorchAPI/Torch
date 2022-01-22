@@ -79,7 +79,10 @@ namespace Torch.Managers.PatchManager.MSIL
                 switch (Instruction.OpCode.OperandType)
                 {
                     case OperandType.ShortInlineI:
-                        generator.Emit(Instruction.OpCode, (byte)Value);
+                        if (Instruction.OpCode == OpCodes.Ldc_I4_S)
+                            generator.Emit(Instruction.OpCode, Value);
+                        else
+                            generator.Emit(Instruction.OpCode);
                         return;
                     case OperandType.InlineI:
                         generator.Emit(Instruction.OpCode, Value);

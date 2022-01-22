@@ -31,13 +31,13 @@ namespace Torch.Server.Views
     /// </summary>
     public partial class PluginBrowser : Window, INotifyPropertyChanged
     {
-        private static Logger Log = LogManager.GetCurrentClassLogger();
+        private static Logger _log = LogManager.GetCurrentClassLogger();
 
         public MtObservableList<PluginItem> PluginsSource { get; set; } = new MtObservableList<PluginItem>();
         public MtObservableList<PluginItem> Plugins { get; set; } = new MtObservableList<PluginItem>();
         public PluginItem CurrentItem { get; set; }
-        public const string PLUGINS_SEARCH_TEXT = "Plugins search...";
-        private string PreviousSearchQuery = "";
+        public const string PluginsSearchText = "Plugins search...";
+        private string _previousSearchQuery = "";
 
         private string _description = "Loading data from server, please wait..";
         private static object _syncLock = new object();
@@ -56,24 +56,35 @@ namespace Torch.Server.Views
             InitializeComponent();
 
             var installedPlugins = pluginManager.Plugins;
-            BindingOperations.EnableCollectionSynchronization(Plugins,_syncLock);
+            BindingOperations.EnableCollectionSynchronization(Plugins, _syncLock);
             Task.Run(async () =>
-                     {
-                         var res = await PluginQuery.Instance.QueryAll();
-                         if (res == null)
-                             return;
-                         foreach (var item in res.Plugins.OrderBy(i => i.Name)) {
-                             lock (_syncLock)
-                             {
-                                 if (installedPlugins.Keys.Contains(Guid.Parse(item.ID)))
-                                     item.Installed = true;
-                                 Plugins.Add(item);
-                                 PluginsList.Dispatcher.Invoke(() => PluginsList.SelectedIndex = 0);
-                                 PluginsSource.Add(item);
-                             }
-                         }
-                         CurrentDescription = "Please select a plugin...";
-                     });
+            {
+                try
+                {
+                    var res = await PluginQuery.Instance.QueryAll();
+                    foreach (var item in res.Plugins.OrderBy(i => i.Name)) {
+                        lock (_syncLock)
+                        {
+                            var pluginItem = item with
+                            {
+                                Description = item.Description.Replace("&lt;", "<").Replace("&gt;", ">"),
+                                Installed = installedPlugins.Keys.Contains(item.Id)
+                            };
+                            Plugins.Add(pluginItem);
+                            PluginsSource.Add(pluginItem);
+                        }
+                    }
+
+                    Dispatcher.Invoke(() => PluginsList.SelectedIndex = 0);
+                    CurrentDescription = "Please select a plugin...";
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show(e.ToString(), "An Error Occurred", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Close();
+                    throw;
+                }
+            });
 
             MarkdownFlow.CommandBindings.Add(new CommandBinding(NavigationCommands.GoToPage, (sender, e) => OpenUri((string)e.Parameter)));
         }
@@ -108,36 +119,36 @@ namespace Torch.Server.Views
 
         private void DownloadButton_OnClick(object sender, RoutedEventArgs e)
         {
-            var SelectedItems = PluginsList.SelectedItems;
+            var selectedItems = PluginsList.SelectedItems;
 
-            foreach(PluginItem PluginItem in SelectedItems)
-                TorchBase.Instance.Config.Plugins.Add(new Guid(PluginItem.ID));
+            foreach(PluginItem pluginItem in selectedItems)
+                TorchBase.Instance.Config.Plugins.Add(pluginItem.Id);
                 
             TorchBase.Instance.Config.Save();
-            Log.Info($"Started to download {SelectedItems.Count} plugin(s)");
+            _log.Info($"Started to download {selectedItems.Count} plugin(s)");
 
-            PluginDownloader DownloadProgress = new PluginDownloader(SelectedItems);
-            DownloadProgress.Show();
+            PluginDownloader downloadProgress = new PluginDownloader(selectedItems);
+            downloadProgress.Show();
         }
         
         private void UninstallButton_OnClick(object sender, RoutedEventArgs e) {
-            var SelectedItems = PluginsList.SelectedItems;
-            if(SelectedItems.Cast<PluginItem>().Any(x => x.Installed == false)) {
+            var selectedItems = PluginsList.SelectedItems;
+            if(selectedItems.Cast<PluginItem>().Any(x => x.Installed == false)) {
                 MessageBox.Show($"Error! You have selected at least 1 plugin which isnt currently installed. Please de-select and try again!", "Uninstall Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            var result = MessageBox.Show($"Are you sure you want to attempt uninstall of {SelectedItems.Count} plugin(s)?", "Uninstall Confirmation", MessageBoxButton.YesNo);
+            var result = MessageBox.Show($"Are you sure you want to attempt uninstall of {selectedItems.Count} plugin(s)?", "Uninstall Confirmation", MessageBoxButton.YesNo);
             if (result == MessageBoxResult.Yes) {
-                foreach(PluginItem PluginItem in SelectedItems) {
-                    if(TorchBase.Instance.Config.Plugins.Contains(Guid.Parse(PluginItem.ID))) {
-                        TorchBase.Instance.Config.Plugins.Remove(Guid.Parse(PluginItem.ID));
+                foreach(PluginItem pluginItem in selectedItems) {
+                    if(TorchBase.Instance.Config.Plugins.Contains(pluginItem.Id)) {
+                        TorchBase.Instance.Config.Plugins.Remove(pluginItem.Id);
 
-                        string path = $"Plugins\\{PluginItem.Name}.zip";
+                        string path = $"Plugins\\{pluginItem.Name}.zip";
 
                         if (File.Exists(path))
                             File.Delete(path);
 
-                        Log.Info($"Uninstalled {PluginItem.Name}");
+                        _log.Info($"Uninstalled {pluginItem.Name}");
                     }
                 }
                 MessageBox.Show($"Plugins removed... Please restart your server for changes to take effect.", "Uninstall Confirmation", MessageBoxButton.OK);
@@ -153,45 +164,45 @@ namespace Torch.Server.Views
         }
         
         private void TxtPluginsSearch_GotFocus(object sender, RoutedEventArgs e) {
-            if (txtPluginsSearch.Text == PLUGINS_SEARCH_TEXT) {
-                txtPluginsSearch.Clear();
-                txtPluginsSearch.Foreground = Brushes.Black;
+            if (TxtPluginsSearch.Text == PluginsSearchText) {
+                TxtPluginsSearch.Clear();
+                TxtPluginsSearch.Foreground = Brushes.Black;
                 return;
             }
         }
 
         private void TxtPluginsSearch_LostFocus(object sender, RoutedEventArgs e) {
-            if(txtPluginsSearch.Text == "") {
-                txtPluginsSearch.Foreground = Brushes.Gray;
-                txtPluginsSearch.Text = PLUGINS_SEARCH_TEXT;
+            if(TxtPluginsSearch.Text == "") {
+                TxtPluginsSearch.Foreground = Brushes.Gray;
+                TxtPluginsSearch.Text = PluginsSearchText;
                 return;
             }
         }
 
         private void TxtPluginsSearch_TextChanged(object sender, TextChangedEventArgs e) {
-            string SearchQueryString = txtPluginsSearch.Text;
+            string searchQueryString = TxtPluginsSearch.Text;
 
-            if(SearchQueryString.Length < PreviousSearchQuery.Length) {
+            if(searchQueryString.Length < _previousSearchQuery.Length) {
                 ResetSearchFilter();
             }
 
-            if (SearchQueryString != PLUGINS_SEARCH_TEXT && SearchQueryString != string.Empty) {
-                SearchPlugins(SearchQueryString);
+            if (searchQueryString != PluginsSearchText && searchQueryString != string.Empty) {
+                SearchPlugins(searchQueryString);
             } else {
                 ResetSearchFilter();
             }
 
-            PreviousSearchQuery = SearchQueryString;
+            _previousSearchQuery = searchQueryString;
         }
 
-        private void SearchPlugins(string SearchQueryString) {
-            foreach (var plugin in Plugins.Where(p => !p.Name.Contains(SearchQueryString, StringComparison.OrdinalIgnoreCase) &&
-                 !p.Author.Contains(SearchQueryString, StringComparison.OrdinalIgnoreCase))) {
+        private void SearchPlugins(string searchQueryString) {
+            foreach (var plugin in Plugins.Where(p => !p.Name.Contains(searchQueryString, StringComparison.OrdinalIgnoreCase) &&
+                 !p.Author.Contains(searchQueryString, StringComparison.OrdinalIgnoreCase))) {
                 Plugins.Remove(plugin);
             }
 
-            foreach (var plugin in Plugins.Where(p => p.Name.Contains(SearchQueryString, StringComparison.OrdinalIgnoreCase) ||
-             p.Author.Contains(SearchQueryString, StringComparison.OrdinalIgnoreCase))) {
+            foreach (var plugin in Plugins.Where(p => p.Name.Contains(searchQueryString, StringComparison.OrdinalIgnoreCase) ||
+             p.Author.Contains(searchQueryString, StringComparison.OrdinalIgnoreCase))) {
                 if (!Plugins.Contains(plugin))
                     Plugins.Add(plugin);
             }

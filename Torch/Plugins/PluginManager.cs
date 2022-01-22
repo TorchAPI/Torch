@@ -18,6 +18,7 @@ using Torch.API.Session;
 using Torch.API.WebAPI;
 using Torch.Collections;
 using Torch.Commands;
+using Torch.Plugins;
 using Torch.Utils;
 
 namespace Torch.Managers
@@ -331,43 +332,21 @@ namespace Torch.Managers
         private void LoadPlugin(PluginItem item)
         {
             var assemblies = new List<Assembly>();
-
-            var loaded = AppDomain.CurrentDomain.GetAssemblies();
             
             if (item.IsZip)
             {
-                using (var zipFile = ZipFile.OpenRead(item.Path))
+                using var zipFile = ZipFile.OpenRead(item.Path);
+                foreach (var entry in zipFile.Entries)
                 {
-                    foreach (var entry in zipFile.Entries)
-                    {
-                        if (!entry.Name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
-                            continue;
+                    if (!entry.Name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
+                        continue;
 
-                        //if (loaded.Any(a => entry.Name.Contains(a.GetName().Name)))
-                        //    continue;
+                    //if (loaded.Any(a => entry.Name.Contains(a.GetName().Name)))
+                    //    continue;
 
 
-                        using (var stream = entry.Open())
-                        {
-                            var data = stream.ReadToEnd((int) entry.Length);
-                            byte[] symbol = null;
-                            var symbolEntryName =
-                                entry.FullName.Substring(0, entry.FullName.Length - "dll".Length) + "pdb";
-                            var symbolEntry = zipFile.GetEntry(symbolEntryName);
-                            if (symbolEntry != null)
-                                try
-                                {
-                                    using (var symbolStream = symbolEntry.Open())
-                                        symbol = symbolStream.ReadToEnd((int) symbolEntry.Length);
-                                }
-                                catch (Exception e)
-                                {
-                                    _log.Warn(e, $"Failed to read debugging symbols from {item.Filename}:{symbolEntryName}");
-                                }
-
-                            assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
-                        }
-                    }
+                    using var stream = entry.Open();
+                    assemblies.Add(stream.ProcessWeavers());
                 }
             }
             else
@@ -384,25 +363,8 @@ namespace Torch.Managers
                     //if (loaded.Any(a => file.Contains(a.GetName().Name)))
                     //    continue;
 
-                    using (var stream = File.OpenRead(file))
-                    {
-                        var data = stream.ReadToEnd();
-                        byte[] symbol = null;
-                        var symbolPath = Path.Combine(Path.GetDirectoryName(file) ?? ".",
-                            Path.GetFileNameWithoutExtension(file) + ".pdb");
-                        if (File.Exists(symbolPath))
-                            try
-                            {
-                                using (var symbolStream = File.OpenRead(symbolPath))
-                                    symbol = symbolStream.ReadToEnd();
-                            }
-                            catch (Exception e)
-                            {
-                                _log.Warn(e, $"Failed to read debugging symbols from {symbolPath}");
-                            }
-                        
-                        assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
-                    }
+                    using var stream = File.OpenRead(file);
+                    assemblies.Add(stream.ProcessWeavers());
                 }
 
                 
@@ -486,10 +448,12 @@ namespace Torch.Managers
             }
 
             // Backwards compatibility for PluginAttribute.
+#pragma warning disable CS0618
             var pluginAttr = pluginType.GetCustomAttribute<PluginAttribute>();
             if (pluginAttr != null)
             {
                 _log.Warn($"Plugin '{manifest.Name}' is using the obsolete {nameof(PluginAttribute)}, using info from attribute if necessary.");
+#pragma warning restore CS0618
                 manifest.Version = manifest.Version ?? pluginAttr.Version.ToString();
                 manifest.Name = manifest.Name ?? pluginAttr.Name;
                 if (manifest.Guid == default(Guid))

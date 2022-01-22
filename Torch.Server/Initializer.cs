@@ -229,37 +229,11 @@ quit";
             }
         }
 
-        private void LogException(Exception ex)
-        {
-            if (ex is AggregateException ag)
-            {
-                foreach (var e in ag.InnerExceptions)
-                    LogException(e);
-
-                return;
-            }
-            
-            Log.Fatal(ex);
-            
-            if (ex is ReflectionTypeLoadException extl)
-            {
-                foreach (var exl in extl.LoaderExceptions)
-                    LogException(exl);
-
-                return;
-            }
-            
-            if (ex.InnerException != null)
-            {
-                LogException(ex.InnerException);
-            }
-        }
-
         private void HandleException(object sender, UnhandledExceptionEventArgs e)
         {
             _server.FatalException = true;
             var ex = (Exception)e.ExceptionObject;
-            LogException(ex);
+            Log.Fatal(ex.ToStringDemystified());
             if (MyFakes.ENABLE_MINIDUMP_SENDING)
             {
                 string path = Path.Combine(MyFileSystem.UserDataPath, "Minidump.dmp");
@@ -274,7 +248,7 @@ quit";
                 Console.WriteLine("Restarting in 5 seconds.");
                 Thread.Sleep(5000);
                 var exe = typeof(Program).Assembly.Location;
-                Config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
+                Config.WaitForPID = Environment.ProcessId.ToString();
                 Process.Start(exe, Config.ToString());
             }
             else
@@ -282,7 +256,7 @@ quit";
                 MessageBox.Show("Torch encountered a fatal error and needs to close. Please check the logs for details.");
             }
 
-            Process.GetCurrentProcess().Kill();
+            Environment.Exit(1);
         }
     }
 }

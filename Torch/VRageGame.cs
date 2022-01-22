@@ -50,18 +50,18 @@ namespace Torch
 
 #pragma warning disable 649
         [ReflectedGetter(Name = "m_plugins", Type = typeof(MyPlugins))]
-        private static readonly Func<List<IPlugin>> _getVRagePluginList;
+        private static Func<List<IPlugin>> _getVRagePluginList;
 
         [ReflectedGetter(Name = "Static", TypeName = "Sandbox.Game.Audio.MyMusicController, Sandbox.Game")]
-        private static readonly Func<object> _getMusicControllerStatic;
+        private static Func<object> _getMusicControllerStatic;
 
 
         [ReflectedSetter(Name = "Static", TypeName = "Sandbox.Game.Audio.MyMusicController, Sandbox.Game")]
-        private static readonly Action<object> _setMusicControllerStatic;
+        private static Action<object> _setMusicControllerStatic;
 
 
         [ReflectedMethod(Name = "Unload", TypeName = "Sandbox.Game.Audio.MyMusicController, Sandbox.Game")]
-        private static readonly Action<object> _musicControllerUnload;
+        private static Action<object> _musicControllerUnload;
 
 //        [ReflectedGetter(Name = "UpdateLayerDescriptors", Type = typeof(MyReplicationServer))]
 //        private static readonly Func<MyReplicationServer.UpdateLayerDesc[]> _layerSettings;
@@ -168,7 +168,9 @@ namespace Torch
             //Type.GetType("VRage.Steam.MySteamService, VRage.Steam").GetProperty("IsActive").GetSetMethod(true).Invoke(service, new object[] {SteamAPI.Init()});
             _log.Info("Initializing network services");
 
+#pragma warning disable CS0618
             var isEos = TorchBase.Instance.Config.UgcServiceType == UGCServiceType.EOS;
+#pragma warning restore CS0618
 
             if (isEos)
             {
@@ -334,8 +336,8 @@ namespace Torch
 
 
 #pragma warning disable 649
-        [ReflectedMethod(Name = "StartServer")]
-        private static Action<MySession, MyMultiplayerBase> _hostServerForSession;
+        // [ReflectedMethod(Name = "StartServer")]
+        // private static Action<MySession, MyMultiplayerBase> _hostServerForSession;
 #pragma warning restore 649
 
         private void DoLoadSession(string sessionPath)

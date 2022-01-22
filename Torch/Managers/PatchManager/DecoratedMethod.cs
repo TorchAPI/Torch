@@ -8,6 +8,10 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
+using MonoMod.Utils;
+using MonoMod.Utils.Cil;
 using NLog;
 using Torch.Managers.PatchManager.MSIL;
 using Torch.Managers.PatchManager.Transpile;
@@ -17,17 +21,21 @@ namespace Torch.Managers.PatchManager
 {
     internal class DecoratedMethod : MethodRewritePattern
     {
+        private static Action<ILHook, bool> IsAppliedSetter;
+
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private readonly MethodBase _method;
+
+        private ILHook _hook;
 
         internal DecoratedMethod(MethodBase method) : base(null)
         {
             _method = method;
+            if (IsAppliedSetter == null)
+            {
+                IsAppliedSetter = typeof(ILHook).GetProperty(nameof(ILHook.IsApplied)).CreateSetter<ILHook, bool>();
+            }
         }
-
-        private long _revertAddress;
-        private byte[] _revertData = null;
-        private GCHandle? _pinnedPatch;
 
         internal bool HasChanged()
         {
@@ -47,59 +55,32 @@ namespace Torch.Managers.PatchManager
                     return;
                 _log.Log(PrintMode != 0 ? LogLevel.Info : LogLevel.Debug,
                     $"Begin patching {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
-                var patch = ComposePatchedMethod();
 
-                _revertAddress = AssemblyMemory.GetMethodBodyStart(_method);
-                var newAddress = AssemblyMemory.GetMethodBodyStart(patch);
-                AssemblyMemory.UnprotectMemoryPage(_revertAddress);
-                _revertData = AssemblyMemory.WriteJump(_revertAddress, newAddress);
-                _pinnedPatch = GCHandle.Alloc(patch);
+                if (_hook == null)
+                    _hook = new ILHook(_method, Manipulator, new ILHookConfig {ManualApply = true});
+                IsAppliedSetter(_hook, false);
+                _hook.Apply();
+
                 _log.Log(PrintMode != 0 ? LogLevel.Info : LogLevel.Debug,
-                    $"Done patching {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
+                    $"Done patching {_method.GetID()})");
             }
             catch (Exception exception)
             {
-                _log.Fatal(exception, $"Error patching {_method.DeclaringType?.FullName}#{_method}");
+                _log.Fatal(exception, $"Error patching {_method.GetID()}");
                 throw;
             }
         }
 
         internal void Revert()
         {
-            if (_pinnedPatch.HasValue)
-            {
-                _log.Debug(
-                    $"Revert {_method.DeclaringType?.FullName}#{_method.Name}({string.Join(", ", _method.GetParameters().Select(x => x.ParameterType.Name))})");
-                AssemblyMemory.WriteMemory(_revertAddress, _revertData);
-                _revertData = null;
-                _pinnedPatch.Value.Free();
-                _pinnedPatch = null;
-            }
+            if (_hook == null)
+                return;
+            _log.Debug($"Revert {_method.GetID()}");
+            _hook.Dispose();
+            _hook = null;
         }
 
         #region Create
-
-        private int _patchSalt = 0;
-
-        private DynamicMethod AllocatePatchMethod()
-        {
-            Debug.Assert(_method.DeclaringType != null);
-            var methodName = "Patched_" + _method.DeclaringType.FullName + _method.Name + $"_{_patchSalt++}";
-            var returnType = _method is MethodInfo meth ? meth.ReturnType : typeof(void);
-            var parameters = _method.GetParameters();
-            var parameterTypes = (_method.IsStatic ? Enumerable.Empty<Type>() : new[] {typeof(object)})
-                .Concat(parameters.Select(x => x.ParameterType)).ToArray();
-
-            var patchMethod = new DynamicMethod(methodName, MethodAttributes.Public | MethodAttributes.Static, CallingConventions.Standard,
-                returnType, parameterTypes, _method.DeclaringType, true);
-            if (!_method.IsStatic)
-                patchMethod.DefineParameter(0, ParameterAttributes.None, INSTANCE_PARAMETER);
-            for (var i = 0; i < parameters.Length; i++)
-                patchMethod.DefineParameter((patchMethod.IsStatic ? 0 : 1) + i, parameters[i].Attributes, parameters[i].Name);
-
-            return patchMethod;
-        }
-
 
         public const string INSTANCE_PARAMETER = "__instance";
         public const string RESULT_PARAMETER = "__result";
@@ -108,40 +89,41 @@ namespace Torch.Managers.PatchManager
 
         private void SavePatchedMethod(string target)
         {
-            var asmBuilder =
-                AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("SomeName"), AssemblyBuilderAccess.RunAndSave, Path.GetDirectoryName(target));
-            var moduleBuilder = asmBuilder.DefineDynamicModule(Path.GetFileNameWithoutExtension(target), Path.GetFileName(target));
-            var typeBuilder = moduleBuilder.DefineType("Test", TypeAttributes.Public);
-
-
-            var methodName = _method.Name + $"_{_patchSalt}";
-            var returnType = _method is MethodInfo meth ? meth.ReturnType : typeof(void);
-            var parameters = _method.GetParameters();
-            var parameterTypes = (_method.IsStatic ? Enumerable.Empty<Type>() : new[] {_method.DeclaringType})
-                .Concat(parameters.Select(x => x.ParameterType)).ToArray();
-
-            var patchMethod = typeBuilder.DefineMethod(methodName, MethodAttributes.Public | MethodAttributes.Static, CallingConventions.Standard,
-                returnType, parameterTypes);
-            if (!_method.IsStatic)
-                patchMethod.DefineParameter(0, ParameterAttributes.None, INSTANCE_PARAMETER);
-            for (var i = 0; i < parameters.Length; i++)
-                patchMethod.DefineParameter((patchMethod.IsStatic ? 0 : 1) + i, parameters[i].Attributes, parameters[i].Name);
-
-            var generator = new LoggingIlGenerator(patchMethod.GetILGenerator(), LogLevel.Trace);
-            List<MsilInstruction> il = EmitPatched((type, pinned) => new MsilLocal(generator.DeclareLocal(type, pinned))).ToList();
-
-            MethodTranspiler.EmitMethod(il, generator);
-
-            Type res = typeBuilder.CreateType();
-            asmBuilder.Save(Path.GetFileName(target));
-            foreach (var method in res.GetMethods(BindingFlags.Public | BindingFlags.Static))
-                _log.Info($"Information " + method);
+            throw new NotSupportedException();
+            // var asmBuilder =
+            //     AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("SomeName"), AssemblyBuilderAccess.RunAndSave, Path.GetDirectoryName(target));
+            // var moduleBuilder = asmBuilder.DefineDynamicModule(Path.GetFileNameWithoutExtension(target), Path.GetFileName(target));
+            // var typeBuilder = moduleBuilder.DefineType("Test", TypeAttributes.Public);
+            //
+            //
+            // var methodName = _method.Name + $"_{_patchSalt}";
+            // var returnType = _method is MethodInfo meth ? meth.ReturnType : typeof(void);
+            // var parameters = _method.GetParameters();
+            // var parameterTypes = (_method.IsStatic ? Enumerable.Empty<Type>() : new[] {_method.DeclaringType})
+            //     .Concat(parameters.Select(x => x.ParameterType)).ToArray();
+            //
+            // var patchMethod = typeBuilder.DefineMethod(methodName, MethodAttributes.Public | MethodAttributes.Static, CallingConventions.Standard,
+            //     returnType, parameterTypes);
+            // if (!_method.IsStatic)
+            //     patchMethod.DefineParameter(0, ParameterAttributes.None, INSTANCE_PARAMETER);
+            // for (var i = 0; i < parameters.Length; i++)
+            //     patchMethod.DefineParameter((patchMethod.IsStatic ? 0 : 1) + i, parameters[i].Attributes, parameters[i].Name);
+            //
+            // var generator = new LoggingIlGenerator(patchMethod.GetILGenerator(), LogLevel.Trace);
+            // List<MsilInstruction> il = EmitPatched((type, pinned) => new MsilLocal(generator.DeclareLocal(type, pinned))).ToList();
+            //
+            // MethodTranspiler.EmitMethod(il, generator);
+            //
+            // Type res = typeBuilder.CreateType();
+            // asmBuilder.Save(Path.GetFileName(target));
+            // foreach (var method in res.GetMethods(BindingFlags.Public | BindingFlags.Static))
+            //     _log.Info($"Information " + method);
         }
 
-        public DynamicMethod ComposePatchedMethod()
+        public void Manipulator(ILContext context)
         {
-            DynamicMethod method = AllocatePatchMethod();
-            var generator = new LoggingIlGenerator(method.GetILGenerator(),
+            context.IL.Clear();
+            var generator = new LoggingIlGenerator(new CecilILGenerator(context.IL),
                 PrintMode.HasFlag(PrintModeEnum.EmittedReflection) ? LogLevel.Info : LogLevel.Trace);
             List<MsilInstruction> il = EmitPatched((type, pinned) => new MsilLocal(generator.DeclareLocal(type, pinned))).ToList();
 
@@ -161,7 +143,9 @@ namespace Torch.Managers.PatchManager
                         _log.Info(msg);
                 }
 
+#pragma warning disable CS0612
                 if (PrintMsil || DumpTarget != null)
+#pragma warning restore CS0612
                 {
                     lock (_log)
                     {
@@ -181,31 +165,16 @@ namespace Torch.Managers.PatchManager
 
                 MethodTranspiler.EmitMethod(il, generator);
 
-                try
-                {
-                    PatchUtilities.Compile(method);
-                }
-                catch (Exception failure)
-                {
-                    lock (_log)
-                    {
-                        _log.Error(failure, $"Failed to patch method {_method}");
-                        var ctx = new MethodContext(method);
-                        ctx.Read();
-                        MethodTranspiler.IntegrityAnalysis((err, msg) => _log.Warn(msg), ctx.Instructions);
-                        LogManager.Flush();
-                    }
-                    throw;
-                }
-
+#pragma warning disable CS0612
                 if (PrintMsil || DumpTarget != null)
+#pragma warning restore CS0612
                 {
                     lock (_log)
                     {
-                        var ctx = new MethodContext(method);
-                        ctx.Read();
+                        var instructions = context.Body.Instructions
+                            .Select(b => new MsilInstruction(b)).ToList();
                         LogTarget(PrintModeEnum.Patched, false, "========== Patched method ==========");
-                        MethodTranspiler.IntegrityAnalysis((a, b) => LogTarget(PrintModeEnum.Patched, a, b), ctx.Instructions, true);
+                        MethodTranspiler.IntegrityAnalysis((a, b) => LogTarget(PrintModeEnum.Patched, a, b), instructions, true);
                         LogTarget(PrintModeEnum.Patched, false, gap);
                     }
                 }
@@ -214,8 +183,6 @@ namespace Torch.Managers.PatchManager
             {
                 dumpTarget?.Close();
             }
-
-            return method;
         }
 
         #endregion
@@ -284,8 +251,8 @@ namespace Torch.Managers.PatchManager
                 if (prefix.ReturnType == typeof(bool))
                     instructions.Add(new MsilInstruction(OpCodes.Brfalse).InlineTarget(labelSkipMethodContent));
                 else if (prefix.ReturnType != typeof(void))
-                    throw new Exception(
-                        $"Prefixes must return void or bool.  {prefix.DeclaringType?.FullName}.{prefix.Name} returns {prefix.ReturnType}");
+                    throw new PatchException(
+                        $"Prefixes must return void or bool.  {prefix.DeclaringType?.FullName}.{prefix.Name} returns {prefix.ReturnType}", prefix);
             }
 
             instructions.AddRange(MethodTranspiler.Transpile(_method, (x) => declareLocal(x, false), Transpilers, labelAfterOriginalContent));
@@ -308,7 +275,7 @@ namespace Torch.Managers.PatchManager
             {
                 instructions.AddRange(EmitMonkeyCall(suffix, specialVariables));
                 if (suffix.ReturnType != typeof(void))
-                    throw new Exception($"Suffixes must return void.  {suffix.DeclaringType?.FullName}.{suffix.Name} returns {suffix.ReturnType}");
+                    throw new PatchException($"Suffixes must return void.  {suffix.DeclaringType?.FullName}.{suffix.Name} returns {suffix.ReturnType}", suffix);
             }
 
             if (resultVariable != null)
@@ -331,16 +298,16 @@ namespace Torch.Managers.PatchManager
                     case INSTANCE_PARAMETER:
                     {
                         if (_method.IsStatic)
-                            throw new Exception("Can't use an instance parameter for a static method");
+                            throw new PatchException("Can't use an instance parameter for a static method", _method);
                         yield return new MsilInstruction(OpCodes.Ldarg_0);
                         break;
                     }
                     case PREFIX_SKIPPED_PARAMETER:
                     {
                         if (param.ParameterType != typeof(bool))
-                            throw new Exception($"Prefix skipped parameter {param.ParameterType} must be of type bool");
+                            throw new PatchException($"Prefix skipped parameter {param.ParameterType} must be of type bool", _method);
                         if (param.ParameterType.IsByRef || param.IsOut)
-                            throw new Exception($"Prefix skipped parameter {param.ParameterType} can't be a reference type");
+                            throw new PatchException($"Prefix skipped parameter {param.ParameterType} can't be a reference type", _method);
                         if (specialVariables.TryGetValue(PREFIX_SKIPPED_PARAMETER, out MsilLocal prefixSkip))
                             yield return new MsilInstruction(OpCodes.Ldloc).InlineValue(prefixSkip);
                         else
@@ -353,8 +320,8 @@ namespace Torch.Managers.PatchManager
                             ? param.ParameterType.GetElementType()
                             : param.ParameterType;
                         if (retType == null || !retType.IsAssignableFrom(specialVariables[RESULT_PARAMETER].Type))
-                            throw new Exception(
-                                $"Return type {specialVariables[RESULT_PARAMETER].Type} can't be assigned to result parameter type {retType}");
+                            throw new PatchException(
+                                $"Return type {specialVariables[RESULT_PARAMETER].Type} can't be assigned to result parameter type {retType}", _method);
                         yield return new MsilInstruction(param.ParameterType.IsByRef ? OpCodes.Ldloca : OpCodes.Ldloc)
                             .InlineValue(specialVariables[RESULT_PARAMETER]);
                         break;
@@ -372,7 +339,7 @@ namespace Torch.Managers.PatchManager
                         {
                             var fieldName = param.Name.Substring(8);
                             var fieldDef = _method.DeclaringType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static).FirstOrDefault(x => x.Name == fieldName);
-                            if (fieldDef == null) throw new Exception($"Could not find field {fieldName}");
+                            if (fieldDef == null) throw new PatchException($"Could not find field {fieldName}", _method);
                             if (fieldDef.IsStatic)
                                 yield return new MsilInstruction(param.ParameterType.IsByRef ? OpCodes.Ldsflda : OpCodes.Ldsfld)
                                     .InlineValue(fieldDef);
@@ -388,7 +355,7 @@ namespace Torch.Managers.PatchManager
                         ParameterInfo declParam = _method.GetParameters().FirstOrDefault(x => x.Name == param.Name);
 
                         if (declParam == null)
-                            throw new Exception($"Parameter name {param.Name} not found");
+                            throw new PatchException($"Parameter name {param.Name} not found", _method);
                         int paramIdx = (_method.IsStatic ? 0 : 1) + declParam.Position;
 
                         bool patchByRef = param.IsOut || param.ParameterType.IsByRef;

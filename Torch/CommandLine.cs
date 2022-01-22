@@ -20,8 +20,10 @@ namespace Torch
             _argPrefix = argPrefix;
             foreach (var prop in GetType().GetProperties())
             {
-                if (prop.HasAttribute<ArgAttribute>())
-                    _args.Add(prop.GetCustomAttribute<ArgAttribute>(), prop);
+                var attr = prop.GetCustomAttribute<ArgAttribute>();
+                if (attr == null)
+                    continue;
+                _args.Add(attr, prop);
             }
         }
 

@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using PropertyChanged;
 using Torch.Utils;
 
 namespace Torch.Collections
@@ -76,7 +77,9 @@ namespace Torch.Collections
             }
         }
 
+        
         /// <inheritdoc/>
+        [SuppressPropertyChangedWarnings]
         public T this[int index]
         {
             get
@@ -181,6 +184,7 @@ namespace Torch.Collections
         }
 
         /// <inheritdoc/>
+        [SuppressPropertyChangedWarnings]
         object IList.this[int index]
         {
             get => this[index];

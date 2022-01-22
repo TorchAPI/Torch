@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using NLog;
 using Sandbox.Engine.Utils;
 using Torch.Collections;
 using Torch.Server.Managers;
+using Torch.Utils;
 using VRage.Game;
-using VRage.Game.ModAPI;
-using Torch.Utils.SteamWorkshopTools;
-using Torch.Collections;
+using VRage.GameServices;
 
 namespace Torch.Server.ViewModels
 {
@@ -76,42 +73,30 @@ namespace Torch.Server.ViewModels
             }
         }
 
-        public async Task UpdateAllModInfosAsync(Action<string> messageHandler = null)
+        public async Task UpdateAllModInfosAsync()
         {
-            if (Mods.Count() == 0)
+            /*if (!Mods.Any())
                 return;
-
-            var ids = Mods.Select(m => m.PublishedFileId);
-            var workshopService = WebAPI.Instance;
-            Dictionary<ulong, PublishedItemDetails> modInfos = null;
-
+            List<MyWorkshopItem> modInfos;
             try
             {
-                modInfos = (await workshopService.GetPublishedFileDetails(ids.ToArray()));
+                modInfos = await WorkshopQueryUtils.GetModsInfo(Mods.Select(b =>
+                    new MyObjectBuilder_Checkpoint.ModItem(b.PublishedFileId, b.UgcService, b.IsDependency)));
             }
             catch (Exception e)
             {
-                Log.Error(e.Message);
+                Log.Error(e);
                 return;
             }
 
-            Log.Info($"Mods Info successfully retrieved!");
+            Log.Info("Mods Info successfully retrieved!");
 
-            foreach (var mod in Mods)
+            foreach (var modItem in Mods
+                         .Select(b => new MyObjectBuilder_Checkpoint.ModItem(b.PublishedFileId, b.UgcService))
+                         .Except(modInfos.Select(b => new MyObjectBuilder_Checkpoint.ModItem(b.Id, b.ServiceName))))
             {
-                if (!modInfos.ContainsKey(mod.PublishedFileId) || modInfos[mod.PublishedFileId] == null)
-                {
-                    Log.Error($"Failed to retrieve info for mod with workshop id '{mod.PublishedFileId}'!");
-                }
-                //else if (!modInfo.Tags.Contains(""))
-                else
-                {
-                    mod.FriendlyName = modInfos[mod.PublishedFileId].Title;
-                    mod.Description = modInfos[mod.PublishedFileId].Description;
-                    //mod.Name = modInfos[mod.PublishedFileId].FileName;
-                }
-            }
-
+                Log.Error($"Unable to retreive info about {modItem.PublishedFileId}:{modItem.PublishedServiceName}");
+            }*/
         }
 
         public List<string> Administrators { get => _config.Administrators; set => SetValue(x => _config.Administrators = x, value); }

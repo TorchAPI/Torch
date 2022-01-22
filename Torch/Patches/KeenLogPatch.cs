@@ -67,28 +67,17 @@ namespace Torch.Patches
         }
 
         [ReflectedMethod(Name = "GetIdentByThread")]
-        private static Func<MyLog, int, int> _getIndentByThread;
+        private static Func<MyLog, int, int> GetIndentByThread = null!;
 
         [ThreadStatic]
         private static StringBuilder _tmpStringBuilder;
         
         private static StringBuilder PrepareLog(MyLog log)
         {
-            if (_tmpStringBuilder == null)
-                _tmpStringBuilder = new StringBuilder();
+            _tmpStringBuilder ??= new();
             
             _tmpStringBuilder.Clear();
-            var i = Thread.CurrentThread.ManagedThreadId;
-            int t = 0;
-            
-            try
-            {
-                t = _getIndentByThread(log, i);
-            }
-            catch (Exception e)
-            {
-                _log.Debug(e, "Failed to get thread indent");
-            }
+            var t = GetIndentByThread(log, Environment.CurrentManagedThreadId);
             
             _tmpStringBuilder.Append(' ', t * 3);
             return _tmpStringBuilder;
@@ -96,24 +85,27 @@ namespace Torch.Patches
 
         private static bool PrefixWriteLine(MyLog __instance, string msg)
         {
-            _log.Debug(PrepareLog(__instance).Append(msg));
+            if (__instance.LogEnabled)
+                _log.Debug(PrepareLog(__instance).Append(msg));
             return false;
         }
 
         private static bool PrefixWriteLineConsole(MyLog __instance, string msg)
         {
-            _log.Info(PrepareLog(__instance).Append(msg));
+            if (__instance.LogEnabled)
+                _log.Info(PrepareLog(__instance).Append(msg));
             return false;
         }
 
         private static bool PrefixAppendToClosedLog(MyLog __instance, string text)
         {
-            _log.Info(PrepareLog(__instance).Append(text));
+            if (__instance.LogEnabled)
+                _log.Info(PrepareLog(__instance).Append(text));
             return false;
         }
         private static bool PrefixWriteLineOptions(MyLog __instance, string message, LoggingOptions option)
         {
-            if (__instance.LogFlag(option))
+            if (__instance.LogEnabled && __instance.LogFlag(option))
                 _log.Info(PrepareLog(__instance).Append(message));
             return false;
         }
@@ -132,10 +124,12 @@ namespace Torch.Patches
 
         private static bool PrefixLogFormatted(MyLog __instance, MyLogSeverity severity, string format, object[] args)
         {
+            if (__instance.LogEnabled)
+                return false;
             // Sometimes this is called with a pre-formatted string and no args
             // and causes a crash when the format string contains braces
             var sb = PrepareLog(__instance);
-            if (args != null && args.Length > 0)
+            if (args is {Length: > 0})
                 sb.AppendFormat(format, args);
             else
                 sb.Append(format);
@@ -146,27 +140,22 @@ namespace Torch.Patches
 
         private static bool PrefixLogStringBuilder(MyLog __instance, MyLogSeverity severity, StringBuilder builder)
         {
-            _log.Log(LogLevelFor(severity), PrepareLog(__instance).Append(builder));
+            if (__instance.LogEnabled)
+                _log.Log(LogLevelFor(severity), PrepareLog(__instance).Append(builder));
             return false;
         }
 
         private static LogLevel LogLevelFor(MyLogSeverity severity)
         {
-            switch (severity)
+            return severity switch
             {
-                case MyLogSeverity.Debug:
-                    return LogLevel.Debug;
-                case MyLogSeverity.Info:
-                    return LogLevel.Info;
-                case MyLogSeverity.Warning:
-                    return LogLevel.Warn;
-                case MyLogSeverity.Error:
-                    return LogLevel.Error;
-                case MyLogSeverity.Critical:
-                    return LogLevel.Fatal;
-                default:
-                    return LogLevel.Info;
-            }
+                MyLogSeverity.Debug => LogLevel.Debug,
+                MyLogSeverity.Info => LogLevel.Info,
+                MyLogSeverity.Warning => LogLevel.Warn,
+                MyLogSeverity.Error => LogLevel.Error,
+                MyLogSeverity.Critical => LogLevel.Fatal,
+                _ => LogLevel.Info
+            };
         }
     }
 }

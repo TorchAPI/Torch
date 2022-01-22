@@ -43,10 +43,12 @@ namespace Torch.Patches
             
             //nasty hack
             Task.Run(() =>
-                     {
-                         Thread.Sleep(TimeSpan.FromSeconds(30));
-                         TorchBase.Instance.Restart();
-                     });
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(30));
+#pragma warning disable CS0618
+                TorchBase.Instance.Restart();
+#pragma warning restore CS0618
+            });
 
             return false;
         }

@@ -25,7 +25,9 @@ namespace Torch.Server.ViewModels.Blocks
             get => Block?.CustomName ?? "null";
             set
             {
+#pragma warning disable CS0618
                 TorchBase.Instance.Invoke(() =>
+#pragma warning restore CS0618
                 {
                     Block.CustomName = value;
                     OnPropertyChanged();
@@ -41,7 +43,9 @@ namespace Torch.Server.ViewModels.Blocks
             get => ((MySlimBlock)Block?.SlimBlock)?.BuiltBy ?? 0;
             set
             {
+#pragma warning disable CS0618
                 TorchBase.Instance.Invoke(() =>
+#pragma warning restore CS0618
                 {
                     ((MySlimBlock)Block.SlimBlock).TransferAuthorship(value);
                     OnPropertyChanged();

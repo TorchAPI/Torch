@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows.Threading;
+using PropertyChanged;
 
 namespace Torch
 {
@@ -77,27 +78,29 @@ namespace Torch
                 _list = list;
 
                 if (_list is INotifyPropertyChanged p)
-                    p.PropertyChanged += OnPropertyChanged;
+                    p.PropertyChanged += OnChildPropertyChanged;
 
                 if (_list is INotifyCollectionChanged c)
-                    c.CollectionChanged += OnCollectionChanged;
+                    c.CollectionChanged += OnChildCollectionChanged;
             }
 
             public void Dispose()
             {
                 if (_list is INotifyPropertyChanged p)
-                    p.PropertyChanged -= OnPropertyChanged;
+                    p.PropertyChanged -= OnChildPropertyChanged;
 
                 if (_list is INotifyCollectionChanged c)
-                    c.CollectionChanged -= OnCollectionChanged;
+                    c.CollectionChanged -= OnChildCollectionChanged;
             }
 
-            private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+            [SuppressPropertyChangedWarnings]
+            private void OnChildCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
             {
                 OnCollectionChanged(e);
             }
 
-            private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+            [SuppressPropertyChangedWarnings]
+            private void OnChildPropertyChanged(object sender, PropertyChangedEventArgs e)
             {
                 OnPropertyChanged(e.PropertyName);
             }
@@ -124,27 +127,29 @@ namespace Torch
                 _dictionary = dictionary;
 
                 if (_dictionary is INotifyPropertyChanged p)
-                    p.PropertyChanged += OnPropertyChanged;
+                    p.PropertyChanged += OnChildPropertyChanged;
 
                 if (_dictionary is INotifyCollectionChanged c)
-                    c.CollectionChanged += OnCollectionChanged;
+                    c.CollectionChanged += OnChildCollectionChanged;
             }
 
             public void Dispose()
             {
                 if (_dictionary is INotifyPropertyChanged p)
-                    p.PropertyChanged -= OnPropertyChanged;
+                    p.PropertyChanged -= OnChildPropertyChanged;
 
                 if (_dictionary is INotifyCollectionChanged c)
-                    c.CollectionChanged -= OnCollectionChanged;
+                    c.CollectionChanged -= OnChildCollectionChanged;
             }
 
-            private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+            [SuppressPropertyChangedWarnings]
+            private void OnChildCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
             {
                 OnCollectionChanged(e);
             }
 
-            private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+            [SuppressPropertyChangedWarnings]
+            private void OnChildPropertyChanged(object sender, PropertyChangedEventArgs e)
             {
                 OnPropertyChanged(e.PropertyName);
             }

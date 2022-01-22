@@ -11,19 +11,17 @@ namespace Torch.Server.ViewModels
     public class BlockLimitViewModel : ViewModel
     {
         private SessionSettingsViewModel _sessionSettings;
-        private string _blockType;
-        private short _limit;
 
-        public string BlockType { get => _blockType; set { _blockType = value; OnPropertyChanged(); } }
-        public short Limit { get => _limit; set { _limit = value; OnPropertyChanged(); } }
+        public string BlockType { get; set; }
+        public short Limit { get; set; }
 
         //public CommandBinding Delete { get; } = new CommandBinding(new DeleteCommand());
 
         public BlockLimitViewModel(SessionSettingsViewModel sessionSettings, string blockType, short limit)
         {
             _sessionSettings = sessionSettings;
-            _blockType = blockType;
-            _limit = limit;
+            BlockType = blockType;
+            Limit = limit;
         }
 
         /* TODO: figure out how WPF commands work
