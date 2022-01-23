@@ -50,7 +50,7 @@ namespace Torch.Managers
 
             try
             {
-                var job = await JenkinsQuery.Instance.GetLatestVersion(Torch.TorchVersion.Branch);
+                var job = await JenkinsQuery.Instance.GetLatestVersion(Torch.TorchVersion.Build);
                 if (job == null)
                 {
                     _log.Info("Failed to fetch latest version.");

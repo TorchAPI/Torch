@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Torch.API.Managers;
 using Torch.API.Session;
 using VRage.Game.ModAPI;
+using Version = SemanticVersioning.Version;
 
 namespace Torch.API
 {
@@ -65,7 +66,7 @@ namespace Torch.API
         /// <summary>
         /// The binary version of the current instance.
         /// </summary>
-        InformationalVersion TorchVersion { get; }
+        Version TorchVersion { get; }
 
         /// <summary>
         /// Invoke an action on the game thread.

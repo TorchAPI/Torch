@@ -1,9 +1,9 @@
 ﻿{
-  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
     "Torch.Server": {
       "commandName": "Project",
-      "commandLineArgs": "-noupdate",
+      
       "use64Bit": true,
       "hotReloadEnabled": false
     }

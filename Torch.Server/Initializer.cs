@@ -52,12 +52,8 @@ quit";
         {
             if (_init)
                 return false;
-
-#if !DEBUG
+            
             AppDomain.CurrentDomain.UnhandledException += HandleException;
-            LogManager.Configuration.AddRule(LogLevel.Info, LogLevel.Fatal, "console");
-            LogManager.ReconfigExistingLoggers();
-#endif
 
 #if DEBUG
             //enables logging debug messages when built in debug mode. Amazing.
@@ -232,16 +228,10 @@ quit";
         private void HandleException(object sender, UnhandledExceptionEventArgs e)
         {
             _server.FatalException = true;
+            if (Debugger.IsAttached)
+                return;
             var ex = (Exception)e.ExceptionObject;
             Log.Fatal(ex.ToStringDemystified());
-            if (MyFakes.ENABLE_MINIDUMP_SENDING)
-            {
-                string path = Path.Combine(MyFileSystem.UserDataPath, "Minidump.dmp");
-                Log.Info($"Generating minidump at {path}");
-                Log.Error("Keen broke the minidump, sorry.");
-                //MyMiniDump.Options options = MyMiniDump.Options.WithProcessThreadData | MyMiniDump.Options.WithThreadInfo;
-                //MyMiniDump.Write(path, options, MyMiniDump.ExceptionInfo.Present);
-            }
             LogManager.Flush();
             if (Config.RestartOnCrash)
             {

@@ -4,10 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using NLog;
+using Torch.API.Utils;
+using Version = SemanticVersioning.Version;
 
 namespace Torch.API.WebAPI
 {
@@ -20,7 +23,7 @@ namespace Torch.API.WebAPI
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         private static JenkinsQuery _instance;
-        public static JenkinsQuery Instance => _instance ?? (_instance = new JenkinsQuery());
+        public static JenkinsQuery Instance => _instance ??= new JenkinsQuery();
         private HttpClient _client;
 
         private JenkinsQuery()
@@ -39,92 +42,43 @@ namespace Torch.API.WebAPI
                 return null;
             }
 
-            string r = await h.Content.ReadAsStringAsync();
+            var branchResponse = await h.Content.ReadFromJsonAsync<BranchResponse>();
 
-            BranchResponse response;
-            try
+            if (branchResponse is null)
             {
-                response = JsonConvert.DeserializeObject<BranchResponse>(r);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to deserialize branch response!");
+                Log.Error("Error reading branch response");
                 return null;
             }
+            
+            h = await _client.GetAsync($"{branchResponse.LastStableBuild.Url}{API_PATH}");
+            if (h.IsSuccessStatusCode) 
+                return await h.Content.ReadFromJsonAsync<Job>();
+            
+            Log.Error($"Job query failed with code {h.StatusCode}");
+            return null;
 
-            h = await _client.GetAsync($"{response.LastStableBuild.URL}{API_PATH}");
-            if (!h.IsSuccessStatusCode)
-            {
-                Log.Error($"Job query failed with code {h.StatusCode}");
-                return null;
-            }
-
-            r = await h.Content.ReadAsStringAsync();
-
-            Job job;
-            try
-            {
-                job = JsonConvert.DeserializeObject<Job>(r);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to deserialize job response!");
-                return null;
-            }
-            return job;
         }
 
         public async Task<bool> DownloadRelease(Job job, string path)
         {
-            var h = await _client.GetAsync(job.URL + ARTIFACT_PATH);
+            var h = await _client.GetAsync(job.Url + ARTIFACT_PATH);
             if (!h.IsSuccessStatusCode)
             {
                 Log.Error($"Job download failed with code {h.StatusCode}");
                 return false;
             }
             var s = await h.Content.ReadAsStreamAsync();
-            using (var fs = new FileStream(path, FileMode.Create))
-            {
-                await s.CopyToAsync(fs);
-                await fs.FlushAsync();
-            }
+            await using var fs = new FileStream(path, FileMode.Create);
+            await s.CopyToAsync(fs);
             return true;
         }
 
     }
 
-    public class BranchResponse
-    {
-        public string Name;
-        public string URL;
-        public Build LastBuild;
-        public Build LastStableBuild;
-    }
+    public record BranchResponse(string Name, string Url, Build LastBuild, Build LastStableBuild);
 
-    public class Build
-    {
-        public int Number;
-        public string URL;
-    }
+    public record Build(int Number, string Url);
 
-    public class Job
-    {
-        public int Number;
-        public bool Building;
-        public string Description;
-        public string Result;
-        public string URL;
-        private InformationalVersion _version;
-
-        public InformationalVersion Version
-        {
-            get
-            {
-                if (_version == null)
-                    InformationalVersion.TryParse(Description, out _version);
-
-                return _version;
-            }
-        }
-    }
+    public record Job(int Number, bool Building, string Description, string Result, string Url,
+        [property: JsonConverter(typeof(SemanticVersionConverter))] Version Version);
 }

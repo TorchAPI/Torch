@@ -207,13 +207,12 @@ namespace Torch.Server
                 var config = (TorchConfig)torch.Config;
                 LogManager.Flush();
 
-                string exe = Assembly.GetExecutingAssembly().Location;
-                Debug.Assert(exe != null);
-                config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
+                string exe = Assembly.GetExecutingAssembly().Location.Replace("dll", "exe");
+                config.WaitForPID = Environment.ProcessId.ToString();
                 config.TempAutostart = true;
                 Process.Start(exe, config.ToString());
 
-                Process.GetCurrentProcess().Kill();
+                Environment.Exit(0);
             }
         }
 

@@ -63,7 +63,7 @@ namespace Torch
         public ITorchConfig Config { get; protected set; }
 
         /// <inheritdoc />
-        public InformationalVersion TorchVersion { get; }
+        public SemanticVersioning.Version TorchVersion { get; }
 
         /// <inheritdoc />
         public Version GameVersion { get; private set; }
@@ -115,16 +115,16 @@ namespace Torch
 #pragma warning restore CS0618
             Config = config;
 
-            var versionString = Assembly.GetEntryAssembly()
-                                      .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                                      .InformationalVersion;
+            var versionString = GetType().Assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!
+                .InformationalVersion;
             
-            if (!InformationalVersion.TryParse(versionString, out InformationalVersion version))
+            if (!SemanticVersioning.Version.TryParse(versionString, out var version))
                 throw new TypeLoadException("Unable to parse the Torch version from the assembly.");
 
             TorchVersion = version;
 
-            RunArgs = new string[0];
+            RunArgs = Array.Empty<string>();
 
             Managers = new DependencyManager();
 
@@ -140,7 +140,7 @@ namespace Torch
             Managers.AddManager(sessionManager);
             Managers.AddManager(new PatchManager(this));
             Managers.AddManager(new FilesystemManager(this));
-            Managers.AddManager(new UpdateManager(this));
+            // Managers.AddManager(new UpdateManager(this));
             Managers.AddManager(new EventManager(this));
 #pragma warning disable CS0618
             Managers.AddManager(Plugins);
