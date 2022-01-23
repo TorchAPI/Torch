@@ -12,9 +12,12 @@ Torch is the successor to SE Server Extender and gives server admins the tools t
 * Organized, easy to use configuration editor
 * Extensible using the Torch plugin system
 
+### Fork Difference
+* .NET 6.0 runtime
+* Additional options & features
+
 ### Installation
 
-* Get the latest Torch release here: https://torchapi.net/download
 * Unzip the Torch release into its own directory and run the executable. It will automatically download the SE DS and generate the other necessary files.
   - If you already have a DS installed you can unzip the Torch files into the folder that contains the DedicatedServer64 folder.
 
