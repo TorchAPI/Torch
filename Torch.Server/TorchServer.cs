@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Diagnostics.Runtime;
 using NLog;
 using Sandbox;
+using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Torch.API;
@@ -190,30 +191,25 @@ namespace Torch.Server
         {
             if (Config.DisconnectOnRestart)
             {
-                ModCommunication.SendMessageToClients(new JoinServerMessage("0.0.0.0:25555"));
+                foreach (var member in MyMultiplayer.Static.Members)
+                {
+                    MyMultiplayer.Static.DisconnectClient(member);
+                }
+
                 Log.Info("Ejected all players from server for restart.");
             }
 
-            if (IsRunning && save)
-                Save().ContinueWith(DoRestart, this, TaskContinuationOptions.RunContinuationsAsynchronously);
-            else
-                DoRestart(null, this);
+            Stop();
+            // TODO clone this
+            var config = (TorchConfig)Config;
+            LogManager.Flush();
 
-            void DoRestart(Task<GameSaveResult> task, object torch0)
-            {
-                var torch = (TorchServer)torch0;
-                torch.Stop();
-                // TODO clone this
-                var config = (TorchConfig)torch.Config;
-                LogManager.Flush();
+            string exe = Assembly.GetExecutingAssembly().Location.Replace("dll", "exe");
+            config.WaitForPID = Environment.ProcessId.ToString();
+            config.TempAutostart = true;
+            Process.Start(exe, config.ToString());
 
-                string exe = Assembly.GetExecutingAssembly().Location.Replace("dll", "exe");
-                config.WaitForPID = Environment.ProcessId.ToString();
-                config.TempAutostart = true;
-                Process.Start(exe, config.ToString());
-
-                Environment.Exit(0);
-            }
+            Environment.Exit(0);
         }
 
         private void OnSessionStateChanged(ITorchSession session, TorchSessionState newState)

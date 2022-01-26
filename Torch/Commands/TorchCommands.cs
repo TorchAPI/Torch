@@ -171,6 +171,10 @@ namespace Torch.Commands
             }
         
             _stopPending = true;
+            
+            if (!save)
+                Log.Warn("Stop without save is not possible. Feature is deprecated");
+            
             Task.Run(() =>
             {
                 var countdown = StopCountdown(countdownSeconds, save).GetEnumerator();
@@ -202,6 +206,9 @@ namespace Torch.Commands
             }
         
             _restartPending = true;
+            
+            if (!save)
+                Log.Warn("Restart without save is not possible. Feature is deprecated");
             
             Task.Run(() =>
             {
@@ -272,20 +279,11 @@ namespace Torch.Commands
                         Log.Info("Saving game before stop.");
                         Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
                             .SendMessageAsSelf($"Saving game before stop.");
-                        DoSave()?.ContinueWith((a, mod) =>
-                        {
-                            ITorchBase torch = (mod as CommandModule)?.Context?.Torch;
-                            Debug.Assert(torch != null);
-                            torch.Stop();
-                        }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
-                    }
-                    else
-                    {
-                        Log.Info("Stopping server.");
-                        Context.Torch.Invoke(() => Context.Torch.Stop());
-                    }
-
                         
+                    }
+                    
+                    Log.Info("Stopping server.");
+                    Context.Torch.Invoke(() => Context.Torch.Stop());
                     yield break;
                 }
             }
@@ -298,7 +296,7 @@ namespace Torch.Commands
                 if (_cancelRestart)
                 {
                     Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
-                           .SendMessageAsSelf($"Restart cancelled.");
+                        .SendMessageAsSelf($"Restart cancelled.");
 
                     _restartPending = false;
                     _cancelRestart = false;
@@ -322,9 +320,9 @@ namespace Torch.Commands
                 {
                     if (save)
                     {
-                        Log.Info("Savin game before restart.");
+                        Log.Info("Saving game before restart.");
                         Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
-                           .SendMessageAsSelf($"Saving game before restart.");
+                            .SendMessageAsSelf($"Saving game before restart.");
                     }
 
                     Log.Info("Restarting server.");
