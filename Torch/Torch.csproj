@@ -14,7 +14,6 @@
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition="$(Configuration) == 'Release'">
-    <DocumentationFile>$(SolutionDir)\bin\$(Platform)\$(Configuration)\Torch.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <Import Project="..\Torch.Mod\Torch.Mod.projitems" Label="Shared" />
@@ -144,6 +143,7 @@
       <DependentUpon>PropertyGrid.xaml</DependentUpon>
     </Compile>
     <Compile Include="..\Versioning\AssemblyVersion.cs" Link="Properties/AssemblyVersion.cs" />
+    <Compile Remove="Commands\Permissions\PermissionManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Torch.API\Torch.API.csproj" />

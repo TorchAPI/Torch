@@ -38,8 +38,10 @@ namespace Torch.API.WebAPI
 
         public async Task<PluginItem> QueryOne(string guid)
         {
-            return (PluginItem) await _client.GetFromJsonAsync(string.Format(PLUGIN_QUERY, guid), typeof(PluginItem),
-                CancellationToken.None);
+            using var res = await _client.GetAsync(string.Format(PLUGIN_QUERY, guid));
+            if (!res.IsSuccessStatusCode)
+                return null;
+            return await res.Content.ReadFromJsonAsync<PluginItem>();
         }
 
         public Task<bool> DownloadPlugin(Guid guid, string path = null)

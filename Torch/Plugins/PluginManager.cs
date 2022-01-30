@@ -129,7 +129,14 @@ namespace Torch.Managers
                 foreach (var item in GetLocalPlugins(Torch.Config.TestPlugin, true))
                 {
                     _log.Info(item.Path);
-                    LoadPlugin(item);
+                    try
+                    {
+                        LoadPlugin(item);
+                    }
+                    catch (Exception e)
+                    {
+                        _log.Error(e, $"Error while loading {item.Path}");
+                    }
                 }
 
                 foreach (var plugin in _plugins.Values)
@@ -197,7 +204,14 @@ namespace Torch.Managers
             // Actually load the plugins now.
             foreach (var item in pluginsToLoad)
             {
-                LoadPlugin(item);
+                try
+                {
+                    LoadPlugin(item);
+                }
+                catch (Exception e)
+                {
+                    _log.Error(e, $"Error while loading {item.Path}");
+                }
             } 
             
             foreach (var plugin in _plugins.Values)

@@ -13,12 +13,10 @@
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition="$(Configuration) == 'Release'">
-    <DocumentationFile>$(SolutionDir)\bin\$(Platform)\$(Configuration)\Torch.API.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
 <!--   <Import Project="$(SolutionDir)\TransformOnBuild.targets" /> -->
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="NLog" Version="4.7.13" />
     <PackageReference Include="SemanticVersioning" Version="2.0.0" />
   </ItemGroup>
