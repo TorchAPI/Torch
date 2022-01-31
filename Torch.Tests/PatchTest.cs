@@ -513,6 +513,83 @@ namespace Torch.Tests
             }
         }
 
+        [PatchTest]
+        private class StaticTryFinallyInject
+        {
+            private static bool _injectionHit;
+            private static bool _normalHit;
+            
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static void Target()
+            {
+                _normalHit = true;
+            }
+            public static void Reset()
+            {
+                _injectionHit = _normalHit = false;
+            }
+            
+            public static void InjectionTarget()
+            {
+                _injectionHit = true;
+            }
+
+            public static void AssertTranspile()
+            {
+                Assert.True(_injectionHit, "Failed to execute transpile");
+            }
+
+            public static void AssertNormal()
+            {
+                Assert.True(_normalHit, "Failed to execute normal");
+            }
+
+            public static IEnumerable<MsilInstruction> Transpile(IEnumerable<MsilInstruction> instructions, MethodBase __methodBase, Func<Type, MsilLocal> __localCreator)
+            {
+                var returnHasValue = (__methodBase as MethodInfo)?.ReturnType != typeof(void);
+                var returnLabel = new MsilLabel();
+                
+                var original = instructions.ToList();
+
+                MsilLocal returnLocal = null;
+                if (returnHasValue)
+                    returnLocal = __localCreator(((MethodInfo)__methodBase).ReturnType);
+
+                // begin try block at start of method
+                var firstInstruction = original.First();
+                firstInstruction.TryCatchOperations.Add(new(MsilTryCatchOperationType.BeginExceptionBlock));
+                yield return firstInstruction;
+                
+                // copy original except first
+                foreach (var instruction in original.Skip(1))
+                {
+                    if (instruction.OpCode == OpCodes.Ret)
+                    {
+                        if (returnHasValue)
+                            yield return instruction.CopyWith(OpCodes.Stloc).InlineValue(returnLocal);
+                        
+                        yield return new MsilInstruction(OpCodes.Leave).InlineTarget(returnLabel);
+                        continue;
+                    }
+                    yield return instruction;
+                }
+
+                var injectionCall = new MsilInstruction(OpCodes.Call).InlineValue(new Action(InjectionTarget).Method);
+                // split begin and end to separate instructions if needed. endfinally instruction will be generated automatically
+                injectionCall.TryCatchOperations.AddRange(new MsilTryCatchOperation[]
+                {
+                    new(MsilTryCatchOperationType.BeginFinallyBlock),
+                    new(MsilTryCatchOperationType.EndExceptionBlock)
+                });
+                yield return injectionCall;
+
+                if (returnHasValue)
+                    yield return new MsilInstruction(OpCodes.Ldloc).InlineValue(returnLocal);
+                
+                yield return new MsilInstruction(OpCodes.Ret).LabelWith(returnLabel);
+            }
+        }
+
         #endregion
     }
 #pragma warning restore 414
