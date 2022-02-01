@@ -25,6 +25,7 @@
     <PackageReference Include="NLog" Version="4.7.13" />
     <PackageReference Include="PropertyChanged.Fody" Version="3.4.0" PrivateAssets="all" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    <PackageReference Include="Torch.SixLabors.ImageSharp" Version="1.0.0-beta6" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="HavokWrapper, Version=1.0.6278.22649, Culture=neutral, processorArchitecture=AMD64">

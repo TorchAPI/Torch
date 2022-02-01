@@ -13,12 +13,12 @@ namespace Torch.Server.Views
 
         public static bool GetScrollContainer(this UIElement ui)
         {
-            return (bool)ui.GetValue(ScrollContainerProperty);
+            return (bool) (ui?.GetValue(ScrollContainerProperty) ?? false);
         }
 
         public static void SetScrollContainer(this UIElement ui, bool value)
         {
-            ui.SetValue(ScrollContainerProperty, value);
+            ui?.SetValue(ScrollContainerProperty, value);
         }
     }
 }
