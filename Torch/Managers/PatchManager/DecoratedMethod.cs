@@ -59,7 +59,25 @@ namespace Torch.Managers.PatchManager
                 if (_hook == null)
                     _hook = new ILHook(_method, Manipulator, new ILHookConfig {ManualApply = true});
                 IsAppliedSetter(_hook, false);
-                _hook.Apply();
+                try
+                {
+                    _hook.Apply();
+                }
+                catch (InvalidProgramException e)
+                {
+                    IsAppliedSetter(_hook, false);
+                    PrintMode = PrintModeEnum.Emitted | PrintModeEnum.Original;
+                    try
+                    {
+                        _hook.Apply();
+                    }
+                    catch
+                    {
+                        // Ignore, we are already know there is an error in IL
+                    }
+
+                    throw;
+                }
 
                 _log.Log(PrintMode != 0 ? LogLevel.Info : LogLevel.Debug,
                     $"Done patching {_method.GetID()})");
