@@ -26,7 +26,7 @@ namespace Torch.Server.ViewModels
         public ConfigDedicatedViewModel(MyConfigDedicated<MyObjectBuilder_SessionSettings> configDedicated)
         {
             _config = configDedicated;
-            //_config.IgnoreLastSession = true;
+            _config.IgnoreLastSession = true;
             SessionSettings = new SessionSettingsViewModel(_config.SessionSettings);
             Task.Run(() => UpdateAllModInfosAsync());
         }
@@ -35,7 +35,7 @@ namespace Torch.Server.ViewModels
         {
             Validate();
 
-            _config.SessionSettings = _sessionSettings;
+            _config.SessionSettings = SessionSettings;
             // Never ever
             //_config.IgnoreLastSession = true;
             _config.Save(path);
@@ -58,8 +58,7 @@ namespace Torch.Server.ViewModels
             return true;
         }
 
-        private SessionSettingsViewModel _sessionSettings;
-        public SessionSettingsViewModel SessionSettings { get => _sessionSettings; set { _sessionSettings = value; OnPropertyChanged(); } }
+        public SessionSettingsViewModel SessionSettings { get; set; }
 
         public MtObservableList<WorldViewModel> Worlds { get; } = new MtObservableList<WorldViewModel>();
         private WorldViewModel _selectedWorld;
@@ -69,6 +68,7 @@ namespace Torch.Server.ViewModels
             set
             {
                 SetValue(ref _selectedWorld, value);
+                SessionSettings = value.WorldConfiguration.Settings;
                 LoadWorld = _selectedWorld?.WorldPath;
             }
         }

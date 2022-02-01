@@ -108,7 +108,7 @@ namespace Torch.Server.Views
             if (e.AddedItems.Count > 0)
             {
                 var result = MessageBoxResult.Yes; //MessageBox.Show("Do you want to import the session settings from the selected world?", "Import Config", MessageBoxButton.YesNo);
-                var world = (WorldViewModel)e.AddedItems[0];
+                var world = (WorldViewModel)e.AddedItems[0]!;
                 _instanceManager.SelectWorld(world.WorldPath, result != MessageBoxResult.Yes);
             }
         }

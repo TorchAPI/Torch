@@ -78,7 +78,10 @@ namespace Torch.Server.Managers
                 try
                 {
                     if (!string.IsNullOrEmpty(f) && File.Exists(Path.Combine(f, "Sandbox.sbc")))
-                        DedicatedConfig.Worlds.Add(new WorldViewModel(f));
+                    {
+                        var worldViewModel = new WorldViewModel(f, DedicatedConfig.LoadWorld == f);
+                        DedicatedConfig.Worlds.Add(worldViewModel);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -96,6 +99,22 @@ namespace Torch.Server.Managers
             SelectWorld(DedicatedConfig.LoadWorld ?? DedicatedConfig.Worlds.First().WorldPath, false);
 
             InstanceLoaded?.Invoke(DedicatedConfig);
+        }
+
+        public void SelectCreatedWorld(string worldPath)
+        {
+            WorldViewModel worldViewModel;
+            try
+            {
+                worldViewModel = new(worldPath);
+                DedicatedConfig.Worlds.Add(worldViewModel);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to load world at path: " + worldPath);
+                return;
+            }
+            SelectWorld(worldViewModel, false);
         }
 
         public void SelectWorld(string worldPath, bool modsOnly = true)
@@ -266,11 +285,21 @@ namespace Torch.Server.Managers
         public long WorldSizeKB { get; }
         private string _checkpointPath;
         private string _worldConfigPath;
-        public CheckpointViewModel Checkpoint { get; private set; }
-        
+        private CheckpointViewModel _checkpoint;
+
+        public CheckpointViewModel Checkpoint
+        {
+            get
+            {
+                if (_checkpoint is null) LoadSandbox();
+                return _checkpoint;
+            }
+            private set => _checkpoint = value;
+        }
+
         public WorldConfigurationViewModel WorldConfiguration { get; private set; }
 
-        public WorldViewModel(string worldPath)
+        public WorldViewModel(string worldPath, bool loadFiles = true)
         {
             try
             {
@@ -279,7 +308,8 @@ namespace Torch.Server.Managers
                 _checkpointPath = Path.Combine(WorldPath, "Sandbox.sbc");
                 _worldConfigPath = Path.Combine(WorldPath, "Sandbox_config.sbc");
                 FolderName = Path.GetFileName(worldPath);
-                LoadSandbox();
+                if (loadFiles)
+                    LoadSandbox();
             }
             catch (ArgumentException ex)
             {
@@ -297,7 +327,7 @@ namespace Torch.Server.Managers
                 MyObjectBuilderSerializer.SerializeXML(f, WorldConfiguration);
         }
 
-        private void LoadSandbox()
+        public void LoadSandbox()
         {
             MyObjectBuilderSerializer.DeserializeXML(_checkpointPath, out MyObjectBuilder_Checkpoint checkpoint);
             Checkpoint = new CheckpointViewModel(checkpoint);

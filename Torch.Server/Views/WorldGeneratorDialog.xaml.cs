@@ -37,7 +37,7 @@ namespace Torch.Server
         private PremadeCheckpointItem _currentItem;
 
         [ReflectedStaticMethod(Type = typeof(ConfigForm), Name = "LoadLocalization")]
-        private static Action _loadLocalization;
+        private static Action _loadLocalization = null!;
 
         public WorldGeneratorDialog(InstanceManager instanceManager)
         {
@@ -81,7 +81,9 @@ namespace Torch.Server
         {
             string worldName = string.IsNullOrEmpty(WorldName.Text) ? _currentItem.Name : WorldName.Text;
             
+#pragma warning disable CS0618
             var worldPath = Path.Combine(TorchBase.Instance.Config.InstancePath, "Saves", worldName);
+#pragma warning restore CS0618
             var checkpoint = _currentItem.Checkpoint;
             if (Directory.Exists(worldPath))
             {
@@ -102,8 +104,7 @@ namespace Torch.Server
             MyLocalCache.SaveCheckpoint(checkpoint, worldPath);
 
 
-            _instanceManager.SelectWorld(worldPath, false);
-            _instanceManager.ImportSelectedWorldConfig();
+            _instanceManager.SelectCreatedWorld(worldPath);
             Close();
         }
 
