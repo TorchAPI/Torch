@@ -20,6 +20,7 @@
 <!--   <Import Project="$(SolutionDir)\TransformOnBuild.targets" /> -->
   <ItemGroup>
     <PackageReference Include="ControlzEx" Version="5.0.1" />
+    <PackageReference Include="InfoOf.Fody" Version="2.1.0" />
     <PackageReference Include="MahApps.Metro" Version="2.4.9" />
     <PackageReference Include="MonoMod.RuntimeDetour" Version="22.1.4.3" />
     <PackageReference Include="NLog" Version="4.7.13" />

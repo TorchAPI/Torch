@@ -221,6 +221,27 @@ namespace Torch.Managers.PatchManager.MSIL
         {
             return new MsilInstruction(argument.Position < 0xFF ? OpCodes.Ldarga_S : OpCodes.Ldarga).InlineValue(argument);
         }
+
+        /// <summary>
+        /// Copy Instruction with null operand and new opcode.
+        /// </summary>
+        /// <param name="instruction">Instruction to copy from.</param>
+        /// <param name="opCode">New opCode to assign.</param>
+        /// <returns>Copy of <see cref="instruction"/>.</returns>
+        public static MsilInstruction CopyWithoutOperand(this MsilInstruction instruction, OpCode opCode)
+        {
+            var copied = new MsilInstruction(opCode);
+            foreach (var label in instruction.Labels)
+            {
+                copied.Labels.Add(label);
+            }
+            foreach (var operation in instruction.TryCatchOperations)
+            {
+                copied.TryCatchOperations.Add(operation);
+            }
+
+            return copied;
+        }
         #endregion
 
         #region Constant Utils
