@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Serialization;
 using NLog;
 
@@ -18,6 +19,7 @@ namespace Torch
     /// <typeparam name="T">Data class type</typeparam>
     public sealed class Persistent<T> : IDisposable where T : new()
     {
+        private static readonly XmlSerializer Serializer = new(typeof(T));
         private static Logger _log = LogManager.GetCurrentClassLogger();
         public string Path { get; set; }
         private T _data;
@@ -36,7 +38,7 @@ namespace Torch
 
         ~Persistent()
         {
-            Dispose();
+            DisposeInternal();
         }
 
         public Persistent(string path, T data = default(T))
@@ -49,10 +51,7 @@ namespace Torch
 
         private void SaveAsync()
         {
-            if (_saveConfigTimer == null)
-            {
-                _saveConfigTimer = new Timer((x) => Save());
-            }
+            _saveConfigTimer ??= new(_ => Save());
 
             _saveConfigTimer.Change(1000, -1);
         }
@@ -67,11 +66,12 @@ namespace Torch
             if (path == null)
                 path = Path;
 
-            var ser = new XmlSerializer(typeof(T));
-            using (var f = File.CreateText(path))
+            using var f = File.Create(path);
+            using var writer = new XmlTextWriter(f, Encoding.UTF8)
             {
-                ser.Serialize(f, Data);
-            }
+                Formatting = Formatting.Indented
+            };
+            Serializer.Serialize(writer, Data);
         }
 
         public static Persistent<T> Load(string path, bool saveIfNew = true)
@@ -82,10 +82,9 @@ namespace Torch
             {
                 try
                 {
-                    var ser = new XmlSerializer(typeof(T));
                     using (var f = File.OpenText(path))
                     {
-                        config = new Persistent<T>(path, (T)ser.Deserialize(f));
+                        config = new Persistent<T>(path, (T)Serializer.Deserialize(f));
                     }
                 }
                 catch (Exception ex)
@@ -104,6 +103,12 @@ namespace Torch
 
         public void Dispose()
         {
+            DisposeInternal();
+            GC.SuppressFinalize(this);
+        }
+
+        private void DisposeInternal()
+        {
             try
             {
                 if (Data is INotifyPropertyChanged npc)
@@ -117,5 +122,4 @@ namespace Torch
             }
         }
     }
-
 }
