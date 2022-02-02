@@ -85,8 +85,9 @@ namespace Torch.Server.ViewModels
         /// via the Steam web API.
         /// </summary>
         /// <returns></returns>
-        public async Task<bool> UpdateModInfoAsync()
+        public Task<bool> UpdateModInfoAsync()
         {
+            return Task.FromResult(true);
             /*if (UgcService.ToLower() == "mod.io")
                 return true;
 
@@ -104,7 +105,6 @@ namespace Torch.Server.ViewModels
             Log.Info("Mod Info successfully retrieved!");
             FriendlyName = modInfo.Title;
             Description = modInfo.Description;*/
-            return true;
         }
 
         public override string ToString()

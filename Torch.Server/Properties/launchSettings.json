@@ -3,7 +3,7 @@
   "profiles": {
     "Torch.Server": {
       "commandName": "Project",
-      
+      "commandLineArgs": "-noupdate",
       "use64Bit": true,
       "hotReloadEnabled": false
     }

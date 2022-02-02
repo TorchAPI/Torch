@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -156,6 +157,10 @@ quit";
                 gameThread.Start();
                 
                 var ui = new TorchUI(_server);
+                
+                SynchronizationContext.SetSynchronizationContext(
+                    new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+                
                 ui.ShowDialog();
             }
         }
@@ -192,8 +197,9 @@ quit";
                 try
                 {
                     log.Info("Downloading SteamCMD.");
-                    using (var client = new WebClient())
-                        client.DownloadFile("https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip", STEAMCMD_ZIP);
+                    using (var client = new HttpClient()) 
+                    using (var file = File.Create(STEAMCMD_ZIP))
+                        client.GetStreamAsync("https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip").Result.CopyTo(file);
 
                     ZipFile.ExtractToDirectory(STEAMCMD_ZIP, STEAMCMD_DIR);
                     File.Delete(STEAMCMD_ZIP);

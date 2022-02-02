@@ -16,9 +16,6 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
-    <UserControl.DataContext>
-        <viewModels:ConfigDedicatedViewModel />
-    </UserControl.DataContext>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -58,7 +55,7 @@
                     <RowDefinition />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" x:Name="DediConfigScrollViewer">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -133,7 +130,7 @@
             </Grid>
             <TabControl Grid.Column="1" Margin="3">
                 <TabItem Header="World">
-                    <views:PropertyGrid DataContext="{Binding SessionSettings}" IgnoreDisplay ="True" />
+                    <views:PropertyGrid DataContext="{Binding SessionSettings}" />
                 </TabItem>
                 <TabItem Header="Torch">
                     <views:PropertyGrid x:Name="TorchSettings" />

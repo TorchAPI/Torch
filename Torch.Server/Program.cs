@@ -25,7 +25,7 @@ namespace Torch.Server
         [STAThread]
         public static void Main(string[] args)
         {
-            Target.Register<FlowDocumentTarget>("FlowDocument");
+            Target.Register<LogViewerTarget>(nameof(LogViewerTarget));
             //Ensures that all the files are downloaded in the Torch directory.
             var workingDir = new FileInfo(typeof(Program).Assembly.Location).Directory!.FullName;
             var binDir = Path.Combine(workingDir, "DedicatedServer64");

@@ -18,11 +18,6 @@ namespace Torch.Server.ViewModels
         private MyConfigDedicated<MyObjectBuilder_SessionSettings> _config;
         public MyConfigDedicated<MyObjectBuilder_SessionSettings> Model => _config;
 
-        public ConfigDedicatedViewModel() : this(new MyConfigDedicated<MyObjectBuilder_SessionSettings>(""))
-        {
-
-        }
-
         public ConfigDedicatedViewModel(MyConfigDedicated<MyObjectBuilder_SessionSettings> configDedicated)
         {
             _config = configDedicated;
@@ -36,8 +31,7 @@ namespace Torch.Server.ViewModels
             Validate();
 
             _config.SessionSettings = SessionSettings;
-            // Never ever
-            //_config.IgnoreLastSession = true;
+            _config.IgnoreLastSession = true;
             _config.Save(path);
         }
 
@@ -73,8 +67,9 @@ namespace Torch.Server.ViewModels
             }
         }
 
-        public async Task UpdateAllModInfosAsync()
+        public Task UpdateAllModInfosAsync()
         {
+            return Task.CompletedTask;
             /*if (!Mods.Any())
                 return;
             List<MyWorkshopItem> modInfos;

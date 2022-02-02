@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using Havok;
@@ -30,7 +31,7 @@ using VRage.Plugins;
 
 namespace Torch.Server.Managers
 {
-    public class InstanceManager : Manager
+    public class InstanceManager : Manager, IInstanceManager
     {
         private const string CONFIG_NAME = "SpaceEngineers-Dedicated.cfg";
 
@@ -44,7 +45,9 @@ namespace Torch.Server.Managers
         {
             
         }
-        
+
+        public IWorld SelectedWorld => DedicatedConfig.SelectedWorld;
+
         public void LoadInstance(string path, bool validate = true)
         {
             Log.Info($"Loading instance {path}");
@@ -221,14 +224,11 @@ namespace Torch.Server.Managers
 
         public void SaveConfig()
         {
-            if (((TorchServer)Torch).HasRun)
+            if (!((TorchServer)Torch).HasRun)
             {
-                Log.Warn("Checkpoint cache is stale, not saving dedicated config.");
-                return;
+                DedicatedConfig.Save(Path.Combine(Torch.Config.InstancePath, CONFIG_NAME));
+                Log.Info("Saved dedicated config.");
             }
-            
-            DedicatedConfig.Save(Path.Combine(Torch.Config.InstancePath, CONFIG_NAME));
-            Log.Info("Saved dedicated config.");
 
             try
             {
@@ -255,7 +255,7 @@ namespace Torch.Server.Managers
             }
             catch (Exception e)
             {
-                Log.Error("Failed to write sandbox config, changes will not appear on server");
+                Log.Error("Failed to write sandbox config");
                 Log.Error(e);
             }
         }
@@ -276,12 +276,14 @@ namespace Torch.Server.Managers
         }
     }
 
-    public class WorldViewModel : ViewModel
+    public class WorldViewModel : ViewModel, IWorld
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         public string FolderName { get; set; }
         public string WorldPath { get; }
+        public MyObjectBuilder_SessionSettings KeenSessionSettings => WorldConfiguration.Settings;
+        public MyObjectBuilder_Checkpoint KeenCheckpoint => Checkpoint;
         public long WorldSizeKB { get; }
         private string _checkpointPath;
         private string _worldConfigPath;
@@ -329,13 +331,15 @@ namespace Torch.Server.Managers
 
         public void LoadSandbox()
         {
-            MyObjectBuilderSerializer.DeserializeXML(_checkpointPath, out MyObjectBuilder_Checkpoint checkpoint);
+            if (!MyObjectBuilderSerializer.DeserializeXML(_checkpointPath, out MyObjectBuilder_Checkpoint checkpoint))
+                throw new SerializationException("Error reading checkpoint, see keen log for details");
             Checkpoint = new CheckpointViewModel(checkpoint);
             
             // migrate old saves
             if (File.Exists(_worldConfigPath))
             {
-                MyObjectBuilderSerializer.DeserializeXML(_worldConfigPath, out MyObjectBuilder_WorldConfiguration worldConfig);
+                if (!MyObjectBuilderSerializer.DeserializeXML(_worldConfigPath, out MyObjectBuilder_WorldConfiguration worldConfig))
+                    throw new SerializationException("Error reading settings, see keen log for details");
                 WorldConfiguration = new WorldConfigurationViewModel(worldConfig);
             }
             else

@@ -28,6 +28,9 @@ namespace Torch.Session
 
         private readonly Dictionary<ulong, MyObjectBuilder_Checkpoint.ModItem> _overrideMods;
 
+        [Dependency]
+        private IInstanceManager _instanceManager = null!;
+
         public event Action<CollectionChangeEventArgs> OverrideModsChanged;
 
         /// <summary>
@@ -101,15 +104,18 @@ namespace Torch.Session
         {
             try
             {
+                if (_instanceManager.SelectedWorld is null)
+                    throw new InvalidOperationException("No valid worlds selected! Please select world first.");
+                
                 if (_currentSession != null)
                 {
                     _log.Warn($"Override old torch session {_currentSession.KeenSession.Name}");
                     _currentSession.Detach();
                 }
 
-                _log.Info($"Starting new torch session for {MySession.Static.Name}");
+                _log.Info($"Starting new torch session for {_instanceManager.SelectedWorld.FolderName}");
 
-                _currentSession = new TorchSession(Torch, MySession.Static);
+                _currentSession = new TorchSession(Torch, MySession.Static, _instanceManager.SelectedWorld);
                 SetState(TorchSessionState.Loading);
             }
             catch (Exception e)
@@ -123,11 +129,9 @@ namespace Torch.Session
         {
             try
             {
-                if (_currentSession == null)
-                {
-                    _log.Warn("Session loaded event occurred when we don't have a session.");
-                    return;
-                }
+                if (_currentSession is null)
+                    throw new InvalidOperationException("Session loaded event occurred when we don't have a session.");
+                
                 foreach (SessionManagerFactoryDel factory in _factories)
                 {
                     IManager manager = factory(CurrentSession);
@@ -135,7 +139,7 @@ namespace Torch.Session
                         CurrentSession.Managers.AddManager(manager);
                 }
                 (CurrentSession as TorchSession)?.Attach();
-                _log.Info($"Loaded torch session for {MySession.Static.Name}");
+                _log.Info($"Loaded torch session for {CurrentSession.World.FolderName}");
                 SetState(TorchSessionState.Loaded);
             }
             catch (Exception e)
@@ -149,12 +153,10 @@ namespace Torch.Session
         {
             try
             {
-                if (_currentSession == null)
-                {
-                    _log.Warn("Session unloading event occurred when we don't have a session.");
-                    return;
-                }
-                _log.Info($"Unloading torch session for {_currentSession.KeenSession.Name}");
+                if (_currentSession is null)
+                    throw new InvalidOperationException("Session loaded event occurred when we don't have a session.");
+                
+                _log.Info($"Unloading torch session for {_currentSession.World.FolderName}");
                 SetState(TorchSessionState.Unloading);
                 _currentSession.Detach();
             }
@@ -169,12 +171,10 @@ namespace Torch.Session
         {
             try
             {
-                if (_currentSession == null)
-                {
-                    _log.Warn("Session unloading event occurred when we don't have a session.");
-                    return;
-                }
-                _log.Info($"Unloaded torch session for {_currentSession.KeenSession.Name}");
+                if (_currentSession is null)
+                    throw new InvalidOperationException("Session loaded event occurred when we don't have a session.");
+                
+                _log.Info($"Unloaded torch session for {_currentSession.World.FolderName}");
                 SetState(TorchSessionState.Unloaded);
                 _currentSession = null;
             }

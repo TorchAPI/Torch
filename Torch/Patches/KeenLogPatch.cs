@@ -9,6 +9,7 @@ using NLog;
 using Torch.API;
 using Torch.Managers.PatchManager;
 using Torch.Utils;
+using VRage;
 using VRage.Utils;
 
 namespace Torch.Patches
@@ -42,71 +43,81 @@ namespace Torch.Patches
 
         [ReflectedMethodInfo(typeof(MyLog), nameof(MyLog.WriteLineAndConsole), Parameters = new[] { typeof(string) })]
         private static MethodInfo _logWriteLineAndConsole;
+
+        [ReflectedMethodInfo(typeof(MyLog), nameof(MyLog.Init))]
+        private static MethodInfo _logInit;
 #pragma warning restore 649
         
 
         public static void Patch(PatchContext context)
         {
-            context.GetPattern(_logStringBuilder).Prefixes.Add(Method(nameof(PrefixLogStringBuilder)));
-            context.GetPattern(_logFormatted).Prefixes.Add(Method(nameof(PrefixLogFormatted)));
+            context.GetPattern(_logStringBuilder).AddPrefix(nameof(PrefixLogStringBuilder));
+            context.GetPattern(_logFormatted).AddPrefix(nameof(PrefixLogFormatted));
 
-            context.GetPattern(_logWriteLine).Prefixes.Add(Method(nameof(PrefixWriteLine)));
-            context.GetPattern(_logAppendToClosedLog).Prefixes.Add(Method(nameof(PrefixAppendToClosedLog)));
-            context.GetPattern(_logWriteLineAndConsole).Prefixes.Add(Method(nameof(PrefixWriteLineConsole)));
+            context.GetPattern(_logWriteLine).AddPrefix(nameof(PrefixWriteLine));
+            context.GetPattern(_logAppendToClosedLog).AddPrefix(nameof(PrefixAppendToClosedLog));
+            context.GetPattern(_logWriteLineAndConsole).AddPrefix(nameof(PrefixWriteLineConsole));
 
-            context.GetPattern(_logWriteLineException).Prefixes.Add(Method(nameof(PrefixWriteLineException)));
-            context.GetPattern(_logAppendToClosedLogException).Prefixes.Add(Method(nameof(PrefixAppendToClosedLogException)));
+            context.GetPattern(_logWriteLineException).AddPrefix(nameof(PrefixWriteLineException));
+            context.GetPattern(_logAppendToClosedLogException).AddPrefix(nameof(PrefixAppendToClosedLogException));
 
-            context.GetPattern(_logWriteLineOptions).Prefixes.Add(Method(nameof(PrefixWriteLineOptions)));
+            context.GetPattern(_logWriteLineOptions).AddPrefix(nameof(PrefixWriteLineOptions));
             
-        }
-
-        private static MethodInfo Method(string name)
-        {
-            return typeof(KeenLogPatch).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            context.GetPattern(_logInit).AddPrefix(nameof(PrefixInit));
         }
 
         [ReflectedMethod(Name = "GetIdentByThread")]
-        private static Func<MyLog, int, int> GetIndentByThread = null!;
+        private static Func<MyLog, int, int> _getIndentByThread = null!;
 
-        [ThreadStatic]
-        private static StringBuilder _tmpStringBuilder;
-        
-        private static StringBuilder PrepareLog(MyLog log)
+        [ReflectedGetter(Name = "m_lock")]
+        private static Func<MyLog, FastResourceLock> _lockGetter = null!;
+
+        [ReflectedSetter(Name = "m_enabled")]
+        private static Action<MyLog, bool> _enabledSetter = null!;
+
+        private static int GetIndentByCurrentThread()
         {
-            _tmpStringBuilder ??= new();
+            using var l = _lockGetter(MyLog.Default).AcquireExclusiveUsing();
+            return _getIndentByThread(MyLog.Default, Environment.CurrentManagedThreadId);
+        }
+
+        private static bool PrefixInit(MyLog __instance, StringBuilder appVersionString)
+        {
+            __instance.WriteLine("Log Started");
+            var byThreadField =
+                typeof(MyLog).GetField("m_indentsByThread", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            var indentsField = typeof(MyLog).GetField("m_indents", BindingFlags.Instance | BindingFlags.NonPublic)!;
             
-            _tmpStringBuilder.Clear();
-            var t = GetIndentByThread(log, Environment.CurrentManagedThreadId);
-            
-            _tmpStringBuilder.Append(' ', t * 3);
-            return _tmpStringBuilder;
+            byThreadField.SetValue(__instance, Activator.CreateInstance(byThreadField.FieldType));
+            indentsField.SetValue(__instance, Activator.CreateInstance(indentsField.FieldType));
+            _enabledSetter(__instance, true);
+            return false;
         }
 
         private static bool PrefixWriteLine(MyLog __instance, string msg)
         {
-            if (__instance.LogEnabled)
-                _log.Debug(PrepareLog(__instance).Append(msg));
+            if (__instance.LogEnabled && _log.IsDebugEnabled)
+                _log.Debug($"{" ".PadRight(3 * GetIndentByCurrentThread())}{msg}");
             return false;
         }
 
         private static bool PrefixWriteLineConsole(MyLog __instance, string msg)
         {
-            if (__instance.LogEnabled)
-                _log.Info(PrepareLog(__instance).Append(msg));
+            if (__instance.LogEnabled && _log.IsInfoEnabled)
+                _log.Info($"{" ".PadRight(3 * GetIndentByCurrentThread())}{msg}");
             return false;
         }
 
         private static bool PrefixAppendToClosedLog(MyLog __instance, string text)
         {
-            if (__instance.LogEnabled)
-                _log.Info(PrepareLog(__instance).Append(text));
+            if (__instance.LogEnabled && _log.IsDebugEnabled)
+                _log.Debug($"{" ".PadRight(3 * GetIndentByCurrentThread())}{text}");
             return false;
         }
         private static bool PrefixWriteLineOptions(MyLog __instance, string message, LoggingOptions option)
         {
-            if (__instance.LogEnabled && __instance.LogFlag(option))
-                _log.Info(PrepareLog(__instance).Append(message));
+            if (__instance.LogEnabled && __instance.LogFlag(option) && _log.IsDebugEnabled)
+                _log.Info($"{" ".PadRight(3 * GetIndentByCurrentThread())}{message}");
             return false;
         }
 
@@ -126,22 +137,22 @@ namespace Torch.Patches
         {
             if (__instance.LogEnabled)
                 return false;
-            // Sometimes this is called with a pre-formatted string and no args
-            // and causes a crash when the format string contains braces
-            var sb = PrepareLog(__instance);
-            if (args is {Length: > 0})
-                sb.AppendFormat(format, args);
-            else
-                sb.Append(format);
 
-            _log.Log(LogLevelFor(severity), sb);
+            // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
+            _log.Log(new(LogLevelFor(severity), _log.Name, $"{" ".PadRight(3 * GetIndentByCurrentThread())}{string.Format(format, args)}"));
             return false;
         }
 
         private static bool PrefixLogStringBuilder(MyLog __instance, MyLogSeverity severity, StringBuilder builder)
         {
-            if (__instance.LogEnabled)
-                _log.Log(LogLevelFor(severity), PrepareLog(__instance).Append(builder));
+            if (!__instance.LogEnabled) return false;
+            var indent = GetIndentByCurrentThread() * 3;
+                
+            // because append resizes every char
+            builder.EnsureCapacity(indent);
+            builder.Append(' ', indent);
+                
+            _log.Log(LogLevelFor(severity), builder);
             return false;
         }
 
