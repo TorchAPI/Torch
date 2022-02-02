@@ -14,12 +14,14 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using NLog;
 using NLog.Targets.Wrappers;
 using Sandbox;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Server.Managers;
+using Torch.Server.ViewModels;
 using Torch.Server.Views;
 using MessageBoxResult = System.Windows.MessageBoxResult;
 
@@ -30,23 +32,22 @@ namespace Torch.Server
     /// </summary>
     public partial class TorchUI : Window
     {
-        private TorchServer _server;
-        private TorchConfig _config;
-
-        private bool _autoscrollLog = true;
+        private readonly TorchServer _server;
+        private ITorchConfig Config => _server.Config;
 
         public TorchUI(TorchServer server)
         {
-            WindowStartupLocation = WindowStartupLocation.Manual;
-            _config = (TorchConfig)server.Config;
-            Width = _config.WindowWidth;
-            Height = _config.WindowHeight;
             _server = server;
             //TODO: data binding for whole server
             DataContext = server;
+            
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            Width = Config.WindowWidth;
+            Height = Config.WindowHeight;
             InitializeComponent();
+            ConsoleText.FontSize = Config.FontSize;
 
-            AttachConsole();
+            Loaded += OnLoaded;
 
             //Left = _config.WindowPosition.X;
             //Top = _config.WindowPosition.Y;
@@ -56,94 +57,35 @@ namespace Torch.Server
             Chat.BindServer(server);
             PlayerList.BindServer(server);
             Plugins.BindServer(server);
-            LoadConfig((TorchConfig)server.Config);
+            
+            if (Config.EntityManagerEnabled)
+            {
+                EntityManagerTab.Content = new EntitiesControl();
+            }
 
             Themes.uiSource = this;
-            Themes.SetConfig(_config);
-            Title = $"{_config.InstanceName} - Torch {server.TorchVersion}, SE {server.GameVersion}";
-            
-            Loaded += TorchUI_Loaded;
+            Themes.SetConfig((TorchConfig) Config);
+            Title = $"{Config.InstanceName} - Torch {server.TorchVersion}, SE {server.GameVersion}";
         }
 
-        private void TorchUI_Loaded(object sender, RoutedEventArgs e)
+        private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            var scrollViewer = FindDescendant<ScrollViewer>(ConsoleText);
-            scrollViewer.ScrollChanged += ConsoleText_OnScrollChanged;
+            AttachConsole();
         }
 
         private void AttachConsole()
         {
-            const string target = "wpf";
-            var doc = LogManager.Configuration.FindTargetByName<FlowDocumentTarget>(target)?.Document;
-            if (doc == null)
+            const string targetName = "wpf";
+            var target = LogManager.Configuration.FindTargetByName<LogViewerTarget>(targetName);
+            if (target == null)
             {
-                var wrapped = LogManager.Configuration.FindTargetByName<WrapperTargetBase>(target);
-                doc = (wrapped?.WrappedTarget as FlowDocumentTarget)?.Document;
+                var wrapped = LogManager.Configuration.FindTargetByName<WrapperTargetBase>(targetName);
+                target = wrapped?.WrappedTarget as LogViewerTarget;
             }
-            ConsoleText.FontSize = _config.FontSize;
-            ConsoleText.Document = doc ?? new FlowDocument(new Paragraph(new Run("No target!")));
-            ConsoleText.TextChanged += ConsoleText_OnTextChanged;
-        }
-
-        public static T FindDescendant<T>(DependencyObject obj) where T : DependencyObject
-        {
-            if (obj == null) return default(T);
-            int numberChildren = VisualTreeHelper.GetChildrenCount(obj);
-            if (numberChildren == 0) return default(T);
-
-            for (int i = 0; i < numberChildren; i++)
-            {
-                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
-                if (child is T)
-                {
-                    return (T)child;
-                }
-            }
-
-            for (int i = 0; i < numberChildren; i++)
-            {
-                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
-                var potentialMatch = FindDescendant<T>(child);
-                if (potentialMatch != default(T))
-                {
-                    return potentialMatch;
-                }
-            }
-
-            return default(T);
-        }
-
-        private void ConsoleText_OnTextChanged(object sender, TextChangedEventArgs args)
-        {
-            var textBox = (RichTextBox) sender;
-            if (_autoscrollLog)
-                ConsoleText.ScrollToEnd();
-        }
-        
-        private void ConsoleText_OnScrollChanged(object sender, ScrollChangedEventArgs e)
-        {
-            var scrollViewer = (ScrollViewer) sender;
-            if (e.ExtentHeightChange == 0)
-            {
-                // User change.
-                _autoscrollLog = scrollViewer.VerticalOffset == scrollViewer.ScrollableHeight;
-            }
-        }
-
-        public void LoadConfig(TorchConfig config)
-        {
-            if (!Directory.Exists(config.InstancePath))
-                return;
-
-            _config = config;
-            Dispatcher.Invoke(() =>
-            {
-                EntityManagerTab.IsEnabled = _config.EntityManagerEnabled;
-                if (_config.EntityManagerEnabled)
-                {
-                    EntityManagerTab.Content = new EntitiesControl();
-                }
-            });
+            if (target is null) return;
+            var viewModel = (LogViewerViewModel)ConsoleText.DataContext;
+            target.LogEntries = viewModel.LogEntries;
+            target.TargetContext = SynchronizationContext.Current;
         }
 
         private void BtnStart_Click(object sender, RoutedEventArgs e)
@@ -175,22 +117,6 @@ namespace Torch.Server
                 _server.Stop();
 
             Process.GetCurrentProcess().Kill();
-        }
-
-        private void BtnRestart_Click(object sender, RoutedEventArgs e)
-        {
-            //MySandboxGame.Static.Invoke(MySandboxGame.ReloadDedicatedServerSession); use i
-        }
-
-        private void InstancePathBox_OnLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
-        {
-            var name = ((TextBox)sender).Text;
-
-            if (!Directory.Exists(name))
-                return;
-
-            _config.InstancePath = name;
-            _server.Managers.GetManager<InstanceManager>().LoadInstance(_config.InstancePath);
         }
     }
 }

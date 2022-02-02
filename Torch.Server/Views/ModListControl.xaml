@@ -25,9 +25,6 @@
             </Style>
         </ResourceDictionary>
     </UserControl.Resources>
-    <UserControl.DataContext>
-        <viewModels:ConfigDedicatedViewModel />
-    </UserControl.DataContext>
         <Grid Style="{StaticResource RootGridStyle}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="500px"/>

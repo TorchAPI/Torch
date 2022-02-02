@@ -29,7 +29,7 @@ namespace Torch
         int WindowHeight { get; set; }
         int FontSize { get; set; }
         UGCServiceType UgcServiceType { get; set; }
-
+        bool EntityManagerEnabled { get; set; }
         void Save(string path = null);
     }
 }

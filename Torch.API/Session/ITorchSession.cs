@@ -22,6 +22,11 @@ namespace Torch.API.Session
         /// The Space Engineers game session this session is bound to.
         /// </summary>
         MySession KeenSession { get; }
+        
+        /// <summary>
+        /// Currently running world
+        /// </summary>
+        IWorld World { get; }
 
         /// <inheritdoc cref="IDependencyManager"/>
         IDependencyManager Managers { get; }

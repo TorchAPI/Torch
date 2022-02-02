@@ -28,7 +28,9 @@ using Torch.API.Managers;
 using Torch.API.Session;
 using Torch.Managers;
 using Torch.Server.Managers;
+using Torch.Server.Views;
 using VRage.Game;
+using Color = VRageMath.Color;
 
 namespace Torch.Server
 {
@@ -38,12 +40,17 @@ namespace Torch.Server
     public partial class ChatControl : UserControl
     {
         private static Logger _log = LogManager.GetCurrentClassLogger();
-        private ITorchServer _server;
+#pragma warning disable CS0618
+        private ITorchServer _server = (ITorchServer) TorchBase.Instance;
+#pragma warning restore CS0618
+        private readonly LinkedList<string> _lastMessages = new();
+        private LinkedListNode<string> _currentLastMessageNode;
 
         public ChatControl()
         {
             InitializeComponent();
             this.IsVisibleChanged += OnIsVisibleChanged;
+            MessageBox.Provider = new CommandSuggestionsProvider(_server);
         }
 
         private void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -57,8 +64,8 @@ namespace Torch.Server
 
                     Dispatcher.Invoke(() =>
                     {
-                        Message.Focus();
-                        Keyboard.Focus(Message);
+                        MessageBox.Focus();
+                        Keyboard.Focus(MessageBox);
                     });
                 });
             }
@@ -160,35 +167,50 @@ namespace Torch.Server
 
         private void Message_OnKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter)
-                OnMessageEntered();
+            switch (e.Key)
+            {
+                case Key.Enter:
+                    OnMessageEntered();
+                    break;
+                case Key.Up:
+                    _currentLastMessageNode = _currentLastMessageNode?.Previous ?? _lastMessages.Last;
+                    MessageBox.Text = _currentLastMessageNode?.Value ?? string.Empty;
+                    break;
+                case Key.Down:
+                    _currentLastMessageNode = _currentLastMessageNode?.Next ?? _lastMessages.First;
+                    MessageBox.Text = _currentLastMessageNode?.Value ?? string.Empty;
+                    break;
+            }
         }
 
         private void OnMessageEntered()
         {
             //Can't use Message.Text directly because of object ownership in WPF.
-            var text = Message.Text;
+            var text = MessageBox.Text;
             if (string.IsNullOrEmpty(text))
                 return;
 
             var commands = _server.CurrentSession?.Managers.GetManager<Torch.Commands.CommandManager>();
             if (commands != null && commands.IsCommand(text))
             {
-                InsertMessage(new TorchChatMessage(TorchBase.Instance.Config.ChatName, text, TorchBase.Instance.Config.ChatColor));
+                InsertMessage(new(_server.Config.ChatName, text, Color.Red, _server.Config.ChatColor));
                 _server.Invoke(() =>
                 {
-                    if (!commands.HandleCommandFromServer(text, InsertMessage))
-                    {
-                        InsertMessage(new TorchChatMessage(TorchBase.Instance.Config.ChatName, "Invalid command.", TorchBase.Instance.Config.ChatColor));
-                        return;
-                    }
+                    if (commands.HandleCommandFromServer(text, InsertMessage)) return;
+                    InsertMessage(new(_server.Config.ChatName, "Invalid command.", Color.Red, _server.Config.ChatColor));
                 });
             }
             else
             {
                 _server.CurrentSession?.Managers.GetManager<IChatManagerClient>().SendMessageAsSelf(text);
             }
-            Message.Text = "";
+            if (_currentLastMessageNode is { } && _currentLastMessageNode.Value == text)
+            {
+                _lastMessages.Remove(_currentLastMessageNode);
+            }
+            _lastMessages.AddLast(text);
+            _currentLastMessageNode = null;
+            MessageBox.Text = "";
         }
     }
 }

@@ -17,11 +17,6 @@
             <converters:InverseBooleanConverter x:Key="InverseBool"/>
         </ResourceDictionary>
     </Window.Resources>
-    <!--
-    <Window.DataContext>
-        <local:TorchServer/>
-    </Window.DataContext>
-    -->
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
@@ -63,10 +58,10 @@
         </StackPanel>
         <TabControl Grid.Row="2" Height="Auto" x:Name="TabControl" Margin="5,10,5,5">
             <TabItem Header="Log">
-                <RichTextBox x:Name="ConsoleText" VerticalScrollBarVisibility="Visible" FontFamily="Consolas" IsReadOnly="True" Background="#0c0c0c"/>
+                <views:LogViewerControl x:Name="ConsoleText" Margin="3" />
             </TabItem>
             <TabItem Header="Configuration">
-                <Grid IsEnabled="{Binding Path=HasRun, Converter={StaticResource InverseBool}}">
+                <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition/>
@@ -93,7 +88,7 @@
                     <local:PlayerListControl Grid.Column="1" x:Name="PlayerList" DockPanel.Dock="Right"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Entity Manager" x:Name="EntityManagerTab">
+            <TabItem Header="Entity Manager" x:Name="EntityManagerTab" IsEnabled="{Binding Config.EntityManagerEnabled}">
             </TabItem>
             <TabItem Header="Plugins">
                 <views:PluginsControl x:Name="Plugins" />

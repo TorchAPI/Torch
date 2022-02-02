@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Diagnostics.Runtime;
 using NLog;
+using PropertyChanged;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
@@ -212,6 +213,7 @@ namespace Torch.Server
             Environment.Exit(0);
         }
 
+        [SuppressPropertyChangedWarnings]
         private void OnSessionStateChanged(ITorchSession session, TorchSessionState newState)
         {
             if (newState == TorchSessionState.Unloading || newState == TorchSessionState.Unloaded)

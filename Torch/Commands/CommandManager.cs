@@ -49,12 +49,13 @@ namespace Torch.Commands
         {
             return !string.IsNullOrEmpty(command) && command[0] == Prefix;
         }
-
-        public void RegisterCommandModule(Type moduleType, ITorchPlugin plugin = null)
+        
+        public int RegisterCommandModule(Type moduleType, ITorchPlugin plugin = null)
         {
             if (!moduleType.IsSubclassOf(typeof(CommandModule)))
-                return;
+                return 0;
 
+            var i = 0;
             foreach (var method in moduleType.GetMethods())
             {
                 var commandAttrib = method.GetCustomAttribute<CommandAttribute>();
@@ -63,11 +64,14 @@ namespace Torch.Commands
 
                 var command = new Command(plugin, method);
                 var cmdPath = string.Join(".", command.Path);
-                _log.Info($"Registering command '{cmdPath}'");
+                _log.Debug($"Registering command '{cmdPath}'");
+                i++;
 
                 if (!Commands.AddCommand(command))
                     _log.Error($"Command path {cmdPath} is already registered.");
             }
+
+            return i;
         }
 
         public void UnregisterPluginCommands(ITorchPlugin plugin)
@@ -78,10 +82,9 @@ namespace Torch.Commands
         public void RegisterPluginCommands(ITorchPlugin plugin)
         {
             var assembly = plugin.GetType().Assembly;
-            foreach (var type in assembly.ExportedTypes)
-            {
-                RegisterCommandModule(type, plugin);
-            }
+            var count = assembly.ExportedTypes.Sum(type => RegisterCommandModule(type, plugin));
+            if (count > 0)
+                _log.Info($"Registered {count} commands from {plugin.Name}");
         }
 
         private List<TorchChatMessage> HandleCommandFromServerInternal(string message, Action<TorchChatMessage> subscriber = null)

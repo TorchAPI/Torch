@@ -8,6 +8,8 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Sandbox;
+using Torch.API;
 using Torch.API.Managers;
 using Torch.Server.Annotations;
 using Torch.Server.Managers;
@@ -32,13 +34,24 @@ namespace Torch.Server.Views
 
         public ConfigControl()
         {
-            InitializeComponent();
-            _instanceManager = TorchBase.Instance.Managers.GetManager<InstanceManager>();
+#pragma warning disable CS0618
+            var instance = TorchBase.Instance;
+#pragma warning restore CS0618
+            instance.GameStateChanged += InstanceOnGameStateChanged;
+            
+            _instanceManager = instance.Managers.GetManager<InstanceManager>();
             _instanceManager.InstanceLoaded += _instanceManager_InstanceLoaded;
             DataContext = _instanceManager.DedicatedConfig;
-            TorchSettings.DataContext = (TorchConfig)TorchBase.Instance.Config;
+            InitializeComponent();
+            TorchSettings.DataContext = (TorchConfig)instance.Config;
             // Gets called once all children are loaded
             Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(ApplyStyles));
+        }
+
+        private void InstanceOnGameStateChanged(MySandboxGame game, TorchGameState newState)
+        {
+            if (newState > TorchGameState.Creating)
+                Dispatcher.InvokeAsync(() => DediConfigScrollViewer.IsEnabled = false);
         }
 
         private void CheckValid()

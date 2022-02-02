@@ -26,13 +26,16 @@ namespace Torch.Session
         /// </summary>
         public MySession KeenSession { get; }
 
+        public IWorld World { get; }
+
         /// <inheritdoc cref="IDependencyManager"/>
         public IDependencyManager Managers { get; }
 
-        public TorchSession(ITorchBase torch, MySession keenSession)
+        public TorchSession(ITorchBase torch, MySession keenSession, IWorld world)
         {
             Torch = torch;
             KeenSession = keenSession;
+            World = world;
             Managers = new DependencyManager(torch.Managers);
         }
 
