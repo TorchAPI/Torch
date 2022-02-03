@@ -50,9 +50,8 @@ cache:
 build_script:
 - pwsh: >-
     dotnet publish .\Torch.Server\Torch.Server.csproj --self-contained -f net6-windows -r win-x64 -c Release -o .\publish\
-
-    cmd /c "rmdir GameBinaries"
-    Compress-Archive -Path .\publish\* -DestinationPath torch-server.zip
+    
+    Compress-Archive -Path .\publish\* -DestinationPath .\torch-server.zip
 artifacts:
 - path: torch-server.zip
 deploy:
