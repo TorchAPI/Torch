@@ -50,7 +50,7 @@ build:
   verbosity: minimal
 after_build:
 - pwsh: >-
-    dotnet publish .\Torch.Server\Torch.Server.csproj --self-contained -r win-x64 -c Release -o .\publish\ --no-build
+    dotnet publish .\Torch.Server\Torch.Server.csproj --self-contained -c Release -o .\publish\ --no-build
 
     Compress-Archive -Path .\publish\ -DestinationPath torch-server.zip
 artifacts:
