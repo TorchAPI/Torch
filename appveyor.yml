@@ -39,8 +39,9 @@ install:
 
     $dataPath = $steamData.Replace("/", "\");
     $contentPath = "$dataPath\Content";
-    if (Test-Path $contentPath)
+    if (Test-Path $contentPath) {
       Remove-Item -LiteralPath $contentPath -Force -Recurse
+    }
 
     cmd /S /C mklink /J .\GameBinaries $dataPath\DedicatedServer64
 cache:
