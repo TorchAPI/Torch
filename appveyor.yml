@@ -38,8 +38,9 @@ install:
     & "$steamCMDPath/steamcmd.exe" "+login anonymous" "+force_install_dir $steamData" "+app_update 298740" "+quit"
 
     $dataPath = $steamData.Replace("/", "\")
-    
-    Remove-Item -LiteralPath $dataPath\Content -Force -Recurse
+    $contentPath = $dataPath\Content
+    if (Test-Path $contentPath)
+      Remove-Item -LiteralPath $contentPath -Force -Recurse
 
     cmd /S /C mklink /J .\GameBinaries $dataPath\DedicatedServer64
 cache:
