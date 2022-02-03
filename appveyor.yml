@@ -1,0 +1,66 @@
+version: 1.0.{build}-{branch}
+pull_requests:
+  do_not_increment_build_number: true
+branches:
+  only:
+  - master
+skip_tags: true
+image: Visual Studio 2022
+configuration: Release
+platform: x64
+shallow_clone: true
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: v{version}
+install:
+- pwsh: >-
+    $steamData = "c:/steam/dedi/"
+
+    $steamCMDPath = "c:/steam/cmd/"
+
+    $steamCMDZip = "steamcmd.zip"
+
+    if (!(Test-Path $steamData)) {
+    	mkdir "$steamData"
+    }
+
+    if (!(Test-Path $steamCMDPath)) {
+    	if (!(Test-Path $steamCMDZip)) {
+    		Invoke-WebRequest -OutFile $steamCMDZip https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip
+    	}
+            Expand-Archive $steamCMDZip -DestinationPath $steamCMDPath
+    }
+
+
+    & "$steamCMDPath/steamcmd.exe" "+login anonymous" "+force_install_dir $steamData" "+app_update 298740" "+quit"
+
+    $dataPath = $steamData.Replace("/", "\")
+
+    cmd /S /C mklink /J .\GameBinaries $dataPath\DedicatedServer64
+cache:
+- c:\steam\dedi\
+- c:\steam\cmd\
+before_build:
+- pwsh: dotnet restore .\Torch.Server\Torch.Server.csproj
+build:
+  project: Torch.Server/Torch.Server.csproj
+  verbosity: minimal
+after_build:
+- pwsh: >-
+    dotnet publish .\Torch.Server\Torch.Server.csproj --self-contained -r win-x64 -c Release -o .\publish\ --no-build
+
+    Compress-Archive -Path .\publish\ -DestinationPath torch-server.zip
+artifacts:
+- path: torch-server.zip
+deploy:
+- provider: GitHub
+  tag: v$(appveyor_build_version)
+  release: Torch - v$(appveyor_build_version)
+  auth_token:
+    secure: IOhwzgIpj85iHitQBiH4chKPL9fXAinEnqUcbZk0ANhfTmdUFh74ko7Bt7LoSJFy
+  artifact: torch-server.zip
+  on:
+    branch: master
