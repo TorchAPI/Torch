@@ -11,7 +11,7 @@ platform: x64
 shallow_clone: true
 assembly_info:
   patch: true
-  file: '**\AssemblyInfo.*'
+  file: '**\AssemblyVersion.*'
   assembly_version: '{version}'
   assembly_file_version: '{version}'
   assembly_informational_version: v{version}
