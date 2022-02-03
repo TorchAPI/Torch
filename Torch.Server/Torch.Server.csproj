@@ -161,6 +161,5 @@
   <ItemGroup>
     <Page Remove="Views\WorldSelectControl.xaml" />
     <None Include="..\NLog.config" Visible="false" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" />
-    <None Include="..\Dockerfile" Visible="false" CopyToPublishDirectory="Always" />
   </ItemGroup>
 </Project>

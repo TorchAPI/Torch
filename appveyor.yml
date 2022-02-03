@@ -47,8 +47,6 @@ install:
 cache:
 - c:\steam\dedi\
 - c:\steam\cmd\
-before_build:
-- pwsh: dotnet restore .\Torch.Server\Torch.Server.csproj
 build_script:
 - pwsh: >-
     dotnet publish .\Torch.Server\Torch.Server.csproj --self-contained -f net6-windows -r win-x64 -c Release -o .\publish\
