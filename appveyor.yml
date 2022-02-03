@@ -49,14 +49,12 @@ cache:
 - c:\steam\cmd\
 before_build:
 - pwsh: dotnet restore .\Torch.Server\Torch.Server.csproj
-build:
-  project: Torch.Server/Torch.Server.csproj
-  verbosity: minimal
-after_build:
+build_script::
 - pwsh: >-
-    dotnet publish .\Torch.Server\Torch.Server.csproj --self-contained -c Release -o .\publish\ --no-build
+    dotnet publish .\Torch.Server\Torch.Server.csproj --self-contained -c Release -o .\publish\
 
-    Compress-Archive -Path .\publish\ -DestinationPath torch-server.zip
+    cmd /c "rmdir GameBinaries"
+    Compress-Archive -Path .\publish\* -DestinationPath torch-server.zip
 artifacts:
 - path: torch-server.zip
 deploy:
