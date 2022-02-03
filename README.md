@@ -1,4 +1,4 @@
-[![Discord](https://discordapp.com/api/guilds/230191591640268800/widget.png)](https://discord.gg/8uHZykr)
+[![Discord](https://discordapp.com/api/guilds/929141809769226271/widget.png)](https://discord.gg/trK6sYdcNE)
 [![Build status](https://ci.appveyor.com/api/projects/status/us64kmwshl50f5a3/branch/master?svg=true)](https://ci.appveyor.com/project/zznty/torch/branch/master)
 
 # What is Torch?
