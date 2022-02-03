@@ -41,9 +41,11 @@ namespace Torch.Server.Managers
         [Dependency]
         private FilesystemManager _filesystemManager;
 
-        public InstanceManager(ITorchBase torchInstance) : base(torchInstance)
+        private new ITorchServer Torch { get; }
+
+        public InstanceManager(ITorchServer torchInstance) : base(torchInstance)
         {
-            
+            Torch = torchInstance;
         }
 
         public IWorld SelectedWorld => DedicatedConfig.SelectedWorld;
@@ -74,7 +76,7 @@ namespace Torch.Server.Managers
 
             DedicatedConfig = new ConfigDedicatedViewModel((MyConfigDedicated<MyObjectBuilder_SessionSettings>) MySandboxGame.ConfigDedicated);
 
-            var worldFolders = Directory.EnumerateDirectories(Path.Combine(Torch.Config.InstancePath, "Saves"));
+            var worldFolders = Directory.EnumerateDirectories(Path.Combine(Torch.InstancePath, "Saves"));
 
             foreach (var f in worldFolders)
             {
@@ -226,7 +228,7 @@ namespace Torch.Server.Managers
         {
             if (!((TorchServer)Torch).HasRun)
             {
-                DedicatedConfig.Save(Path.Combine(Torch.Config.InstancePath, CONFIG_NAME));
+                DedicatedConfig.Save(Path.Combine(Torch.InstancePath, CONFIG_NAME));
                 Log.Info("Saved dedicated config.");
             }
 

@@ -150,6 +150,11 @@ namespace Torch.API
         /// Path of the dedicated instance folder.
         /// </summary>
         string InstancePath { get; }
+        
+        /// <summary>
+        /// Name of the dedicated instance.
+        /// </summary>
+        string InstanceName { get; }
 
         /// <summary>
         /// Raised when the server's Init() method has completed.

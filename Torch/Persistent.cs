@@ -26,7 +26,7 @@ namespace Torch
         public T Data
         {
             get => _data;
-            private set
+            private init
             {
                 if (_data is INotifyPropertyChanged npc1)
                     npc1.PropertyChanged -= OnPropertyChanged;

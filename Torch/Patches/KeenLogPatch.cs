@@ -46,6 +46,9 @@ namespace Torch.Patches
 
         [ReflectedMethodInfo(typeof(MyLog), nameof(MyLog.Init))]
         private static MethodInfo _logInit;
+
+        [ReflectedMethodInfo(typeof(MyLog), nameof(MyLog.Close))]
+        private static MethodInfo _logClose;
 #pragma warning restore 649
         
 
@@ -64,6 +67,7 @@ namespace Torch.Patches
             context.GetPattern(_logWriteLineOptions).AddPrefix(nameof(PrefixWriteLineOptions));
             
             context.GetPattern(_logInit).AddPrefix(nameof(PrefixInit));
+            context.GetPattern(_logClose).AddPrefix(nameof(PrefixClose));
         }
 
         [ReflectedMethod(Name = "GetIdentByThread")]
@@ -80,6 +84,8 @@ namespace Torch.Patches
             using var l = _lockGetter(MyLog.Default).AcquireExclusiveUsing();
             return _getIndentByThread(MyLog.Default, Environment.CurrentManagedThreadId);
         }
+
+        private static bool PrefixClose() => false;
 
         private static bool PrefixInit(MyLog __instance, StringBuilder appVersionString)
         {

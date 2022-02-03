@@ -55,8 +55,10 @@ namespace Torch.Server
 
         //Here to trigger rebuild
         /// <inheritdoc />
-        public TorchServer(TorchConfig config) : base(config)
+        public TorchServer(ITorchConfig config, string instancePath, string instanceName) : base(config)
         {
+            InstancePath = instancePath;
+            InstanceName = instanceName;
             DedicatedInstance = new InstanceManager(this);
             AddManager(DedicatedInstance);
             if (config.EntityManagerEnabled)
@@ -116,7 +118,7 @@ namespace Torch.Server
         public InstanceManager DedicatedInstance { get; }
 
         /// <inheritdoc />
-        public string InstanceName => Config?.InstanceName;
+        public string InstanceName { get; }
 
         /// <inheritdoc />
         protected override uint SteamAppId => 244850;
@@ -130,7 +132,7 @@ namespace Torch.Server
         public event Action<ITorchServer> Initialized;
 
         /// <inheritdoc />
-        public string InstancePath => Config?.InstancePath;
+        public string InstancePath { get; }
 
         public int OnlinePlayers { get => _players; private set => SetValue(ref _players, value); }
 
@@ -141,10 +143,10 @@ namespace Torch.Server
             MySandboxGame.IsDedicated = true;
             base.Init();
             Managers.GetManager<ITorchSessionManager>().SessionStateChanged += OnSessionStateChanged;
-            GetManager<InstanceManager>().LoadInstance(Config.InstancePath);
+            GetManager<InstanceManager>().LoadInstance(InstancePath);
             CanRun = true;
             Initialized?.Invoke(this);
-            Log.Info($"Initialized server '{Config.InstanceName}' at '{Config.InstancePath}'");
+            Log.Info($"Initialized server '{InstanceName}' at '{InstancePath}'");
         }
 
         /// <inheritdoc />

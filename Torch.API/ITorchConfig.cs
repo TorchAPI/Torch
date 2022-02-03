@@ -10,7 +10,9 @@ namespace Torch
         bool ForceUpdate { get; set; }
         bool GetPluginUpdates { get; set; }
         bool GetTorchUpdates { get; set; }
+        [Obsolete("Use Torch.InstanceName instead")]
         string InstanceName { get; set; }
+        [Obsolete("Use Torch.InstancePath instead")]
         string InstancePath { get; set; }
         bool NoGui { get; set; }
         bool NoUpdate { get; set; }

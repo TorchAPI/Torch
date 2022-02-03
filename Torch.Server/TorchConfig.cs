@@ -17,9 +17,7 @@ namespace Torch.Server
 
         public bool ShouldUpdatePlugins => (GetPluginUpdates && !NoUpdate) || ForceUpdate;
         public bool ShouldUpdateTorch => (GetTorchUpdates && !NoUpdate) || ForceUpdate;
-
-        private string _instancePath = Path.GetFullPath("Instance");
-        private string _instanceName = "Instance";
+        
         private bool _autostart;
         private bool _restartOnCrash;
         private bool _noGui;
@@ -39,21 +37,6 @@ namespace Torch.Server
         private int _fontSize = 16;
         private UGCServiceType _ugcServiceType = UGCServiceType.Steam;
         private bool _entityManagerEnabled = true;
-
-
-        /// <inheritdoc />
-        [Arg("instancename", "The name of the Torch instance.")]
-        [Display(Name = "Instance Name", Description = "The name of the Torch instance.", GroupName = "Server")]
-        public string InstanceName { get => _instanceName; set => Set(value, ref _instanceName); }
-
-        /// <inheritdoc />
-        [Arg("instancepath", "Server data folder where saves and mods are stored.")]
-        [Display(Name = "Instance Path", Description = "Server data folder where saves and mods are stored.", GroupName = "Server")]
-        public string InstancePath
-        {
-            get => _instancePath;
-            set => Set(value, ref _instancePath);
-        }
 
         /// <inheritdoc />
         [XmlIgnore, Arg("noupdate", "Disable automatically downloading game and plugin updates.")]
@@ -81,6 +64,8 @@ namespace Torch.Server
         [Display(Name = "Restart On Crash", Description = "Automatically restart the server if it crashes.", GroupName = "Server")]
         public bool RestartOnCrash { get => _restartOnCrash; set => Set(value, ref _restartOnCrash); }
 
+        public string InstancePath { get; set; }
+
         /// <inheritdoc />
         [Arg("nogui", "Do not show the Torch UI.")]
         [Display(Name = "No GUI", Description = "Do not show the Torch UI.", GroupName = "Window")]
@@ -93,6 +78,8 @@ namespace Torch.Server
         /// <inheritdoc />
         [Display(Name = "Update Torch", Description = "Check every start for new versions of torch.", GroupName = "Server")]
         public bool GetTorchUpdates { get => _getTorchUpdates; set => Set(value, ref _getTorchUpdates); }
+
+        public string InstanceName { get; set; }
 
         /// <inheritdoc />
         [Display(Name = "Update Plugins", Description = "Check every start for new versions of plugins.", GroupName = "Server")]

@@ -22,40 +22,35 @@ namespace Torch.Server
 {
     public class Initializer
     {
-        [Obsolete("It's hack. Do not use it!")]
         internal static Initializer Instance { get; private set; }
 
         private static readonly Logger Log = LogManager.GetLogger(nameof(Initializer));
         private bool _init;
         private const string STEAMCMD_DIR = "steamcmd";
         private const string STEAMCMD_ZIP = "temp.zip";
-        private static readonly string STEAMCMD_PATH = $"{STEAMCMD_DIR}\\steamcmd.exe";
-        private static readonly string RUNSCRIPT_PATH = $"{STEAMCMD_DIR}\\runscript.txt";
+        private static readonly string STEAMCMD_EXE = "steamcmd.exe";
+        private static readonly string RUNSCRIPT_FILE = "runscript.txt";
 
         private const string RUNSCRIPT = @"force_install_dir ../
 login anonymous
 app_update 298740
 quit";
         private TorchServer _server;
-        private string _basePath;
 
-        internal Persistent<TorchConfig> ConfigPersistent { get; private set; }
+        internal Persistent<TorchConfig> ConfigPersistent { get; }
         public TorchConfig Config => ConfigPersistent?.Data;
         public TorchServer Server => _server;
 
-        public Initializer(string basePath)
+        public Initializer(string basePath, Persistent<TorchConfig> torchConfig)
         {
-            _basePath = basePath;
             Instance = this;
+            ConfigPersistent = torchConfig;
         }
 
         public bool Initialize(string[] args)
         {
             if (_init)
                 return false;
-            
-            AppDomain.CurrentDomain.UnhandledException += HandleException;
-
 #if DEBUG
             //enables logging debug messages when built in debug mode. Amazing.
             LogManager.Configuration.AddRule(LogLevel.Debug, LogLevel.Debug, "main");
@@ -68,37 +63,6 @@ quit";
             // This is what happens when Keen is bad and puts extensions into the System namespace.
             if (!Enumerable.Contains(args, "-noupdate"))
                 RunSteamCmd();
-
-            var basePath = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
-            var apiSource = Path.Combine(basePath, "DedicatedServer64", "steam_api64.dll");
-            var apiTarget = Path.Combine(basePath, "steam_api64.dll");
-
-            if (!File.Exists(apiTarget))
-            {
-                File.Copy(apiSource, apiTarget);
-            }
-            else if (File.GetLastWriteTime(apiTarget) < File.GetLastWriteTime(apiSource))
-            {
-                File.Delete(apiTarget);
-                File.Copy(apiSource, apiTarget);
-            }
-            
-            var havokSource = Path.Combine(basePath, "DedicatedServer64", "Havok.dll");
-            var havokTarget = Path.Combine(basePath, "Havok.dll");
-
-            if (!File.Exists(havokTarget))
-            {
-                File.Copy(havokSource, havokTarget);   
-            }
-            else if (File.GetLastWriteTime(havokTarget) < File.GetLastWriteTime(havokSource))
-            {   
-                File.Delete(havokTarget);
-                File.Copy(havokSource, havokTarget);
-            }
-
-            InitConfig();
-            if (!Config.Parse(args))
-                return false;
 
             if (!string.IsNullOrEmpty(Config.WaitForPID))
             {
@@ -114,9 +78,9 @@ quit";
                         Thread.Sleep(1000);
                     }
                 }
-                catch
+                catch (Exception e)
                 {
-                    // ignored
+                    Log.Warn(e);
                 }
             }
 
@@ -124,11 +88,11 @@ quit";
             return true;
         }
 
-        public void Run()
+        public void Run(bool isService, string instanceName, string instancePath)
         {
-            _server = new TorchServer(Config);
+            _server = new TorchServer(Config, instancePath, instanceName);
 
-            if (Config.NoGui)
+            if (isService || Config.NoGui)
             {
                 _server.Init();
                 _server.Start();
@@ -164,35 +128,24 @@ quit";
                 ui.ShowDialog();
             }
         }
-
-        private void InitConfig()
-        {
-            var configName = "Torch.cfg";
-            var configPath = Path.Combine(Directory.GetCurrentDirectory(), configName);
-            if (File.Exists(configName))
-            {
-                Log.Info($"Loading config {configName}");
-            }
-            else
-            {
-                Log.Info($"Generating default config at {configPath}");
-            }
-            ConfigPersistent = Persistent<TorchConfig>.Load(configPath);
-        }
-
+        
         public static void RunSteamCmd()
         {
             var log = LogManager.GetLogger("SteamCMD");
 
-            if (!Directory.Exists(STEAMCMD_DIR))
+            var path = Environment.GetEnvironmentVariable("TORCH_STEAMCMD") ?? Path.GetFullPath(STEAMCMD_DIR);
+            
+            if (!Directory.Exists(path))
             {
-                Directory.CreateDirectory(STEAMCMD_DIR);
+                Directory.CreateDirectory(path);
             }
 
-            if (!File.Exists(RUNSCRIPT_PATH))
-                File.WriteAllText(RUNSCRIPT_PATH, RUNSCRIPT);
+            var runScriptPath = Path.Combine(path, RUNSCRIPT_FILE);
+            if (!File.Exists(runScriptPath))
+                File.WriteAllText(runScriptPath, RUNSCRIPT);
 
-            if (!File.Exists(STEAMCMD_PATH))
+            var steamCmdExePath = Path.Combine(path, STEAMCMD_EXE);
+            if (!File.Exists(steamCmdExePath))
             {
                 try
                 {
@@ -201,22 +154,21 @@ quit";
                     using (var file = File.Create(STEAMCMD_ZIP))
                         client.GetStreamAsync("https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip").Result.CopyTo(file);
 
-                    ZipFile.ExtractToDirectory(STEAMCMD_ZIP, STEAMCMD_DIR);
+                    ZipFile.ExtractToDirectory(STEAMCMD_ZIP, path);
                     File.Delete(STEAMCMD_ZIP);
                     log.Info("SteamCMD downloaded successfully!");
                 }
                 catch (Exception e)
                 {
-                    log.Error("Failed to download SteamCMD, unable to update the DS.");
-                    log.Error(e);
+                    log.Error(e, "Failed to download SteamCMD, unable to update the DS.");
                     return;
                 }
             }
 
             log.Info("Checking for DS updates.");
-            var steamCmdProc = new ProcessStartInfo(STEAMCMD_PATH, "+runscript runscript.txt")
+            var steamCmdProc = new ProcessStartInfo(steamCmdExePath, "+runscript runscript.txt")
             {
-                WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), STEAMCMD_DIR),
+                WorkingDirectory = path,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 StandardOutputEncoding = Encoding.ASCII
@@ -229,30 +181,6 @@ quit";
                 log.Info(cmd.StandardOutput.ReadLine());
                 Thread.Sleep(100);
             }
-        }
-
-        private void HandleException(object sender, UnhandledExceptionEventArgs e)
-        {
-            _server.FatalException = true;
-            if (Debugger.IsAttached)
-                return;
-            var ex = (Exception)e.ExceptionObject;
-            Log.Fatal(ex.ToStringDemystified());
-            LogManager.Flush();
-            if (Config.RestartOnCrash)
-            {
-                Console.WriteLine("Restarting in 5 seconds.");
-                Thread.Sleep(5000);
-                var exe = typeof(Program).Assembly.Location;
-                Config.WaitForPID = Environment.ProcessId.ToString();
-                Process.Start(exe, Config.ToString());
-            }
-            else
-            {
-                MessageBox.Show("Torch encountered a fatal error and needs to close. Please check the logs for details.");
-            }
-
-            Environment.Exit(1);
         }
     }
 }
