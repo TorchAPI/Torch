@@ -49,7 +49,7 @@ cache:
 - c:\steam\cmd\
 before_build:
 - pwsh: dotnet restore .\Torch.Server\Torch.Server.csproj
-build_script::
+build_script:
 - pwsh: >-
     dotnet publish .\Torch.Server\Torch.Server.csproj --self-contained -c Release -o .\publish\
 
