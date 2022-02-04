@@ -7,6 +7,7 @@ namespace Torch.Server
 {
     internal static class Program
     {
+        [STAThread]
         public static void Main(string[] args)
         {
             var isService = Environment.GetEnvironmentVariable("TORCH_SERVICE")
@@ -23,8 +24,6 @@ namespace Torch.Server
                     File.Delete(file);
                 }
 
-            TorchLauncher.Launch(workingDir, binDir);
-            
             // Breaks on Windows Server 2019
 #if TORCH_SERVICE
             if (!new ComputerInfo().OSFullName.Contains("Server 2019") && !Environment.UserInteractive)
@@ -45,7 +44,7 @@ namespace Torch.Server
             }
             else
             {
-                instancePath = Path.GetFullPath(instanceName);
+                instancePath = Directory.CreateDirectory(instanceName).FullName;
             }
 
             var oldTorchCfg = Path.Combine(workingDir, "Torch.cfg");
@@ -70,6 +69,8 @@ namespace Torch.Server
             if (!initializer.Initialize(args))
                 Environment.Exit(1);
 
+            TorchLauncher.Launch(workingDir, binDir);
+            
             CopyNative(binDir);
             initializer.Run(isService, instanceName, instancePath);
         }
