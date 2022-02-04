@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -43,11 +45,14 @@ namespace Torch.Patches
         private static void WhitelistCtorPrefix(MyScriptCompiler scriptCompiler)
         {
             scriptCompiler.AddReferencedAssemblies(
+                typeof(ValueType).Assembly.Location,
+                typeof(LinkedList<>).Assembly.Location,
                 typeof(Regex).Assembly.Location,
                 typeof(Enumerable).Assembly.Location,
                 typeof(ConcurrentBag<>).Assembly.Location,
                 typeof(ImmutableArray).Assembly.Location,
-                typeof(System.ComponentModel.TypeConverter).Assembly.Location,
+                typeof(PropertyChangedEventArgs).Assembly.Location,
+                typeof(TypeConverter).Assembly.Location,
                 typeof(System.Diagnostics.TraceSource).Assembly.Location,
                 typeof(ProtoBuf.Meta.RuntimeTypeModel).Assembly.Location,
                 Path.Combine(MyFileSystem.ExePath, "Sandbox.Game.dll"),
