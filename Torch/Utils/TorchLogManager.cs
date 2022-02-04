@@ -1,47 +1,41 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.Loader;
 using NLog;
 using NLog.Config;
+using NLog.Targets;
 
 namespace Torch.Utils;
 
 public static class TorchLogManager
 {
-    private static AssemblyLoadContext LoadContext;
+    private static AssemblyLoadContext LoadContext = new("TorchLog");
 
     public static LoggingConfiguration Configuration { get; private set; }
 
-    public static void SetConfiguration(LoggingConfiguration configuration, string extensionsDir = null)
+    public static void SetConfiguration(LoggingConfiguration configuration)
     {
         Configuration = configuration;
-        LogManager.Setup()
-            .SetupExtensions(builder =>
-            {
-                if (extensionsDir is null || !Directory.Exists(extensionsDir))
-                    return;
-                if (LoadContext is null)
-                {
-                    LoadContext = new("TorchLog");
-                    foreach (var file in Directory.EnumerateFiles(extensionsDir, "*.dll", SearchOption.AllDirectories))
-                    {
-                        builder.RegisterAssembly(LoadContext.LoadFromAssemblyPath(file));
-                    }
-                    return;
-                }
-                foreach (var assembly in LoadContext.Assemblies)
-                {
-                    builder.RegisterAssembly(assembly);
-                }
-            })
-            .SetupLogFactory(builder => builder.SetThrowConfigExceptions(true))
-            .LoadConfiguration(configuration);
+        LogManager.Configuration = configuration;
         LogManager.ReconfigExistingLoggers();
+    }
+
+    public static void RegisterTargets(string dir)
+    {
+        if (!Directory.Exists(dir)) return;
+        
+        foreach (var type in Directory.EnumerateFiles(dir, "*.dll").Select(LoadContext.LoadFromAssemblyPath)
+                     .SelectMany(b => b.ExportedTypes)
+                     .Where(b => b.GetCustomAttribute<TargetAttribute>() is { }))
+        {
+            Target.Register(type.GetCustomAttribute<TargetAttribute>()!.Name, type);
+        }
     }
 
     public static void RestoreGlobalConfiguration()
     {
-        LogManager.Configuration = Configuration;
-        LogManager.ReconfigExistingLoggers();
+        SetConfiguration(Configuration);
     }
 }

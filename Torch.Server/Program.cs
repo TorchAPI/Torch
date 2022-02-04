@@ -61,9 +61,6 @@ namespace Torch.Server
             
             if (File.Exists(oldTorchCfg))
                 File.Move(oldTorchCfg, torchCfg, true);
-            
-            Target.Register<LogViewerTarget>(nameof(LogViewerTarget));
-            TorchLogManager.SetConfiguration(new XmlLoggingConfiguration(newNlog));
 
             var config = Persistent<TorchConfig>.Load(torchCfg);
             config.Data.InstanceName = instanceName;
@@ -76,15 +73,18 @@ namespace Torch.Server
 
             var handler = new UnhandledExceptionHandler(config.Data, isService);
             AppDomain.CurrentDomain.UnhandledException += handler.OnUnhandledException;
+            
+            Target.Register<LogViewerTarget>(nameof(LogViewerTarget));
+            TorchLogManager.RegisterTargets(Environment.GetEnvironmentVariable("TORCH_LOG_EXTENSIONS_PATH") ??
+                                            Path.Combine(instancePath, "LoggingExtensions"));
+            
+            TorchLogManager.SetConfiguration(new XmlLoggingConfiguration(newNlog));
 
             var initializer = new Initializer(workingDir, config);
             if (!initializer.Initialize(args))
                 Environment.Exit(1);
 
             TorchLauncher.Launch(workingDir, binDir);
-            TorchLogManager.SetConfiguration(TorchLogManager.Configuration,
-                Environment.GetEnvironmentVariable("TORCH_LOG_EXTENSIONS_PATH") ??
-                Path.Combine(instancePath, "LoggingExtensions"));
             
             CopyNative(binDir);
             initializer.Run(isService, instanceName, instancePath);
