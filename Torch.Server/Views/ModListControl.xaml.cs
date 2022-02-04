@@ -269,7 +269,10 @@ namespace Torch.Server.Views
             modList.RemoveAll(m =>
             {
                 var mod = m.ToString();
-                return idList.Any(mod.Equals);
+                return idList.Any(id =>
+                    id.IndexOf('-') > 0
+                        ? mod.Equals(id, StringComparison.Ordinal)
+                        : m.PublishedFileId.Equals(ulong.Parse(id)));
             });
             modList.AddRange(idList.Select(id =>
             {
@@ -282,13 +285,8 @@ namespace Torch.Server.Views
                 _instanceManager.DedicatedConfig.Mods.Add(mod);
 
             if (tasks.Any())
-                Task.WaitAll(tasks.ToArray());
-            
-            Dispatcher.Invoke(() =>
-                              {
-                                  _instanceManager.DedicatedConfig.Save();
-                              });
-
+                Task.WhenAll(tasks.ToArray())
+                    .ContinueWith(_ => Dispatcher.Invoke(() => _instanceManager.DedicatedConfig.Save()));
         }
 
         private void UgcServiceTypeBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
