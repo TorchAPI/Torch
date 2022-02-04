@@ -42,9 +42,8 @@ namespace Torch.Patches
 
         private static void FixLogging()
         {
+            TorchLogManager.RestoreGlobalConfiguration();
             _setLogger(null, LogManager.GetLogger("GameAnalytics"));
-            if (LogManager.Configuration is not XmlLoggingConfiguration)
-                LogManager.Configuration = TorchLogManager.Configuration;
         }
 
         private static bool PatchLogger()

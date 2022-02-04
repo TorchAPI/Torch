@@ -63,9 +63,7 @@ namespace Torch.Server
                 File.Move(oldTorchCfg, torchCfg, true);
             
             Target.Register<LogViewerTarget>(nameof(LogViewerTarget));
-            TorchLogManager.Configuration = new XmlLoggingConfiguration(newNlog);
-            LogManager.Configuration = TorchLogManager.Configuration;
-            LogManager.ReconfigExistingLoggers();
+            TorchLogManager.SetConfiguration(new XmlLoggingConfiguration(newNlog));
 
             var config = Persistent<TorchConfig>.Load(torchCfg);
             config.Data.InstanceName = instanceName;
@@ -84,6 +82,9 @@ namespace Torch.Server
                 Environment.Exit(1);
 
             TorchLauncher.Launch(workingDir, binDir);
+            TorchLogManager.SetConfiguration(TorchLogManager.Configuration,
+                Environment.GetEnvironmentVariable("TORCH_LOG_EXTENSIONS_PATH") ??
+                Path.Combine(instancePath, "LoggingExtensions"));
             
             CopyNative(binDir);
             initializer.Run(isService, instanceName, instancePath);
