@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using NLog;
+using NLog.Config;
 using NLog.Targets;
 using Torch.Utils;
 
@@ -12,7 +14,6 @@ namespace Torch.Server
         {
             var isService = Environment.GetEnvironmentVariable("TORCH_SERVICE")
                 ?.Equals(bool.TrueString, StringComparison.OrdinalIgnoreCase) ?? false;
-            Target.Register<LogViewerTarget>(nameof(LogViewerTarget));
             //Ensures that all the files are downloaded in the Torch directory.
             var workingDir = AppContext.BaseDirectory;
             var binDir = Path.Combine(Environment.GetEnvironmentVariable("TORCH_GAME_PATH") ?? workingDir, "DedicatedServer64");
@@ -46,12 +47,24 @@ namespace Torch.Server
             {
                 instancePath = Directory.CreateDirectory(instanceName).FullName;
             }
+            
+            var oldNlog = Path.Combine(workingDir, "NLog.config");
+            var newNlog = Path.Combine(instancePath, "NLog.config");
+            if (File.Exists(oldNlog))
+                File.Move(oldNlog, newNlog, true);
+            else if (!File.Exists(newNlog))
+                using (var f = File.Create(newNlog))
+                    typeof(Program).Assembly.GetManifestResourceStream("Torch.Server.NLog.config")!.CopyTo(f);
 
             var oldTorchCfg = Path.Combine(workingDir, "Torch.cfg");
             var torchCfg = Path.Combine(instancePath, "Torch.cfg");
             
             if (File.Exists(oldTorchCfg))
                 File.Move(oldTorchCfg, torchCfg, true);
+            
+            Target.Register<LogViewerTarget>(nameof(LogViewerTarget));
+            LogManager.Configuration = new XmlLoggingConfiguration(newNlog);
+            LogManager.ReconfigExistingLoggers();
 
             var config = Persistent<TorchConfig>.Load(torchCfg);
             config.Data.InstanceName = instanceName;

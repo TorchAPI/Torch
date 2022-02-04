@@ -160,6 +160,6 @@
   </ItemGroup>
   <ItemGroup>
     <Page Remove="Views\WorldSelectControl.xaml" />
-    <None Include="..\NLog.config" Visible="false" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" />
+    <EmbeddedResource Include="..\NLog.config" Visible="false" />
   </ItemGroup>
 </Project>
