@@ -17,6 +17,7 @@ internal static class GcCollectPatch
 {
     // FUCK YO KEEN
     // every call results in freeze for seconds
+    
     private static readonly MethodBase[] _targets =
     {
         Info.OfMethod<MyPlanetTextureMapProvider>(nameof(MyPlanetTextureMapProvider.GetHeightmap)),
