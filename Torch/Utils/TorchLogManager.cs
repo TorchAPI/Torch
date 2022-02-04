@@ -8,7 +8,7 @@ namespace Torch.Utils;
 
 public static class TorchLogManager
 {
-    private static readonly AssemblyLoadContext LoadContext = new("TorchLog");
+    private static AssemblyLoadContext LoadContext;
 
     public static LoggingConfiguration Configuration { get; private set; }
 
@@ -20,9 +20,18 @@ public static class TorchLogManager
             {
                 if (extensionsDir is null || !Directory.Exists(extensionsDir))
                     return;
-                foreach (var file in Directory.EnumerateFiles(extensionsDir, "*.dll", SearchOption.AllDirectories))
+                if (LoadContext is null)
                 {
-                    builder.RegisterAssembly(LoadContext.LoadFromAssemblyPath(file));
+                    LoadContext = new("TorchLog");
+                    foreach (var file in Directory.EnumerateFiles(extensionsDir, "*.dll", SearchOption.AllDirectories))
+                    {
+                        builder.RegisterAssembly(LoadContext.LoadFromAssemblyPath(file));
+                    }
+                    return;
+                }
+                foreach (var assembly in LoadContext.Assemblies)
+                {
+                    builder.RegisterAssembly(assembly);
                 }
             })
             .SetupLogFactory(builder => builder.SetThrowConfigExceptions(true))
