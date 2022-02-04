@@ -63,7 +63,8 @@ namespace Torch.Server
                 File.Move(oldTorchCfg, torchCfg, true);
             
             Target.Register<LogViewerTarget>(nameof(LogViewerTarget));
-            LogManager.Configuration = new XmlLoggingConfiguration(newNlog);
+            TorchLogManager.Configuration = new XmlLoggingConfiguration(newNlog);
+            LogManager.Configuration = TorchLogManager.Configuration;
             LogManager.ReconfigExistingLoggers();
 
             var config = Persistent<TorchConfig>.Load(torchCfg);

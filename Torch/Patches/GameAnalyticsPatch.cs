@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using NLog;
 using NLog.Config;
 using Torch.Managers.PatchManager;
+using Torch.Utils;
 
 namespace Torch.Patches
 {
@@ -36,16 +37,14 @@ namespace Torch.Patches
                 _log.Warn("GALogger constructor is unknown.  Logging may not function.");
                 return;
             }
-            ctx.GetPattern(ctor).Prefixes.Add(typeof(GameAnalyticsPatch).GetMethod(nameof(PatchLogger),
-                BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
+            ctx.GetPattern(ctor).AddPrefix(nameof(PatchLogger));
         }
 
         private static void FixLogging()
         {
             _setLogger(null, LogManager.GetLogger("GameAnalytics"));
-            if (!(LogManager.Configuration is XmlLoggingConfiguration))
-                LogManager.Configuration = new XmlLoggingConfiguration(Path.Combine(
-                    Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) ?? Environment.CurrentDirectory, "NLog.config"));
+            if (LogManager.Configuration is not XmlLoggingConfiguration)
+                LogManager.Configuration = TorchLogManager.Configuration;
         }
 
         private static bool PatchLogger()
