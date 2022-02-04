@@ -10,6 +10,8 @@ using Torch.API;
 using Torch.Managers.PatchManager;
 using Torch.Utils;
 using VRage.Utils;
+using Sandbox.Engine.Multiplayer;
+using Sandbox.Game.World;
 
 namespace Torch.Patches
 {
@@ -42,6 +44,9 @@ namespace Torch.Patches
 
         [ReflectedMethodInfo(typeof(MyLog), nameof(MyLog.WriteLineAndConsole), Parameters = new[] { typeof(string) })]
         private static MethodInfo _logWriteLineAndConsole;
+
+        [ReflectedMethodInfo(typeof(MyMultiplayerServerBase), nameof(MyMultiplayerServerBase.ValidationFailed), Parameters = new[] { typeof(ulong), typeof(bool), typeof(string), typeof(bool) })]
+        private static MethodInfo _logSuppressValidationFailed;
 #pragma warning restore 649
         
 
@@ -58,6 +63,9 @@ namespace Torch.Patches
             context.GetPattern(_logAppendToClosedLogException).Prefixes.Add(Method(nameof(PrefixAppendToClosedLogException)));
 
             context.GetPattern(_logWriteLineOptions).Prefixes.Add(Method(nameof(PrefixWriteLineOptions)));
+
+            _log.Info("Suppressing ValidationFailed() - This is a temporary band-aid until keen fix it.");
+            context.GetPattern(_logSuppressValidationFailed).Prefixes.Add(Method(nameof(SuppressActionBlockedLog)));
             
         }
 
@@ -167,6 +175,11 @@ namespace Torch.Patches
                 default:
                     return LogLevel.Info;
             }
+        }
+
+        private static bool SuppressActionBlockedLog(ulong clientId, bool kick = true, string additionalInfo = null, bool stackTrace = true)
+        {
+            return false;
         }
     }
 }

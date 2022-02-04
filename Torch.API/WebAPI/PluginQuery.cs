@@ -12,7 +12,13 @@ namespace Torch.API.WebAPI
 {
     public class PluginQuery
     {
+#if DEBUG
+        private const string ALL_QUERY = "https://torchapi.com/api/plugins?includeArchived=true";
+#else
         private const string ALL_QUERY = "https://torchapi.com/api/plugins";
+#endif
+
+
         private const string PLUGIN_QUERY = "https://torchapi.com/api/plugins/item/{0}";
         private readonly HttpClient _client;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
