@@ -62,11 +62,7 @@ namespace Torch.Patches
             context.GetPattern(_logWriteLineException).Prefixes.Add(Method(nameof(PrefixWriteLineException)));
             context.GetPattern(_logAppendToClosedLogException).Prefixes.Add(Method(nameof(PrefixAppendToClosedLogException)));
 
-            context.GetPattern(_logWriteLineOptions).Prefixes.Add(Method(nameof(PrefixWriteLineOptions)));
-
-            _log.Info("Suppressing ValidationFailed() - This is a temporary band-aid until keen fix it.");
-            context.GetPattern(_logSuppressValidationFailed).Prefixes.Add(Method(nameof(SuppressActionBlockedLog)));
-            
+            context.GetPattern(_logWriteLineOptions).Prefixes.Add(Method(nameof(PrefixWriteLineOptions)));  
         }
 
         private static MethodInfo Method(string name)
@@ -175,11 +171,6 @@ namespace Torch.Patches
                 default:
                     return LogLevel.Info;
             }
-        }
-
-        private static bool SuppressActionBlockedLog(ulong clientId, bool kick = true, string additionalInfo = null, bool stackTrace = true)
-        {
-            return false;
         }
     }
 }
