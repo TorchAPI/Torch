@@ -197,7 +197,7 @@ namespace Torch.Managers.PatchManager
                     lock (_log)
                     {
                         var instructions = context.Body.Instructions
-                            .Select(b => new MsilInstruction(b)).ToList();
+                            .Select(b => b.ToMsilInstruction()).ToList();
                         LogTarget(PrintModeEnum.Patched, false, "========== Patched method ==========");
                         MethodTranspiler.IntegrityAnalysis((a, b) => LogTarget(PrintModeEnum.Patched, a, b), instructions, true);
                         LogTarget(PrintModeEnum.Patched, false, gap);
