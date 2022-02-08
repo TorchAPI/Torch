@@ -12,6 +12,7 @@ using Mono.Cecil.Cil;
 using MonoMod.Utils;
 using Torch.Managers.PatchManager.Transpile;
 using Torch.Utils;
+using VRage.Game.VisualScripting;
 using OpCode = System.Reflection.Emit.OpCode;
 using OpCodes = System.Reflection.Emit.OpCodes;
 using OperandType = System.Reflection.Emit.OperandType;
@@ -284,7 +285,11 @@ namespace Torch.Managers.PatchManager.MSIL
                 type = type.BaseType;
             }
 
-            ((MsilOperandInline<T>) Operand).Value = o;
+            if (Operand is not MsilOperandInline<T> operandInline)
+                throw new InvalidOperationException(
+                    $"Type {typeof(T).FullName} is not valid operand for {Operand?.GetType().Signature()}");
+
+            operandInline.Value = o;
             return this;
         }
 
