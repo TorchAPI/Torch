@@ -86,6 +86,8 @@ namespace Torch.Server
 
             TorchLauncher.Launch(workingDir, binDir);
             
+            CopyNative(binDir);
+            
             initializer.Run(isService, instanceName, instancePath);
         }
 
