@@ -86,36 +86,7 @@ namespace Torch.Server
 
             TorchLauncher.Launch(workingDir, binDir);
             
-            CopyNative(binDir);
             initializer.Run(isService, instanceName, instancePath);
-        }
-
-        private static void CopyNative(string binPath)
-        {
-            var apiSource = Path.Combine(binPath, "steam_api64.dll");
-            var apiTarget = Path.Combine(AppContext.BaseDirectory, "steam_api64.dll");
-            if (!File.Exists(apiTarget))
-            {
-                File.Copy(apiSource, apiTarget);
-            }
-            else if (File.GetLastWriteTime(apiTarget) < File.GetLastWriteTime(binPath))
-            {
-                File.Delete(apiTarget);
-                File.Copy(apiSource, apiTarget);
-            }
-            
-            var havokSource = Path.Combine(binPath, "Havok.dll");
-            var havokTarget = Path.Combine(AppContext.BaseDirectory, "Havok.dll");
-
-            if (!File.Exists(havokTarget))
-            {
-                File.Copy(havokSource, havokTarget);   
-            }
-            else if (File.GetLastWriteTime(havokTarget) < File.GetLastWriteTime(havokSource))
-            {   
-                File.Delete(havokTarget);
-                File.Copy(havokSource, havokTarget);
-            }
         }
     }
 }
