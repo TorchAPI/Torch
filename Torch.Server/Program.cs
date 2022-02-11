@@ -50,7 +50,7 @@ namespace Torch.Server
             
             var oldNlog = Path.Combine(workingDir, "NLog.config");
             var newNlog = Path.Combine(instancePath, "NLog.config");
-            if (File.Exists(oldNlog))
+            if (File.Exists(oldNlog) && !File.ReadAllText(oldNlog).Contains("FlowDocument", StringComparison.Ordinal))
                 File.Move(oldNlog, newNlog, true);
             else if (!File.Exists(newNlog))
                 using (var f = File.Create(newNlog))
