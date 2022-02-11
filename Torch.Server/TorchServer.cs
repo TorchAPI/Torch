@@ -377,18 +377,7 @@ namespace Torch.Server
                 var clrThread = runtime.Threads.First(b => b.ManagedThreadId == thread.ManagedThreadId);
 
                 var sb = new StringBuilder();
-
-                sb.AppendFormat(
-                        "ManagedThreadId: {0}, Name: {1}, OSThreadId: {2}, Thread: IsAlive: {3}, IsBackground: {4}, IsThreadPool: {5}",
-                        thread.ManagedThreadId, 
-                        thread.Name, 
-                        clrThread.OSThreadId, 
-                        thread.IsAlive, 
-                        thread.IsBackground,
-                        thread.IsThreadPoolThread)
-                    .AppendLine();
-
-                sb.AppendLine("Stack trace:");
+                
                 foreach (var frame in clrThread.EnumerateStackTrace())
                 {
                     sb.Append('\t');
