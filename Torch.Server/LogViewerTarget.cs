@@ -17,7 +17,7 @@ namespace Torch.Server
     {
         public IList<LogEntry> LogEntries { get; set; }
         public SynchronizationContext TargetContext { get; set; }
-        private readonly int _maxLines = 1000;
+        private const int MAX_LINES = 1000;
 
         /// <inheritdoc />
         protected override void Write(LogEventInfo logEvent)
@@ -29,6 +29,11 @@ namespace Torch.Server
         {
             var logEvent = (LogEventInfo) state;
             LogEntries?.Add(new(logEvent.TimeStamp, Layout.Render(logEvent), LogLevelColors[logEvent.Level]));
+            if (LogEntries is not {Count: > MAX_LINES}) return;
+            for (var i = 0; LogEntries.Count > MAX_LINES; i++)
+            {
+                LogEntries.RemoveAt(i);
+            }
         }
 
         private static readonly Dictionary<LogLevel, SolidColorBrush> LogLevelColors = new()
