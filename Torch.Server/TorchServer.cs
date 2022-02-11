@@ -107,7 +107,7 @@ namespace Torch.Server
         public TimeSpan ElapsedPlayTime { get => _elapsedPlayTime; set => SetValue(ref _elapsedPlayTime, value); }
 
         /// <inheritdoc />
-        public Thread GameThread { get; private set; }
+        public Thread GameThread => MySandboxGame.Static?.UpdateThread;
 
         /// <inheritdoc />
         public bool IsRunning { get => _isRunning; set => SetValue(ref _isRunning, value); }
