@@ -234,9 +234,11 @@ namespace Torch.Server.Managers
 
             try
             {
-                var world = DedicatedConfig.Worlds.FirstOrDefault(x => x.WorldPath == DedicatedConfig.LoadWorld) ?? new WorldViewModel(DedicatedConfig.LoadWorld);
+                var world = DedicatedConfig.SelectedWorld;
 
-                world.Checkpoint.SessionName = DedicatedConfig.WorldName;
+                world.Checkpoint.SessionName = string.IsNullOrEmpty(DedicatedConfig.WorldName)
+                    ? Path.GetDirectoryName(DedicatedConfig.LoadWorld)
+                    : DedicatedConfig.WorldName;
                 world.WorldConfiguration.Settings = DedicatedConfig.SessionSettings;
                 world.WorldConfiguration.Mods.Clear();
 
@@ -268,7 +270,7 @@ namespace Torch.Server.Managers
         private void ValidateInstance(string path)
         {
             Directory.CreateDirectory(Path.Combine(path, "Saves"));
-            Directory.CreateDirectory(Path.Combine(path, "Mods"));
+            // Directory.CreateDirectory(Path.Combine(path, "Mods"));
             var configPath = Path.Combine(path, CONFIG_NAME);
             if (File.Exists(configPath))
                 return;

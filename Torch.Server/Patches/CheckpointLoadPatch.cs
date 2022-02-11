@@ -33,6 +33,9 @@ public static class CheckpointLoadPatch
             return false;
         }
 
+        world.KeenCheckpoint.Settings = world.WorldConfiguration.Settings;
+        world.KeenCheckpoint.Mods = world.WorldConfiguration.Mods;
+
         __result = world.Checkpoint;
         return false;
     }
