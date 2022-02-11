@@ -196,6 +196,7 @@ namespace Torch.Server
             State = ServerState.Stopped;
             IsRunning = false;
             CanRun = true;
+            SimulationRatio = 0;
         }
 
         /// <summary>
@@ -244,9 +245,21 @@ namespace Torch.Server
             if (newState == TorchSessionState.Loaded)
             {
                 _multiplayerManagerDedicated = CurrentSession.Managers.GetManager<MultiplayerManagerDedicated>();
+                _multiplayerManagerDedicated.PlayerJoined += MultiplayerManagerDedicatedOnPlayerJoined;
+                _multiplayerManagerDedicated.PlayerLeft += MultiplayerManagerDedicatedOnPlayerLeft;
                 CurrentSession.Managers.GetManager<CommandManager>().RegisterCommandModule(typeof(WhitelistCommands));
                 ModCommunication.Register();
             }
+        }
+
+        private void MultiplayerManagerDedicatedOnPlayerLeft(IPlayer player)
+        {
+            OnlinePlayers--;
+        }
+
+        private void MultiplayerManagerDedicatedOnPlayerJoined(IPlayer player)
+        {
+            OnlinePlayers++;
         }
 
         /// <inheritdoc />
@@ -267,7 +280,6 @@ namespace Torch.Server
             SimulationRatio = Math.Min(Sync.ServerSimulationRatio, 1);
             var elapsed = TimeSpan.FromSeconds(Math.Floor(_uptime.Elapsed.TotalSeconds));
             ElapsedPlayTime = elapsed;
-            OnlinePlayers = _multiplayerManagerDedicated?.Players.Count ?? 0;
 
             if (_watchdog == null && Config.TickTimeout > 0)
             {
