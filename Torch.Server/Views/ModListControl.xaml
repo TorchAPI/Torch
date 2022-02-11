@@ -49,16 +49,6 @@
                       AutoGenerateColumns="False">
                 <!--:DesignSource="{d:DesignInstance Type={x:Type MyObjectBuilder_Checkpoint:ModItem, CreateList=True}}">-->
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Load Order"
-                                        Width="Auto"
-                                        IsReadOnly="True">
-                        <DataGridTextColumn.Binding>
-                            <MultiBinding Converter="{StaticResource ModToListIdConverter}" StringFormat="{}{0}">
-                                <Binding />
-                                <Binding ElementName="ModList" Path="DataContext"></Binding>
-                            </MultiBinding>
-                        </DataGridTextColumn.Binding>
-                    </DataGridTextColumn>
                     <DataGridTextColumn Header="Workshop Id" 
                                         IsReadOnly="True"
                                         Binding="{Binding PublishedFileId, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged}">
