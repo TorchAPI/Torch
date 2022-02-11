@@ -472,7 +472,8 @@ namespace Torch
         {
             // Kinda icky, but we can't block the update and expect the state to change.
             if (Thread.CurrentThread == _updateThread)
-                return _state == state;
+                throw new InvalidOperationException(
+                    "Waiting for game state is not possible from update thread (deadlock)");
 
             DateTime? end = timeout.HasValue ? (DateTime?) (DateTime.Now + timeout.Value) : null;
             while (_state != state && (!end.HasValue || end > DateTime.Now + TimeSpan.FromSeconds(1)))

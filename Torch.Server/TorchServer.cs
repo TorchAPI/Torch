@@ -178,6 +178,17 @@ namespace Torch.Server
         {
             if (State == ServerState.Stopped)
                 Log.Error("Server is already stopped");
+            if (Thread.CurrentThread == GameThread)
+                new Thread(StopInternal)
+                {
+                    Name = "Stopping Thread"
+                }.Start();
+            else
+                StopInternal();
+        }
+
+        private void StopInternal()
+        {
             Log.Info("Stopping server.");
             base.Stop();
             Log.Info("Server stopped.");
@@ -202,17 +213,22 @@ namespace Torch.Server
                 Log.Info("Ejected all players from server for restart.");
             }
 
-            Stop();
-            // TODO clone this
-            var config = (TorchConfig)Config;
-            LogManager.Flush();
+            new Thread(() =>
+            {
+                StopInternal();
+                var config = (TorchConfig)Config;
+                LogManager.Flush();
 
-            string exe = Assembly.GetExecutingAssembly().Location.Replace("dll", "exe");
-            config.WaitForPID = Environment.ProcessId.ToString();
-            config.TempAutostart = true;
-            Process.Start(exe, config.ToString());
+                string exe = Assembly.GetExecutingAssembly().Location.Replace("dll", "exe");
+                config.WaitForPID = Environment.ProcessId.ToString();
+                config.TempAutostart = true;
+                Process.Start(exe, config.ToString());
 
-            Environment.Exit(0);
+                Environment.Exit(0);
+            })
+            {
+                Name = "Restart thread"
+            }.Start();
         }
 
         [SuppressPropertyChangedWarnings]
