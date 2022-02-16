@@ -23,6 +23,9 @@ namespace Torch
         string WaitForPID { get; set; }
         string ChatName { get; set; }
         string ChatColor { get; set; }
+        string WebUsername { get; set; }
+        string WebSecret { get; set; }
+        bool DataSharing { get; set; }
         string TestPlugin { get; set; }
         bool DisconnectOnRestart { get; set; }
         int WindowWidth { get; set; }

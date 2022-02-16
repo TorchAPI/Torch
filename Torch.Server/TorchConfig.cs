@@ -33,6 +33,9 @@ namespace Torch.Server
         private bool _disconnectOnRestart;
         private string _chatName = "Server";
         private string _chatColor = "Red";
+        private string _webUsername = "";
+        private string _webSecret = "";
+        private bool _dataSharing = false;
         private bool _enableWhitelist = false;
         private List<ulong> _whitelist = new List<ulong>();
         private int _windowWidth = 980;
@@ -111,6 +114,16 @@ namespace Torch.Server
         [Arg("localplugins", "Loads all pluhins from disk, ignores the plugins defined in config.")]
         [Display(Name = "Local Plugins", Description = "Loads all pluhins from disk, ignores the plugins defined in config.", GroupName = "In-Game")]
         public bool LocalPlugins { get => _localPlugins; set => Set(value, ref _localPlugins); }
+
+        [Display(Name = "Username", Description = "Your username as registered on TorchAPI.com", GroupName = "Private Plugins")]
+        public string WebUsername { get => _webUsername; set => Set(value, ref _webUsername); }
+
+        [Display(Name = "Secret", Description = "Your secret as defined in your profile on TorchAPI.com", GroupName = "Private Plugins")]
+        public string WebSecret { get => _webSecret; set => Set(value, ref _webSecret); }
+
+        [Display(Name = "Data sharing", Description = "REQUIRED for private plugins (IP and port, Server name, world name, installed plugins and torch config!)", GroupName = "Private Plugins")]
+        public bool DataSharing { get => _dataSharing; set => Set(value, ref _dataSharing); }
+
 
         [Arg("disconnect", "When server restarts, all clients are rejected to main menu to prevent auto rejoin.")]
         [Display(Name = "Auto Disconnect", Description = "When server restarts, all clients are rejected to main menu to prevent auto rejoin.", GroupName = "In-Game")]
