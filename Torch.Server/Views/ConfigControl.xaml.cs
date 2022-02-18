@@ -144,22 +144,17 @@ namespace Torch.Server.Views
         {
             //var w = new RoleEditor(_instanceManager.DedicatedConfig.SelectedWorld);
             //w.Show();
-            var d = new RoleEditor();
             var w = _instanceManager.DedicatedConfig.SelectedWorld;
 
-            if(w.Checkpoint.PromotedUsers == null) {
-                w.Checkpoint.PromotedUsers = new VRage.Serialization.SerializableDictionary<ulong, MyPromoteLevel>();
-            }
-
-            if (w == null)
+            if (w is null)
             {
                 MessageBox.Show("A world is not selected.");
                 return;
             }
-
-            if (w.Checkpoint.PromotedUsers == null)
-                w.Checkpoint.PromotedUsers = new SerializableDictionary<ulong, MyPromoteLevel>();
-            d.Edit(w.Checkpoint.PromotedUsers.Dictionary);
+            
+            w.Checkpoint.PromotedUsers ??= new();
+            
+            new RoleEditor().Edit(w.Checkpoint.PromotedUsers.Dictionary);
             _instanceManager.DedicatedConfig.Administrators = w.Checkpoint.PromotedUsers.Dictionary.Where(k => k.Value >= MyPromoteLevel.Admin).Select(k => k.Key.ToString()).ToList();
         }
     }
