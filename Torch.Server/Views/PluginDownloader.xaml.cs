@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.ComponentModel;
+using Torch.Managers;
 
 namespace Torch.Server.Views
 {
@@ -49,17 +50,40 @@ namespace Torch.Server.Views
             var DownloadProgress = 0;
             var PercentChangeOnDownload = 100 / PluginsToDownload.Count;
 
-            foreach (PluginItem PluginItem in PluginsToDownload) {
-                if (!Task.Run(async () => await PluginQuery.Instance.DownloadPlugin(PluginItem.ID)).Result) {
-                    failedDownloads++;
+            foreach (PluginItem PluginItem in PluginsToDownload)
+            {
+                if (PluginItem.IsPrivate)
+                {
+                    //private download
+                    if (!Task.Run(async () => await PluginQuery.Instance.DownloadPrivatePlugin(PluginItem.ID, TorchBase.Instance.Config.WebUsername, TorchBase.Instance.Config.WebSecret)).Result)
+                    {
+                        failedDownloads++;
+                        DownloadProgress += PercentChangeOnDownload;
+                        (sender as BackgroundWorker).ReportProgress(DownloadProgress);
+                        continue;
+                    }
+
                     DownloadProgress += PercentChangeOnDownload;
                     (sender as BackgroundWorker).ReportProgress(DownloadProgress);
-                    continue;
+                    successfulDownloads++;
                 }
-                DownloadProgress += PercentChangeOnDownload;
-                (sender as BackgroundWorker).ReportProgress(DownloadProgress);
-                successfulDownloads++;
+                else
+                {
+                    //public download
+                    if (!Task.Run(async () => await PluginQuery.Instance.DownloadPlugin(PluginItem.ID)).Result)
+                    {
+                        failedDownloads++;
+                        DownloadProgress += PercentChangeOnDownload;
+                        (sender as BackgroundWorker).ReportProgress(DownloadProgress);
+                        continue;
+                    }
+
+                    DownloadProgress += PercentChangeOnDownload;
+                    (sender as BackgroundWorker).ReportProgress(DownloadProgress);
+                    successfulDownloads++;
+                }
             }
+
             (sender as BackgroundWorker).ReportProgress(100);
         }
 

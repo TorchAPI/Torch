@@ -18,7 +18,7 @@ namespace Torch.API.WebAPI
         private const string ALL_QUERY = "https://torchapi.com/api/plugins";
 #endif
 
-
+        private const string ALL_PRIVATE_QUERY = "https://torchapi.com/api/plugins/private/";
         private const string PLUGIN_QUERY = "https://torchapi.com/api/plugins/item/{0}";
         private readonly HttpClient _client;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -55,15 +55,26 @@ namespace Torch.API.WebAPI
             return response;
         }
 
-        public async Task<PluginFullItem> QueryOne(Guid guid)
-        {
-            return await QueryOne(guid.ToString());
-        }
-
-        public async Task<PluginFullItem> QueryOne(string guid)
+        public async Task<PluginFullItem> QueryOne(string guid, bool priv = false, string username = null, string secret = null)
         {
 
-            var h = await _client.GetAsync(string.Format(PLUGIN_QUERY, guid));
+            var h = new HttpResponseMessage();
+            if (priv)
+            {
+                //private query using PostAsync with username,secret and guid params
+                var values = new Dictionary<string, string>
+                {
+                    {"username", username},
+                    {"secret", secret},
+                    {"guid", guid}
+                };
+                var content = new FormUrlEncodedContent(values);
+                h = await _client.PostAsync(ALL_PRIVATE_QUERY, content);
+            }
+            else
+            {
+                h = await _client.GetAsync(string.Format(PLUGIN_QUERY, guid));
+            }
             if (!h.IsSuccessStatusCode)
             {
                 Log.Error($"Plugin query returned response {h.StatusCode}");
@@ -85,16 +96,18 @@ namespace Torch.API.WebAPI
             return response;
         }
 
-        public async Task<bool> DownloadPlugin(Guid guid, string path = null)
-        {
-            return await DownloadPlugin(guid.ToString(), path);
-        }
-
-        public async Task<bool> DownloadPlugin(string guid, string path = null)
+        public async Task<bool> DownloadPlugin(string guid)
         {
             var item = await QueryOne(guid);
             if (item == null) return false;
-            return await DownloadPlugin(item, path);
+            return await DownloadPlugin(item);
+        }
+
+        public async Task<bool> DownloadPrivatePlugin(string guid, string username, string secret)
+        {
+            var item = await QueryOne(guid, true, username, secret);
+            if (item == null) return false;
+            return await DownloadPlugin(item);
         }
 
         public async Task<bool> DownloadPlugin(PluginFullItem item, string path = null)
@@ -106,15 +119,8 @@ namespace Torch.API.WebAPI
 
                 Directory.CreateDirectory(relpath);
 
-                var h = await _client.GetAsync(string.Format(PLUGIN_QUERY, item.ID));
-                string res = await h.Content.ReadAsStringAsync();
-                var response = JsonConvert.DeserializeObject<PluginFullItem>(res);
-                if (response.Versions.Length == 0)
-                {
-                    Log.Error($"Selected plugin {item.Name} does not have any versions to download!");
-                    return false;
-                }
-                var version = response.Versions.FirstOrDefault(v => v.Version == response.LatestVersion);
+                
+                var version = item.Versions.FirstOrDefault(v => v.Version == item.LatestVersion);
                 if (version == null)
                 {
                     Log.Error($"Could not find latest version for selected plugin {item.Name}");
@@ -153,6 +159,7 @@ namespace Torch.API.WebAPI
         public string Author;
         public string Description;
         public string LatestVersion;
+        public bool IsPrivate;
         public bool Installed { get; set; } = false;
 
         public override string ToString()

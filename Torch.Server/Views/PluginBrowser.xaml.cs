@@ -72,6 +72,7 @@ namespace Torch.Server.Views
                                  PluginsSource.Add(item);
                              }
                          }
+
                          CurrentDescription = "Please select a plugin...";
                      });
 
@@ -109,6 +110,17 @@ namespace Torch.Server.Views
         private void DownloadButton_OnClick(object sender, RoutedEventArgs e)
         {
             var SelectedItems = PluginsList.SelectedItems;
+
+            if (!TorchBase.Instance.Managers.GetManager<PluginManager>().CanUsePrivatePlugins)
+            {
+                //if any of plugins is private, remove them from the list and notify in log
+                var privatePlugins = SelectedItems.Cast<PluginItem>().Where(i => i.IsPrivate).ToList();
+                foreach (var plugin in privatePlugins)
+                {
+                    SelectedItems.Remove(plugin);
+                    Log.Warn($"Plugin {plugin.Name} is private and cannot be installed.");
+                }
+            }
 
             foreach(PluginItem PluginItem in SelectedItems)
                 TorchBase.Instance.Config.Plugins.Add(new Guid(PluginItem.ID));

@@ -49,6 +49,7 @@ namespace Torch.Managers
         
         /// <inheritdoc />
         public IReadOnlyDictionary<Guid, ITorchPlugin> Plugins => _plugins.AsReadOnlyObservable();
+        public bool CanUsePrivatePlugins = false;
 
         public event Action<IReadOnlyCollection<ITorchPlugin>> PluginsLoaded;
         
@@ -120,6 +121,13 @@ namespace Torch.Managers
         public void LoadPlugins()
         {
             _log.Info("Loading plugins...");
+
+            //check for usage of private plugins
+            if(!string.IsNullOrEmpty(Torch.Config.WebUsername) && !string.IsNullOrEmpty(Torch.Config.WebSecret) && !Torch.Config.DataSharing) {
+                _log.Warn("Data sharing must be enabled in order to use private plugins");
+            } else if (!string.IsNullOrEmpty(Torch.Config.WebUsername) && !string.IsNullOrEmpty(Torch.Config.WebSecret)) {
+                CanUsePrivatePlugins = true;
+            }
 
             if (!string.IsNullOrEmpty(Torch.Config.TestPlugin))
             {
@@ -291,7 +299,7 @@ namespace Torch.Managers
                         return;
                     }
                     item.Manifest.Version.TryExtractVersion(out Version currentVersion);
-                    var latest = await PluginQuery.Instance.QueryOne(item.Manifest.Guid);
+                    var latest = await PluginQuery.Instance.QueryOne(item.Manifest.Guid.ToString(), false);
 
                     if (latest?.LatestVersion == null)
                     {
