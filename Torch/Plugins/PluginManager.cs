@@ -123,9 +123,7 @@ namespace Torch.Managers
             _log.Info("Loading plugins...");
 
             //check for usage of private plugins
-            if(!string.IsNullOrEmpty(Torch.Config.WebUsername) && !string.IsNullOrEmpty(Torch.Config.WebSecret) && !Torch.Config.DataSharing) {
-                _log.Warn("Data sharing must be enabled in order to use private plugins");
-            } else if (!string.IsNullOrEmpty(Torch.Config.WebUsername) && !string.IsNullOrEmpty(Torch.Config.WebSecret)) {
+            if(Torch.Config.DataSharing){
                 CanUsePrivatePlugins = true;
             }
 
@@ -299,11 +297,18 @@ namespace Torch.Managers
                         return;
                     }
                     item.Manifest.Version.TryExtractVersion(out Version currentVersion);
-                    var latest = await PluginQuery.Instance.QueryOne(item.Manifest.Guid.ToString(), false);
+                    var latest = await PluginQuery.Instance.QueryOneOnly(item.Manifest.Guid.ToString(), false, TorchBase.Instance.Identifier);
 
                     if (latest?.LatestVersion == null)
                     {
                         _log.Warn($"Plugin {item.Manifest.Name} does not have any releases on torchapi.com. Cannot update.");
+                        return;
+                    }
+
+                    if (latest.IsPrivate && !CanUsePrivatePlugins)
+                    {
+                        _log.Warn($"You cannot use {item.Manifest.Name} as data sharing is disabled in config");
+                        File.Delete(item.Path);
                         return;
                     }
 
@@ -322,7 +327,15 @@ namespace Torch.Managers
                     }
 
                     _log.Info($"Updating plugin '{item.Manifest.Name}' from {currentVersion} to {newVersion}.");
-                    await PluginQuery.Instance.DownloadPlugin(latest, item.Path);
+                    if (latest.IsPrivate)
+                    {
+                        await PluginQuery.Instance.DownloadPrivatePlugin(latest.ID, TorchBase.Instance.Identifier, TorchBase.IPAddress);
+                    }
+                    else
+                    {
+                        await PluginQuery.Instance.DownloadPlugin(latest, item.Path);
+                    }
+
                     Interlocked.Increment(ref count);
                 }
                 catch (Exception e)

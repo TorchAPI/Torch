@@ -48,7 +48,9 @@ namespace Torch.API
         /// Configuration for the current instance.
         /// </summary>
         ITorchConfig Config { get; }
-
+        
+        string Identifier { get; }
+        
         /// <inheritdoc cref="IPluginManager"/>
         [Obsolete]
         IPluginManager Plugins { get; }

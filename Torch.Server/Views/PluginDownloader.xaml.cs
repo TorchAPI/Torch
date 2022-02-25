@@ -55,7 +55,7 @@ namespace Torch.Server.Views
                 if (PluginItem.IsPrivate)
                 {
                     //private download
-                    if (!Task.Run(async () => await PluginQuery.Instance.DownloadPrivatePlugin(PluginItem.ID, TorchBase.Instance.Config.WebUsername, TorchBase.Instance.Config.WebSecret)).Result)
+                    if (!Task.Run(async () => await PluginQuery.Instance.DownloadPrivatePlugin(PluginItem.ID, TorchBase.Instance.Identifier, TorchBase.IPAddress)).Result)
                     {
                         failedDownloads++;
                         DownloadProgress += PercentChangeOnDownload;

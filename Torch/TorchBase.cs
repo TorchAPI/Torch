@@ -4,13 +4,16 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 using NLog;
 using ProtoBuf.Meta;
 using Sandbox;
@@ -88,6 +91,9 @@ namespace Torch
 
         /// <inheritdoc />
         public ITorchConfig Config { get; protected set; }
+        
+        public string Identifier { get; protected set; } 
+        public static string IPAddress { get; protected set; }
 
         /// <inheritdoc />
         public InformationalVersion TorchVersion { get; }
@@ -139,6 +145,32 @@ namespace Torch
 
             Instance = this;
             Config = config;
+            
+            //get public ip address from api and assign it to IPAddress
+            IPAddress = GetPublicIpAddress();
+            Identifier = GenerateIdentifier(config.InstancePath);
+
+            if (Config.DataSharing)
+            {
+                //post identifier to https://torchapi.com/api/servers/
+                var postData = new Dictionary<string, string>
+                {
+                    {"identifier", Identifier},
+                    {"action", "ensure_registered"},
+                    {"ip", IPAddress}
+                };
+
+                //use httpclient postAsync
+                var client = new HttpClient();
+                var response = client
+                    .PostAsync("https://torchapi.com/api/servers/", new FormUrlEncodedContent(postData)).Result;
+
+                //if response is not 200, log error
+                if (!response.IsSuccessStatusCode)
+                {
+                    Log.Error($"Failed to register server with torchapi.com. Error: {response.StatusCode}");
+                }
+            }
 
             var versionString = Assembly.GetEntryAssembly()
                                       .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
@@ -491,6 +523,45 @@ namespace Torch
                     ReflectedManager.Process(asm);
                     PatchManager.AddPatchShims(asm);
                 }
+        }
+
+        private static string GenerateIdentifier(string instancepath)
+        {
+            var location = @"SOFTWARE\Microsoft\Cryptography";
+            var name = "MachineGuid";
+
+            using (RegistryKey localMachineX64View = 
+                   RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+            {
+                using (RegistryKey rk = localMachineX64View.OpenSubKey(location))
+                {
+                    if (rk == null)
+                        throw new KeyNotFoundException(
+                            string.Format("Key Not Found: {0}", location));
+
+                    object machineGuid = rk.GetValue(name);
+                    if (machineGuid == null)
+                        throw new IndexOutOfRangeException(
+                            string.Format("Index Not Found: {0}", name));
+
+                    var identifier = instancepath + machineGuid.ToString();
+                    
+                    var sha = SHA256.Create();
+                    var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(identifier));
+                    
+                    identifier =  BitConverter.ToString(hash).Replace("-", "").Substring(0, 16);
+                    return identifier;
+                }
+            }
+        }
+        
+        private static string GetPublicIpAddress()
+        {
+            //use httpclient
+            var httpClient = new HttpClient();
+            var response = httpClient.GetAsync("https://api.ipify.org").Result;
+            var ip = response.Content.ReadAsStringAsync().Result;
+            return ip;
         }
     }
 }

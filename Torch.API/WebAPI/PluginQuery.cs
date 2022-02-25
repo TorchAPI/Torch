@@ -55,7 +55,7 @@ namespace Torch.API.WebAPI
             return response;
         }
 
-        public async Task<PluginFullItem> QueryOne(string guid, bool priv = false, string username = null, string secret = null)
+        public async Task<PluginFullItem> QueryOneOnly(string guid, bool priv = false, string instanceid = null, string ip = null)
         {
 
             var h = new HttpResponseMessage();
@@ -64,12 +64,15 @@ namespace Torch.API.WebAPI
                 //private query using PostAsync with username,secret and guid params
                 var values = new Dictionary<string, string>
                 {
-                    {"username", username},
-                    {"secret", secret},
-                    {"guid", guid}
+                    {"identifier", instanceid},
+                    {"guid", guid},
+                    {"ip", ip}
                 };
                 var content = new FormUrlEncodedContent(values);
                 h = await _client.PostAsync(ALL_PRIVATE_QUERY, content);
+                //write content response to file
+                var rs = await h.Content.ReadAsStringAsync();
+                Console.WriteLine(rs);
             }
             else
             {
@@ -77,6 +80,27 @@ namespace Torch.API.WebAPI
             }
             if (!h.IsSuccessStatusCode)
             {
+                //if the respose code is 401, it means the plugin is private and the user is not authenticated
+                if (h.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    string pluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+                    //use the guid to get the plugin name (use api to get the name)
+                    var plugin = await QueryOneOnly(guid, false);
+                    var path = Path.Combine(pluginDir, plugin.Name);
+                    
+                    //delete folder or zipfile with the name in the plugin directory
+                    if (Directory.Exists(path))
+                    {
+                        Directory.Delete(path, true);
+                    }
+                    else if (File.Exists(path))
+                    {
+                        File.Delete(path);
+                    }
+                    Log.Warn($"You are not authorized to access {plugin.Name}");
+                    return null;
+                }
+                
                 Log.Error($"Plugin query returned response {h.StatusCode}");
                 return null;
             }
@@ -98,14 +122,14 @@ namespace Torch.API.WebAPI
 
         public async Task<bool> DownloadPlugin(string guid)
         {
-            var item = await QueryOne(guid);
+            var item = await QueryOneOnly(guid);
             if (item == null) return false;
             return await DownloadPlugin(item);
         }
 
-        public async Task<bool> DownloadPrivatePlugin(string guid, string username, string secret)
+        public async Task<bool> DownloadPrivatePlugin(string guid, string instanceid, string ip)
         {
-            var item = await QueryOne(guid, true, username, secret);
+            var item = await QueryOneOnly(guid, true, instanceid, ip);
             if (item == null) return false;
             return await DownloadPlugin(item);
         }
