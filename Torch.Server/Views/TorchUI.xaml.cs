@@ -41,6 +41,10 @@ namespace Torch.Server
             Width = _config.WindowWidth;
             Height = _config.WindowHeight;
             _server = server;
+            if (server.Config.DataSharing)
+            {
+                BtnCopyIdentifier.Visibility = Visibility.Visible;
+            }
             //TODO: data binding for whole server
             DataContext = server;
             InitializeComponent();
@@ -186,6 +190,12 @@ namespace Torch.Server
 
             _config.InstancePath = name;
             _server.Managers.GetManager<InstanceManager>().LoadInstance(_config.InstancePath);
+        }
+
+        private void BtnCopyIdentifier_Click(object sender, RoutedEventArgs e) {
+            Clipboard.SetText(TorchBase.Instance.Identifier);
+            
+            MessageBox.Show("Identifier copied to clipboard");
         }
     }
 }

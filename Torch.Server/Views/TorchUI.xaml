@@ -60,6 +60,8 @@
                     <TextBlock Text="{Binding OnlinePlayers, StringFormat=Players: {0}}"/>
                 </Label.Content>
             </Label>
+            <Button x:Name="BtnCopyIdentifier" Visibility="Collapsed" Content="Copy Identifier to clipboard" Height="24" Width="170" Margin="5,1" HorizontalAlignment="Left"
+                    Click="BtnCopyIdentifier_Click"/>
         </StackPanel>
         <TabControl Grid.Row="2" Height="Auto" x:Name="TabControl" Margin="5,10,5,5">
             <TabItem Header="Log">
