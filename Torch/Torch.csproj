@@ -123,31 +123,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Views\CollectionEditor.xaml.cs">
-      <DependentUpon>CollectionEditor.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\DictionaryEditor.xaml.cs">
-      <DependentUpon>DictionaryEditor.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\EmbeddedCollectionEditor.xaml.cs">
-      <DependentUpon>EmbeddedCollectionEditor.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\FlagsEditor.xaml.cs">
-      <DependentUpon>FlagsEditor.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\ObjectCollectionEditor.xaml.cs">
-      <DependentUpon>ObjectCollectionEditor.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\ObjectEditor.xaml.cs">
-      <DependentUpon>ObjectEditor.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\PropertyGrid.xaml.cs">
-      <DependentUpon>PropertyGrid.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="..\Versioning\AssemblyVersion.cs" Link="Properties/AssemblyVersion.cs" />
-    <Compile Remove="Commands\Permissions\PermissionManager.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Torch.API\Torch.API.csproj" />
   </ItemGroup>
 </Project>

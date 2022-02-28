@@ -140,12 +140,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="TorchService.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="TorchServiceInstaller.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Remove="ServerManager.cs" />
     <Compile Remove="ViewModels\SessionSettingsViewModel1.cs" />
     <Compile Remove="Views\WorldSelectControl.xaml.cs" />

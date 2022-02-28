@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -12,7 +11,6 @@ using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.CodeAnalysis;
-using ProtoBuf;
 using Torch.Managers.PatchManager;
 using Torch.Managers.PatchManager.MSIL;
 using Torch.Utils;
@@ -42,10 +40,14 @@ namespace Torch.Patches
             context.GetPattern(Register2Method).AddTranspiler(nameof(RegisterTranspiler));
         }
 
-        private static void WhitelistCtorPrefix(MyScriptCompiler scriptCompiler)
+        private static void WhitelistCtorPrefix(MyScriptCompiler scriptCompiler, MyScriptWhitelist __instance)
         {
+            var basePath = new FileInfo(typeof(object).Assembly.Location).DirectoryName!;
+            
             scriptCompiler.AddReferencedAssemblies(
-                typeof(ValueType).Assembly.Location,
+                Path.Combine(basePath, "netstandard.dll"),
+                Path.Combine(basePath, "mscorlib.dll"),
+                Path.Combine(basePath, "System.Runtime.dll"),
                 typeof(LinkedList<>).Assembly.Location,
                 typeof(Regex).Assembly.Location,
                 typeof(Enumerable).Assembly.Location,
@@ -55,6 +57,7 @@ namespace Torch.Patches
                 typeof(TypeConverter).Assembly.Location,
                 typeof(System.Diagnostics.TraceSource).Assembly.Location,
                 typeof(ProtoBuf.Meta.RuntimeTypeModel).Assembly.Location,
+                typeof(ProtoBuf.ProtoMemberAttribute).Assembly.Location,
                 Path.Combine(MyFileSystem.ExePath, "Sandbox.Game.dll"),
                 Path.Combine(MyFileSystem.ExePath, "Sandbox.Common.dll"),
                 Path.Combine(MyFileSystem.ExePath, "Sandbox.Graphics.dll"),
@@ -73,6 +76,9 @@ namespace Torch.Patches
             MyModWatchdog.Init(updateThread);
             MyScriptCompiler.Static.AddImplicitIngameNamespacesFromTypes(referencedTypes);
             MyScriptCompiler.Static.AddConditionalCompilationSymbols(symbols);
+            using var batch = MyScriptCompiler.Static.Whitelist.OpenBatch();
+            // Dict and queue in different assemblies, microsoft being microsoft
+            batch.AllowNamespaceOfTypes(MyWhitelistTarget.ModApi, typeof(ConcurrentQueue<>));
             return false;
         }
         
