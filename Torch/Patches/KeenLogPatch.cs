@@ -103,27 +103,27 @@ namespace Torch.Patches
         private static bool PrefixWriteLine(MyLog __instance, string msg)
         {
             if (__instance.LogEnabled && _log.IsDebugEnabled)
-                _log.Debug($"{" ".PadRight(3 * GetIndentByCurrentThread())}{msg}");
+                _log.Debug($"{string.Empty.PadRight(3 * GetIndentByCurrentThread(), ' ')}{msg}");
             return false;
         }
 
         private static bool PrefixWriteLineConsole(MyLog __instance, string msg)
         {
             if (__instance.LogEnabled && _log.IsInfoEnabled)
-                _log.Info($"{" ".PadRight(3 * GetIndentByCurrentThread())}{msg}");
+                _log.Info($"{string.Empty.PadRight(3 * GetIndentByCurrentThread(), ' ')}{msg}");
             return false;
         }
 
         private static bool PrefixAppendToClosedLog(MyLog __instance, string text)
         {
             if (__instance.LogEnabled && _log.IsDebugEnabled)
-                _log.Debug($"{" ".PadRight(3 * GetIndentByCurrentThread())}{text}");
+                _log.Debug($"{string.Empty.PadRight(3 * GetIndentByCurrentThread(), ' ')}{text}");
             return false;
         }
         private static bool PrefixWriteLineOptions(MyLog __instance, string message, LoggingOptions option)
         {
             if (__instance.LogEnabled && __instance.LogFlag(option) && _log.IsDebugEnabled)
-                _log.Info($"{" ".PadRight(3 * GetIndentByCurrentThread())}{message}");
+                _log.Info($"{string.Empty.PadRight(3 * GetIndentByCurrentThread(), ' ')}{message}");
             return false;
         }
 
@@ -145,7 +145,7 @@ namespace Torch.Patches
                 return false;
 
             // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
-            _log.Log(new(LogLevelFor(severity), _log.Name, $"{" ".PadRight(3 * GetIndentByCurrentThread())}{string.Format(format, args)}"));
+            _log.Log(new(LogLevelFor(severity), _log.Name, $"{string.Empty.PadRight(3 * GetIndentByCurrentThread(), ' ')}{string.Format(format, args)}"));
             return false;
         }
 
