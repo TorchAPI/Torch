@@ -360,7 +360,7 @@ namespace Torch.Managers
 
 
                     using var stream = entry.Open();
-                    assemblies.Add(stream.ProcessWeavers());
+                    assemblies.Add(stream.ProcessWeavers(zipFile));
                 }
             }
             else
@@ -378,7 +378,7 @@ namespace Torch.Managers
                     //    continue;
 
                     using var stream = File.OpenRead(file);
-                    assemblies.Add(stream.ProcessWeavers());
+                    assemblies.Add(stream.ProcessWeavers(item.Path));
                 }
 
                 
