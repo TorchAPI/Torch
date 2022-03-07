@@ -29,12 +29,7 @@ namespace Torch.Server
         private const string STEAMCMD_DIR = "steamcmd";
         private const string STEAMCMD_ZIP = "temp.zip";
         private static readonly string STEAMCMD_EXE = "steamcmd.exe";
-        private static readonly string RUNSCRIPT_FILE = "runscript.txt";
-
-        private const string RUNSCRIPT = @"force_install_dir ../
-login anonymous
-app_update 298740
-quit";
+        private const string STEAMCMD_ARGS = "+force_install_dir \"{0}\" +login anonymous +app_update 298740 +quit";
         private TorchServer _server;
 
         internal Persistent<TorchConfig> ConfigPersistent { get; }
@@ -140,10 +135,6 @@ quit";
                 Directory.CreateDirectory(path);
             }
 
-            var runScriptPath = Path.Combine(path, RUNSCRIPT_FILE);
-            if (!File.Exists(runScriptPath))
-                File.WriteAllText(runScriptPath, RUNSCRIPT);
-
             var steamCmdExePath = Path.Combine(path, STEAMCMD_EXE);
             if (!File.Exists(steamCmdExePath))
             {
@@ -166,8 +157,9 @@ quit";
             }
 
             log.Info("Checking for DS updates.");
-            var steamCmdProc = new ProcessStartInfo(steamCmdExePath, "+runscript runscript.txt")
+            var steamCmdProc = new ProcessStartInfo(steamCmdExePath)
             {
+                Arguments = string.Format(STEAMCMD_ARGS, Environment.GetEnvironmentVariable("TORCH_GAME_PATH") ?? "../"),
                 WorkingDirectory = path,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
