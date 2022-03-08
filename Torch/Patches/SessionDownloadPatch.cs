@@ -38,7 +38,7 @@ namespace Torch.Patches
             var factionList = __result.Checkpoint.Factions.Factions;
 
             foreach(var faction in factionList) {
-                if (faction.Tag.Length > 512 || faction.Name.Length > 512 || faction.Description.Length > 512 || faction.PrivateInfo.Length > 512) {
+                if (faction.Tag?.Length > 512 || faction.Name?.Length > 512 || faction.Description?.Length > 512 || faction.PrivateInfo?.Length > 512) {
                     __result.Checkpoint.Factions.Factions.Remove(faction);
                 }
             }
