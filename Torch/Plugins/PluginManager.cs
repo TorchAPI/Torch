@@ -167,7 +167,8 @@ namespace Torch.Managers
 
             if (Torch.Config.ShouldUpdatePlugins)
             {
-                if (DownloadPluginUpdates(pluginsToLoad))
+                List<PluginItem> updatedPluginList = new List<PluginItem>();
+                if (DownloadPluginUpdates(pluginsToLoad, out updatedPluginList))
                 {
                     // Resort the plugins just in case updates changed load hints.
                     pluginItems = GetLocalPlugins(PluginDir);
@@ -184,7 +185,8 @@ namespace Torch.Managers
 
                         pluginsToLoad.Add(pluginItem);
                     }
-                }   
+                }
+                pluginsToLoad = pluginItems;
             }
 
             // Sort based on dependencies.
@@ -268,6 +270,13 @@ namespace Torch.Managers
                     }
                 }
                 
+                var pluginFullItem = Task.Run(async () => await PluginQuery.Instance.QueryOneOnly(manifest.Guid.ToString())).Result;
+                if(pluginFullItem.IsPrivate && (pluginFullItem != null))
+                {
+                    _log.Warn($"Plugin {manifest.Name} ({item}) is private and cannot be loaded as local. Skipping load!");
+                    continue;
+                }
+
                 results.Add(new PluginItem
                 {
                     Filename = item,
@@ -283,10 +292,11 @@ namespace Torch.Managers
             return results;
         } 
         
-        private bool DownloadPluginUpdates(List<PluginItem> plugins)
+        private bool DownloadPluginUpdates(List<PluginItem> plugins, out List<PluginItem> returnedPlugins)
         {
             _log.Info("Checking for plugin updates...");
             var count = 0;
+            List<PluginItem> pluginsToUpdate = plugins;
             Task.WaitAll(plugins.Select(async item =>
             {
                 try
@@ -308,7 +318,7 @@ namespace Torch.Managers
                     if (latest.IsPrivate && !CanUsePrivatePlugins)
                     {
                         _log.Warn($"You cannot use {item.Manifest.Name} as data sharing is disabled in config");
-                        File.Delete(item.Path);
+                        pluginsToUpdate.Remove(item);
                         return;
                     }
 
@@ -346,6 +356,7 @@ namespace Torch.Managers
             }).ToArray());
 
             _log.Info($"Updated {count} plugins.");
+            returnedPlugins = pluginsToUpdate;
             return count > 0;
         }
         
