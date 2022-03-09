@@ -39,34 +39,28 @@ namespace Torch.Patches
             var factionsToRemove = new List<MyObjectBuilder_Faction>();
             foreach(var faction in __result.Checkpoint.Factions.Factions) {
                 
-                //regex to see if any string follows format of \&.*?\;
-                Regex regex = new Regex(@"\&.*?\;");
-            
                 //replace null strings with empty strings
                 string privateInfo = faction.PrivateInfo ?? "";
                 string description = faction.Description ?? "";
                 string factionName = faction.Name ?? "";
                 string factionTag = faction.Tag ?? "";
-            
-                if (regex.IsMatch(factionTag) || regex.IsMatch(factionName) || regex.IsMatch(description) || regex.IsMatch(privateInfo)) {
-                    factionsToRemove.Add(faction);
-                    continue;
-                }
 
                 string pattern = "[^ -~]+";
                 Regex reg_exp = new Regex(pattern);
+
                 if (reg_exp.IsMatch(factionTag) || reg_exp.IsMatch(factionName) || reg_exp.IsMatch(description) || reg_exp.IsMatch(privateInfo)) {
+                    faction.PrivateInfo = reg_exp.Replace(privateInfo, "_");
+                    faction.Description = reg_exp.Replace(description, "_");
+                    faction.Name = reg_exp.Replace(factionName, "_");
+                    faction.Tag = reg_exp.Replace(factionTag, "_");
                     factionsToRemove.Add(faction);
                     continue;
-                }
-
-                if (faction.Tag?.Length > 512 || faction.Name?.Length > 512 || faction.Description?.Length > 512 || faction.PrivateInfo?.Length > 512) {
-                    factionsToRemove.Add(faction);
                 }
             }
             
             foreach (var faction in factionsToRemove) {
                 __result.Checkpoint.Factions.Factions.Remove(faction);
+                __result.Checkpoint.Factions.Factions.Add(faction);
             }
         }
     }
