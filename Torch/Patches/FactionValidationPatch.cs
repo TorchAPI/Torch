@@ -48,6 +48,13 @@ namespace Torch.Patches
                 _log.Warn($"Attempted creation of faction with illegal characters.");
                 return false;
             }
+            
+            string pattern = "[^ -~]+";
+            Regex reg_exp = new Regex(pattern);
+            if (reg_exp.IsMatch(factionTag) || reg_exp.IsMatch(factionName) || reg_exp.IsMatch(description) || reg_exp.IsMatch(privateInfo))
+            {
+                return false;
+            }
 
             //check to see if any of the strings are longer than 512 characters
             if (factionTag.Length > 512 || factionName.Length > 512 || description.Length > 512 || privateInfo.Length > 512) {
