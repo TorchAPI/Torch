@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Text.RegularExpressions;
 using NLog;
 using Sandbox.Definitions;
 using Sandbox.Engine.Multiplayer;
@@ -32,6 +33,21 @@ namespace Torch.Patches
         private static bool PrefixCreateFactionServer(long founderId, string factionTag, string factionName, string description, string privateInfo,
             MyFactionDefinition factionDef = null, MyFactionTypes type = MyFactionTypes.None, SerializableDefinitionId? factionIconGroupId = null, int factionIconId = 0,
             Vector3 factionColor = new Vector3(), Vector3 factionIconColor = new Vector3(), int score = 0) {
+
+            //regex to see if any string follows format of \&.*?\;
+            Regex regex = new Regex(@"\&.*?\;");
+            
+            //replace null strings with empty strings
+            privateInfo = privateInfo ?? "";
+            description = description ?? "";
+            factionName = factionName ?? "";
+            factionTag = factionTag ?? "";
+            
+            
+            if (regex.IsMatch(factionTag) || regex.IsMatch(factionName) || regex.IsMatch(description) || regex.IsMatch(privateInfo)) {
+                _log.Warn($"Attempted creation of faction with illegal characters.");
+                return false;
+            }
 
             //check to see if any of the strings are longer than 512 characters
             if (factionTag.Length > 512 || factionName.Length > 512 || description.Length > 512 || privateInfo.Length > 512) {
