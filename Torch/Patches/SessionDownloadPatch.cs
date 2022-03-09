@@ -48,10 +48,6 @@ namespace Torch.Patches
                 string factionName = faction.Name ?? "";
                 string factionTag = faction.Tag ?? "";
             
-                //convert strings to hex in new variable
-                string privateInfoHex = privateInfo.ToHex();
-                
-            
                 if (regex.IsMatch(factionTag) || regex.IsMatch(factionName) || regex.IsMatch(description) || regex.IsMatch(privateInfo)) {
                     factionsToRemove.Add(faction);
                     continue;
@@ -72,16 +68,6 @@ namespace Torch.Patches
             foreach (var faction in factionsToRemove) {
                 __result.Checkpoint.Factions.Factions.Remove(faction);
             }
-        }
-        
-        public static string ToHex(this string input)
-        {
-            var sb = new StringBuilder();
-            foreach (var c in input)
-            {
-                sb.Append(Convert.ToInt32(c).ToString("X"));
-            }
-            return sb.ToString();
         }
     }
 }
