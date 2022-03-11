@@ -35,33 +35,6 @@ namespace Torch.Patches
             __result.Checkpoint.Mods = __result.Checkpoint.Mods.ToList();
             
             __result.Checkpoint.Mods.AddRange(SessionManager.OverrideMods);
-
-            var factionsToRemove = new List<MyObjectBuilder_Faction>();
-            foreach(var faction in __result.Checkpoint.Factions.Factions) {
-                
-                //replace null strings with empty strings
-                string privateInfo = faction.PrivateInfo ?? "";
-                string description = faction.Description ?? "";
-                string factionName = faction.Name ?? "";
-                string factionTag = faction.Tag ?? "";
-
-                string pattern = "[^ -~]+";
-                Regex reg_exp = new Regex(pattern);
-
-                if (reg_exp.IsMatch(factionTag) || reg_exp.IsMatch(factionName) || reg_exp.IsMatch(description) || reg_exp.IsMatch(privateInfo)) {
-                    faction.PrivateInfo = reg_exp.Replace(privateInfo, "_");
-                    faction.Description = reg_exp.Replace(description, "_");
-                    faction.Name = reg_exp.Replace(factionName, "_");
-                    faction.Tag = reg_exp.Replace(factionTag, "_");
-                    factionsToRemove.Add(faction);
-                    continue;
-                }
-            }
-            
-            foreach (var faction in factionsToRemove) {
-                __result.Checkpoint.Factions.Factions.Remove(faction);
-                __result.Checkpoint.Factions.Factions.Add(faction);
-            }
         }
     }
 }
