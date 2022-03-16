@@ -310,7 +310,7 @@ namespace Torch.Managers
 
                     if (latest?.LatestVersion == null)
                     {
-                        _log.Warn($"Plugin {item.Manifest.Name} does not have any releases on torchapi.net. Cannot update.");
+                        _log.Warn($"Plugin {item.Manifest.Name} does not have any releases on torchapi.com. Cannot update.");
                         return;
                     }
 

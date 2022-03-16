@@ -11,6 +11,8 @@ using Torch.Managers.PatchManager;
 using Torch.Utils;
 using VRage;
 using VRage.Utils;
+using Sandbox.Engine.Multiplayer;
+using Sandbox.Game.World;
 
 namespace Torch.Patches
 {
