@@ -40,7 +40,13 @@ namespace Torch.Server.Managers
 
             protected abstract EntityControlViewModel Create(EntityViewModel evm);
 
+#if NETFRAMEWORK
+            [ReflectedGetter(Name = "Keys")]
+            private static readonly Func<ConditionalWeakTable<EntityViewModel, EntityControlViewModel>, ICollection<EntityViewModel>> WeakTableKeys = null!;
+            internal IEnumerable<EntityViewModel> Keys => WeakTableKeys(_models);
+#else
             internal IEnumerable<EntityViewModel> Keys => _models.Select(b => b.Key);
+#endif
 
             internal EntityControlViewModel GetOrCreate(EntityViewModel evm)
             {

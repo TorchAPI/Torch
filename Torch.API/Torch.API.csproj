@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net6-windows</TargetFramework>
+    <LangVersion>10</LangVersion>
     <AssemblyTitle>Torch API</AssemblyTitle>
     <Product>Torch</Product>
     <Copyright>Copyright © Torch API 2017</Copyright>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <OutputPath>..\bin\$(Platform)\$(Configuration)\</OutputPath>
     <UseWpf>True</UseWpf>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <PlatformTarget>x64</PlatformTarget>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
@@ -19,6 +19,9 @@
   <ItemGroup>
     <PackageReference Include="NLog" Version="5.0.0-rc2" />
     <PackageReference Include="SemanticVersioning" Version="2.0.0" />
+    <PackageReference Include="System.Text.Json" Version="6.0.2" Condition="$(TargetFramework) == 'net48'" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" Condition="$(TargetFramework) == 'net48'" />
+    <PackageReference Include="System.Net.Http.Json" Version="6.0.0" Condition="$(TargetFramework) == 'net48'" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="HavokWrapper, Version=1.0.6278.22649, Culture=neutral, processorArchitecture=AMD64">
@@ -98,8 +101,5 @@
       <Private>False</Private>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\Versioning\AssemblyVersion.cs" Link="Properties/AssemblyVersion.cs" />
   </ItemGroup>
 </Project>

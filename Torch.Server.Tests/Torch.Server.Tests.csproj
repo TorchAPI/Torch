@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net6-windows</TargetFramework>
+    <LangVersion>10</LangVersion>
     <NoWarn>1591,0649</NoWarn>
     <AssemblyTitle>Torch Server Tests</AssemblyTitle>
     <Product>Torch</Product>
@@ -26,9 +27,6 @@
       <HintPath>..\GameBinaries\VRage.Game.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\Versioning\AssemblyVersion.cs" Link="Properties\AssemblyVersion.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Torch.API\Torch.API.csproj" />

@@ -9,13 +9,11 @@ namespace Torch.Server;
 internal class UnhandledExceptionHandler
 {
     private readonly TorchConfig _config;
-    private readonly bool _isService;
     private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
-    public UnhandledExceptionHandler(TorchConfig config, bool isService)
+    public UnhandledExceptionHandler(TorchConfig config)
     {
         _config = config;
-        _isService = isService;
     }
     
     internal void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -26,7 +24,7 @@ internal class UnhandledExceptionHandler
         Log.Fatal(ex.ToStringDemystified());
         LogManager.Flush();
         
-        if (_isService)
+        if (ApplicationContext.Current.IsService)
             Environment.Exit(1);
         
         if (_config.RestartOnCrash)
@@ -34,7 +32,11 @@ internal class UnhandledExceptionHandler
             Console.WriteLine("Restarting in 5 seconds.");
             Thread.Sleep(5000);
             var exe = typeof(Program).Assembly.Location;
+#if NETFRAMEWORK
+            _config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
+#else
             _config.WaitForPID = Environment.ProcessId.ToString();
+#endif
             Process.Start(exe, _config.ToString());
         }
         else

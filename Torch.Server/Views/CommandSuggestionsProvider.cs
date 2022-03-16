@@ -32,7 +32,7 @@ public class CommandSuggestionsProvider : ISuggestionProvider
     {
         if (_commandManager is null || !_commandManager.IsCommand(filter))
             yield break;
-        var args = filter[1..].Split(' ').ToList();
+        var args = filter.Substring(1).Split(' ').ToList();
         var skip = _commandManager.Commands.GetNode(args, out var node);
         if (skip == -1)
             yield break;
@@ -42,7 +42,7 @@ public class CommandSuggestionsProvider : ISuggestionProvider
         {
             if (lastArg != node.Name && !subcommandsKey.Contains(lastArg))
                 continue;
-            yield return $"!{string.Join(' ', node.GetPath())} {subcommandsKey}";
+            yield return $"!{string.Join(" ", node.GetPath())} {subcommandsKey}";
         }
     }
 }

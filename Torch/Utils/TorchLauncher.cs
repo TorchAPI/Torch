@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Loader;
-using System.Text;
-using System.Threading.Tasks;
-using ProtoBuf;
-using Torch.API;
 
 namespace Torch.Utils
 {
@@ -23,7 +17,13 @@ namespace Torch.Utils
                 try
                 {
                     var name = AssemblyName.GetAssemblyName(file);
-                    Assemblies.TryAdd(name.Name ?? name.FullName.Split(',')[0], file);
+                    var key = name.Name ?? name.FullName.Split(',')[0];
+#if NETFRAMEWORK
+                    if (!Assemblies.ContainsKey(key))
+                        Assemblies.Add(key, file);
+#else
+                    Assemblies.TryAdd(key, file);
+#endif
                 }
                 catch (BadImageFormatException)
                 {
@@ -37,7 +37,7 @@ namespace Torch.Utils
         private static Assembly CurrentDomainOnAssemblyResolve(object sender, ResolveEventArgs args)
         {
             var name = args.Name;
-            return Assemblies.TryGetValue(name[..name.IndexOf(',')], out var path) ? Assembly.LoadFrom(path) : null;
+            return Assemblies.TryGetValue(name.IndexOf(',') > 0 ? name.Substring(0, name.IndexOf(',')) : name, out var path) ? Assembly.LoadFrom(path) : null;
         }
     }
 }

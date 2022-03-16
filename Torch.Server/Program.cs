@@ -3,6 +3,7 @@ using System.IO;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
+using Torch.API;
 using Torch.Utils;
 
 namespace Torch.Server
@@ -12,112 +13,71 @@ namespace Torch.Server
         [STAThread]
         public static void Main(string[] args)
         {
-            var isService = Environment.GetEnvironmentVariable("TORCH_SERVICE")
-                ?.Equals(bool.TrueString, StringComparison.OrdinalIgnoreCase) ?? false;
-            //Ensures that all the files are downloaded in the Torch directory.
-            var workingDir = AppContext.BaseDirectory;
-            var binDir = Path.Combine(Environment.GetEnvironmentVariable("TORCH_GAME_PATH") ?? workingDir, "DedicatedServer64");
-            Directory.SetCurrentDirectory(Environment.GetEnvironmentVariable("TORCH_GAME_PATH") ?? workingDir);
-            
-            if (!isService && Directory.Exists(binDir))
-                foreach (var file in Directory.GetFiles(binDir, "System.*.dll"))
-                {
-                    File.Delete(file);
-                }
+            var context = CreateApplicationContext();
 
-            // Breaks on Windows Server 2019
-#if TORCH_SERVICE
-            if (!new ComputerInfo().OSFullName.Contains("Server 2019") && !Environment.UserInteractive)
-            {
-                using (var service = new TorchService(args))
-                    ServiceBase.Run(service);
-                return;
-            }
-#endif
+            SetupLogging();
 
-            var instanceName = Environment.GetEnvironmentVariable("TORCH_INSTANCE") ?? "Instance";
-            string instancePath;
-            
-            if (Path.IsPathRooted(instanceName))
-            {
-                instancePath = instanceName;
-                instanceName = Path.GetDirectoryName(instanceName);
-            }
-            else
-            {
-                instancePath = Directory.CreateDirectory(instanceName).FullName;
-            }
-            
-            var oldNlog = Path.Combine(workingDir, "NLog.config");
-            var newNlog = Path.Combine(instancePath, "NLog.config");
-            if (File.Exists(oldNlog) && !File.ReadAllText(oldNlog).Contains("FlowDocument", StringComparison.Ordinal))
-                File.Move(oldNlog, newNlog, true);
-            else if (!File.Exists(newNlog))
-                using (var f = File.Create(newNlog))
-                    typeof(Program).Assembly.GetManifestResourceStream("Torch.Server.NLog.config")!.CopyTo(f);
-
-            var oldTorchCfg = Path.Combine(workingDir, "Torch.cfg");
-            var torchCfg = Path.Combine(instancePath, "Torch.cfg");
+            var oldTorchCfg = Path.Combine(context.TorchDirectory.FullName, "Torch.cfg");
+            var torchCfg = Path.Combine(context.InstanceDirectory.FullName, "Torch.cfg");
             
             if (File.Exists(oldTorchCfg))
-                File.Move(oldTorchCfg, torchCfg, true);
+                File.Move(oldTorchCfg, torchCfg);
 
             var config = Persistent<TorchConfig>.Load(torchCfg);
-            config.Data.InstanceName = instanceName;
-            config.Data.InstancePath = instancePath;
+            config.Data.InstanceName = context.InstanceName;
+            config.Data.InstancePath = context.InstanceDirectory.FullName;
+            
             if (!config.Data.Parse(args))
             {
                 Console.WriteLine("Invalid arguments");
                 Environment.Exit(1);
             }
 
-            var handler = new UnhandledExceptionHandler(config.Data, isService);
+            var handler = new UnhandledExceptionHandler(config.Data);
             AppDomain.CurrentDomain.UnhandledException += handler.OnUnhandledException;
-            
-            Target.Register<LogViewerTarget>(nameof(LogViewerTarget));
-            TorchLogManager.RegisterTargets(Environment.GetEnvironmentVariable("TORCH_LOG_EXTENSIONS_PATH") ??
-                                            Path.Combine(instancePath, "LoggingExtensions"));
-            
-            TorchLogManager.SetConfiguration(new XmlLoggingConfiguration(newNlog));
 
-            var initializer = new Initializer(workingDir, config);
+            var initializer = new Initializer(config);
             if (!initializer.Initialize(args))
                 Environment.Exit(1);
 
-            TorchLauncher.Launch(workingDir, binDir);
+#if DEBUG
+            TorchLauncher.Launch(context.TorchDirectory.FullName, context.GameBinariesDirectory.FullName);
+#else
+            TorchLauncher.Launch(context.TorchDirectory.FullName, Path.Combine(context.TorchDirectory.FullName, "torch64"),
+                context.GameBinariesDirectory.FullName);
+#endif
             
-            CopyNative(binDir);
+            CopyNative();
             
-            initializer.Run(isService, instanceName, instancePath);
+            initializer.Run();
         }
 
-        private static void CopyNative(string binPath)
+        private static void CopyNative()
         {
             var log = LogManager.GetLogger("TorchLauncher");
             
-            var workingDir = new DirectoryInfo(Directory.GetCurrentDirectory());
-            if (workingDir.Attributes.HasFlag(FileAttributes.ReadOnly))
+            if (ApplicationContext.Current.GameFilesDirectory.Attributes.HasFlag(FileAttributes.ReadOnly))
             {
-                log.Warn("Game directory is readonly. You should copy steam_api64.dll, Havok.dll from bin manually");
+                log.Warn("Torch directory is readonly. You should copy steam_api64.dll, Havok.dll from bin manually");
                 return;
             }
 
             try
             {
-                var apiSource = Path.Combine(binPath, "steam_api64.dll");
-                var apiTarget = Path.Combine(workingDir.FullName, "steam_api64.dll");
+                var apiSource = Path.Combine(ApplicationContext.Current.GameBinariesDirectory.FullName, "steam_api64.dll");
+                var apiTarget = Path.Combine(ApplicationContext.Current.GameFilesDirectory.FullName, "steam_api64.dll");
                 if (!File.Exists(apiTarget))
                 {
                     File.Copy(apiSource, apiTarget);
                 }
-                else if (File.GetLastWriteTime(apiTarget) < File.GetLastWriteTime(binPath))
+                else if (File.GetLastWriteTime(apiTarget) < ApplicationContext.Current.GameBinariesDirectory.LastWriteTime)
                 {
                     File.Delete(apiTarget);
                     File.Copy(apiSource, apiTarget);
                 }
 
-                var havokSource = Path.Combine(binPath, "Havok.dll");
-                var havokTarget = Path.Combine(workingDir.FullName, "Havok.dll");
+                var havokSource = Path.Combine(ApplicationContext.Current.GameBinariesDirectory.FullName, "Havok.dll");
+                var havokTarget = Path.Combine(ApplicationContext.Current.GameFilesDirectory.FullName, "Havok.dll");
 
                 if (!File.Exists(havokTarget))
                 {
@@ -137,6 +97,50 @@ namespace Torch.Server
             {
                 log.Error(e);
             }
+        }
+
+        private static void SetupLogging()
+        {
+            var oldNlog = Path.Combine(ApplicationContext.Current.TorchDirectory.FullName, "NLog.config");
+            var newNlog = Path.Combine(ApplicationContext.Current.InstanceDirectory.FullName, "NLog.config");
+            if (File.Exists(oldNlog) && !File.ReadAllText(oldNlog).Contains("FlowDocument"))
+                File.Move(oldNlog, newNlog);
+            else if (!File.Exists(newNlog))
+                using (var f = File.Create(newNlog))
+                    typeof(Program).Assembly.GetManifestResourceStream("Torch.Server.NLog.config")!.CopyTo(f);
+            
+            Target.Register<LogViewerTarget>(nameof(LogViewerTarget));
+            TorchLogManager.RegisterTargets(Environment.GetEnvironmentVariable("TORCH_LOG_EXTENSIONS_PATH") ??
+                                            Path.Combine(ApplicationContext.Current.InstanceDirectory.FullName, "LoggingExtensions"));
+            
+            TorchLogManager.SetConfiguration(new XmlLoggingConfiguration(newNlog));
+        }
+
+        private static IApplicationContext CreateApplicationContext()
+        {
+            var isService = Environment.GetEnvironmentVariable("TORCH_SERVICE")
+                ?.Equals(bool.TrueString, StringComparison.OrdinalIgnoreCase) ?? false;
+            
+            var workingDir = AppContext.BaseDirectory;
+            var gamePath = Environment.GetEnvironmentVariable("TORCH_GAME_PATH") ?? workingDir;
+            var binDir = Path.Combine(gamePath, "DedicatedServer64");
+            Directory.SetCurrentDirectory(gamePath);
+
+            var instanceName = Environment.GetEnvironmentVariable("TORCH_INSTANCE") ?? "Instance";
+            string instancePath;
+            
+            if (Path.IsPathRooted(instanceName))
+            {
+                instancePath = instanceName;
+                instanceName = Path.GetDirectoryName(instanceName);
+            }
+            else
+            {
+                instancePath = Directory.CreateDirectory(instanceName).FullName;
+            }
+            
+            return new ApplicationContext(new(workingDir), new(gamePath), new(binDir), 
+                new(instancePath), instanceName, isService);
         }
     }
 }

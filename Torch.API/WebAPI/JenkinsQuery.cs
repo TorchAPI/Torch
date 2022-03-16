@@ -68,7 +68,11 @@ namespace Torch.API.WebAPI
                 return false;
             }
             var s = await h.Content.ReadAsStreamAsync();
+#if !NETFRAMEWORK
             await using var fs = new FileStream(path, FileMode.Create);
+#else
+            using var fs = new FileStream(path, FileMode.Create);
+#endif
             await s.CopyToAsync(fs);
             return true;
         }

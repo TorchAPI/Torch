@@ -2,11 +2,10 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6-windows</TargetFramework>
+    <LangVersion>10</LangVersion>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <PublishUrl>publish\</PublishUrl>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <AssemblyTitle>Torch Server</AssemblyTitle>
     <Product>Torch</Product>
@@ -14,13 +13,16 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <OutputPath>..\bin\$(Platform)\$(Configuration)\</OutputPath>
     <UseWPF>true</UseWPF>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <PlatformTarget>x64</PlatformTarget>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
     <IsPackable>false</IsPackable>
     <NeutralLanguage>en</NeutralLanguage>
+    
+    <BeautyLibsDir>torch64</BeautyLibsDir>
+    <NoBeautyFlag>True</NoBeautyFlag>
+    <ForceBeauty>True</ForceBeauty>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>Torch.Server.Program</StartupObject>
@@ -40,6 +42,7 @@
     <PackageReference Include="PropertyChanged.Fody" Version="3.4.0" PrivateAssets="all" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="System.Management" Version="6.0.0" />
+    <PackageReference Include="nulastudio.NetCoreBeauty" Version="1.2.9.3" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="HavokWrapper, Version=1.0.6051.28726, Culture=neutral, processorArchitecture=AMD64">
@@ -143,7 +146,6 @@
     <Compile Remove="ServerManager.cs" />
     <Compile Remove="ViewModels\SessionSettingsViewModel1.cs" />
     <Compile Remove="Views\WorldSelectControl.xaml.cs" />
-    <Compile Include="..\Versioning\AssemblyVersion.cs" Link="Properties/AssemblyVersion.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Torch.API\Torch.API.csproj" />

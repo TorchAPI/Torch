@@ -221,7 +221,11 @@ namespace Torch.Server
                 LogManager.Flush();
 
                 string exe = Assembly.GetExecutingAssembly().Location.Replace("dll", "exe");
+#if NETFRAMEWORK
+                config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
+#else
                 config.WaitForPID = Environment.ProcessId.ToString();
+#endif
                 config.TempAutostart = true;
                 Process.Start(exe, config.ToString());
 
@@ -370,35 +374,37 @@ namespace Torch.Server
             // return stack.ToString();
 
             // Modified from https://www.examplefiles.net/cs/579311
-            using (var target = DataTarget.CreateSnapshotAndAttach(Environment.ProcessId))
-            {
-                var runtime = target.ClrVersions[0].CreateRuntime();
+#if NETFRAMEWORK
+            using var target = DataTarget.CreateSnapshotAndAttach(Process.GetCurrentProcess().Id);
+#else
+            using var target = DataTarget.CreateSnapshotAndAttach(Environment.ProcessId);
+#endif
+            var runtime = target.ClrVersions[0].CreateRuntime();
 
-                var clrThread = runtime.Threads.First(b => b.ManagedThreadId == thread.ManagedThreadId);
+            var clrThread = runtime.Threads.First(b => b.ManagedThreadId == thread.ManagedThreadId);
 
-                var sb = new StringBuilder();
+            var sb = new StringBuilder();
                 
-                foreach (var frame in clrThread.EnumerateStackTrace())
+            foreach (var frame in clrThread.EnumerateStackTrace())
+            {
+                sb.Append('\t');
+                switch (frame.Kind)
                 {
-                    sb.Append('\t');
-                    switch (frame.Kind)
-                    {
-                        case ClrStackFrameKind.Unknown:
-                            sb.AppendLine("[Unknown]");
-                            break;
-                        case ClrStackFrameKind.ManagedMethod:
-                            sb.AppendLine(frame.Method?.Signature ?? "[Unable to get method signature]");
-                            break;
-                        case ClrStackFrameKind.Runtime:
-                            sb.AppendLine("[CLR Runtime]");
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException(nameof(frame.Kind), frame.Kind, "Incorrect value in EnumerateStackTrace");
-                    }
+                    case ClrStackFrameKind.Unknown:
+                        sb.AppendLine("[Unknown]");
+                        break;
+                    case ClrStackFrameKind.ManagedMethod:
+                        sb.AppendLine(frame.Method?.Signature ?? "[Unable to get method signature]");
+                        break;
+                    case ClrStackFrameKind.Runtime:
+                        sb.AppendLine("[CLR Runtime]");
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(frame.Kind), frame.Kind, "Incorrect value in EnumerateStackTrace");
                 }
-
-                return sb.ToString();
             }
+
+            return sb.ToString();
         }
 
         #endregion

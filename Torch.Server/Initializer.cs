@@ -36,7 +36,7 @@ namespace Torch.Server
         public TorchConfig Config => ConfigPersistent?.Data;
         public TorchServer Server => _server;
 
-        public Initializer(string basePath, Persistent<TorchConfig> torchConfig)
+        public Initializer(Persistent<TorchConfig> torchConfig)
         {
             Instance = this;
             ConfigPersistent = torchConfig;
@@ -83,11 +83,11 @@ namespace Torch.Server
             return true;
         }
 
-        public void Run(bool isService, string instanceName, string instancePath)
+        public void Run()
         {
-            _server = new TorchServer(Config, instancePath, instanceName);
+            _server = new TorchServer(Config, ApplicationContext.Current.InstanceDirectory.FullName, ApplicationContext.Current.InstanceName);
 
-            if (isService || Config.NoGui)
+            if (ApplicationContext.Current.IsService || Config.NoGui)
             {
                 _server.Init();
                 _server.Start();

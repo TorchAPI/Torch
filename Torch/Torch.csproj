@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net6-windows</TargetFramework>
+    <LangVersion>10</LangVersion>
     <AssemblyTitle>Torch</AssemblyTitle>
     <Product>Torch</Product>
     <Copyright>Copyright © Torch API 2017</Copyright>
@@ -8,7 +9,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\bin\$(Platform)\$(Configuration)\</OutputPath>
     <UseWpf>True</UseWpf>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <PlatformTarget>x64</PlatformTarget>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>

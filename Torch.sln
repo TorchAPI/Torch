@@ -12,16 +12,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7AD02A71-1D4C-48F9-A8C1-789A5512424F}"
 	ProjectSection(SolutionItems) = preProject
 		NLog.config = NLog.config
+		Jenkinsfile = Jenkinsfile
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Torch.Tests", "Torch.Tests\Torch.Tests.csproj", "{C3C8B671-6AD1-44AA-A8DA-E0C0DC0FEDF5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Torch.Server.Tests", "Torch.Server.Tests\Torch.Server.Tests.csproj", "{9EFD1D91-2FA2-47ED-B537-D8BC3B0E543E}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Versioning", "Versioning", "{762F6A0D-55EF-4173-8CDE-309D183F40C4}"
-	ProjectSection(SolutionItems) = preProject
-		Versioning\AssemblyVersion.cs = Versioning\AssemblyVersion.cs
-	EndProjectSection
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Torch.Mod", "Torch.Mod\Torch.Mod.shproj", "{3CE4D2E9-B461-4F19-8233-F87E0DFDDD74}"
 EndProject
@@ -56,7 +52,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{762F6A0D-55EF-4173-8CDE-309D183F40C4} = {7AD02A71-1D4C-48F9-A8C1-789A5512424F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BB51D91F-958D-4B63-A897-3C40642ACD3E}

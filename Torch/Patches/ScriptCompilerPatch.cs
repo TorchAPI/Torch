@@ -1,8 +1,10 @@
-﻿using System;
+﻿#if !NETFRAMEWORK
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -11,6 +13,8 @@ using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.CodeAnalysis;
+using ProtoBuf;
+using ProtoBuf.Meta;
 using Torch.Managers.PatchManager;
 using Torch.Managers.PatchManager.MSIL;
 using Torch.Utils;
@@ -55,9 +59,9 @@ namespace Torch.Patches
                 typeof(ImmutableArray).Assembly.Location,
                 typeof(PropertyChangedEventArgs).Assembly.Location,
                 typeof(TypeConverter).Assembly.Location,
-                typeof(System.Diagnostics.TraceSource).Assembly.Location,
-                typeof(ProtoBuf.Meta.RuntimeTypeModel).Assembly.Location,
-                typeof(ProtoBuf.ProtoMemberAttribute).Assembly.Location,
+                typeof(TraceSource).Assembly.Location,
+                typeof(RuntimeTypeModel).Assembly.Location,
+                typeof(ProtoMemberAttribute).Assembly.Location,
                 Path.Combine(MyFileSystem.ExePath, "Sandbox.Game.dll"),
                 Path.Combine(MyFileSystem.ExePath, "Sandbox.Common.dll"),
                 Path.Combine(MyFileSystem.ExePath, "Sandbox.Graphics.dll"),
@@ -108,3 +112,4 @@ namespace Torch.Patches
         }
     }
 }
+#endif
