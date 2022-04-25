@@ -34,6 +34,7 @@ namespace Torch.Server
     {
         private InstanceManager _instanceManager;
         private List<PremadeCheckpointItem> _checkpoints = new List<PremadeCheckpointItem>();
+        private List<string> _worldNames = new List<string>();
         private PremadeCheckpointItem _currentItem;
 
         [ReflectedStaticMethod(Type = typeof(ConfigForm), Name = "LoadLocalization")]
@@ -67,7 +68,12 @@ namespace Torch.Server
                 });
             }
 
-            PremadeCheckpoints.ItemsSource = _checkpoints;
+            foreach (var checkpoint in _checkpoints)
+            {
+                _worldNames.Add(checkpoint.Name);
+            }
+
+            PremadeCheckpoints.ItemsSource = _worldNames;
         }
         
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
@@ -102,55 +108,36 @@ namespace Torch.Server
 
         private void PremadeCheckpoints_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var selected = (PremadeCheckpointItem)PremadeCheckpoints.SelectedItem;
+            var selected = _checkpoints.FirstOrDefault(x => x.Name == PremadeCheckpoints.SelectedItem.ToString());
             _currentItem = selected;
+            if (_currentItem == null) return;
             SettingsView.DataContext = new SessionSettingsViewModel(_currentItem.Checkpoint.Settings);
+            CheckpointImage.Source = new BitmapImage(new Uri(_currentItem.Icon));
         }
         
          private void GetWorldInfo(string savesPath, List<Tuple<string, MyWorldInfo>> result)
         {
             foreach (var saveDir in Directory.GetDirectories(savesPath, "*", SearchOption.TopDirectoryOnly))            
             {
-                bool newScenario = Directory.GetFiles(saveDir, "*.scf", SearchOption.TopDirectoryOnly).Length == 1;
-
-                if (newScenario)
+                bool isCompatible;
+                string platformSessionPath = null;
+                
+                platformSessionPath = MyLocalCache.GetSessionPathFromScenario(saveDir, false, out isCompatible);
+                if (platformSessionPath != null && isCompatible)
                 {
-                    bool isCompatible;
-                    string platformSessionPath = null;
-
-
-                    if (!Sandbox.Game.MyPlatformGameSettings.CONSOLE_COMPATIBLE)
-                    {
-                        platformSessionPath = MyLocalCache.GetSessionPathFromScenario(saveDir, false, out isCompatible);
-                        if (platformSessionPath != null && isCompatible)
-                        {
-                            AddWorldInfo(result, platformSessionPath, saveDir, " [PC]");
-                        }
-                    }
-
-                    string xboxPlatformSessionPath = MyLocalCache.GetSessionPathFromScenario(saveDir, true, out isCompatible);
-                    if (xboxPlatformSessionPath != null && isCompatible)
-                    {
-                        AddWorldInfo(result, xboxPlatformSessionPath, saveDir, " [XBOX]");
-                    }
-
-                    if (platformSessionPath == null && xboxPlatformSessionPath == null && isCompatible)
-                    {
-                        AddWorldInfo(result, saveDir, saveDir, "");
-                    }
+                    AddWorldInfo(result, platformSessionPath, saveDir, " [PC]");
                 }
-                else
+                
+                string xboxPlatformSessionPath = MyLocalCache.GetSessionPathFromScenario(saveDir, true, out isCompatible);
+                if (xboxPlatformSessionPath != null && isCompatible)
                 {
-                    foreach (var file in Directory.GetFiles(saveDir, MyLocalCache.CHECKPOINT_FILE, SearchOption.AllDirectories))
-                    {
-                        var checkpointDir = Path.GetDirectoryName(file);
-                        if (checkpointDir.ToLower().Contains("backup"))
-                            continue;
-
-                        AddWorldInfo(result, file, saveDir, "");
-                    }
+                    AddWorldInfo(result, xboxPlatformSessionPath, saveDir, " [XBOX]");
                 }
 
+                if (platformSessionPath == null && xboxPlatformSessionPath == null && isCompatible)
+                {
+                    AddWorldInfo(result, saveDir, saveDir, "");
+                }
             }
         }
         

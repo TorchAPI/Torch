@@ -7,27 +7,16 @@
         xmlns:views="clr-namespace:Torch.Server.Views"
         xmlns:views1="clr-namespace:Torch.Views;assembly=Torch"
         mc:Ignorable="d"
-        Title="WorldGeneratorDialog" Height="500" Width="700">
+        Title="Premade world selection" Height="500" Width="700">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="235"/>
+            <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <ListView Grid.Column="0" x:Name="PremadeCheckpoints" ScrollViewer.CanContentScroll="False" HorizontalContentAlignment="Center" Margin="3" SelectionChanged="PremadeCheckpoints_SelectionChanged">
-            <ListView.ItemTemplate>
-                <DataTemplate DataType="local:PremadeCheckpointItem">
-                    <StackPanel HorizontalAlignment="Center">
-                        <Label Content="{Binding Name}" HorizontalAlignment="Center"/>
-                        <Image Stretch="Uniform" MaxHeight="100" HorizontalAlignment="Center">
-                            <Image.Source>
-                                <BitmapImage UriSource="{Binding Icon}"/>
-                            </Image.Source>
-                        </Image>
-                    </StackPanel>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-        <Grid Grid.Column="1" Margin="3">
+        <ListBox x:Name="PremadeCheckpoints" SelectionChanged="PremadeCheckpoints_SelectionChanged" d:ItemsSource="{d:SampleData ItemCount=20}" Margin="0,0,0,180"/>
+        <Image Grid.Column="0" x:Name="CheckpointImage" Stretch="Uniform" Margin="2,0,1,44" Width="232" Height="136" VerticalAlignment="Bottom"/>
+
+        <Grid Grid.Column="1" Margin="3,3,3,3">
             <Grid.RowDefinitions>
                 <RowDefinition Height ="Auto"/>
                 <RowDefinition Height ="*"/>
