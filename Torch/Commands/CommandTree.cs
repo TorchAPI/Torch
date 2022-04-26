@@ -21,11 +21,17 @@ namespace Torch.Commands
 
         public bool AddCommand(Command command)
         {
+            bool hasAlias = !string.IsNullOrEmpty(command.Alias);
             var root = command.Path.First();
 
             if (!_root.ContainsKey(root))
             {
                 _root.Add(root, new CommandNode(root));
+                
+                if (hasAlias)
+                {
+                    _root.Add(command.Alias, _root[root]);
+                }
             }
 
             var node = _root[root];
@@ -65,7 +71,9 @@ namespace Torch.Commands
                 return -1;
 
             if (!_root.ContainsKey(root))
+            {
                 return -1;
+            }
 
             var node = _root[root];
             var i = 1;
@@ -85,15 +93,7 @@ namespace Torch.Commands
             commandNode = node;
             return i;
         }
-
-        public Command GetCommand(List<string> path, out List<string> args)
-        {
-            args = new List<string>();
-            var skip = GetNode(path, out CommandNode node);
-            args.AddRange(path.Skip(skip));
-            return node.Command;
-        }
-
+        
         public Command GetCommand(string commandText, out string argText)
         {
             var split = commandText.Split(new []{' '}, StringSplitOptions.RemoveEmptyEntries).ToList();

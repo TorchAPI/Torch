@@ -208,6 +208,7 @@
     <Compile Include="Collections\SystemSortedView.cs" />
     <Compile Include="Collections\TransformComparer.cs" />
     <Compile Include="Collections\TransformEnumerator.cs" />
+    <Compile Include="Commands\AliasAttribute.cs" />
     <Compile Include="Commands\ConsoleCommandContext.cs" />
     <Compile Include="Event\EventShimAttribute.cs" />
     <Compile Include="Extensions\LinqExtensions.cs" />

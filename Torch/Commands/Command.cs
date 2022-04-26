@@ -21,6 +21,7 @@ namespace Torch.Commands
         public string Name { get; }
         public string Description { get; }
         public string HelpText { get; }
+        public string Alias { get; }
         public CommandAction Action { get; }
         public Type Module { get; }
         public List<string> Path { get; } = new List<string>();
@@ -31,44 +32,17 @@ namespace Torch.Commands
         private ParameterInfo[] _parameters;
         private int? _requiredParamCount;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-
-        public Command(string name, string description, CommandAction action, ITorchPlugin plugin, MyPromoteLevel? minimumPromoteLevel = null, string helpText = null, int requiredParamCount = 0)
-        {
-            HelpText = helpText;
-            Action = action;
-            Plugin = plugin;
-            MinimumPromoteLevel = minimumPromoteLevel ?? MyPromoteLevel.Admin;
-
-            var split = name.Split(' ');
-            Name = split.Last();
-            Description = description;
-            HelpText = helpText ?? description;
-
-            Path.AddRange(split);
-
-            var sb = new StringBuilder();
-            sb.Append($"!{string.Join(" ", Path)} ");
-
-            _requiredParamCount = requiredParamCount;
-            Log.Debug($"Params: ({_requiredParamCount} required)");
-            SyntaxHelp = sb.ToString();
-        }
-
-        public Command(ITorchPlugin plugin, MethodInfo commandMethod)
+        
+        public Command(ITorchPlugin plugin, MethodInfo commandMethod, CommandAttribute attributeData)
         {
             Plugin = plugin;
-
-            var commandAttribute = commandMethod.GetCustomAttribute<CommandAttribute>();
-            if (commandAttribute == null)
-                throw new TypeLoadException($"Method does not have a {nameof(CommandAttribute)}");
-
+            
             var permissionAttribute = commandMethod.GetCustomAttribute<PermissionAttribute>();
             MinimumPromoteLevel = permissionAttribute?.PromoteLevel ?? MyPromoteLevel.Admin;
 
-            if (!commandMethod.DeclaringType.IsSubclassOf(typeof(CommandModule)))
-                throw new TypeLoadException($"Command {commandMethod.Name}'s declaring type {commandMethod.DeclaringType.FullName} is not a subclass of {nameof(CommandModule)}");
-
             var moduleAttribute = commandMethod.DeclaringType.GetCustomAttribute<CategoryAttribute>();
+            
+            var aliasAttribute = commandMethod.GetCustomAttribute<AliasAttribute>();
 
             _method = commandMethod;
             Module = commandMethod.DeclaringType;
@@ -77,12 +51,18 @@ namespace Torch.Commands
             {
                 Path.AddRange(moduleAttribute.Path);
             }
-            Path.AddRange(commandAttribute.Path);
+            
+            if(aliasAttribute != null)
+            {
+                Alias = aliasAttribute.Alias;
+            }
+            
+            Path.AddRange(attributeData.Path);
 
-            Name = commandAttribute.Name;
-            Description = commandAttribute.Description;
-            HelpText = commandAttribute.HelpText;
-
+            Name = attributeData.Name;
+            Description = attributeData.Description;
+            HelpText = attributeData.HelpText;
+            
             //parameters
             _parameters = commandMethod.GetParameters();
 

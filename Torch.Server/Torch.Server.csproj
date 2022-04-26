@@ -240,6 +240,7 @@
     <Compile Include="..\Versioning\AssemblyVersion.cs">
       <Link>Properties\AssemblyVersion.cs</Link>
     </Compile>
+    <Compile Include="Commands\TestCommands.cs" />
     <Compile Include="Commands\WhitelistCommands.cs" />
     <Compile Include="FlowDocumentTarget.cs" />
     <Compile Include="ListBoxExtensions.cs" />
