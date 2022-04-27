@@ -10,6 +10,8 @@ using Torch.API;
 using Torch.Managers.PatchManager;
 using Torch.Utils;
 using VRage.Utils;
+using Sandbox.Engine.Multiplayer;
+using Sandbox.Game.World;
 
 namespace Torch.Patches
 {
@@ -42,6 +44,9 @@ namespace Torch.Patches
 
         [ReflectedMethodInfo(typeof(MyLog), nameof(MyLog.WriteLineAndConsole), Parameters = new[] { typeof(string) })]
         private static MethodInfo _logWriteLineAndConsole;
+
+        [ReflectedMethodInfo(typeof(MyMultiplayerServerBase), nameof(MyMultiplayerServerBase.ValidationFailed), Parameters = new[] { typeof(ulong), typeof(bool), typeof(string), typeof(bool) })]
+        private static MethodInfo _logSuppressValidationFailed;
 #pragma warning restore 649
         
 
@@ -57,8 +62,7 @@ namespace Torch.Patches
             context.GetPattern(_logWriteLineException).Prefixes.Add(Method(nameof(PrefixWriteLineException)));
             context.GetPattern(_logAppendToClosedLogException).Prefixes.Add(Method(nameof(PrefixAppendToClosedLogException)));
 
-            context.GetPattern(_logWriteLineOptions).Prefixes.Add(Method(nameof(PrefixWriteLineOptions)));
-            
+            context.GetPattern(_logWriteLineOptions).Prefixes.Add(Method(nameof(PrefixWriteLineOptions)));  
         }
 
         private static MethodInfo Method(string name)

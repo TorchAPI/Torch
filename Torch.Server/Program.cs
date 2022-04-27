@@ -53,25 +53,33 @@ namespace Torch.Server
                 return;
             }
 
-            if (!TorchLauncher.IsTorchWrapped())
+            try 
             {
-                TorchLauncher.Launch(Assembly.GetEntryAssembly().FullName, args, binDir);
+                if (!TorchLauncher.IsTorchWrapped())
+                {
+                    TorchLauncher.Launch(Assembly.GetEntryAssembly().FullName, args, binDir);
+                    return;
+                }
+
+                // Breaks on Windows Server 2019
+                if (!new ComputerInfo().OSFullName.Contains("Server 2019") && !Environment.UserInteractive)
+                {
+                    using (var service = new TorchService(args))
+                        ServiceBase.Run(service);
+                    return;
+                }
+
+                var initializer = new Initializer(workingDir);
+                if (!initializer.Initialize(args))
+                    return;
+
+                initializer.Run();
+            } catch (Exception runException)
+            {
+                var log = LogManager.GetCurrentClassLogger();
+                log.Fatal(runException.ToString());
                 return;
             }
-
-            // Breaks on Windows Server 2019
-            if (!new ComputerInfo().OSFullName.Contains("Server 2019") && !Environment.UserInteractive)
-            {
-                using (var service = new TorchService(args))
-                    ServiceBase.Run(service);
-                return;
-            }
-
-            var initializer = new Initializer(workingDir);
-            if (!initializer.Initialize(args))
-                return;
-
-            initializer.Run();
         }
     }
 }

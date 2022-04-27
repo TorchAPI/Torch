@@ -266,29 +266,26 @@ namespace Torch.Server.Views
             //blocking
             editor.Edit<string>(idList, "Mods");
 
-            modList.RemoveAll(m =>
-            {
-                var mod = m.ToString();
-                return idList.Any(mod.Equals);
-            });
+            modList.Clear();
             modList.AddRange(idList.Select(id =>
             {
-                var info = new ModItemInfo(ModItemUtils.Create(id));
+                if (!ModItemUtils.TryParse(id, out var item))
+                    return null;
+                
+                var info = new ModItemInfo(item);
                 tasks.Add(Task.Run(info.UpdateModInfoAsync));
                 return info;
-            }));
+            }).Where(b => b != null));
+            
             _instanceManager.DedicatedConfig.Mods.Clear();
             foreach (var mod in modList)
                 _instanceManager.DedicatedConfig.Mods.Add(mod);
 
-            if (tasks.Any())
-                Task.WaitAll(tasks.ToArray());
-            
-            Dispatcher.Invoke(() =>
-                              {
-                                  _instanceManager.DedicatedConfig.Save();
-                              });
-
+            Task.Run(async () =>
+            {
+                await Task.WhenAll(tasks);
+                _instanceManager.DedicatedConfig.Save();
+            });
         }
 
         private void UgcServiceTypeBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
