@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
+using Microsoft.Win32;
 using NLog;
 using Torch.Utils;
 using MessageBox = System.Windows.MessageBox;
@@ -52,10 +53,13 @@ namespace Torch.Client
 #if DEBUG
             try
             {
+              
+
                 AllocConsole();
 #endif
                 if (!TorchLauncher.IsTorchWrapped())
                 {
+                  
                     AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
                     // Early config: Resolve SE install directory.
@@ -82,9 +86,8 @@ namespace Torch.Client
             string spaceEngineersDirectory = null;
 
             // TODO look at Steam/config/Config.VDF?  Has alternate directories.
-            var steamDir =
-                Microsoft.Win32.Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Valve\\Steam", "SteamPath",
-                    null) as string;
+            var steamDir = Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Valve\\Steam", "SteamPath", null) as string;
+
             if (steamDir != null)
             {
                 spaceEngineersDirectory = Path.Combine(steamDir, _steamSpaceEngineersDirectory);
@@ -97,6 +100,8 @@ namespace Torch.Client
                     spaceEngineersDirectory = null;
                 }
             }
+
+
             if (spaceEngineersDirectory == null)
             {
                 var dialog = new System.Windows.Forms.FolderBrowserDialog

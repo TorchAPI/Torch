@@ -26,15 +26,17 @@ namespace Torch.Server
 
         private static readonly Logger Log = LogManager.GetLogger(nameof(Initializer));
         private bool _init;
-        private const string STEAMCMD_DIR = "steamcmd";
+        private const string STEAMCMD_DIR = @"lib\steamcmd";
         private const string STEAMCMD_ZIP = "temp.zip";
         private static readonly string STEAMCMD_PATH = $"{STEAMCMD_DIR}\\steamcmd.exe";
         private static readonly string RUNSCRIPT_PATH = $"{STEAMCMD_DIR}\\runscript.txt";
+        private static string[] _allDlls;
 
         private const string RUNSCRIPT = @"force_install_dir ../
 login anonymous
 app_update 298740
 quit";
+
         private TorchServer _server;
         private string _basePath;
 
@@ -72,36 +74,17 @@ quit";
             if (!Enumerable.Contains(args, "-noupdate"))
                 RunSteamCmd();
 
+
             var basePath = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
-            var apiSource = Path.Combine(basePath, "DedicatedServer64", "steam_api64.dll");
-            var apiTarget = Path.Combine(basePath, "steam_api64.dll");
 
-            if (!File.Exists(apiTarget))
-            {
-                File.Copy(apiSource, apiTarget);
-            }
-            else if (File.GetLastWriteTime(apiTarget) < File.GetLastWriteTime(apiSource))
-            {
-                File.Delete(apiTarget);
-                File.Copy(apiSource, apiTarget);
-            }
-            
-            var havokSource = Path.Combine(basePath, "DedicatedServer64", "Havok.dll");
-            var havokTarget = Path.Combine(basePath, "Havok.dll");
 
-            if (!File.Exists(havokTarget))
-            {
-                File.Copy(havokSource, havokTarget);   
-            }
-            else if (File.GetLastWriteTime(havokTarget) < File.GetLastWriteTime(havokSource))
-            {   
-                File.Delete(havokTarget);
-                File.Copy(havokSource, havokTarget);
-            }
+            _allDlls = Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, "lib"), "*.dll", SearchOption.AllDirectories);
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
             InitConfig();
             if (!Config.Parse(args))
                 return false;
+
 
             if (!string.IsNullOrEmpty(Config.WaitForPID))
             {
@@ -127,6 +110,46 @@ quit";
             return true;
         }
 
+
+        //Resolves game assemblies instead of copying them over
+        private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            var log = LogManager.GetLogger("AssemblyResolver");
+
+
+            AppDomain senderAssembly = ((AppDomain)sender);
+            string currentDLL = args.Name.Split(',')[0];
+            //log.Warn($"Finding {currentDLL}.dll");
+
+            //Check to make sure this assembly isnt already loaded
+            Assembly a = senderAssembly.GetAssemblies().FirstOrDefault(x => x.FullName == args.Name);
+            if (a != null)
+                return a;
+
+
+            //Need to split the strinb below
+            //VRage.Library, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+            //log.Fatal(args.Name);
+           
+
+            //MS C# expected behaviour
+
+
+            //Loop through DLLs
+            for (int i = 0; i < _allDlls.Count(); i++)
+            {
+                string foundDLL = Path.GetFileNameWithoutExtension(_allDlls[i]);
+                if (foundDLL != currentDLL)
+                    continue;
+
+                //Log.Warn($"Found DLL: {_allDlls[i]}");
+                return Assembly.LoadFile(_allDlls[i]);
+
+            }
+
+            return null;
+        }
+
         public void Run()
         {
             _server = new TorchServer(Config);
@@ -145,7 +168,7 @@ quit";
                     NativeMethods.FreeConsole();
                 }
 #endif
-                
+
                 var gameThread = new Thread(() =>
                 {
                     _server.Init();
@@ -156,9 +179,9 @@ quit";
                         _server.Start();
                     }
                 });
-                
+
                 gameThread.Start();
-                
+
                 var ui = new TorchUI(_server);
                 ui.ShowDialog();
             }
@@ -220,7 +243,7 @@ quit";
                 StandardOutputEncoding = Encoding.ASCII
             };
             var cmd = Process.Start(steamCmdProc);
-            
+
             // ReSharper disable once PossibleNullReferenceException
             while (!cmd.HasExited)
             {
@@ -238,9 +261,9 @@ quit";
 
                 return;
             }
-            
+
             Log.Fatal(ex);
-            
+
             if (ex is ReflectionTypeLoadException extl)
             {
                 foreach (var exl in extl.LoaderExceptions)
@@ -248,7 +271,7 @@ quit";
 
                 return;
             }
-            
+
             if (ex.InnerException != null)
             {
                 LogException(ex.InnerException);
