@@ -43,7 +43,7 @@ namespace Torch.Server
             _server = server;
             if (server.Config.DataSharing)
             {
-                BtnCopyIdentifier.Visibility = Visibility.Visible;
+                //BtnCopyIdentifier.Visibility = Visibility.Visible;
             }
             //TODO: data binding for whole server
             DataContext = server;

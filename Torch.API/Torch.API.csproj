@@ -193,6 +193,7 @@
     <Compile Include="Utils\StringUtils.cs" />
     <Compile Include="WebAPI\JenkinsQuery.cs" />
     <Compile Include="WebAPI\PluginQuery.cs" />
+    <Compile Include="WebAPI\SiteQuery.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

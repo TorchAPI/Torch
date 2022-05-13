@@ -50,6 +50,7 @@ namespace Torch.Managers
         /// <inheritdoc />
         public IReadOnlyDictionary<Guid, ITorchPlugin> Plugins => _plugins.AsReadOnlyObservable();
         public bool CanUsePrivatePlugins = false;
+        private List<PluginItem> pluginsToRemove = new List<PluginItem>();
 
         public event Action<IReadOnlyCollection<ITorchPlugin>> PluginsLoaded;
         
@@ -123,27 +124,21 @@ namespace Torch.Managers
             _log.Info("Loading plugins...");
 
             //check for usage of private plugins
-            if(Torch.Config.DataSharing){
-                CanUsePrivatePlugins = true;
-            }
-
-            if (!string.IsNullOrEmpty(Torch.Config.TestPlugin))
+            if (Torch.Config.DataSharing)
             {
-                _log.Info($"Loading plugin for debug at {Torch.Config.TestPlugin}");
-
-                foreach (var item in GetLocalPlugins(Torch.Config.TestPlugin, true))
+                var privateQueryResponse = Task.Run(async () => await SiteQuery.Instance.GetIsHigherAccess(TorchBase.Instance.Identifier)).Result;
+                //check to see if privateQueryReponse is null or false
+                if (privateQueryResponse == null || !privateQueryResponse.HigherAccess)
                 {
-                    _log.Info(item.Path);
-                    LoadPlugin(item);
+                    CanUsePrivatePlugins = false;
+                    _log.Info("Private plugins are disabled. You do not have sufficient permissions to use private plugins.");
+                }
+                else
+                {
+                    CanUsePrivatePlugins = true;
+                    _log.Info("Private plugins are enabled for this instance.");
                 }
 
-                foreach (var plugin in _plugins.Values)
-                {
-                    plugin.Init(Torch);
-                }
-                _log.Info($"Loaded {_plugins.Count} plugins.");
-                PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
-                return;
             }
 
             var pluginItems = GetLocalPlugins(PluginDir);
@@ -151,6 +146,17 @@ namespace Torch.Managers
             foreach (var item in pluginItems)
             {
                 var pluginItem = item;
+                
+                //run checks to see if user has access to this plugin
+                if (Torch.Config.DataSharing)
+                {
+                    if (!EnsureValidPluginUsage(item))
+                    {
+                        pluginsToRemove.Add(item);
+                        continue;
+                    }
+                }
+
                 if (!TryValidatePluginDependencies(pluginItems, ref pluginItem, out var missingPlugins))
                 {
                     // We have some missing dependencies.
@@ -172,9 +178,14 @@ namespace Torch.Managers
                 {
                     // Resort the plugins just in case updates changed load hints.
                     pluginItems = GetLocalPlugins(PluginDir);
+                    
                     pluginsToLoad.Clear();
                     foreach (var item in pluginItems)
                     {
+                        //check to see if item is in pluginsToRemove
+                        if (pluginsToRemove.Contains(item))
+                            continue;
+                        
                         var pluginItem = item;
                         if (!TryValidatePluginDependencies(pluginItems, ref pluginItem, out var missingPlugins))
                         {
@@ -204,6 +215,9 @@ namespace Torch.Managers
             // Actually load the plugins now.
             foreach (var item in pluginsToLoad)
             {
+                //check to see if item is in pluginsToRemove
+                if (pluginsToRemove.Contains(item))
+                    continue;
                 LoadPlugin(item);
             } 
             
@@ -271,10 +285,10 @@ namespace Torch.Managers
                 }
                 
                 var pluginFullItem = Task.Run(async () => await PluginQuery.Instance.QueryOneOnly(manifest.Guid.ToString())).Result;
-                if(pluginFullItem.IsPrivate && (pluginFullItem != null))
+                if(pluginFullItem.IsPrivate)
                 {
-                    _log.Warn($"Plugin {manifest.Name} ({item}) is private and cannot be loaded as local. Skipping load!");
-                    continue;
+                    //_log.Warn($"Plugin {manifest.Name} ({item}) is private and cannot be loaded as local. Skipping load!");
+                    //continue;
                 }
 
                 results.Add(new PluginItem
@@ -290,14 +304,37 @@ namespace Torch.Managers
                 Torch.Config.Save();
             
             return results;
-        } 
-        
+        }
+
+        private bool EnsureValidPluginUsage(PluginItem item)
+        {
+            var latest = Task.Run(async()=> await PluginQuery.Instance.QueryOneOnly(item.Manifest.Guid.ToString())).Result;
+            //if it is not null or false, it is public
+            if(latest != null && !latest.IsPrivate)
+            {
+                return true;
+            }
+            
+            
+            
+            var privateQueryResponse = Task.Run(async () => await SiteQuery.Instance.EnsureUserCanAccessPlugin(TorchBase.Instance.Identifier, item.Manifest.Guid.ToString())).Result;
+            if (!privateQueryResponse.CanUse)
+            {
+                _log.Warn($"You do not have permission to use {item.Manifest.Name}.");
+                
+                File.Delete(item.Path);
+                return false;
+            }
+
+            return true;
+        }
+
         private bool DownloadPluginUpdates(List<PluginItem> plugins, out List<PluginItem> returnedPlugins)
         {
             _log.Info("Checking for plugin updates...");
             var count = 0;
             List<PluginItem> pluginsToUpdate = plugins;
-            Task.WaitAll(plugins.Select(async item =>
+            plugins.Select(async item =>
             {
                 try
                 {
@@ -315,9 +352,17 @@ namespace Torch.Managers
                         return;
                     }
 
-                    if (latest.IsPrivate && !CanUsePrivatePlugins)
+                    if (latest.IsPrivate && !Torch.Config.DataSharing)
                     {
                         _log.Warn($"You cannot use {item.Manifest.Name} as data sharing is disabled in config");
+                        pluginsToUpdate.Remove(item);
+                        return;
+                    }
+
+                    if (latest.IsPrivate && !CanUsePrivatePlugins)
+                    {
+                        _log.Warn($"You cannot use {item.Manifest.Name} as this instnace does not have the required permissions");
+                        pluginsToRemove.Add(item);
                         pluginsToUpdate.Remove(item);
                         return;
                     }
@@ -351,9 +396,9 @@ namespace Torch.Managers
                 catch (Exception e)
                 {
                     _log.Warn($"An error occurred updating the plugin {item.Manifest.Name}.");
-                    _log.Warn(e);
+                    _log.Warn(e.ToString());
                 }
-            }).ToArray());
+            }).ToArray();
 
             _log.Info($"Updated {count} plugins.");
             returnedPlugins = pluginsToUpdate;
@@ -365,78 +410,84 @@ namespace Torch.Managers
             var assemblies = new List<Assembly>();
 
             var loaded = AppDomain.CurrentDomain.GetAssemblies();
-            
-            if (item.IsZip)
+            try
             {
-                using (var zipFile = ZipFile.OpenRead(item.Path))
+                if (item.IsZip)
                 {
-                    foreach (var entry in zipFile.Entries)
+                    using (var zipFile = ZipFile.OpenRead(item.Path))
                     {
-                        if (!entry.Name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
+                        foreach (var entry in zipFile.Entries)
+                        {
+                            if (!entry.Name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
+                                continue;
+
+                            //if (loaded.Any(a => entry.Name.Contains(a.GetName().Name)))
+                            //    continue;
+
+
+                            using (var stream = entry.Open())
+                            {
+                                var data = stream.ReadToEnd((int) entry.Length);
+                                byte[] symbol = null;
+                                var symbolEntryName =
+                                    entry.FullName.Substring(0, entry.FullName.Length - "dll".Length) + "pdb";
+                                var symbolEntry = zipFile.GetEntry(symbolEntryName);
+                                if (symbolEntry != null)
+                                    try
+                                    {
+                                        using (var symbolStream = symbolEntry.Open())
+                                            symbol = symbolStream.ReadToEnd((int) symbolEntry.Length);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        _log.Warn(e,
+                                            $"Failed to read debugging symbols from {item.Filename}:{symbolEntryName}");
+                                    }
+
+                                assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    var files = Directory
+                        .EnumerateFiles(item.Path, "*.*", SearchOption.AllDirectories)
+                        .ToList();
+
+                    foreach (var file in files)
+                    {
+                        if (!file.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
                             continue;
 
-                        //if (loaded.Any(a => entry.Name.Contains(a.GetName().Name)))
+                        //if (loaded.Any(a => file.Contains(a.GetName().Name)))
                         //    continue;
 
-
-                        using (var stream = entry.Open())
+                        using (var stream = File.OpenRead(file))
                         {
-                            var data = stream.ReadToEnd((int) entry.Length);
+                            var data = stream.ReadToEnd();
                             byte[] symbol = null;
-                            var symbolEntryName =
-                                entry.FullName.Substring(0, entry.FullName.Length - "dll".Length) + "pdb";
-                            var symbolEntry = zipFile.GetEntry(symbolEntryName);
-                            if (symbolEntry != null)
+                            var symbolPath = Path.Combine(Path.GetDirectoryName(file) ?? ".",
+                                Path.GetFileNameWithoutExtension(file) + ".pdb");
+                            if (File.Exists(symbolPath))
                                 try
                                 {
-                                    using (var symbolStream = symbolEntry.Open())
-                                        symbol = symbolStream.ReadToEnd((int) symbolEntry.Length);
+                                    using (var symbolStream = File.OpenRead(symbolPath))
+                                        symbol = symbolStream.ReadToEnd();
                                 }
                                 catch (Exception e)
                                 {
-                                    _log.Warn(e, $"Failed to read debugging symbols from {item.Filename}:{symbolEntryName}");
+                                    _log.Warn(e, $"Failed to read debugging symbols from {symbolPath}");
                                 }
 
                             assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
                         }
                     }
                 }
+
             }
-            else
+            catch (IOException)
             {
-                var files = Directory
-                    .EnumerateFiles(item.Path, "*.*", SearchOption.AllDirectories)
-                    .ToList();
-                
-                foreach (var file in files)
-                {
-                    if (!file.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
-                        continue;
-
-                    //if (loaded.Any(a => file.Contains(a.GetName().Name)))
-                    //    continue;
-
-                    using (var stream = File.OpenRead(file))
-                    {
-                        var data = stream.ReadToEnd();
-                        byte[] symbol = null;
-                        var symbolPath = Path.Combine(Path.GetDirectoryName(file) ?? ".",
-                            Path.GetFileNameWithoutExtension(file) + ".pdb");
-                        if (File.Exists(symbolPath))
-                            try
-                            {
-                                using (var symbolStream = File.OpenRead(symbolPath))
-                                    symbol = symbolStream.ReadToEnd();
-                            }
-                            catch (Exception e)
-                            {
-                                _log.Warn(e, $"Failed to read debugging symbols from {symbolPath}");
-                            }
-                        
-                        assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
-                    }
-                }
-
                 
             }
             
