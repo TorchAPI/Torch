@@ -34,6 +34,7 @@ namespace Torch.Server
     {
         private InstanceManager _instanceManager;
         private List<PremadeCheckpointItem> _checkpoints = new List<PremadeCheckpointItem>();
+        private List<string> _worldNames = new List<string>();
         private PremadeCheckpointItem _currentItem;
 
         [ReflectedStaticMethod(Type = typeof(ConfigForm), Name = "LoadLocalization")]
@@ -44,12 +45,14 @@ namespace Torch.Server
             _instanceManager = instanceManager;
             InitializeComponent();
             _loadLocalization();
-            var scenarios = MyLocalCache.GetAvailableWorldInfos(new List<string> {Path.Combine(MyFileSystem.ContentPath, "CustomWorlds")});
-            foreach (var tup in scenarios)
+
+            string worldsDir = Path.Combine(MyFileSystem.ContentPath, "CustomWorlds");
+            var result = new List<Tuple<string,MyWorldInfo>>();
+            
+            GetWorldInfo(worldsDir, result);
+            
+            foreach (var tup in result)
             {
-                if (tup.Item2 == null)
-                    continue;
-                
                 string directory = tup.Item1;
                 MyWorldInfo info = tup.Item2;
                 var sessionNameId = MyStringId.GetOrCompute(info.SessionName);
@@ -58,23 +61,19 @@ namespace Torch.Server
                 checkpoint.OnlineMode = MyOnlineModeEnum.PUBLIC;
                 // Keen, why do random checkpoints point to the SBC and not the folder!
                 directory = directory.Replace("Sandbox.sbc", "");
-                _checkpoints.Add(new PremadeCheckpointItem { Name = localizedName, Icon = Path.Combine(directory, "thumb.jpg"), Path = directory, Checkpoint = checkpoint});
-            }
-
-            /*
-            var premadeCheckpoints = Directory.EnumerateDirectories(Path.Combine("Content", "CustomWorlds"));
-            foreach (var path in premadeCheckpoints)
-            {
-                var thumbPath = Path.GetFullPath(Directory.EnumerateFiles(path).First(x => x.Contains("thumb")));
-
                 _checkpoints.Add(new PremadeCheckpointItem
                 {
-                    Path = path,
-                    Icon = thumbPath,
-                    Name = Path.GetFileName(path)
+                    Name = localizedName, Icon = Path.Combine(directory, "thumb.jpg"), Path = directory,
+                    Checkpoint = checkpoint
                 });
-            }*/
-            PremadeCheckpoints.ItemsSource = _checkpoints;
+            }
+
+            foreach (var checkpoint in _checkpoints)
+            {
+                _worldNames.Add(checkpoint.Name);
+            }
+
+            PremadeCheckpoints.ItemsSource = _worldNames;
         }
         
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
@@ -109,9 +108,75 @@ namespace Torch.Server
 
         private void PremadeCheckpoints_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var selected = (PremadeCheckpointItem)PremadeCheckpoints.SelectedItem;
+            var selected = _checkpoints.FirstOrDefault(x => x.Name == PremadeCheckpoints.SelectedItem.ToString());
             _currentItem = selected;
+            if (_currentItem == null) return;
             SettingsView.DataContext = new SessionSettingsViewModel(_currentItem.Checkpoint.Settings);
+            CheckpointImage.Source = new BitmapImage(new Uri(_currentItem.Icon));
+        }
+        
+         private void GetWorldInfo(string savesPath, List<Tuple<string, MyWorldInfo>> result)
+        {
+            foreach (var saveDir in Directory.GetDirectories(savesPath, "*", SearchOption.TopDirectoryOnly))            
+            {
+                bool isCompatible;
+                string platformSessionPath = null;
+                
+                platformSessionPath = MyLocalCache.GetSessionPathFromScenario(saveDir, false, out isCompatible);
+                if (platformSessionPath != null && isCompatible)
+                {
+                    AddWorldInfo(result, platformSessionPath, saveDir, " [PC]");
+                }
+                
+                string xboxPlatformSessionPath = MyLocalCache.GetSessionPathFromScenario(saveDir, true, out isCompatible);
+                if (xboxPlatformSessionPath != null && isCompatible)
+                {
+                    AddWorldInfo(result, xboxPlatformSessionPath, saveDir, " [XBOX]");
+                }
+
+                if (platformSessionPath == null && xboxPlatformSessionPath == null && isCompatible)
+                {
+                    AddWorldInfo(result, saveDir, saveDir, "");
+                }
+            }
+        }
+        
+        private static void AddWorldInfo(List<Tuple<string, MyWorldInfo>> result, string sessionDir, string saveDir, string namePostfix)
+        {
+            MyWorldInfo worldInfo = null;
+            var worldConfiguration = MyLocalCache.LoadWorldConfiguration(sessionDir);
+            if (worldConfiguration == null)
+            {
+                worldInfo = MyLocalCache.LoadWorldInfoFromFile(sessionDir);
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(worldConfiguration.SessionName) || !worldConfiguration.LastSaveTime.HasValue)
+                {
+                    worldInfo = MyLocalCache.LoadWorldInfoFromFile(sessionDir);
+                }
+                else
+                {
+                    worldInfo = new MyWorldInfo
+                    {
+                        SessionName = worldConfiguration.SessionName,
+                        LastSaveTime = worldConfiguration.LastSaveTime.Value
+                    };
+                }
+
+                if (worldInfo != null && string.IsNullOrEmpty(worldInfo.SessionName))
+                {
+                    worldInfo.SessionName = Path.GetFileName(sessionDir);
+                }
+            }
+
+            if (worldInfo != null)
+            {
+                worldInfo.SessionName += namePostfix;
+            }
+
+            worldInfo.SaveDirectory = saveDir;
+            result.Add(Tuple.Create(sessionDir, worldInfo));
         }
     }
 
