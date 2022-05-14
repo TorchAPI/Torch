@@ -73,5 +73,6 @@ node('windows') {
 	        ]]
 	    ])
 	}
+	this is a test for jenkins triggers
 	*/
 }
