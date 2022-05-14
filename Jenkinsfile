@@ -35,10 +35,10 @@ node('windows') {
 
 	stage('Build') {
 		currentBuild.description = bat(returnStdout: true, script: '@powershell -File Versioning/version.ps1').trim()
-		if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "Patron" || env.BRANCH_NAME == "publictest") {
+		if (env.BRANCH_NAME == "master") {
 			buildMode = "Release"
 		} else {
-			buildMode = "Release"
+			buildMode = "Debug"
 		}
 		bat "IF EXIST \"bin\" rmdir /Q /S \"bin\""
 		bat "IF EXIST \"bin-test\" rmdir /Q /S \"bin-test\""
