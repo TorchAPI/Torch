@@ -41,6 +41,7 @@ namespace Torch.Server
         private bool _enableAsserts = false;
         private int _fontSize = 16;
         private UGCServiceType _ugcServiceType = UGCServiceType.Steam;
+        private TorchBranchType _torchBranch = TorchBranchType.master;
 
 
         /// <inheritdoc />
@@ -144,7 +145,14 @@ namespace Torch.Server
             set => Set(value, ref _ugcServiceType);
         }
 
-        public string LastUsedTheme { get; set; } = "Torch Theme";
+        [Display(Name = "Torch branch", Description = "Select what branch of torch you want to use.", GroupName = "Server")]
+        public TorchBranchType BranchName
+        {
+            get => _torchBranch;
+            set => Set(value, ref _torchBranch);
+        }
+
+public string LastUsedTheme { get; set; } = "Torch Theme";
 
         //Prevent reserved players being written to disk, but allow it to be read
         //remove this when ReservedPlayers is removed

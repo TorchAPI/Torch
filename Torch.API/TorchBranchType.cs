@@ -9,6 +9,7 @@ namespace Torch.API
     public enum TorchBranchType
     {
         master,
-        staging
+        staging,
+        dev
     }
 }
