@@ -68,7 +68,9 @@ namespace Torch.Managers
                     }
                     UpdateFromZip(updateName, _torchDir);
                     File.Delete(updateName);
-                    _log.Warn($"Torch version {job.Version} has been installed, please restart Torch to finish the process.");
+                    _log.Warn($"Torch version {job.Version} has been installed.");
+                    //restart torch
+                    Torch.Restart();
                 }
                 else
                 {
