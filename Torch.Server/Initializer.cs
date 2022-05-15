@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -30,7 +31,7 @@ namespace Torch.Server
         private const string STEAMCMD_ZIP = "temp.zip";
         private static readonly string STEAMCMD_PATH = $"{STEAMCMD_DIR}\\steamcmd.exe";
         private static readonly string RUNSCRIPT_PATH = $"{STEAMCMD_DIR}\\runscript.txt";
-        private static string[] _allDlls;
+        private static string[] _allDLLs;
 
         private const string RUNSCRIPT = @"force_install_dir ../
 login anonymous
@@ -75,10 +76,10 @@ quit";
                 RunSteamCmd();
 
 
-            var basePath = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
+            //var basePath = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
 
 
-            _allDlls = Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, "lib"), "*.dll", SearchOption.AllDirectories);
+            _allDLLs = Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, "lib"), "*.dll", SearchOption.AllDirectories);
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
             InitConfig();
@@ -112,17 +113,33 @@ quit";
 
 
         //Resolves game assemblies instead of copying them over
+
+        static List<string> listOfAssemblies = new List<string>();
         private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
             var log = LogManager.GetLogger("AssemblyResolver");
-
+           
 
             AppDomain senderAssembly = ((AppDomain)sender);
             string currentDLL = args.Name.Split(',')[0];
-            //log.Warn($"Finding {currentDLL}.dll");
+
+
+            string requester = "";
+            if (args.RequestingAssembly != null)
+                requester = args.RequestingAssembly.FullName;
+
+            //log.Warn($"{senderAssembly.FriendlyName} needs {args.Name}! Finding {currentDLL}.dll! Requester: { requester}");
+
+
+
+
+
+
+            
+            
 
             //Check to make sure this assembly isnt already loaded
-            Assembly a = senderAssembly.GetAssemblies().FirstOrDefault(x => x.FullName == args.Name);
+            Assembly a = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(x => x.FullName == args.Name);
             if (a != null)
                 return a;
 
@@ -130,22 +147,53 @@ quit";
             //Need to split the strinb below
             //VRage.Library, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
             //log.Fatal(args.Name);
-           
+
 
             //MS C# expected behaviour
+            if (listOfAssemblies.Contains(args.Name))
+            {
+                // Already resolving this assembly, return now
+                return null;
+            }
+
 
 
             //Loop through DLLs
-            for (int i = 0; i < _allDlls.Count(); i++)
+
+            Assembly dll = null;
+            for (int i = 0; i < _allDLLs.Count(); i++)
             {
-                string foundDLL = Path.GetFileNameWithoutExtension(_allDlls[i]);
+                string foundDLL = Path.GetFileNameWithoutExtension(_allDLLs[i]);
                 if (foundDLL != currentDLL)
                     continue;
 
-                //Log.Warn($"Found DLL: {_allDlls[i]}");
-                return Assembly.LoadFile(_allDlls[i]);
 
+
+                Log.Warn($"Found DLL: {_allDLLs[i]}");
+               
+                try
+                {
+                    listOfAssemblies.Add(args.Name);
+                    dll = Assembly.LoadFrom(_allDLLs[i]);
+                    Log.Warn($"{dll.FullName} has been loaded!");
+
+                }catch(Exception ex)
+                {
+                    log.Error(ex);
+                    //Console.ReadLine();
+                    return dll;
+                }
+                finally
+                {
+                    listOfAssemblies.Remove(args.Name);
+
+                }
+
+
+                return dll;
             }
+
+
 
             return null;
         }
