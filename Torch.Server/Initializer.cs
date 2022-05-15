@@ -128,7 +128,7 @@ quit";
             if (args.RequestingAssembly != null)
                 requester = args.RequestingAssembly.FullName;
 
-            log.Warn($"{senderAssembly.FriendlyName} needs {args.Name}! Finding {currentDLL}.dll! Requester: { requester}");
+            //log.Warn($"{senderAssembly.FriendlyName} needs {args.Name}! Finding {currentDLL}.dll! Requester: { requester}");
 
 
 
@@ -174,7 +174,7 @@ quit";
                 try
                 {
                     listOfAssemblies.Add(args.Name);
-                    dll = Assembly.LoadFile(_allDLLs[i]);
+                    dll = Assembly.LoadFrom(_allDLLs[i]);
                     Log.Warn($"{dll.FullName} has been loaded!");
 
                 }catch(Exception ex)
