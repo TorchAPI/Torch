@@ -6,11 +6,11 @@ def packageAndArchive(buildMode, packageName) {
 	bat "IF EXIST ${packageDir} RMDIR /S /Q ${packageDir}"
 
 
-	bat "del $bin\\x64\\${buildMode}\\lib\\Content"
-	bat "del $bin\\x64\\${buildMode}\\lib\\DedicatedServer64"
-	bat "del $bin\\x64\\${buildMode}\\lib\\steamapps"
-	bat "del $bin\\x64\\${buildMode}\\lib\\TempContent"
-	bat "del $bin\\x64\\${buildMode}\\lib\\Content"
+	bat "del bin\\x64\\${buildMode}\\lib\\Content"
+	bat "del bin\\x64\\${buildMode}\\lib\\DedicatedServer64"
+	bat "del bin\\x64\\${buildMode}\\lib\\steamapps"
+	bat "del bin\\x64\\${buildMode}\\lib\\TempContent"
+	bat "del bin\\x64\\${buildMode}\\lib\\Content"
 
 
 	bat "xcopy bin\\x64\\${buildMode} ${packageDir} /S"
