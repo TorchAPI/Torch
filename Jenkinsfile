@@ -47,7 +47,7 @@ node('windows') {
 	}
 
 	stage('Archive') {
-		archiveArtifacts artifacts: "bin/x64/${buildMode}/Torch*", caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
+		archiveArtifacts artifacts: "bin/x64/${buildMode}/*", caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
 
 		packageAndArchive(buildMode, "torch-server")
 
