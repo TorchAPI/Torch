@@ -35,7 +35,7 @@ node('windows') {
 
 	stage('Build') {
 		currentBuild.description = bat(returnStdout: true, script: '@powershell -File Versioning/version.ps1').trim()
-		if (env.BRANCH_NAME == "master") {
+		if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "staging") {
 			buildMode = "Release"
 		} else {
 			buildMode = "Debug"
