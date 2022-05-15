@@ -33,7 +33,8 @@ namespace Torch.Server
         private TorchConfig _config;
 
         private bool _autoscrollLog = true;
-
+        private bool _needScroll;
+        private System.Windows.Forms.Timer _scrollTimer;
         public TorchUI(TorchServer server)
         {
             WindowStartupLocation = WindowStartupLocation.Manual;
@@ -68,8 +69,22 @@ namespace Torch.Server
         {
             var scrollViewer = FindDescendant<ScrollViewer>(ConsoleText);
             scrollViewer.ScrollChanged += ConsoleText_OnScrollChanged;
+            
+            _scrollTimer = new System.Windows.Forms.Timer();
+            _scrollTimer.Tick += ScrollIfNeed;
+            _scrollTimer.Interval = 120;
+            _scrollTimer.Start();
         }
 
+        private void ScrollIfNeed(object sender, EventArgs e)
+        {
+            if (_autoscrollLog && _needScroll)
+            {
+                ConsoleText.ScrollToEnd();
+                _needScroll = false;
+            }
+        }
+        
         private void AttachConsole()
         {
             const string target = "wpf";
@@ -114,9 +129,7 @@ namespace Torch.Server
 
         private void ConsoleText_OnTextChanged(object sender, TextChangedEventArgs args)
         {
-            var textBox = (RichTextBox) sender;
-            if (_autoscrollLog)
-                ConsoleText.ScrollToEnd();
+            _needScroll = true;
         }
         
         private void ConsoleText_OnScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -169,6 +182,8 @@ namespace Torch.Server
             if (_server?.State == ServerState.Running)
                 _server.Stop();
 
+            _scrollTimer.Stop();
+            
             Process.GetCurrentProcess().Kill();
         }
 

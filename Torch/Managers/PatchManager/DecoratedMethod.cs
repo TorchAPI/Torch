@@ -59,7 +59,17 @@ namespace Torch.Managers.PatchManager
             }
             catch (Exception exception)
             {
-                _log.Fatal(exception, $"Error patching {_method.DeclaringType?.FullName}#{_method}");
+                var errorMessage = $"Error patching {_method.DeclaringType?.FullName}#{_method} (Exception: {exception.Message})\n\nFind a list below of possible causes of this error:\n";
+                
+                //get prefixes and suffixes for this method and append to error message
+                errorMessage = Prefixes.Aggregate(errorMessage, (current, prefix) => current + $"{prefix.DeclaringType.Namespace}::{prefix.Name} \n");
+
+                errorMessage = Suffixes.Aggregate(errorMessage, (current, suffix) => current + $"{suffix.DeclaringType.Namespace}::{suffix.Name} \n");
+
+                errorMessage = Transpilers.Aggregate(errorMessage, (current, transpiler) => current + $"{transpiler.DeclaringType.Namespace}::{transpiler.Name} \n");
+
+                errorMessage = errorMessage.Substring(0, errorMessage.Length - 1);
+                _log.Fatal(errorMessage);
                 throw;
             }
         }

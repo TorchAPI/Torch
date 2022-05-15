@@ -65,6 +65,7 @@ namespace Torch.API.WebAPI
             try
             {
                 job = JsonConvert.DeserializeObject<Job>(r);
+                job.BranchName = response.Name;
             }
             catch (Exception ex)
             {
@@ -109,6 +110,7 @@ namespace Torch.API.WebAPI
 
     public class Job
     {
+        public string BranchName;
         public int Number;
         public bool Building;
         public string Description;

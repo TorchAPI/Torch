@@ -49,14 +49,14 @@ namespace Torch.Managers
 
             try
             {
-                var job = await JenkinsQuery.Instance.GetLatestVersion(Torch.TorchVersion.Branch);
+                var job = await JenkinsQuery.Instance.GetLatestVersion(Torch.Config.BranchName.ToString());
                 if (job == null)
                 {
                     _log.Info("Failed to fetch latest version.");
                     return;
                 }
                 
-                if (job.Version > Torch.TorchVersion)
+                if (job.Version > Torch.TorchVersion || (Torch.TorchVersion.Branch != Torch.Config.BranchName.ToString()))
                 {
                     _log.Warn($"Updating Torch from version {Torch.TorchVersion} to version {job.Version}");
                     var updateName = Path.Combine(_fsManager.TempDirectory, "torchupdate.zip");
@@ -68,7 +68,9 @@ namespace Torch.Managers
                     }
                     UpdateFromZip(updateName, _torchDir);
                     File.Delete(updateName);
-                    _log.Warn($"Torch version {job.Version} has been installed, please restart Torch to finish the process.");
+                    _log.Warn($"Torch version {job.Version} has been installed.");
+                    //restart torch
+                    Torch.Restart();
                 }
                 else
                 {
