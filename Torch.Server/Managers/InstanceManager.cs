@@ -53,7 +53,7 @@ namespace Torch.Server.Managers
                 ValidateInstance(path);
 
             MyFileSystem.Reset();
-            MyFileSystem.Init("Content", path);
+            MyFileSystem.Init(@"lib\Content", path);
             //Initializes saves path. Why this isn't in Init() we may never know.
             MyFileSystem.InitUserSpecific(null);
 

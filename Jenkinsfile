@@ -18,7 +18,7 @@ def packageAndArchive(buildMode, packageName) {
 node('windows') {
 	stage('Checkout') {
 		checkout scm
-		bat "git pull https://github.com/TorchAPI/Torch/ $env.BRANCH_NAME --tags"
+		//bat "git pull https://github.com/TorchAPI/Torch/ $env.BRANCH_NAME --tags"
 	}
 
 	stage('Acquire SE') {

@@ -57,6 +57,8 @@ namespace Torch.Server.Views
             InitializeComponent();
             this.DataContext = this;
 
+
+            return;
             _themes["Dark theme"] = new ResourceDictionary() { Source = new Uri(@"/Themes/Dark Theme.xaml", UriKind.Relative) };
             _themes["Animated Dark theme"] = new ResourceDictionary() { Source = new Uri(@"/Themes/Dark Theme Animated.xaml", UriKind.Relative) };
 
