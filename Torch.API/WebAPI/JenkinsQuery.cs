@@ -13,7 +13,8 @@ namespace Torch.API.WebAPI
 {
     public class JenkinsQuery
     {
-        private const string BRANCH_QUERY = "http://136.243.80.164:2690/job/TorchDev/job/{0}/" + API_PATH;
+        //Revert when ready
+        private const string BRANCH_QUERY = "http://136.243.80.164:2690/job/CasmirDEV/job/{0}/" + API_PATH;
         private const string ARTIFACT_PATH = "artifact/bin/torch-server.zip";
         private const string API_PATH = "api/json";
 
