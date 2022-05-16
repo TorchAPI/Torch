@@ -92,8 +92,8 @@ namespace Torch.Managers
                         continue;
 
                     _log.Debug($"Unzipping {file.FullName}");
-                    var targetFile = Path.Combine(extractPath, file.FullName);
-                    _fsManager.SoftDelete(extractPath, file.FullName);
+                    var targetFile = Path.Combine(extractPath, file.Name);
+                    _fsManager.SoftDelete(extractPath, file.Name);
                     file.ExtractToFile(targetFile, true);
                 }
 
