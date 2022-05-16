@@ -84,6 +84,25 @@ namespace Torch.Managers
 
         private void UpdateFromZip(string zipFile, string extractPath)
         {
+            string preservedExtractPath = extractPath;
+            string topDirectoryPath = null;
+            for (int i = 0; i < 2; i++)
+            {
+                topDirectoryPath = Directory.GetParent((!string.IsNullOrEmpty(topDirectoryPath) ? topDirectoryPath : extractPath))?.FullName;
+            }
+
+            var TopLevelFiles = new[]
+            {
+                "app.config",
+                "Nlog.config",
+                "NLog-user.config",
+                "Torch.cfg",
+                "Torch.Server.exe",
+                "Torch.Server.exe.config",
+                "Torch.Server.pdb",
+                "Torch.Server.xml",
+            };
+            
             using (var zip = ZipFile.OpenRead(zipFile))
             {
                 foreach (var file in zip.Entries)
@@ -92,6 +111,9 @@ namespace Torch.Managers
                         continue;
 
                     _log.Debug($"Unzipping {file.FullName}");
+
+                    extractPath = TopLevelFiles.Contains(file.Name) ? topDirectoryPath : preservedExtractPath;
+
                     var targetFile = Path.Combine(extractPath, file.Name);
                     _fsManager.SoftDelete(extractPath, file.Name);
                     file.ExtractToFile(targetFile, true);
