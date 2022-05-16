@@ -5,11 +5,17 @@ def packageAndArchive(buildMode, packageName) {
 	bat "IF EXIST ${zipFile} DEL ${zipFile}"
 	bat "IF EXIST ${packageDir} RMDIR /S /Q ${packageDir}"
 
-	bat "xcopy bin\\x64\\${buildMode} ${packageDir}"
 
-	bat "del ${packageDir}VRage.*"
-	bat "del ${packageDir}Sandbox.*"
-	bat "del ${packageDir}SpaceEngineers.*"
+	bat "del bin\\x64\\${buildMode}\\lib\\Content"
+	bat "del bin\\x64\\${buildMode}\\lib\\DedicatedServer64"
+	bat "del bin\\x64\\${buildMode}\\lib\\steamapps"
+	bat "del bin\\x64\\${buildMode}\\lib\\TempContent"
+	bat "del bin\\x64\\${buildMode}\\lib\\Content"
+
+
+	bat "xcopy bin\\x64\\${buildMode} ${packageDir} /S"
+
+
     
 	powershell "Add-Type -Assembly System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory(\"\$PWD\\${packageDir}\", \"\$PWD\\${zipFile}\")"
 	archiveArtifacts artifacts: zipFile, caseSensitive: false, onlyIfSuccessful: true
@@ -47,7 +53,7 @@ node('windows') {
 	}
 
 	stage('Archive') {
-		archiveArtifacts artifacts: "bin/x64/${buildMode}/Torch*", caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
+		archiveArtifacts artifacts: "bin/x64/${buildMode}/*", caseSensitive: false, fingerprint: true, onlyIfSuccessful: true
 
 		packageAndArchive(buildMode, "torch-server")
 
