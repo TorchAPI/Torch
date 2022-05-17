@@ -135,13 +135,18 @@ namespace Torch.Server
                 {
                     //check to see if file exists in current directory
                     var newFile = Path.Combine(workingDir, "lib", file);
+                    
                     if (File.Exists(newFile)) continue;
+                    if(!Directory.Exists(Path.Combine(workingDir, file))) continue;
+
                     File.Move(Path.Combine(workingDir, file), newFile);
                 }
                 else
                 {
                     var newDir = Path.Combine(workingDir, "lib", file);
+                    
                     if (Directory.Exists(newDir)) continue;
+                    if(!Directory.Exists(Path.Combine(workingDir, file))) continue;
                     Directory.Move(Path.Combine(workingDir, file), newDir);
                 }
             }
@@ -150,6 +155,8 @@ namespace Torch.Server
             {
                 if (filesToManualDelete.Any(x => file.Contains(x)))
                 {
+                    var log = LogManager.GetCurrentClassLogger();
+                    log.Error($"{file} was not deleted.  Please delete manually.");
                     continue;
                 }
                 
