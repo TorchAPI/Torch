@@ -150,8 +150,6 @@ namespace Torch.Server
             {
                 if (filesToManualDelete.Any(x => file.Contains(x)))
                 {
-                    var log = LogManager.GetCurrentClassLogger();
-                    log.Error($"{file} was not deleted, please delete manually");
                     continue;
                 }
                 
