@@ -34,7 +34,7 @@ namespace Torch.Server
             var badDlls = new[]
             {
                 "System.Security.Principal.Windows.dll",
-                "VRage.Platform.Windows.dll"
+                "VRage.Platform.Windows.dll",
             };
 
             try
@@ -45,6 +45,7 @@ namespace Torch.Server
                         File.Delete(file);
                 }
             }
+            
             catch (Exception e)
             {
                 var log = LogManager.GetCurrentClassLogger();
@@ -52,7 +53,10 @@ namespace Torch.Server
                 log.Error(e);
                 return;
             }
-
+            
+            //TEMPORARY for a few weeks after master deployment to ensure all instances are updated properly
+            MigrateFiles(workingDir);
+            
             try 
             {
                 if (!TorchLauncher.IsTorchWrapped())
@@ -80,6 +84,82 @@ namespace Torch.Server
                 log.Fatal(runException.ToString());
                 return;
             }
+        }
+
+        private static void MigrateFiles(string workingDir)
+        {
+            var toMoveToLib = new[]
+            {
+                "steamcmd",
+                "steamapps",
+                "TempContent",
+                "DedicatedServer64",
+                "Content",
+                "steamclient.dll",
+                "steamclient64.dll",
+                "tier0_s.dll",
+                "tier0_s64.dll",
+                "vstdlib_s.dll",
+                "vstdlib_s64.dll",
+            };
+
+            var filesToPreserve = new[]
+            {
+                "Plugins",
+                "Instance",
+                "Logs",
+                "UserData",
+                "Torch.Server.exe",
+                "Torch.cfg",
+                "Torch.Server.pdb",
+                "app.config",
+                "NLog.config",
+                //cant be auto deleted
+                "NLog.dll",
+                "NLog-user.config",
+                "Torch.Server.exe.config",
+                "Torch.Server.xml",
+                //cant be auto deleted
+                "Torch.dll",
+            };
+
+            var filesToManualDelete = new[]
+            {
+                "Torch.dll",
+                "NLog.dll",
+            };
+            
+            foreach (var file in toMoveToLib)
+            {
+                if (file.EndsWith(".dll"))
+                {
+                    //check to see if file exists in current directory
+                    var newFile = Path.Combine(workingDir, "lib", file);
+                    if (File.Exists(newFile)) continue;
+                    File.Move(Path.Combine(workingDir, file), newFile);
+                }
+                else
+                {
+                    var newDir = Path.Combine(workingDir, "lib", file);
+                    if (Directory.Exists(newDir)) continue;
+                    Directory.Move(Path.Combine(workingDir, file), newDir);
+                }
+            }
+            
+            foreach (var file in Directory.GetFiles(workingDir))
+            {
+                if (filesToManualDelete.Any(x => file.Contains(x)))
+                {
+                    var log = LogManager.GetCurrentClassLogger();
+                    log.Error($"{file} was not deleted, please delete manually");
+                    continue;
+                }
+                
+                if (filesToPreserve.Any(x => file.Contains(x))) continue;
+                File.Delete(file);
+            }
+            
+            
         }
     }
 }

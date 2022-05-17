@@ -91,7 +91,7 @@ namespace Torch.Managers
                 topDirectoryPath = Directory.GetParent((!string.IsNullOrEmpty(topDirectoryPath) ? topDirectoryPath : extractPath))?.FullName;
             }
 
-            var TopLevelFiles = new[]
+            var topLevelFiles = new[]
             {
                 "app.config",
                 "Nlog.config",
@@ -112,7 +112,7 @@ namespace Torch.Managers
 
                     _log.Debug($"Unzipping {file.FullName}");
 
-                    extractPath = TopLevelFiles.Contains(file.Name) ? topDirectoryPath : preservedExtractPath;
+                    extractPath = topLevelFiles.Contains(file.Name) ? topDirectoryPath : preservedExtractPath;
 
                     var targetFile = Path.Combine(extractPath, file.Name);
                     _fsManager.SoftDelete(extractPath, file.Name);
