@@ -129,6 +129,7 @@ namespace Torch.Server
                 "Torch.dll",
                 "Torch.API.dll",
                 "NLog.dll",
+                "Torch.API.dll"
             };
 
             var filesToManualDelete = new[]
@@ -162,16 +163,18 @@ namespace Torch.Server
 
             foreach (var file in Directory.GetFiles(workingDir))
             {
+                //get last part of file string after /
+                var fileName = Path.GetFileName(file);
                 foreach (var entry in filesToManualDelete)
                 {
-                    if (file == entry)
+                    if (fileName == entry)
                     {
                         var log = LogManager.GetCurrentClassLogger();
-                        log.Error($"file {file} was not deleted. Please delete manually.");
+                        log.Error($"file {fileName} was not deleted. Please delete manually.");
                     }
                 }
 
-                if (filesToPreserve.Any(x => file.Contains(x))) continue;
+                if (filesToPreserve.Any(x => x == fileName)) continue;
                 File.Delete(file);
             }
             
