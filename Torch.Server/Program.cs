@@ -9,6 +9,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using Microsoft.VisualBasic.Devices;
+using Microsoft.Xaml.Behaviors.Core;
 using NLog;
 using NLog.Fluent;
 using NLog.Targets;
@@ -27,7 +28,7 @@ namespace Torch.Server
             Target.Register<FlowDocumentTarget>("FlowDocument");
             //Ensures that all the files are downloaded in the Torch directory.
             var workingDir = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
-            var binDir = Path.Combine(workingDir, "DedicatedServer64");
+            var binDir = workingDir + @"lib\DedicatedServer64";
             Directory.SetCurrentDirectory(workingDir);
 
             //HACK for block skins update
@@ -53,10 +54,16 @@ namespace Torch.Server
                 log.Error(e);
                 return;
             }
-            
-            //TEMPORARY for a few weeks after master deployment to ensure all instances are updated properly
-            MigrateFiles(workingDir);
-            
+
+            try
+            {
+                //TEMPORARY for a few weeks after master deployment to ensure all instances are updated properly
+                MigrateFiles(workingDir);
+            } catch (Exception e)
+            {
+                throw new Exception("Error migrating files", e);
+            }
+
             try 
             {
                 if (!TorchLauncher.IsTorchWrapped())
@@ -114,19 +121,21 @@ namespace Torch.Server
                 "Torch.Server.pdb",
                 "app.config",
                 "NLog.config",
-                //cant be auto deleted
-                "NLog.dll",
                 "NLog-user.config",
                 "Torch.Server.exe.config",
                 "Torch.Server.xml",
+                
                 //cant be auto deleted
                 "Torch.dll",
+                "Torch.API.dll",
+                "NLog.dll",
             };
 
             var filesToManualDelete = new[]
             {
                 "Torch.dll",
                 "NLog.dll",
+                "Torch.API.dll",
             };
             
             foreach (var file in toMoveToLib)
@@ -150,16 +159,18 @@ namespace Torch.Server
                     Directory.Move(Path.Combine(workingDir, file), newDir);
                 }
             }
-            
+
             foreach (var file in Directory.GetFiles(workingDir))
             {
-                if (filesToManualDelete.Any(x => file.Contains(x)))
+                foreach (var entry in filesToManualDelete)
                 {
-                    var log = LogManager.GetCurrentClassLogger();
-                    log.Error($"{file} was not deleted.  Please delete manually.");
-                    continue;
+                    if (file == entry)
+                    {
+                        var log = LogManager.GetCurrentClassLogger();
+                        log.Error($"file {file} was not deleted. Please delete manually.");
+                    }
                 }
-                
+
                 if (filesToPreserve.Any(x => file.Contains(x))) continue;
                 File.Delete(file);
             }
