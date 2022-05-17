@@ -55,6 +55,8 @@ quit";
         {
             if (_init)
                 return false;
+            
+            LogManager.Configuration.LoggingRules.Clear();
 
 #if !DEBUG
             AppDomain.CurrentDomain.UnhandledException += HandleException;
@@ -127,27 +129,11 @@ quit";
             string requester = "";
             if (args.RequestingAssembly != null)
                 requester = args.RequestingAssembly.FullName;
-
-            //log.Warn($"{senderAssembly.FriendlyName} needs {args.Name}! Finding {currentDLL}.dll! Requester: { requester}");
-
-
-
-
-
-
             
-            
-
             //Check to make sure this assembly isnt already loaded
             Assembly a = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(x => x.FullName == args.Name);
             if (a != null)
                 return a;
-
-
-            //Need to split the strinb below
-            //VRage.Library, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-            //log.Fatal(args.Name);
-
 
             //MS C# expected behaviour
             if (listOfAssemblies.Contains(args.Name))
@@ -167,16 +153,10 @@ quit";
                 if (foundDLL != currentDLL)
                     continue;
 
-
-
-                Log.Warn($"Found DLL: {_allDLLs[i]}");
-               
                 try
                 {
                     listOfAssemblies.Add(args.Name);
                     dll = Assembly.LoadFrom(_allDLLs[i]);
-                    Log.Warn($"{dll.FullName} has been loaded!");
-
                 }catch(Exception ex)
                 {
                     log.Error(ex);
@@ -192,9 +172,6 @@ quit";
 
                 return dll;
             }
-
-
-
             return null;
         }
 
