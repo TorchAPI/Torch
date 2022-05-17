@@ -92,8 +92,7 @@ namespace Torch
             Destroyed
         }
 
-        internal VRageGame(TorchBase torch, Action tweakGameSettings, string appName, uint appSteamId,
-            string userDataPath, string[] runArgs)
+        internal VRageGame(TorchBase torch, Action tweakGameSettings, string appName, uint appSteamId, string userDataPath, string[] runArgs)
         {
             _torch = torch;
             _tweakGameSettings = tweakGameSettings;
@@ -154,6 +153,8 @@ namespace Torch
             _ = MyVRage.Platform.Scripting;
             
             MyFileSystem.ExePath = Path.GetDirectoryName(typeof(SpaceEngineersGame).Assembly.Location);
+            _log.Error(MyFileSystem.ExePath);
+
 
             _tweakGameSettings();
 
@@ -304,6 +305,8 @@ namespace Torch
 
         private void DoStart()
         {
+
+            Directory.SetCurrentDirectory(Path.Combine(Directory.GetCurrentDirectory(), "lib", "DedicatedServer64"));
             _game = new SpaceEngineersGame(_runArgs);
 
             if (MySandboxGame.FatalErrorDuringInit)
@@ -343,6 +346,8 @@ namespace Torch
             if (!Path.IsPathRooted(sessionPath))
                 sessionPath = Path.Combine(MyFileSystem.SavesPath, sessionPath);
 
+
+            MyLog.Default.WriteLineAndConsole("sessionPath");
             if (!Sandbox.Engine.Platform.Game.IsDedicated)
             {
                 MySessionLoader.LoadSingleplayerSession(sessionPath);
