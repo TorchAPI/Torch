@@ -113,9 +113,11 @@ namespace Torch.Managers
                     _log.Debug($"Unzipping {file.FullName}");
 
                     extractPath = topLevelFiles.Contains(file.Name) ? topDirectoryPath : preservedExtractPath;
-
                     var targetFile = Path.Combine(extractPath, file.Name);
-                    _fsManager.SoftDelete(extractPath, file.Name);
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(targetFile));
+
+                    _fsManager.SoftDelete(extractPath, file.FullName);
                     file.ExtractToFile(targetFile, true);
                 }
 
