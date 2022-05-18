@@ -91,8 +91,9 @@ namespace Torch.Managers
                     if(file.Name == "NLog-user.config" && File.Exists(Path.Combine(extractPath, file.FullName)))
                         continue;
 
-                    _log.Debug($"Unzipping {file.FullName}");
                     var targetFile = Path.Combine(extractPath, file.FullName);
+                    Directory.CreateDirectory(Path.GetDirectoryName(targetFile));
+
                     _fsManager.SoftDelete(extractPath, file.FullName);
                     file.ExtractToFile(targetFile, true);
                 }
