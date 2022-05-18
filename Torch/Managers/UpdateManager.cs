@@ -29,6 +29,10 @@ namespace Torch.Managers
         public UpdateManager(ITorchBase torchInstance) : base(torchInstance)
         {
             //_updatePollTimer = new Timer(TimerElapsed, this, TimeSpan.Zero, TimeSpan.FromMinutes(5));
+            for (int i = 0; i < 2; i++)
+            {
+                _torchDir = Directory.GetParent(_torchDir)?.FullName;
+            }
         }
 
         /// <inheritdoc />
@@ -84,25 +88,6 @@ namespace Torch.Managers
 
         private void UpdateFromZip(string zipFile, string extractPath)
         {
-            string preservedExtractPath = extractPath;
-            string topDirectoryPath = null;
-            for (int i = 0; i < 2; i++)
-            {
-                topDirectoryPath = Directory.GetParent((!string.IsNullOrEmpty(topDirectoryPath) ? topDirectoryPath : extractPath))?.FullName;
-            }
-
-            var topLevelFiles = new[]
-            {
-                "app.config",
-                "Nlog.config",
-                "NLog-user.config",
-                "Torch.cfg",
-                "Torch.Server.exe",
-                "Torch.Server.exe.config",
-                "Torch.Server.pdb",
-                "Torch.Server.xml",
-            };
-            
             using (var zip = ZipFile.OpenRead(zipFile))
             {
                 foreach (var file in zip.Entries)
@@ -110,11 +95,7 @@ namespace Torch.Managers
                     if(file.Name == "NLog-user.config" && File.Exists(Path.Combine(extractPath, file.FullName)))
                         continue;
 
-                    _log.Debug($"Unzipping {file.FullName}");
-
-                    extractPath = topLevelFiles.Contains(file.Name) ? topDirectoryPath : preservedExtractPath;
-                    var targetFile = Path.Combine(extractPath, file.Name);
-
+                    var targetFile = Path.Combine(extractPath, file.FullName);
                     Directory.CreateDirectory(Path.GetDirectoryName(targetFile));
 
                     _fsManager.SoftDelete(extractPath, file.FullName);
