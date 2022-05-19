@@ -95,6 +95,7 @@ namespace Torch.Server
 
         private static void MigrateFiles(string workingDir)
         {
+            var torchDir = Path.Combine(workingDir, @"lib\Torch");
             var toMoveToLib = new[]
             {
                 "steamcmd",
@@ -108,6 +109,11 @@ namespace Torch.Server
                 "tier0_s64.dll",
                 "vstdlib_s.dll",
                 "vstdlib_s64.dll",
+            };
+
+            var copySteamToTorch = new[]
+            {
+                "steam_api64.dll",
             };
 
             var filesToPreserve = new[]
@@ -124,6 +130,7 @@ namespace Torch.Server
                 "NLog-user.config",
                 "Torch.Server.exe.config",
                 "Torch.Server.xml",
+                "steam_api64.dll",
                 
                 //cant be auto deleted
                 "Torch.dll",
@@ -177,7 +184,16 @@ namespace Torch.Server
                 if (filesToPreserve.Any(x => x == fileName)) continue;
                 File.Delete(file);
             }
-            
+
+            foreach (var file in copySteamToTorch)
+            {
+                var baseFile = Path.Combine(workingDir, file);
+                if (File.Exists(baseFile))
+                {
+                    var destFile = Path.Combine(torchDir, file);
+                    File.Move(baseFile, destFile);
+                }
+            }
             
         }
     }
