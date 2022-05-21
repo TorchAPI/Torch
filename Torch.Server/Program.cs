@@ -57,8 +57,11 @@ namespace Torch.Server
 
             try
             {
+                //see if arguments contails --wiperoot=false and if not set it to true
+                var dontWipeRoot = args.Any(a => a.ToLower().Contains("-wiperoot=false"));
+
                 //TEMPORARY for a few weeks after master deployment to ensure all instances are updated properly
-                MigrateFiles(workingDir);
+                MigrateFiles(workingDir, dontWipeRoot);
             } catch (Exception e)
             {
                 throw new Exception("Error migrating files", e);
@@ -93,7 +96,7 @@ namespace Torch.Server
             }
         }
 
-        private static void MigrateFiles(string workingDir)
+        private static void MigrateFiles(string workingDir, bool dontWipeRoot)
         {
             var torchDir = Path.Combine(workingDir, @"lib\Torch");
             var toMoveToLib = new[]
@@ -182,7 +185,11 @@ namespace Torch.Server
                 }
 
                 if (filesToPreserve.Any(x => x == fileName)) continue;
-                File.Delete(file);
+
+                if (!dontWipeRoot)
+                {
+                    File.Delete(file);
+                }
             }
 
             foreach (var file in copySteamToTorch)
