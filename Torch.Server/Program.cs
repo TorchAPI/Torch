@@ -114,11 +114,6 @@ namespace Torch.Server
                 "vstdlib_s64.dll",
             };
 
-            var copySteamToTorch = new[]
-            {
-                "steam_api64.dll",
-            };
-
             var filesToPreserve = new[]
             {
                 "Plugins",
@@ -133,13 +128,12 @@ namespace Torch.Server
                 "NLog-user.config",
                 "Torch.Server.exe.config",
                 "Torch.Server.xml",
-                "steam_api64.dll",
+                //"steam_api64.dll",
                 
                 //cant be auto deleted
                 "Torch.dll",
                 "Torch.API.dll",
                 "NLog.dll",
-                "Torch.API.dll"
             };
 
             var filesToManualDelete = new[]
@@ -189,16 +183,6 @@ namespace Torch.Server
                 if (!dontWipeRoot)
                 {
                     File.Delete(file);
-                }
-            }
-
-            foreach (var file in copySteamToTorch)
-            {
-                var baseFile = Path.Combine(workingDir, file);
-                if (File.Exists(baseFile))
-                {
-                    var destFile = Path.Combine(torchDir, file);
-                    File.Move(baseFile, destFile);
                 }
             }
             
