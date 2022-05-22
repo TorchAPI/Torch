@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using NLog;
@@ -28,21 +27,6 @@ namespace Torch.Managers
             var torch = new FileInfo(typeof(FilesystemManager).Assembly.Location).Directory.FullName;
             TempDirectory = Directory.CreateDirectory(Path.Combine(torch, "tmp")).FullName;
             TorchDirectory = torch;
-            
-            //get directory of executing assembly
-            string rootDir = Assembly.GetExecutingAssembly().Location;
-
-            var oldTorchLibs = new[]
-            {
-                "Torch.dll",
-                "Torch.API.dll"
-            };
-
-            //temp until soon after june 1st update
-            foreach (var oldLib in oldTorchLibs)
-            {
-                SoftDelete(rootDir,oldLib);
-            }
 
             _log.Debug($"Clearing tmp directory at {TempDirectory}");
             ClearTemp();

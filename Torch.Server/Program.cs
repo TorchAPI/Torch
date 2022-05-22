@@ -128,7 +128,7 @@ namespace Torch.Server
                 "NLog-user.config",
                 "Torch.Server.exe.config",
                 "Torch.Server.xml",
-                //"steam_api64.dll",
+                "steam_api64.dll",
                 
                 //cant be auto deleted
                 "Torch.dll",
@@ -136,10 +136,9 @@ namespace Torch.Server
                 "NLog.dll",
             };
 
-            var filesToManualDelete = new[]
+            var OldTorchLibs = new[]
             {
                 "Torch.dll",
-                "NLog.dll",
                 "Torch.API.dll",
             };
             
@@ -167,16 +166,7 @@ namespace Torch.Server
 
             foreach (var file in Directory.GetFiles(workingDir))
             {
-                //get last part of file string after /
                 var fileName = Path.GetFileName(file);
-                foreach (var entry in filesToManualDelete)
-                {
-                    if (fileName == entry)
-                    {
-                        var log = LogManager.GetCurrentClassLogger();
-                        log.Error($"file {fileName} was not deleted. Please delete manually.");
-                    }
-                }
 
                 if (filesToPreserve.Any(x => x == fileName)) continue;
 
@@ -184,6 +174,27 @@ namespace Torch.Server
                 {
                     File.Delete(file);
                 }
+            }
+            
+            var oldTorchLibs = new[]
+            {
+                "Torch.dll",
+                "Torch.API.dll"
+            };
+
+            //temp until soon after june 1st update
+            foreach (var oldLib in oldTorchLibs)
+            {
+                string source = Path.Combine(workingDir, oldLib);
+                if (!File.Exists(source))
+                    continue;
+                var rand = Path.GetRandomFileName();
+                
+                var tmpDir = Path.Combine(torchDir, "tmp");
+                
+                var dest = Path.Combine(tmpDir, rand);
+                File.Move(source, rand);
+                File.Move(rand, dest);
             }
             
         }
