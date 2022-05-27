@@ -53,12 +53,6 @@ quit";
             if (_init)
                 return false;
 
-#if !DEBUG
-            AppDomain.CurrentDomain.UnhandledException += HandleException;
-            LogManager.Configuration.AddRule(LogLevel.Info, LogLevel.Fatal, "console");
-            LogManager.ReconfigExistingLoggers();
-#endif
-
 #if DEBUG
             //enables logging debug messages when built in debug mode. Amazing.
             LogManager.Configuration.AddRule(LogLevel.Debug, LogLevel.Debug, "main");
@@ -66,6 +60,8 @@ quit";
             LogManager.Configuration.AddRule(LogLevel.Debug, LogLevel.Debug, "wpf");
             LogManager.ReconfigExistingLoggers();
             Log.Debug("Debug logging enabled.");
+#else
+            AppDomain.CurrentDomain.UnhandledException += HandleException;
 #endif
 
             // This is what happens when Keen is bad and puts extensions into the System namespace.
