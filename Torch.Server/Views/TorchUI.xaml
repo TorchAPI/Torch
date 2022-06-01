@@ -77,7 +77,8 @@
                             <ColumnDefinition/>
                         </Grid.ColumnDefinitions>
                     </Grid>
-                    <views:ConfigControl Grid.Row="1" x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom" IsEnabled="{Binding CanRun}"/>
+                    <!-- IsEnabled="{Binding CanRun}" -->
+                    <views:ConfigControl Grid.Row="1" x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Mods">
