@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 using NLog;
 using Torch.API;
 using Torch.Views;

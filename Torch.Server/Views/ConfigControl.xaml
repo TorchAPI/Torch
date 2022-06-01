@@ -28,7 +28,6 @@
             <Label Content="World:" DockPanel.Dock="Left" />
             <Button Content="Import World Config" Margin="3" Padding="3" DockPanel.Dock="Right" Click="ImportConfig_OnClick" ToolTip="Override the DS config with the one from the selected world." IsEnabled="{Binding ElementName=WorldList, Path=Items.Count, Mode=OneWay}"/>
             <Button Content="New World" Margin="3" Padding="3" DockPanel.Dock="Right" Click="NewWorld_OnClick"/>
-            
             <ComboBox x:Name="WorldList" ItemsSource="{Binding Worlds}" SelectedItem="{Binding SelectedWorld}" Margin="3"
                       SelectionChanged="Selector_OnSelectionChanged">
                 <ComboBox.ItemTemplate>

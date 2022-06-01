@@ -29,10 +29,6 @@ namespace Torch.Managers
         public UpdateManager(ITorchBase torchInstance) : base(torchInstance)
         {
             //_updatePollTimer = new Timer(TimerElapsed, this, TimeSpan.Zero, TimeSpan.FromMinutes(5));
-            for (int i = 0; i < 2; i++)
-            {
-                _torchDir = Directory.GetParent(_torchDir)?.FullName;
-            }
         }
 
         /// <inheritdoc />

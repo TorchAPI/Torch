@@ -62,7 +62,8 @@ namespace Torch.Managers
             var rand = Path.GetRandomFileName();
             var dest = Path.Combine(TempDirectory, rand);
             File.Move(source, rand);
-            File.Move(rand, dest);
+            string rsource = Path.Combine(path, rand);
+            File.Move(rsource, dest);
         }
     }
 }

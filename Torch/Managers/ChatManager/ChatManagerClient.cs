@@ -12,6 +12,7 @@ using Sandbox.Game.Gui;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
+using SteamKit2.Unified.Internal;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Utils;
