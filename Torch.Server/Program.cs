@@ -193,8 +193,12 @@ namespace Torch.Server
                 var tmpDir = Path.Combine(torchDir, "tmp");
                 
                 var dest = Path.Combine(tmpDir, rand);
-                File.Move(source, rand);
-                File.Move(rand, dest);
+                try {
+                    File.Move(source, rand);
+                    File.Move(rand, dest);
+                } catch (Exception e)
+                {
+                }
             }
             
         }
