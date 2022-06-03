@@ -30,16 +30,12 @@ namespace Torch.Patches
             var msil = method.ToList();
             for (var i = 0; i < msil.Count; i++)
             {
-                if (msil[i].TryCatchOperations.All(x => x.Type != MsilTryCatchOperationType.BeginClauseBlock))
-                    continue;
-
-                for (; i < msil.Count; i++)
+                var instruction = msil[i];
+                if (instruction.IsLocalStore() && 
+                    instruction.Operand is MsilOperandInline.MsilOperandLocal && 
+                    ((MsilOperandInline.MsilOperandLocal)instruction.Operand).Value.Index == 19)
                 {
-                    if (msil[i].OpCode != OpCodes.Leave)
-                        continue;
-
-                    msil[i] = new MsilInstruction(OpCodes.Rethrow);
-                    break;
+                    msil.Insert(i + 1, new MsilInstruction(OpCodes.Rethrow));
                 }
             }
             return msil;
