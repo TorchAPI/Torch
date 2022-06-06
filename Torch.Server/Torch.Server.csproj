@@ -60,6 +60,10 @@
     <ApplicationIcon>torchicon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AutoCompleteTextBox, Version=1.1.1.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\AutoCompleteTextBox.1.5.0\lib\net472\AutoCompleteTextBox.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="ControlzEx, Version=3.0.2.4, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\ControlzEx.3.0.2.4\lib\net45\ControlzEx.dll</HintPath>
     </Reference>
@@ -274,6 +278,7 @@
     <Compile Include="ViewModels\ModItemInfo.cs" />
     <Compile Include="ViewModels\SessionSettingsViewModel.cs" />
     <Compile Include="ViewModels\WorldConfigurationViewModel.cs" />
+    <Compile Include="Views\CommandSuggestionsProvider.cs" />
     <Compile Include="Views\Converters\DefinitionToIdConverter.cs" />
     <Compile Include="Views\Converters\BooleanAndConverter.cs" />
     <Compile Include="Views\Converters\ListConverter.cs" />

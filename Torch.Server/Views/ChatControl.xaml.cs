@@ -28,7 +28,9 @@ using Torch.API.Managers;
 using Torch.API.Session;
 using Torch.Managers;
 using Torch.Server.Managers;
+using Torch.Server.Views;
 using VRage.Game;
+using Color = VRageMath.Color;
 
 namespace Torch.Server
 {
@@ -51,14 +53,14 @@ namespace Torch.Server
             if (IsVisible)
             {
                 //I hate this and I hate myself. You should hate me too
-                Task.Run(() =>
+                Task.Run(async () =>
                 {
-                    Thread.Sleep(100);
+                    await Task.Delay(100);
 
-                    Dispatcher.Invoke(() =>
+                    await Dispatcher.InvokeAsync(() =>
                     {
-                        Message.Focus();
-                        Keyboard.Focus(Message);
+                        MessageBox.Focus();
+                        Keyboard.Focus(MessageBox);
                     });
                 });
             }
@@ -68,7 +70,8 @@ namespace Torch.Server
         {
             _server = server;
 
-            server.Initialized += Server_Initialized            ;
+            server.Initialized += Server_Initialized;
+            MessageBox.Provider = new CommandSuggestionsProvider(_server);
         }
 
         private void Server_Initialized(ITorchServer obj)
@@ -167,28 +170,25 @@ namespace Torch.Server
         private void OnMessageEntered()
         {
             //Can't use Message.Text directly because of object ownership in WPF.
-            var text = Message.Text;
+            var text = MessageBox.Text;
             if (string.IsNullOrEmpty(text))
                 return;
 
             var commands = _server.CurrentSession?.Managers.GetManager<Torch.Commands.CommandManager>();
             if (commands != null && commands.IsCommand(text))
             {
-                InsertMessage(new TorchChatMessage(TorchBase.Instance.Config.ChatName, text, TorchBase.Instance.Config.ChatColor));
+                InsertMessage(new TorchChatMessage(_server.Config.ChatName, text, Color.Red, _server.Config.ChatColor));
                 _server.Invoke(() =>
                 {
-                    if (!commands.HandleCommandFromServer(text, InsertMessage))
-                    {
-                        InsertMessage(new TorchChatMessage(TorchBase.Instance.Config.ChatName, "Invalid command.", TorchBase.Instance.Config.ChatColor));
-                        return;
-                    }
+                    if (commands.HandleCommandFromServer(text, InsertMessage)) return;
+                    InsertMessage(new TorchChatMessage(_server.Config.ChatName, "Invalid command.", Color.Red, _server.Config.ChatColor));
                 });
             }
             else
             {
                 _server.CurrentSession?.Managers.GetManager<IChatManagerClient>().SendMessageAsSelf(text);
             }
-            Message.Text = "";
+            MessageBox.Text = "";
         }
     }
 }
