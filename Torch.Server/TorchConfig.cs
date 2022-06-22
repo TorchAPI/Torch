@@ -35,6 +35,7 @@ namespace Torch.Server
         private string _chatColor = "Red";
         private bool _enableWhitelist = false;
         private List<ulong> _whitelist = new List<ulong>();
+        private List<ulong> _groupWhitelist = new List<ulong>();
         private int _windowWidth = 980;
         private int _windowHeight = 588;
         private bool _independentConsole = false;
@@ -128,6 +129,9 @@ namespace Torch.Server
 
         [Display(Name = "Whitelist", Description = "Collection of whitelisted steam ids.", GroupName = "In-Game")]
         public List<ulong> Whitelist { get => _whitelist; set => Set(value, ref _whitelist); }
+
+        [Display(Name = "GroupWhitelist", Description = "Collection of whitelisted group ids.", GroupName = "In-Game")]
+        public List<ulong> GroupWhitelist { get => _groupWhitelist; set => Set(value, ref _groupWhitelist); }
 
         [Display(Name = "Width", Description = "Default window width.", GroupName = "Window")]
         public int WindowWidth { get => _windowWidth; set => Set(value, ref _windowWidth); }

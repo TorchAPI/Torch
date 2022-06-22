@@ -214,6 +214,7 @@ namespace Torch.Server.Managers
 
         private const int _waitListSize = 32;
         private readonly List<WaitingForGroup> _waitingForGroupLocal = new List<WaitingForGroup>(_waitListSize);
+        private readonly List<WaitingForGroups> _waitingForGroupsLocal = new List<WaitingForGroups>(_waitListSize);
 
         private struct WaitingForGroup
         {
@@ -226,6 +227,19 @@ namespace Torch.Server.Managers
                 SteamId = id;
                 Response = response;
                 SteamOwner = owner;
+            }
+        }
+
+        private struct WaitingForGroups
+        {
+            public readonly WaitingForGroup wait;
+            public readonly List<ulong> groupIds;
+            public readonly JoinResult result;
+            public WaitingForGroups(WaitingForGroup wait, List<ulong> groupIds)
+            {
+                this.wait = wait;
+                this.groupIds = groupIds;
+                this.result = JoinResult.OK;
             }
         }
 
@@ -270,7 +284,7 @@ namespace Torch.Server.Managers
 
         private void RunEvent(ValidateAuthTicketEvent info)
         {
-            JoinResult internalAuth;
+            JoinResult internalAuth = info.SteamResponse;
 
 
             if (IsBanned(info.SteamOwner) || IsBanned(info.SteamID))
@@ -281,10 +295,68 @@ namespace Torch.Server.Managers
             else if (info.SteamResponse == JoinResult.OK)
             {
                 var config = (TorchConfig) Torch.Config;
-                if (config.EnableWhitelist && !config.Whitelist.Contains(info.SteamID))
+                if (config.EnableWhitelist)
                 {
-                    _log.Warn($"Rejecting user {info.SteamID} because they are not whitelisted in Torch.cfg.");
-                    internalAuth = JoinResult.NotInGroup;
+                    List<ulong> groupIds = new List<ulong>();
+                    CSteamID userID = new CSteamID(info.SteamID);
+                    if (userID.GetEAccountType() != EAccountType.k_EAccountTypeIndividual)
+                    {
+                        _log.Info($"User {userID.GetAccountID()} is not valid ({userID.GetEAccountType()})");
+                    }
+                    else
+                    {
+                        foreach (var groupID in config.GroupWhitelist)
+                        {
+                            CSteamID groupId = new CSteamID(groupID);
+                            if (groupId.GetEAccountType() == EAccountType.k_EAccountTypeClan)
+                            {
+                                bool callbackComplete = false;
+                                bool callbackValue = false;
+                                
+                                var callback = Callback<GSClientGroupStatus_t>.Create( (GSClientGroupStatus_t pCallback) => {
+                                    if (pCallback.m_SteamIDUser == userID && pCallback.m_SteamIDGroup == groupId)
+                                    {
+                                        callbackValue = pCallback.m_bMember;
+                                        _log.Info($"User {info.SteamID} Ingroup {groupID} == {callbackValue}");
+                                        callbackComplete = true;
+                                    } else
+                                    {
+                                        _log.Info(pCallback);
+                                    }
+                                });
+                                bool status = SteamGameServer.RequestUserGroupStatus(userID, groupId);
+                                if (status)
+                                {
+                                    groupIds.Add(groupID);
+                                } 
+                                else
+                                {
+                                    _log.Warn($"Error Requesting Status for {info.SteamID} from {groupID}");
+                                }
+                            }
+                            else
+                            {
+                                _log.Info($"Group {groupID} is invalid! {groupId.GetAccountID()},{groupId.GetEAccountType()}");
+                            }
+                        }
+                    }
+
+                    if (groupIds.Count > 0)
+                    {
+
+                        lock (_waitingForGroupsLocal)
+                        {
+                            if (_waitingForGroupsLocal.Count >= _waitListSize)
+                                _waitingForGroupsLocal.RemoveAt(0);
+                            _waitingForGroupsLocal.Add(new WaitingForGroups(new WaitingForGroup(info.SteamID, info.SteamResponse, info.SteamOwner), groupIds));
+                        }
+                        return;
+                    }
+                    if (!config.Whitelist.Contains(info.SteamID))
+                    {
+                        _log.Warn($"Rejecting user {info.SteamID} because they are not whitelisted in Torch.cfg.");
+                        internalAuth = JoinResult.NotInGroup;
+                    }
                 }
                 else if (MySandboxGame.ConfigDedicated.Reserved.Contains(info.SteamID))
                     internalAuth = JoinResult.OK;
@@ -308,7 +380,7 @@ namespace Torch.Server.Managers
             }
             else
                 internalAuth = info.SteamResponse;
-
+                        
             info.FutureVerdict = Task.FromResult(internalAuth);
 
             MultiplayerManagerDedicatedEventShim.RaiseValidateAuthTicket(ref info);
@@ -341,6 +413,31 @@ namespace Torch.Server.Managers
                 UserRejected(steamId, verdict);
         }
 
+        private void commitResult(ValidateAuthTicketEvent info, JoinResult joinResult)
+        {
+            info.FutureVerdict = Task.FromResult(joinResult);
+
+            MultiplayerManagerDedicatedEventShim.RaiseValidateAuthTicket(ref info);
+
+            info.FutureVerdict.ContinueWith((task) =>
+            {
+                JoinResult verdict;
+                if (task.IsFaulted)
+                {
+                    _log.Error(task.Exception, $"Future validation verdict faulted");
+                    verdict = JoinResult.TicketCanceled;
+                }
+                else if (Players.ContainsKey(info.SteamID))
+                {
+                    _log.Warn($"Player {info.SteamID} has already joined!");
+                    verdict = JoinResult.AlreadyJoined;
+                }
+                else
+                    verdict = task.Result;
+
+                Torch.Invoke(() => { CommitVerdict(info.SteamID, verdict); });
+            });
+        }
         private void UserGroupStatusResponse(ulong userId, ulong groupId, bool member, bool officer)
         {
             lock (_waitingForGroupLocal)
@@ -352,6 +449,43 @@ namespace Torch.Server.Managers
                         RunEvent(new ValidateAuthTicketEvent(wait.SteamId, wait.SteamOwner, wait.Response, groupId,
                             member, officer));
                         _waitingForGroupLocal.RemoveAt(j);
+                        break;
+                    }
+                }
+            lock(_waitingForGroupsLocal)
+                for (var j = 0; j < _waitingForGroupsLocal.Count; j++)
+                {
+                    var wait = _waitingForGroupsLocal[j];
+                    if (wait.wait.SteamId == userId)
+                    {
+                        lock(wait.groupIds)
+                            for (var k = 0; k < wait.groupIds.Count; k++)
+                            {
+                                var _groupId = wait.groupIds[k];
+                                if (_groupId == groupId)
+                                {
+
+                                    _log.Debug($"User {userId} ingroup {groupId} == {member}");
+
+                                    var info = new ValidateAuthTicketEvent(wait.wait.SteamId, wait.wait.SteamOwner, wait.wait.Response, groupId,
+                                                                member, officer);
+
+                                    wait.groupIds.RemoveAt(k);
+                                    if (member)
+                                    {
+
+                                        commitResult(info, JoinResult.OK);
+                                                                        
+                                        _waitingForGroupsLocal.RemoveAt(j);
+                                    } else if (wait.groupIds.Count == 0)
+                                    {
+                                        commitResult(info, JoinResult.NotInGroup);
+                                        _log.Warn($"Rejecting user {info.SteamID} because they are not part of a whitelisted steam group in Torch.cfg.");
+                                        _waitingForGroupsLocal.RemoveAt(j);
+                                    }
+                                    break;
+                                }
+                            }
                         break;
                     }
                 }
