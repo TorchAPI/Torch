@@ -19,7 +19,7 @@ namespace Torch.API.WebAPI
 #endif
 
 
-        private const string PLUGIN_QUERY = "https://torchapi.com/api/plugins/item/{0}";
+        private const string PLUGIN_QUERY = "https://torchapi.com/api/plugins/search/{0}";
         private readonly HttpClient _client;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 

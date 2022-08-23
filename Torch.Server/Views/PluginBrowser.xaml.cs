@@ -68,7 +68,6 @@ namespace Torch.Server.Views
                                  if (installedPlugins.Keys.Contains(Guid.Parse(item.ID)))
                                      item.Installed = true;
                                  Plugins.Add(item);
-                                 PluginsList.Dispatcher.Invoke(() => PluginsList.SelectedIndex = 0);
                                  PluginsSource.Add(item);
                              }
                          }
