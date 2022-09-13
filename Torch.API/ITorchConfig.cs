@@ -30,6 +30,8 @@ namespace Torch
         int FontSize { get; set; }
         UGCServiceType UgcServiceType { get; set; }
         TorchBranchType BranchName { get; set; }
+        bool SendLogsToKeen { get; set; }
+        bool DeleteMiniDumps { get; set; }
 
         void Save(string path = null);
     }

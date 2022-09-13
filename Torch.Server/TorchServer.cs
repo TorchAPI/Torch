@@ -12,6 +12,7 @@ using System.Windows.Forms;
 using NLog;
 using Sandbox;
 using Sandbox.Engine.Networking;
+using Sandbox.Game;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Torch.API;
@@ -167,6 +168,7 @@ namespace Torch.Server
             CanRun = false;
             PatchManager.CommitInternal();
             Log.Info("Starting server.");
+            MyPerGameSettings.BasicGameInfo.AnalyticId = "SEDS_TORCH";
             MySandboxGame.ConfigDedicated = DedicatedInstance.DedicatedConfig.Model;
 
             _uptime = Stopwatch.StartNew();

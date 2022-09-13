@@ -13,9 +13,13 @@ using System.Windows;
 using System.Windows.Threading;
 using NLog;
 using NLog.Targets;
+using Sandbox;
 using Sandbox.Engine.Utils;
 using Torch.Utils;
+using VRage;
 using VRage.FileSystem;
+using VRage.Scripting;
+using VRage.Utils;
 
 namespace Torch.Server
 {
@@ -60,6 +64,7 @@ quit";
 #endif
 
 #if DEBUG
+            AppDomain.CurrentDomain.UnhandledException += HandleException;
             //enables logging debug messages when built in debug mode. Amazing.
             LogManager.Configuration.AddRule(LogLevel.Debug, LogLevel.Debug, "main");
             LogManager.Configuration.AddRule(LogLevel.Debug, LogLevel.Debug, "console");
@@ -255,19 +260,37 @@ quit";
             }
         }
 
+        private void SendAndDump()
+        {
+            var shortdate = DateTime.Now.ToString("yyyy-MM-dd");
+            var shortdateWithTime = DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss");
+            
+            var dumpPath = $"Logs\\MiniDumpT{Thread.CurrentThread.ManagedThreadId}-{shortdateWithTime}.dmp";
+            Log.Info($"Generating minidump at {dumpPath}");
+            var dumpFlags = MyMiniDump.Options.Normal | MyMiniDump.Options.WithProcessThreadData | MyMiniDump.Options.WithThreadInfo;
+            MyVRage.Platform.CrashReporting.WriteMiniDump(dumpPath, dumpFlags, IntPtr.Zero);
+
+            if (Config.SendLogsToKeen)
+            {
+                List<string> additionalFiles = new List<string>();
+                if (File.Exists(dumpPath))
+                    additionalFiles.Add(dumpPath);
+                
+                CrashInfo info = MyErrorReporter.BuildCrashInfo();
+                MyErrorReporter.ReportNotInteractive($"Logs\\Keen-{shortdate}.log", info.AnalyticId, false,
+                    additionalFiles.ToList(), true, string.Empty, string.Empty, info);
+            }
+            
+            if(Config.DeleteMiniDumps)
+                File.Delete(dumpPath);
+        }
+
         private void HandleException(object sender, UnhandledExceptionEventArgs e)
         {
             _server.FatalException = true;
             var ex = (Exception)e.ExceptionObject;
             LogException(ex);
-            if (MyFakes.ENABLE_MINIDUMP_SENDING)
-            {
-                string path = Path.Combine(MyFileSystem.UserDataPath, "Minidump.dmp");
-                Log.Info($"Generating minidump at {path}");
-                Log.Error("Keen broke the minidump, sorry.");
-                //MyMiniDump.Options options = MyMiniDump.Options.WithProcessThreadData | MyMiniDump.Options.WithThreadInfo;
-                //MyMiniDump.Write(path, options, MyMiniDump.ExceptionInfo.Present);
-            }
+            SendAndDump();
             LogManager.Flush();
             if (Config.RestartOnCrash)
             {
