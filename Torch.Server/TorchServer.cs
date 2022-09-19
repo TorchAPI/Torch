@@ -168,7 +168,6 @@ namespace Torch.Server
             CanRun = false;
             PatchManager.CommitInternal();
             Log.Info("Starting server.");
-            MyPerGameSettings.BasicGameInfo.AnalyticId = "SEDS_TORCH";
             MySandboxGame.ConfigDedicated = DedicatedInstance.DedicatedConfig.Model;
 
             _uptime = Stopwatch.StartNew();
