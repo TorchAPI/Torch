@@ -107,5 +107,11 @@ namespace Torch.Server.Views
                 i.DescriptiveName = i.GetSortedName(sort);
             
         }
+
+        private void DeleteFloating_OnClick(object sender, RoutedEventArgs e)
+        {
+            foreach (var i in Entities.SortedFloatingObjects)
+                TorchBase.Instance.Invoke(() => i?.Delete());
+        }
     }
 }

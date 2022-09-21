@@ -90,6 +90,7 @@
             <StackPanel Grid.Row="2" DockPanel.Dock="Bottom">
                 <Button Content="Delete" Click="Delete_OnClick" IsEnabled="{Binding CurrentEntity.CanDelete}"
                         Margin="3" />
+                <Button Content="Delete Floating objects" Click="DeleteFloating_OnClick" IsEnabled="{Binding CurrentEntity.CanStop}" Margin="3" />
                 <Button Content="Stop" Click="Stop_OnClick" IsEnabled="{Binding CurrentEntity.CanStop}" Margin="3" />
             </StackPanel>
         </Grid>
