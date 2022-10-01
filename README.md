@@ -1,4 +1,4 @@
-[![Discord](https://discordapp.com/api/guilds/230191591640268800/widget.png)](https://discord.gg/8uHZykr) [![Build Status](http://build.torchapi.net/job/Torch/job/Torch/job/master/badge/icon)](http://build.torchapi.net/job/Torch/job/Torch/job/master/)
+[![Discord](https://discordapp.com/api/guilds/230191591640268800/widget.png)](https://discord.gg/8uHZykr) <!--- [![Build Status]  (https://build.torchapi.com/job/Torch/job/master/badge/icon)](https://build.torchapi.com/job/Torch/job/master/) -->
 
 # What is Torch?
 Torch is the successor to SE Server Extender and gives server admins the tools they need to keep their Space Engineers servers running smoothly. It features a user interface with live management tools and a plugin system so you can run your server exactly how you'd like. Torch is still in early development so there may be bugs and incomplete features.
@@ -14,7 +14,7 @@ Torch is the successor to SE Server Extender and gives server admins the tools t
 
 ### Installation
 
-* Get the latest Torch release here: http://136.243.80.164:2690/job/Torch/job/master/lastSuccessfulBuild/artifact/bin/torch-server.zip
+* Get the latest Torch release here: https://build.torchapi.com/job/Torch/job/master/lastSuccessfulBuild/artifact/bin/torch-server.zip
 * Unzip the Torch release into its own directory and run the executable. It will automatically download the SE DS and generate the other necessary files.
   - If you already have a DS installed you can unzip the Torch files into the folder that contains the DedicatedServer64 folder.
 
