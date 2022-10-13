@@ -32,6 +32,7 @@ namespace Torch
         TorchBranchType BranchName { get; set; }
         bool SendLogsToKeen { get; set; }
         bool DeleteMiniDumps { get; set; }
+        string LoginToken { get; set; }
 
         void Save(string path = null);
     }
