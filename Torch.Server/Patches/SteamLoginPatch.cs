@@ -20,6 +20,8 @@ namespace Torch.Patches
 
         public static void Patch(PatchContext context)
         {
+            Log.Info("Disabled temp");
+            return;
             context.GetPattern(LoginMethod).Prefixes.Add(PrefixMethod);
         }
         
