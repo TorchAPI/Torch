@@ -151,7 +151,7 @@ namespace Torch.Views
                         valueControl = (FrameworkElement)Activator.CreateInstance(descriptor.EditorType);
                         valueControl.SetBinding(FrameworkElement.DataContextProperty, property.Name);
                     }
-                    else if (property.GetSetMethod() == null && !(propertyType.IsGenericType && typeof(ICollection).IsAssignableFrom(propertyType.GetGenericTypeDefinition()))|| descriptor?.ReadOnly == true)
+                    else if (property.GetSetMethod() == null && !(propertyType.IsGenericType && typeof(ICollection).IsAssignableFrom(propertyType.GetGenericTypeDefinition())))
                     {
                         valueControl = new TextBlock();
                         var binding = new Binding(property.Name)
@@ -234,7 +234,10 @@ namespace Torch.Views
                     }
                     else if (propertyType.IsPrimitive)
                     {
-                        valueControl = new TextBox();
+                        valueControl = new TextBox
+                        {
+                            IsReadOnly = descriptor?.ReadOnly == true
+                        };
                         valueControl.SetBinding(TextBox.TextProperty, property.Name);
                     }
                     else if (propertyType == typeof(string))
@@ -244,6 +247,7 @@ namespace Torch.Views
                         tb.AcceptsReturn = true;
                         tb.AcceptsTab = true;
                         tb.SpellCheck.IsEnabled = true;
+                        tb.IsReadOnly = descriptor?.ReadOnly == true;
                         tb.SetBinding(TextBox.TextProperty, property.Name);
                         valueControl = tb;
                     }
