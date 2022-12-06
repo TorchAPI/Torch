@@ -117,7 +117,7 @@ namespace Torch.API
         /// <summary>
         /// Initialize the Torch instance.  Before this <see cref="Start"/> is invalid.
         /// </summary>
-        void Init(bool ignorelastsession = false);
+        void Init();
 
         /// <summary>
         /// Disposes the Torch instance.  After this <see cref="Start"/> is invalid.

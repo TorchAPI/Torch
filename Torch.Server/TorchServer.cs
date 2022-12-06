@@ -138,11 +138,11 @@ namespace Torch.Server
         public int OnlinePlayers { get => _players; private set => SetValue(ref _players, value); }
 
         /// <inheritdoc />
-        public override void Init(bool ignorelastsession)
+        public override void Init()
         {
             Log.Info("Initializing server");
             MySandboxGame.IsDedicated = true;
-            base.Init(ignorelastsession);
+            base.Init();
             Managers.GetManager<ITorchSessionManager>().SessionStateChanged += OnSessionStateChanged;
             GetManager<InstanceManager>().LoadInstance(Config.InstancePath);
             CanRun = true;

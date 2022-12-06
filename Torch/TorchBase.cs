@@ -306,7 +306,7 @@ namespace Torch
         protected abstract string SteamAppName { get; }
 
         /// <inheritdoc />
-        public virtual void Init(bool ignoreLastSession)
+        public virtual void Init()
         {
             Debug.Assert(!_init, "Torch instance is already initialized.");
             SpaceEngineersGame.SetupBasicGameInfo();
@@ -336,11 +336,6 @@ namespace Torch
             Log.Info($"Executing directory: {AppDomain.CurrentDomain.BaseDirectory}");
 
             Managers.GetManager<PluginManager>().LoadPlugins();
-            
-            //if ignoreLastSession is true, add -ignorelastsession to the command line args
-            if (ignoreLastSession)
-                RunArgs = new[] {"-ignorelastsession"};
-
             Game = new VRageGame(this, TweakGameSettings, SteamAppName, SteamAppId, Config.InstancePath, RunArgs);
             if (!Game.WaitFor(VRageGame.GameState.Stopped))
                 Log.Warn("Failed to wait for game to be initialized");

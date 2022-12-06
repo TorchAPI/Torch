@@ -73,9 +73,7 @@ namespace Torch.Server
                 if (!initializer.Initialize(args))
                     return;
 
-                
-
-                initializer.Run(args.Contains("-ignorelastsession"));
+                initializer.Run();
             } catch (Exception runException)
             {
                 var log = LogManager.GetCurrentClassLogger();
