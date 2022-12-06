@@ -24,10 +24,12 @@ namespace Torch.Patches
 
         public static void Patch(PatchContext ctx)
         {
+#if !DEBUG
             _log.Info("Patching mods downloading");
 
             ctx.GetPattern(_downloadWorldModsBlockingMethod).Suffixes
                 .Add(typeof(ModsDownloadingPatch).GetMethod(nameof(Postfix)));
+#endif
         }
         public static void Postfix(MyWorkshop.ResultData __result, List<MyObjectBuilder_Checkpoint.ModItem> mods)
         {
