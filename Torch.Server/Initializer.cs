@@ -132,13 +132,13 @@ quit";
             return true;
         }
 
-        public void Run()
+        public void Run(bool ignorelastsession = false)
         {
             _server = new TorchServer(Config);
 
             if (Config.NoGui)
             {
-                _server.Init();
+                _server.Init(ignorelastsession);
                 _server.Start();
             }
             else
@@ -153,7 +153,7 @@ quit";
                 
                 var gameThread = new Thread(() =>
                 {
-                    _server.Init();
+                    _server.Init(ignorelastsession);
 
                     if (Config.Autostart || Config.TempAutostart)
                     {
