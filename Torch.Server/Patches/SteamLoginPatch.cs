@@ -16,11 +16,18 @@ namespace Torch.Patches
         private static readonly MethodInfo LoginMethod;
         [ReflectedMethodInfo(typeof(SteamLoginPatch), nameof(Prefix))]
         private static readonly MethodInfo PrefixMethod;
+        
+        [ReflectedMethodInfo(null, "WaitStart", TypeName = "VRage.Steam.MySteamGameServer, VRage.Steam")]
+        private static readonly MethodInfo WaitStartMethod;
+        [ReflectedMethodInfo(typeof(SteamLoginPatch), nameof(WaitStartLonger))]
+        private static readonly MethodInfo WaitStartLongerMethod;
 #pragma warning restore CS0649
 
         public static void Patch(PatchContext context)
         {
             context.GetPattern(LoginMethod).Prefixes.Add(PrefixMethod);
+            context.GetPattern(WaitStartMethod).Prefixes.Add(WaitStartLongerMethod);
+            Log.Info("Applied custom WaitStart timeout");
         }
         
         private static bool Prefix()
@@ -35,6 +42,11 @@ namespace Torch.Patches
             Log.Info("Logging in to Steam with GSLT");
             SteamGameServer.LogOn(token);
             return false;
+        }
+
+        private static void WaitStartLonger(ref int timeOut)
+        {
+            timeOut = 20000;
         }
     }
 }
