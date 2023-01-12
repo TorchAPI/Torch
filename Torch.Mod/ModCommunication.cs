@@ -20,44 +20,108 @@ namespace Torch.Mod
     {
         public const ushort NET_ID = 4352;
         private static bool _closing = false;
-        private static BlockingCollection<MessageBase> _processing;
-        private static MyConcurrentPool<IncomingMessage> _messagePool;
         private static List<IMyPlayer> _playerCache;
 
         public static void Register()
         {
             MyLog.Default.WriteLineAndConsole("TORCH MOD: Registering mod communication.");
-            _processing = new BlockingCollection<MessageBase>(new ConcurrentQueue<MessageBase>());
+            //_processing = new BlockingCollection<MessageBase>(new ConcurrentQueue<MessageBase>());
             _playerCache = new List<IMyPlayer>();
-            _messagePool = new MyConcurrentPool<IncomingMessage>(8);
+            // _messagePool = new MyConcurrentPool<IncomingMessage>(8);
 
-            MyAPIGateway.Multiplayer.RegisterMessageHandler(NET_ID, MessageHandler);
+            MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(NET_ID, MessageHandler);
+            //MyAPIGateway.Multiplayer.RegisterMessageHandler(NET_ID, MessageHandler);
             //background thread to handle de/compression and processing
             _closing = false;
-            MyAPIGateway.Parallel.StartBackground(DoProcessing);
+
+
+            //MyAPIGateway.Parallel.StartBackground(DoProcessing);
+
+
             MyLog.Default.WriteLineAndConsole("TORCH MOD: Mod communication registered successfully.");
+        }
+
+        private static void MessageHandler(ushort arg1, byte[] arg2, ulong arg3, bool arg4)
+        {
+            try
+            {
+                MessageBase msgBase = MyAPIGateway.Utilities.SerializeFromBinary<MessageBase>(arg2);
+
+
+                if (false)
+                    MyAPIGateway.Utilities.ShowMessage("Torch", $"Received message of type {msgBase.GetType().Name}");
+
+                if (MyAPIGateway.Multiplayer.IsServer)
+                    msgBase.ProcessServer();
+                else
+                    msgBase.ProcessClient();
+
+
+            }
+            catch (Exception ex)
+            {
+                MyLog.Default.WriteLineAndConsole($"TORCH MOD: Failed to deserialize message! {ex}");
+                return;
+            }
         }
 
         public static void Unregister()
         {
             MyLog.Default.WriteLineAndConsole("TORCH MOD: Unregistering mod communication.");
-            MyAPIGateway.Multiplayer?.UnregisterMessageHandler(NET_ID, MessageHandler);
-            _processing?.CompleteAdding();
+            MyAPIGateway.Multiplayer?.UnregisterSecureMessageHandler(NET_ID, MessageHandler);
+            //_processing?.CompleteAdding();
             _closing = true;
             //_task.Wait();
         }
 
-        private static void MessageHandler(byte[] bytes)
+        public static void DoProcessing(MessageBase m)
         {
-            var m = _messagePool.Get();
-            m.CompressedData = bytes;
-#if TORCH
-            m.SenderId = MyEventContext.Current.Sender.Value;
-#endif
+            if (false)
+                MyAPIGateway.Utilities.ShowMessage("Torch", $"Sending message of type {m.GetType().Name}");
 
-            _processing.Add(m);
+            var b = MyAPIGateway.Utilities.SerializeToBinary(m);
+
+
+            switch (m.TargetType)
+            {
+                case MessageTarget.Single:
+                    MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, b, m.Target);
+                    break;
+                case MessageTarget.Server:
+                    MyAPIGateway.Multiplayer.SendMessageToServer(NET_ID, b);
+                    break;
+                case MessageTarget.AllClients:
+                    MyAPIGateway.Players.GetPlayers(_playerCache);
+                    foreach (var p in _playerCache)
+                    {
+                        if (p.SteamUserId == MyAPIGateway.Multiplayer.MyId)
+                            continue;
+                        MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, b, p.SteamUserId);
+                    }
+
+                    break;
+                case MessageTarget.AllExcept:
+                    MyAPIGateway.Players.GetPlayers(_playerCache);
+                    foreach (var p in _playerCache)
+                    {
+                        if (p.SteamUserId == MyAPIGateway.Multiplayer.MyId || m.Ignore.Contains(p.SteamUserId))
+                            continue;
+                        MyAPIGateway.Multiplayer.SendMessageTo(NET_ID, b, p.SteamUserId);
+                    }
+
+                    break;
+                default:
+                    throw new Exception();
+            }
+
+            //_playerCache.Clear();
+
         }
 
+
+
+
+        /*
         public static void DoProcessing()
         {
             while (!_closing)
@@ -157,7 +221,7 @@ namespace Torch.Mod
             _messagePool = null;
             _playerCache = null;
         }
-        
+        */
         public static void SendMessageTo(MessageBase message, ulong target)
         {
             if (!MyAPIGateway.Multiplayer.IsServer)
@@ -168,7 +232,7 @@ namespace Torch.Mod
 
             message.Target = target;
             message.TargetType = MessageTarget.Single;
-            _processing.Add(message);
+            DoProcessing(message);
         }
 
         public static void SendMessageToClients(MessageBase message)
@@ -180,7 +244,7 @@ namespace Torch.Mod
                 return;
 
             message.TargetType = MessageTarget.AllClients;
-            _processing.Add(message);
+            DoProcessing(message);
         }
 
         public static void SendMessageExcept(MessageBase message, params ulong[] ignoredUsers)
@@ -193,7 +257,7 @@ namespace Torch.Mod
 
             message.TargetType = MessageTarget.AllExcept;
             message.Ignore = ignoredUsers;
-            _processing.Add(message);
+            DoProcessing(message);
         }
 
         public static void SendMessageToServer(MessageBase message)
@@ -202,7 +266,7 @@ namespace Torch.Mod
                 return;
 
             message.TargetType = MessageTarget.Server;
-            _processing.Add(message);
+            DoProcessing(message);
         }
     }
 }

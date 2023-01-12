@@ -4,16 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox.ModAPI;
+using Torch.Mod.Messages;
 using VRage.Game.Components;
+using VRage.Utils;
 
 namespace Torch.Mod
 {
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     public class TorchModCore : MySessionComponentBase
     {
-        public const ulong MOD_ID = 2722000298;
+
+        public const ulong MOD_ID = 2722000298; //real
+        //public const ulong MOD_ID = 2916923149; //test
         private static bool _init;
         public static bool Debug;
+        public static MyStringId id;
 
         public override void UpdateAfterSimulation()
         {
@@ -23,6 +28,13 @@ namespace Torch.Mod
             _init = true;
             ModCommunication.Register();
             MyAPIGateway.Utilities.MessageEntered += Utilities_MessageEntered;
+            id = MyStringId.GetOrCompute("Square");
+
+        }
+
+        public override void Draw()
+        {
+            DrawDebug.refreshAllDraws();
         }
 
         private void Utilities_MessageEntered(string messageText, ref bool sendToOthers)
