@@ -9,11 +9,11 @@
     <Import_RootNamespace>Torch.Mod</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Messages\IncomingMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Messages\JoinServerMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Messages\NotificationMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Messages\DialogMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Messages\MessageBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Messages\ShowDebugShape.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Messages\VoxelResetMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModCommunication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TorchModCore.cs" />
