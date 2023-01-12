@@ -27,7 +27,7 @@ namespace Torch.Mod
             MyLog.Default.WriteLineAndConsole("TORCH MOD: Registering mod communication.");
             //_processing = new BlockingCollection<MessageBase>(new ConcurrentQueue<MessageBase>());
             _playerCache = new List<IMyPlayer>();
-           // _messagePool = new MyConcurrentPool<IncomingMessage>(8);
+            // _messagePool = new MyConcurrentPool<IncomingMessage>(8);
 
             MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(NET_ID, MessageHandler);
             //MyAPIGateway.Multiplayer.RegisterMessageHandler(NET_ID, MessageHandler);
@@ -45,18 +45,17 @@ namespace Torch.Mod
         {
             try
             {
-                MyLog.Default.WriteLineAndConsole($"Recieved Torch Message!");
                 MessageBase msgBase = MyAPIGateway.Utilities.SerializeFromBinary<MessageBase>(arg2);
-                
 
-                    if (true)
-                        MyAPIGateway.Utilities.ShowMessage("Torch", $"Received message of type {msgBase.GetType().Name}");
 
-                    if (MyAPIGateway.Multiplayer.IsServer)
-                        msgBase.ProcessServer();
-                    else
-                        msgBase.ProcessClient();
-                
+                if (false)
+                    MyAPIGateway.Utilities.ShowMessage("Torch", $"Received message of type {msgBase.GetType().Name}");
+
+                if (MyAPIGateway.Multiplayer.IsServer)
+                    msgBase.ProcessServer();
+                else
+                    msgBase.ProcessClient();
+
 
             }
             catch (Exception ex)
@@ -77,7 +76,7 @@ namespace Torch.Mod
 
         public static void DoProcessing(MessageBase m)
         {
-            if (true)
+            if (false)
                 MyAPIGateway.Utilities.ShowMessage("Torch", $"Sending message of type {m.GetType().Name}");
 
             var b = MyAPIGateway.Utilities.SerializeToBinary(m);

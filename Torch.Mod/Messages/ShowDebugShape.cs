@@ -56,7 +56,7 @@ namespace Torch.Mod.Messages
                 return;
             }
 
-            MyAPIGateway.Utilities.ShowMessage("Torch", $"Hit process client on debug draw!");
+            //MyAPIGateway.Utilities.ShowMessage("Torch", $"Hit process client on debug draw!");
 
             if(!AllDraws.ContainsKey(uniqueName))
                 AllDraws.Add(uniqueName, this);
