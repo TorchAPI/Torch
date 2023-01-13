@@ -71,12 +71,14 @@ namespace Torch.Mod.Messages
 
 
 
-        public void addOBB(BoundingBoxD box, Quaternion orientation, Color color, MySimpleObjectRasterizer raster, float intensity, float linethickness)
+        public void addOBB(BoundingBoxD box, Vector3D position, Vector3D forward, Vector3D up, Color color, MySimpleObjectRasterizer raster, float intensity, float linethickness)
         {
             drawObject obj = new drawObject(drawObject.drawtype.OBB);
 
             obj.box = box;
-            obj.orientation = orientation;
+            obj.position = position;
+            obj.forward = forward;
+            obj.up = up;
             obj.color= color;
             obj.intensity = intensity;
             obj.linethickness = linethickness;
@@ -161,7 +163,10 @@ namespace Torch.Mod.Messages
         public BoundingBoxD box;
 
         [ProtoMember(105)]
-        public Quaternion orientation;
+        public Vector3D forward;
+
+        [ProtoMember(106)]
+        public Vector3D up;
 
 
         [ProtoMember(120)]
@@ -200,10 +205,9 @@ namespace Torch.Mod.Messages
 
         public void drawOBB()
         {
-            var transform = MatrixD.CreateFromQuaternion(orientation);
+            MatrixD worldMatrix = MatrixD.CreateWorld(position, forward, up);
             var material = TorchModCore.id;
-            MySimpleObjectDraw.DrawTransparentBox(ref transform, ref box, ref color, raster, 1, linethickness, material, material);
-
+            MySimpleObjectDraw.DrawTransparentBox(ref worldMatrix, ref box, ref color, raster, 1, linethickness, material, material);
         }
 
         public void drawSphere()
@@ -212,6 +216,8 @@ namespace Torch.Mod.Messages
             var transform = MatrixD.CreateTranslation(position);
             MySimpleObjectDraw.DrawTransparentSphere(ref transform, 10, ref color, raster, 25, material, material, -1);
         }
+
+
 
 
 
