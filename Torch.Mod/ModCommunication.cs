@@ -114,7 +114,7 @@ namespace Torch.Mod
                     throw new Exception();
             }
 
-            //_playerCache.Clear();
+            _playerCache.Clear();
 
         }
 
