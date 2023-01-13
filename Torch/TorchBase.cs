@@ -71,6 +71,7 @@ namespace Torch
             PatchManager.AddPatchShim(typeof(GameStatePatchShim));
             PatchManager.AddPatchShim(typeof(GameAnalyticsPatch));
             PatchManager.AddPatchShim(typeof(KeenLogPatch));
+            PatchManager.AddPatchShim(typeof(MessageSizeLimitPatch));
             PatchManager.CommitInternal();
             RegisterCoreAssembly(typeof(ITorchBase).Assembly);
             RegisterCoreAssembly(typeof(TorchBase).Assembly);
