@@ -62,8 +62,16 @@ namespace Torch.Mod.Messages
 
             //MyAPIGateway.Utilities.ShowMessage("Torch", $"Hit process client on debug draw!");
 
-            if (!AllDraws.ContainsKey(uniqueName))
+            //If its the same unique name, we can add it
+            if (AllDraws.TryGetValue(uniqueName, out DrawDebug draw))
+            {
+                draw.drawObjects.AddList(drawObjects);
+            }
+            else
+            {
                 AllDraws.Add(uniqueName, this);
+            }
+                
 
             //If both are not false, then we have new items to draw
         }

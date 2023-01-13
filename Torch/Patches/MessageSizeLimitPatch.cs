@@ -12,10 +12,8 @@ namespace Torch.Patches
         private static Logger _log = LogManager.GetCurrentClassLogger();
         internal static void Patch(PatchContext context)
         {
-            context.GetPattern(typeof(MyMultiplayerBase).GetMethod("OnChatMessageReceived_Server", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance))
-                .Prefixes.Add(typeof(MessageSizeLimitPatch).GetMethod(nameof(PrefixHandleChatMessage), BindingFlags.Static | BindingFlags.NonPublic));
-            context.GetPattern(typeof(MyMultiplayerBase).GetMethod("OnScriptedChatMessageReceived", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance))
-                .Prefixes.Add(typeof(MessageSizeLimitPatch).GetMethod(nameof(PrefixHandleScriptedMessage), BindingFlags.Static | BindingFlags.NonPublic));
+            context.GetPattern(typeof(MyMultiplayerBase).GetMethod("OnChatMessageReceived_Server", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance)).Prefixes.Add(typeof(MessageSizeLimitPatch).GetMethod(nameof(PrefixHandleChatMessage), BindingFlags.Static | BindingFlags.NonPublic));
+            context.GetPattern(typeof(MyMultiplayerBase).GetMethod("OnScriptedChatMessageReceived", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance)).Prefixes.Add(typeof(MessageSizeLimitPatch).GetMethod(nameof(PrefixHandleScriptedMessage), BindingFlags.Static | BindingFlags.NonPublic));
             _log.Info("Patched MessageSizeLimit");
         }
         private static bool PrefixHandleChatMessage(ChatMsg msg)
