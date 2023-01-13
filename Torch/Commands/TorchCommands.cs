@@ -127,11 +127,36 @@ namespace Torch.Commands
             }
             else
             {
-                var sb = new StringBuilder();
-                foreach (var command in commandManager.Commands.WalkTree())
+                Dictionary<string, StringBuilder> cmdList = new Dictionary<string, StringBuilder>();
+
+                foreach (CommandTree.CommandNode command in commandManager.Commands.WalkTree())
                 {
                     if (command.IsCommand && (Context.Player == null || command.Command.MinimumPromoteLevel <= Context.Player.PromoteLevel))
-                        sb.AppendLine($"{command.Command.SyntaxHelp}\n    {command.Command.HelpText}");
+                    {
+                        if (command.Command.Plugin?.Name != null)
+                        {
+                            if (!cmdList.ContainsKey(command.Command.Plugin.Name))
+                            {
+                                cmdList.Add(command.Command.Plugin.Name, new StringBuilder());
+                            }
+                            cmdList[command.Command.Plugin.Name].AppendLine(command.Command.SyntaxHelp + "\n    " + command.Command.HelpText);
+                        }
+                        else
+                        {
+                            if (!cmdList.ContainsKey("Torch"))
+                            {
+                                cmdList.Add("Torch", new StringBuilder());
+                            }
+                            cmdList["Torch"].AppendLine(command.Command.SyntaxHelp + "\n    " + command.Command.HelpText);
+                        }
+                    }
+                }
+
+                StringBuilder sb = new StringBuilder();
+                foreach (string key in cmdList.Keys)
+                {
+                    sb.AppendLine("\n----- " + key + " ------------------------------------------\n");
+                    sb.AppendLine(cmdList[key].ToString());
                 }
 
                 if (!Context.SentBySelf)
