@@ -14,8 +14,8 @@ namespace Torch.Mod
     public class TorchModCore : MySessionComponentBase
     {
 
-        //public const ulong MOD_ID = 2722000298; //real
-        public const ulong MOD_ID = 2916923149; //test
+        public const ulong MOD_ID = 2722000298; //real
+        //public const ulong MOD_ID = 2916923149; //test
         private static bool _init;
         public static bool Debug;
         public static MyStringId id;
