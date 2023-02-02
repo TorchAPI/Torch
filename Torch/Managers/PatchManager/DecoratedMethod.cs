@@ -20,6 +20,12 @@ namespace Torch.Managers.PatchManager
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private readonly MethodBase _method;
 
+        [ReflectedMethodInfo(typeof(MethodBase), nameof(MethodBase.GetMethodFromHandle), Parameters = new[] { typeof(RuntimeMethodHandle) })]
+        static MethodInfo _getMethodFromHandle;
+
+        [ReflectedMethodInfo(typeof(MethodBase), nameof(MethodBase.GetMethodFromHandle), Parameters = new[] { typeof(RuntimeMethodHandle), typeof(RuntimeTypeHandle) })]
+        static MethodInfo _getMethodFromHandleGeneric;
+
         internal DecoratedMethod(MethodBase method) : base(null)
         {
             _method = method;
@@ -114,6 +120,7 @@ namespace Torch.Managers.PatchManager
         public const string INSTANCE_PARAMETER = "__instance";
         public const string RESULT_PARAMETER = "__result";
         public const string PREFIX_SKIPPED_PARAMETER = "__prefixSkipped";
+        public const string ORIGINAL_PARAMETER = "__original";
         public const string LOCAL_PARAMETER = "__local";
 
         private void SavePatchedMethod(string target)
@@ -343,6 +350,32 @@ namespace Torch.Managers.PatchManager
                         if (_method.IsStatic)
                             throw new Exception("Can't use an instance parameter for a static method");
                         yield return new MsilInstruction(OpCodes.Ldarg_0);
+                        break;
+                    }
+                    case ORIGINAL_PARAMETER:
+                    {
+                        if (!typeof(MethodBase).IsAssignableFrom(param.ParameterType))
+                        {
+                            throw new Exception($"Original parameter should be assignable to {nameof(MethodBase)}; method: {_method}");
+                        }
+                        
+                        yield return new MsilInstruction(OpCodes.Ldtoken).InlineValue(_method);
+
+                        if (_method.DeclaringType != null && _method.DeclaringType.ContainsGenericParameters)
+                        {
+                            yield return new MsilInstruction(OpCodes.Ldtoken).InlineValue(_method.DeclaringType);
+                            yield return new MsilInstruction(OpCodes.Call).InlineValue(_getMethodFromHandleGeneric);
+                        }
+                        else
+                        {
+                            yield return new MsilInstruction(OpCodes.Call).InlineValue(_getMethodFromHandle);
+                        }
+
+                        if (param.ParameterType != typeof(MethodBase))
+                        {
+                            yield return new MsilInstruction(OpCodes.Castclass).InlineValue(param.ParameterType);
+                        }
+                        
                         break;
                     }
                     case PREFIX_SKIPPED_PARAMETER:
