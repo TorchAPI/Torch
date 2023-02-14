@@ -10,6 +10,7 @@ namespace Torch.API
     {
         master,
         staging,
+        publicbeta,
         dev
     }
 }
