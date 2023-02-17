@@ -41,7 +41,7 @@ namespace Torch.Server
         private bool _enableAsserts = false;
         private int _fontSize = 16;
         private UGCServiceType _ugcServiceType = UGCServiceType.Steam;
-        private TorchBranchType _torchBranch = TorchBranchType.master;
+        private TorchBranchType _torchBranch = TorchBranchType.publicbeta;
         private bool _sendLogsToKeen;
         private bool _deleteMiniDumps = true;
         private string _loginToken;
