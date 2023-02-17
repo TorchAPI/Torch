@@ -33,7 +33,7 @@ namespace Torch.Server
         private const string STEAMCMD_DIR = "steamcmd";
         private const string STEAMCMD_ZIP = "temp.zip";
         private static readonly string STEAMCMD_PATH = $"{STEAMCMD_DIR}\\steamcmd.exe";
-        private static readonly string RUNSCRIPT_PATH = $"{STEAMCMD_DIR}\\runscript.txt";
+        private static readonly string RUNSCRIPT_PATH = $"{STEAMCMD_DIR}\\runscript-beta.txt";
 
         private const string RUNSCRIPT = @"force_install_dir ../
 login anonymous
@@ -218,7 +218,7 @@ quit";
             }
 
             log.Info("Checking for DS updates.");
-            var steamCmdProc = new ProcessStartInfo(STEAMCMD_PATH, "+runscript runscript.txt")
+            var steamCmdProc = new ProcessStartInfo(STEAMCMD_PATH, "+runscript runscript-beta.txt")
             {
                 WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), STEAMCMD_DIR),
                 UseShellExecute = false,
