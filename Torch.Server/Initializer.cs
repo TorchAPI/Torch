@@ -218,7 +218,7 @@ quit";
             }
 
             log.Info("Checking for DS updates.");
-            var steamCmdProc = new ProcessStartInfo(STEAMCMD_PATH, "+runscript runscript-beta.txt")
+            var steamCmdProc = new ProcessStartInfo(STEAMCMD_PATH, "+runscript runscript-beta-fixed.txt")
             {
                 WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), STEAMCMD_DIR),
                 UseShellExecute = false,
