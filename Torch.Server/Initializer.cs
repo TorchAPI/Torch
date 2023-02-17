@@ -33,12 +33,12 @@ namespace Torch.Server
         private const string STEAMCMD_DIR = "steamcmd";
         private const string STEAMCMD_ZIP = "temp.zip";
         private static readonly string STEAMCMD_PATH = $"{STEAMCMD_DIR}\\steamcmd.exe";
-        private static readonly string RUNSCRIPT_PATH = $"{STEAMCMD_DIR}\\runscript-beta.txt";
+        private static readonly string RUNSCRIPT_PATH = $"{STEAMCMD_DIR}\\runscript-beta-fixed.txt";
 
         private const string RUNSCRIPT = @"force_install_dir ../
 login anonymous
 app_update 298740
--beta automtatons-beta
+-beta automatons-beta
 quit";
         private TorchServer _server;
         private string _basePath;
