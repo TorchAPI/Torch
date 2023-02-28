@@ -173,9 +173,6 @@ namespace Torch
             {
                 if (state == TorchGameState.Created)
                 {
-                    // If the attached assemblies change (MySandboxGame.ctor => MySandboxGame.ParseArgs => MyPlugins.RegisterFromArgs)
-                    // attach assemblies to object factories again.
-                    ObjectFactoryInitPatch.ForceRegisterAssemblies();
                     // safe to commit here; all important static ctors have run
                     PatchManager.CommitInternal();
                 }
@@ -312,7 +309,6 @@ namespace Torch
             Debug.Assert(!_init, "Torch instance is already initialized.");
             SpaceEngineersGame.SetupBasicGameInfo();
             SpaceEngineersGame.SetupPerGameSettings();
-            ObjectFactoryInitPatch.ForceRegisterAssemblies();
 
             Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
             GameVersion = new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value);

@@ -44,8 +44,12 @@ namespace Torch.Managers
         
         private async void CheckAndUpdateTorch()
         {
-            if (Torch.Config.NoUpdate || !Torch.Config.GetTorchUpdates)
+            if (Torch.Config.NoUpdate || !Torch.Config.GetTorchUpdates || (Torch.Config.BranchName == TorchBranchType.dev))
                 return;
+
+#if  DEBUG
+            return;  
+#endif
 
             try
             {
