@@ -24,16 +24,22 @@ namespace Torch.Patches
 
         public static void Patch(PatchContext ctx)
         {
+#if !DEBUG
             _log.Info("Patching mods downloading");
 
             ctx.GetPattern(_downloadWorldModsBlockingMethod).Suffixes
                 .Add(typeof(ModsDownloadingPatch).GetMethod(nameof(Postfix)));
+#endif
         }
-        public static void Postfix(MyWorkshop.ResultData __result)
+        public static void Postfix(MyWorkshop.ResultData __result, List<MyObjectBuilder_Checkpoint.ModItem> mods)
         {
             if (__result.Success) return;
             _log.Warn("Missing Mods:");
-            __result.MismatchMods?.ForEach(b => _log.Info($"\t{b}"));
+            var mismatchMods = mods.Where(b => __result.Mods.All(c => b.PublishedFileId != c.Id));
+            foreach (var mod in mismatchMods)
+            {
+                _log.Warn($"\t{mod.PublishedFileId} : {mod.FriendlyName}");
+            }
         }
     }
 }
