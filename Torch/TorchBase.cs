@@ -435,6 +435,7 @@ namespace Torch
         public virtual void Update()
         {
             Managers.GetManager<IPluginManager>().UpdatePlugins();
+            MyDefinitionIdToStringPatch.Update(MySandboxGame.Static?.FrameTimeTicks ?? 0);
         }
 
 

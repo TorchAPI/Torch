@@ -266,8 +266,6 @@ namespace Torch.Server
                 _watchdog = new Timer(CheckServerResponding, this, TimeSpan.Zero,
                     TimeSpan.FromSeconds(Config.TickTimeout));
             }
-            
-            MyDefinitionIdToStringPatch.Update(MySandboxGame.Static.FrameTimeTicks);
         }
 
         #region Freeze Detection
