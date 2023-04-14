@@ -8,7 +8,6 @@ using System.Xml.Serialization;
 using Newtonsoft.Json;
 using NLog;
 using Torch.API;
-using Torch.Patches;
 using Torch.Views;
 using VRage.Game;
 
@@ -46,7 +45,6 @@ namespace Torch.Server
         private bool _sendLogsToKeen;
         private bool _deleteMiniDumps = true;
         private string _loginToken;
-        private bool _defIdFix = true;
 
 
         /// <inheritdoc />
@@ -186,18 +184,6 @@ public string LastUsedTheme { get; set; } = "Torch Theme";
         [Arg("logintoken", "Steam GSLT")]
         [Display(Name = "Login Token", Description = "Steam GSLT (can be used if you have dynamic ip)", GroupName = "Server")]
         public string LoginToken { get => _loginToken; set => Set(value, ref _loginToken); }
-
-        [Arg("defidfix", "MyDefinitionId.ToString fix (performance, deadlock)")]
-        [Display(Name = "Login Token", Description = "MyDefinitionId.ToString fix (performance, deadlock)", GroupName = "Server")]
-        public bool DefIdFix
-        {
-            get => _defIdFix;
-            set
-            {
-                Set(value, ref _defIdFix);
-                MyDefinitionIdToStringPatch.Enabled = value;
-            }
-        }
 
 
         public event PropertyChangedEventHandler PropertyChanged;

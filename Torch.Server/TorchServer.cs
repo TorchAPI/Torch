@@ -72,12 +72,8 @@ namespace Torch.Server
             
             // Needs to be done at some point after MyVRageWindows.Init
             // where the debug listeners are registered
-            var torchConfig = (TorchConfig)Config;
-            if (!torchConfig.EnableAsserts)
+            if (!((TorchConfig)Config).EnableAsserts)
                 MyDebug.Listeners.Clear();
-
-            MyDefinitionIdToStringPatch.Enabled = torchConfig.DefIdFix;
-            
             _simUpdateTimer.Elapsed += SimUpdateElapsed;
             _simUpdateTimer.Start();
         }
