@@ -53,7 +53,6 @@ namespace Torch.Patches
         
         // ReSharper disable once UnusedMember.Local
         // ReSharper disable once RedundantAssignment
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool MyDefinitionIdToStringPrefix(MyDefinitionId __instance, ref string __result)
         {
             if (Cache.TryGetValue(__instance.GetHashCodeLong(), out __result))
