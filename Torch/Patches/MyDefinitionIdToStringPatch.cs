@@ -8,6 +8,8 @@
 // #define VERIFY_RESULT
 #endif
 
+using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -27,7 +29,7 @@ namespace Torch.Patches
         private const long FillPeriod = 37 * 60;  // frames
 
 #if DEBUG
-        private static string CacheReport => $"{Cache.ImmutableReport} | {Cache.Report}";
+        private static string CacheReport => $"1-RO: {Cache.ImmutableReport} | 2-RW: {Cache.Report}";
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 #endif
 
@@ -48,26 +50,39 @@ namespace Torch.Patches
         // ReSharper disable once UnusedMember.Global
         internal static void Patch(PatchContext context)
         {
-            context.GetPattern(typeof(MyDefinitionId).GetMethod(nameof(MyDefinitionId.ToString))).Prefixes.Add(typeof(MyDefinitionIdToStringPatch).GetMethod(nameof(MyDefinitionIdToStringPrefix), BindingFlags.Static | BindingFlags.NonPublic));
+            var targetMethod = typeof(MyDefinitionId).GetMethod(nameof(MyDefinitionId.ToString));
+            Debug.Assert(targetMethod != null);
+            
+            var patchMethod = typeof(MyDefinitionIdToStringPatch).GetMethod(nameof(ToStringPrefix), BindingFlags.Static | BindingFlags.NonPublic);
+            Debug.Assert(patchMethod != null);
+            
+            context.GetPattern(targetMethod).Prefixes.Add(patchMethod);
         }
         
         // ReSharper disable once UnusedMember.Local
         // ReSharper disable once RedundantAssignment
-        private static bool MyDefinitionIdToStringPrefix(MyDefinitionId __instance, ref string __result)
+        private static bool ToStringPrefix(MyDefinitionId __instance, ref string __result)
         {
-            if (Cache.TryGetValue(__instance.GetHashCodeLong(), out __result))
+            try
             {
+                if (Cache.TryGetValue(__instance.GetHashCodeLong(), out __result))
+                {
 #if DEBUG && VERIFY_RESULT
                 var expectedName = Format(__instance);
                 Debug.Assert(__result == expectedName);
 #endif
-                return false;
+                    return false;
+                }
+
+                var result = Format(__instance);
+                Cache.Store(__instance.GetHashCodeLong(), result);
+
+                __result = result;
             }
-
-            var result = Format(__instance);
-            Cache.Store(__instance.GetHashCodeLong(), result);
-
-            __result = result;
+            catch (Exception e)
+            {
+                _log.Error($"{e.Message}: {e}");
+            }
             return false;
         }
 
