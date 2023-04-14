@@ -22,19 +22,6 @@ namespace Torch.Patches
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     public static class MyDefinitionIdToStringPatch
     {
-        private static bool enabled = true;
-
-        public static bool Enabled
-        {
-            get => Enabled;
-            set
-            {
-                enabled = value;
-                if (!enabled)
-                    Cache.Clear();
-            }
-        }
-
         private static readonly CacheForever<long, string> Cache = new CacheForever<long, string>();
         private static long nextFill;
         private const long FillPeriod = 37 * 60;  // frames
@@ -46,7 +33,7 @@ namespace Torch.Patches
 
         public static void Update(long uptime)
         {
-            if (!enabled || uptime < nextFill)
+            if (uptime < nextFill)
                 return;
 
             nextFill = uptime + FillPeriod;
@@ -68,9 +55,6 @@ namespace Torch.Patches
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool MyDefinitionIdToStringPrefix(MyDefinitionId __instance, ref string __result)
         {
-            if (!enabled)
-                return true;
-
             if (Cache.TryGetValue(__instance.GetHashCodeLong(), out __result))
             {
 #if DEBUG && VERIFY_RESULT
@@ -90,19 +74,27 @@ namespace Torch.Patches
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string Format(MyDefinitionId definitionId)
         {
+#if false
+            // Original code
+            string typeId = !definitionId.TypeId.IsNull ? definitionId.TypeId.ToString() : "(null)";
+            string subtypeName = !string.IsNullOrEmpty(definitionId.SubtypeName) ? definitionId.SubtypeName : "(null)";
+            return string.Format("{0}/{1}", typeId, subtypeName);
+#endif
+            
+            // Same with less memory allocation due to reusing StringBuilder instances
             const string DefinitionNull = "(null)";
-
+            
             var typeId = definitionId.TypeId;
             var typeName = typeId.IsNull ? DefinitionNull : typeId.ToString();
-
+            
             var subtypeName = definitionId.SubtypeName;
             if (string.IsNullOrEmpty(subtypeName))
                 subtypeName = DefinitionNull;
-
+            
             var sb = ObjectPools.StringBuilder.Get(typeName.Length + 1 + subtypeName.Length);
             var text = sb.Append(typeName).Append('/').Append(subtypeName).ToString();
             ObjectPools.StringBuilder.Return(sb);
-
+            
             return text;
         }
     }
