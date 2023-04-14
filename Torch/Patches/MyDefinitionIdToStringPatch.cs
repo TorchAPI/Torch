@@ -31,7 +31,7 @@ namespace Torch.Patches
 
 #if LOG_STATS
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
-        private static string CacheReport => $"1-RO: {Cache.ImmutableReport} | 2-RW: {Cache.Report}";
+        private static string CacheReport => $"L1-RO: {Cache.ImmutableReport} | L2-RW: {Cache.Report}";
 #endif
 
         public static void Update(long ticks)
