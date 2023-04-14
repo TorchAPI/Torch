@@ -1,4 +1,5 @@
-// Caching ported from Performance Improvements 1.10.5
+// Caching of MyDefinitionId.ToString() results ported from Performance Improvements 1.10.5
+
 // Reasons:
 // https://support.keenswh.com/spaceengineers/pc/topic/27997-servers-deadlocked-on-load
 // https://support.keenswh.com/spaceengineers/pc/topic/24210-performance-pre-calculate-or-cache-mydefinitionid-tostring-results
@@ -9,7 +10,6 @@
 // Uncomment to enable logging statistics
 #define LOG_STATS
 
-using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -27,7 +27,7 @@ namespace Torch.Patches
     {
         private static readonly CacheForever<long, string> Cache = new CacheForever<long, string>();
         private static long nextFill;
-        private const long FillPeriod = 37 * 60; // frames
+        private const long FillPeriod = 27 * 60; // frames
 
 #if LOG_STATS
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
@@ -64,27 +64,19 @@ namespace Torch.Patches
         // ReSharper disable once RedundantAssignment
         private static bool ToStringPrefix(MyDefinitionId __instance, ref string __result)
         {
-            try
+            if (Cache.TryGetValue(__instance.GetHashCodeLong(), out __result))
             {
-                if (Cache.TryGetValue(__instance.GetHashCodeLong(), out __result))
-                {
 #if VERIFY_RESULT
                 var expectedName = Format(__instance);
                 Debug.Assert(__result == expectedName);
 #endif
-                    return false;
-                }
-
-                var result = Format(__instance);
-                Cache.Store(__instance.GetHashCodeLong(), result);
-
-                __result = result;
-            }
-            catch (Exception e)
-            {
-                _log.Error($"{e.Message}: {e}");
+                return false;
             }
 
+            var result = Format(__instance);
+            Cache.Store(__instance.GetHashCodeLong(), result);
+
+            __result = result;
             return false;
         }
 
