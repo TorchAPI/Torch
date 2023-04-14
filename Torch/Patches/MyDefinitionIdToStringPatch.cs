@@ -4,7 +4,7 @@
 // https://support.keenswh.com/spaceengineers/pc/topic/24210-performance-pre-calculate-or-cache-mydefinitionid-tostring-results
 
 #if DEBUG
-// Uncomment this to enable the verification of cached results to the original call (disables caching!)
+// Uncomment this to enable the verification that all formatting actually matches the first one (effectively disables caching)
 // #define VERIFY_RESULT
 #endif
 
