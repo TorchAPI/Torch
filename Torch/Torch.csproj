@@ -245,6 +245,7 @@
     <Compile Include="Patches\KeenLogPatch.cs" />
     <Compile Include="Patches\MessageSizeLimitPatch.cs" />
     <Compile Include="Patches\ModsDownloadingPatch.cs" />
+    <Compile Include="Patches\MyDefinitionIdToStringPatch.cs" />
     <Compile Include="Patches\PhysicsMemoryPatch.cs" />
     <Compile Include="Patches\SessionDownloadPatch.cs" />
     <Compile Include="Patches\TorchAsyncSaving.cs" />
@@ -271,6 +272,11 @@
     <Compile Include="Managers\UpdateManager.cs" />
     <Compile Include="Persistent.cs" />
     <Compile Include="Plugins\PluginManifest.cs" />
+    <Compile Include="Utils\Cache\CacheForever.cs" />
+    <Compile Include="Utils\Cache\CacheStat.cs" />
+    <Compile Include="Utils\Cache\ObjectPools.cs" />
+    <Compile Include="Utils\Concurrent\RwLock.cs" />
+    <Compile Include="Utils\Concurrent\RwLockDictionary.cs" />
     <Compile Include="Utils\ModItemUtils.cs" />
     <Compile Include="Utils\SteamWorkshopTools\KeyValueExtensions.cs" />
     <Compile Include="Utils\MiscExtensions.cs" />

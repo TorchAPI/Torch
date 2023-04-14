@@ -22,6 +22,7 @@ using Torch.Commands;
 using Torch.Managers.PatchManager;
 using Torch.Mod;
 using Torch.Mod.Messages;
+using Torch.Patches;
 using Torch.Server.Commands;
 using Torch.Server.Managers;
 using Torch.Utils;
@@ -71,8 +72,12 @@ namespace Torch.Server
             
             // Needs to be done at some point after MyVRageWindows.Init
             // where the debug listeners are registered
-            if (!((TorchConfig)Config).EnableAsserts)
+            var torchConfig = (TorchConfig)Config;
+            if (!torchConfig.EnableAsserts)
                 MyDebug.Listeners.Clear();
+
+            MyDefinitionIdToStringPatch.Enabled = torchConfig.DefIdFix;
+            
             _simUpdateTimer.Elapsed += SimUpdateElapsed;
             _simUpdateTimer.Start();
         }
@@ -265,6 +270,8 @@ namespace Torch.Server
                 _watchdog = new Timer(CheckServerResponding, this, TimeSpan.Zero,
                     TimeSpan.FromSeconds(Config.TickTimeout));
             }
+            
+            MyDefinitionIdToStringPatch.Update(MySandboxGame.Static.FrameTimeTicks);
         }
 
         #region Freeze Detection
