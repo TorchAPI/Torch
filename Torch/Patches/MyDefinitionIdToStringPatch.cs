@@ -31,12 +31,12 @@ namespace Torch.Patches
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 #endif
 
-        public static void Update(long uptime)
+        public static void Update(long ticks)
         {
-            if (uptime < nextFill)
+            if (ticks < nextFill)
                 return;
 
-            nextFill = uptime + FillPeriod;
+            nextFill = ticks + FillPeriod;
         
 #if DEBUG
             _log.Info($"{nameof(MyDefinitionIdToStringPatch)}: {CacheReport}");
