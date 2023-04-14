@@ -1,3 +1,6 @@
+// Uncomment to enable collecting statistics
+#define COLLECT_STATS
+
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Torch.Utils.Concurrent;
@@ -12,7 +15,7 @@ namespace Torch.Utils.Cache
         // Second layer mutable and synchronized cache, collecting new keys
         private readonly RwLockDictionary<TK, TV> cache = new RwLockDictionary<TK, TV>();
 
-#if DEBUG
+#if COLLECT_STATS
         private readonly CacheStat immutableStat = new CacheStat();
         private readonly CacheStat stat = new CacheStat();
         public string ImmutableReport => immutableStat.Report;
@@ -56,19 +59,19 @@ namespace Torch.Utils.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetValue(TK key, out TV value)
         {
-#if DEBUG
+#if COLLECT_STATS
             immutableStat.CountLookup(immutableCache.Count);
 #endif
 
             if (immutableCache.TryGetValue(key, out value))
             {
-#if DEBUG
+#if COLLECT_STATS
                 immutableStat.CountHit();
 #endif
                 return true;
             }
 
-#if DEBUG
+#if COLLECT_STATS
             stat.CountLookup(cache.Count);
 #endif
 
@@ -76,7 +79,7 @@ namespace Torch.Utils.Cache
             if (cache.TryGetValue(key, out value))
             {
                 cache.FinishReading();
-#if DEBUG
+#if COLLECT_STATS
                 stat.CountHit();
 #endif
                 return true;
