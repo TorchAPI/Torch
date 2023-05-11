@@ -76,6 +76,7 @@ namespace Torch
         private readonly string[] _runArgs;
         private SpaceEngineersGame _game;
         private readonly Thread _updateThread;
+        private readonly string _rootPath;
 
         private bool _startGame = false;
         private readonly AutoResetEvent _commandChanged = new AutoResetEvent(false);
@@ -99,6 +100,7 @@ namespace Torch
             _tweakGameSettings = tweakGameSettings;
             _appName = appName;
             _appSteamId = appSteamId;
+            _rootPath = MyVRage.Platform.System.GetRootPath();
             _userDataPath = userDataPath;
             _runArgs = runArgs;
             _updateThread = new Thread(Run);
@@ -148,7 +150,7 @@ namespace Torch
             MySessionComponentExtDebug.ForceDisable = true;
             MyPerGameSettings.SendLogToKeen = false;
             // SpaceEngineersGame.SetupAnalytics();
-            
+
             //not implemented by keen.. removed in cross-play update
             //MyVRage.Platform.InitScripting(MyVRageScripting.Create());
             _ = MyVRage.Platform.Scripting;
@@ -158,7 +160,7 @@ namespace Torch
             _tweakGameSettings();
 
             MyFileSystem.Reset();
-            MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _userDataPath);
+            MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _rootPath, _userDataPath);
 
             _log.Info("Loading Dedicated Config");
             // object created in SpaceEngineersGame.SetupPerGameSettings()
@@ -183,8 +185,7 @@ namespace Torch
             if (isEos)
             {
                 service = MyEOSService.Create();
-
-                MyEOSService.InitNetworking(dedicated,
+                MyEOSService.InitNetworking(dedicated,false,
                     "Space Engineers",
                     service,
                     "xyza7891A4WeGrpP85BTlBa3BSfUEABN",
@@ -214,9 +215,17 @@ namespace Torch
 
             MyServiceManager.Instance.AddService(service);
             
-            MyGameService.WorkshopService.AddAggregate(MyModIoService.Create(service, "spaceengineers", "264",
-                "1fb4489996a5e8ffc6ec1135f9985b5b", "331", "f2b64abe55452252b030c48adc0c1f0e",
-                MyPlatformGameSettings.UGC_TEST_ENVIRONMENT, true));
+            MyGameService.WorkshopService.AddAggregate(MyModIoService.Create(
+                service,
+                "spaceengineers",
+                "264",
+                "1fb4489996a5e8ffc6ec1135f9985b5b",
+                "331",
+                "f2b64abe55452252b030c48adc0c1f0e",
+                MyPlatformGameSettings.UGC_TEST_ENVIRONMENT,
+                true,
+                "XboxLive",
+                "XboxOne"));
             
             if (!isEos && !MyGameService.HasGameServer)
             {

@@ -30,6 +30,7 @@ using VRage.ObjectBuilders;
 using VRage.Sync;
 using VRageMath;
 
+
 namespace Torch.Managers
 {
     public class EntityManager : Manager
@@ -43,9 +44,10 @@ namespace Torch.Managers
 
         public void ExportGrid(IMyCubeGrid grid, string path)
         {
+
             var ob = grid.GetObjectBuilder(true);
             using (var f = File.Open(path, FileMode.CreateNew))
-                MyObjectBuilderSerializer.SerializeXML(f, ob);
+                MyObjectBuilderSerializer.SerializeXML(f, ob, MyObjectBuilderSerializer.XmlCompression.Uncompressed);
         }
 
         public void ImportGrid(string path, Vector3D position)
