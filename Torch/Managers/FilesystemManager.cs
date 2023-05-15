@@ -9,7 +9,7 @@ using Torch.API;
 
 namespace Torch.Managers
 {
-    public class FilesystemManager : Manager
+    public class FilesystemManager
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         /// <summary>
@@ -22,7 +22,7 @@ namespace Torch.Managers
         /// </summary>
         public string TorchDirectory { get; }
 
-        public FilesystemManager(ITorchBase torchInstance) : base(torchInstance)
+        public FilesystemManager(ITorchBase torchInstance)
         {
             var torch = new FileInfo(typeof(FilesystemManager).Assembly.Location).Directory.FullName;
             TempDirectory = Directory.CreateDirectory(Path.Combine(torch, "tmp")).FullName;

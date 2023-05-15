@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.IO.Packaging;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -23,26 +24,25 @@ namespace Torch.Managers
         private Timer _updatePollTimer;
         private string _torchDir = new FileInfo(typeof(UpdateManager).Assembly.Location).DirectoryName;
         private Logger _log = LogManager.GetCurrentClassLogger();
-        [Dependency]
         private FilesystemManager _fsManager;
+        private bool _isProcessing = false;
         
         public UpdateManager(ITorchBase torchInstance) : base(torchInstance)
         {
-            //_updatePollTimer = new Timer(TimerElapsed, this, TimeSpan.Zero, TimeSpan.FromMinutes(5));
+            //fs is only really used here so might as well create it here
+            _fsManager = new FilesystemManager(torchInstance);
         }
 
         /// <inheritdoc />
         public override void Attach()
         {
-            CheckAndUpdateTorch();
         }
 
         private void TimerElapsed(object state)
         {
-            CheckAndUpdateTorch();
         }
         
-        private async void CheckAndUpdateTorch()
+        public async void CheckAndUpdateTorch()
         {
             if (Torch.Config.NoUpdate || !Torch.Config.GetTorchUpdates || (Torch.Config.BranchName == TorchBranchType.dev))
                 return;
@@ -53,6 +53,8 @@ namespace Torch.Managers
 
             try
             {
+                _log.Info("Checking for Torch Update...");
+                _isProcessing = true;
                 var job = await JenkinsQuery.Instance.GetLatestVersion(Torch.Config.BranchName.ToString());
                 if (job == null)
                 {
@@ -68,21 +70,26 @@ namespace Torch.Managers
                     if (!await JenkinsQuery.Instance.DownloadRelease(job, updateName))
                     {
                         _log.Warn("Failed to download new release!");
+                        _isProcessing = false;
                         return;
                     }
                     UpdateFromZip(updateName, _torchDir);
                     File.Delete(updateName);
-                    _log.Warn($"Torch version {job.Version} has been installed. Please restart to apply update.");
+                    _log.Warn($"Torch version {job.Version} has been installed.  Restarting...");
+                    Torch.Restart();
                 }
                 else
                 {
                     _log.Info("Torch is up to date.");
                 }
+                _isProcessing = false;
+
             }
             catch (Exception e)
             {
                 _log.Error("An error occured downloading the Torch update.");
                 _log.Error(e);
+                _isProcessing = false;
             }
         }
 
@@ -104,6 +111,15 @@ namespace Torch.Managers
 
                 //zip.ExtractToDirectory(extractPath); //throws exceptions sometimes?
             }
+        }
+        
+        /// <summary>
+        /// Returns true if update data is being checked or processed.
+        /// </summary>
+        /// <returns></returns>
+        public bool GetIsUpdating()
+        {
+            return _isProcessing;
         }
 
         /// <inheritdoc />
