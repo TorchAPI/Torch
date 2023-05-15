@@ -144,6 +144,13 @@ namespace Torch.Server
         /// <inheritdoc />
         public override void Init()
         {
+            var updateManager = Managers.GetManager<UpdateManager>();
+
+            while (updateManager.GetIsUpdating())
+            {
+                //wait until complete, its jank, I know but eventually there will be a stand-alone updater.
+            }
+            
             Log.Info("Initializing server");
             MySandboxGame.IsDedicated = true;
             base.Init();
@@ -211,15 +218,19 @@ namespace Torch.Server
             void DoRestart(Task<GameSaveResult> task, object torch0)
             {
                 var torch = (TorchServer)torch0;
-                torch.Stop();
-                // TODO clone this
                 var config = (TorchConfig)torch.Config;
+                
+                if (IsRunning)
+                {
+                    config.TempAutostart = true;
+                    torch.Stop();
+                }
+                
                 LogManager.Flush();
 
                 string exe = Assembly.GetExecutingAssembly().Location;
                 Debug.Assert(exe != null);
                 config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
-                config.TempAutostart = true;
                 Process.Start(exe, config.ToString());
 
                 Process.GetCurrentProcess().Kill();
