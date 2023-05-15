@@ -19,6 +19,7 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Session;
 using Torch.Commands;
+using Torch.Managers;
 using Torch.Managers.PatchManager;
 using Torch.Mod;
 using Torch.Mod.Messages;
@@ -65,7 +66,10 @@ namespace Torch.Server
             AddManager(DedicatedInstance);
             AddManager(new EntityControlManager(this));
             AddManager(new RemoteAPIManager(this));
-
+            AddManager(new UpdateManager(this));
+            
+            Managers.GetManager<UpdateManager>().CheckAndUpdateTorch();
+            
             var sessionManager = Managers.GetManager<ITorchSessionManager>();
             sessionManager.AddFactory(x => new MultiplayerManagerDedicated(this));
             

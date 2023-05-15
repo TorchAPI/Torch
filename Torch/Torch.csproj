@@ -268,7 +268,6 @@
     <Compile Include="Managers\Manager.cs" />
     <Compile Include="Managers\NetworkManager\NetworkManager.cs" />
     <Compile Include="Managers\MultiplayerManagerBase.cs" />
-    <Compile Include="Managers\UpdateManager.cs" />
     <Compile Include="Persistent.cs" />
     <Compile Include="Plugins\PluginManifest.cs" />
     <Compile Include="Utils\ModItemUtils.cs" />

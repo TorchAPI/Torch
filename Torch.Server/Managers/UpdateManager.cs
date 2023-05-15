@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.IO.Packaging;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -23,26 +24,24 @@ namespace Torch.Managers
         private Timer _updatePollTimer;
         private string _torchDir = new FileInfo(typeof(UpdateManager).Assembly.Location).DirectoryName;
         private Logger _log = LogManager.GetCurrentClassLogger();
-        [Dependency]
         private FilesystemManager _fsManager;
         
         public UpdateManager(ITorchBase torchInstance) : base(torchInstance)
         {
-            //_updatePollTimer = new Timer(TimerElapsed, this, TimeSpan.Zero, TimeSpan.FromMinutes(5));
+            //fs is only really used here so might as well create it here
+            _fsManager = new FilesystemManager(torchInstance);
         }
 
         /// <inheritdoc />
         public override void Attach()
         {
-            CheckAndUpdateTorch();
         }
 
         private void TimerElapsed(object state)
         {
-            CheckAndUpdateTorch();
         }
         
-        private async void CheckAndUpdateTorch()
+        public async void CheckAndUpdateTorch()
         {
             if (Torch.Config.NoUpdate || !Torch.Config.GetTorchUpdates || (Torch.Config.BranchName == TorchBranchType.dev))
                 return;
@@ -53,6 +52,7 @@ namespace Torch.Managers
 
             try
             {
+                _log.Info("Checking for Torch Update...");
                 var job = await JenkinsQuery.Instance.GetLatestVersion(Torch.Config.BranchName.ToString());
                 if (job == null)
                 {
@@ -62,8 +62,13 @@ namespace Torch.Managers
                 
                 if (job.Version > Torch.TorchVersion || (Torch.TorchVersion.Branch != Torch.Config.BranchName.ToString()))
                 {
+                    
+                    string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+                    UriBuilder uri = new UriBuilder(codeBase);
+                    string path = Uri.UnescapeDataString(uri.Path);
+                    
                     _log.Warn($"Updating Torch from version {Torch.TorchVersion} to version {job.Version}");
-                    var updateName = Path.Combine(_fsManager.TempDirectory, "torchupdate.zip");
+                    var updateName = Path.Combine(Path.GetDirectoryName(path), "torchupdate.zip");
                     //new WebClient().DownloadFile(new Uri(releaseInfo.Item2), updateName);
                     if (!await JenkinsQuery.Instance.DownloadRelease(job, updateName))
                     {
