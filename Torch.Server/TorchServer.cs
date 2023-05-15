@@ -145,11 +145,6 @@ namespace Torch.Server
         public override void Init()
         {
             var updateManager = Managers.GetManager<UpdateManager>();
-
-            while (updateManager.GetIsUpdating())
-            {
-                //wait until complete, its jank, I know but eventually there will be a stand-alone updater.
-            }
             
             Log.Info("Initializing server");
             MySandboxGame.IsDedicated = true;
