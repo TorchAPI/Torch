@@ -62,13 +62,8 @@ namespace Torch.Managers
                 
                 if (job.Version > Torch.TorchVersion || (Torch.TorchVersion.Branch != Torch.Config.BranchName.ToString()))
                 {
-                    
-                    string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-                    UriBuilder uri = new UriBuilder(codeBase);
-                    string path = Uri.UnescapeDataString(uri.Path);
-                    
                     _log.Warn($"Updating Torch from version {Torch.TorchVersion} to version {job.Version}");
-                    var updateName = Path.Combine(Path.GetDirectoryName(path), "torchupdate.zip");
+                    var updateName = Path.Combine(_fsManager.TempDirectory, "torchupdate.zip");
                     //new WebClient().DownloadFile(new Uri(releaseInfo.Item2), updateName);
                     if (!await JenkinsQuery.Instance.DownloadRelease(job, updateName))
                     {
