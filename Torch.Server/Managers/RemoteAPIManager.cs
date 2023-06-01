@@ -32,7 +32,7 @@ namespace Torch.Server.Managers
         {
             if (newstate == TorchGameState.Loading && MySandboxGame.ConfigDedicated.RemoteApiEnabled && !string.IsNullOrEmpty(MySandboxGame.ConfigDedicated.RemoteSecurityKey))
             {
-                var myRemoteServer = new MyRemoteServer(MySandboxGame.ConfigDedicated.RemoteApiPort, MySandboxGame.ConfigDedicated.RemoteSecurityKey);
+                var myRemoteServer = new MyRemoteServer(MySandboxGame.ConfigDedicated.RemoteApiIP, MySandboxGame.ConfigDedicated.RemoteApiPort, MySandboxGame.ConfigDedicated.RemoteSecurityKey);
                 LogManager.GetCurrentClassLogger().Info($"Remote API started on port {myRemoteServer.Port}");
             }
         }
