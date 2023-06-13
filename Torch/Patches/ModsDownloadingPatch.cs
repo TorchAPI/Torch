@@ -10,6 +10,7 @@ using Torch.Managers.PatchManager;
 using Torch.Managers.PatchManager.MSIL;
 using Torch.Utils;
 using VRage.Game;
+using VRage.GameServices;
 
 namespace Torch.Patches
 {
@@ -33,7 +34,7 @@ namespace Torch.Patches
         }
         public static void Postfix(MyWorkshop.ResultData __result, List<MyObjectBuilder_Checkpoint.ModItem> mods)
         {
-            if (__result.Success) return;
+            if (__result.Result == MyGameServiceCallResult.OK) return;
             _log.Warn("Missing Mods:");
             var mismatchMods = mods.Where(b => __result.Mods.All(c => b.PublishedFileId != c.Id));
             foreach (var mod in mismatchMods)

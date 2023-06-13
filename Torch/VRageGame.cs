@@ -161,7 +161,7 @@ namespace Torch
             _tweakGameSettings();
 
             MyFileSystem.Reset();
-            MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _rootPath, _userDataPath, _modCachePath);
+            MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _rootPath, _userDataPath,false, -1, null, _modCachePath);
 
             _log.Info("Loading Dedicated Config");
             // object created in SpaceEngineersGame.SetupPerGameSettings()
