@@ -77,7 +77,8 @@ namespace Torch
         private SpaceEngineersGame _game;
         private readonly Thread _updateThread;
         private readonly string _rootPath;
-
+        private readonly string _modCachePath = null;
+        
         private bool _startGame = false;
         private readonly AutoResetEvent _commandChanged = new AutoResetEvent(false);
         private bool _destroyGame = false;
@@ -160,7 +161,7 @@ namespace Torch
             _tweakGameSettings();
 
             MyFileSystem.Reset();
-            MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _rootPath, _userDataPath);
+            MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _rootPath, _userDataPath, _modCachePath);
 
             _log.Info("Loading Dedicated Config");
             // object created in SpaceEngineersGame.SetupPerGameSettings()
