@@ -34,7 +34,7 @@ namespace Torch.Server.Managers
         /// </summary>
         public override void Attach()
         {
-            _log.Warn("Starting game update manager");
+            _log.Info("Starting game update manager");
             base.Attach();
             int updateIntervalSeconds = TorchBase.Instance.Config.GameUpdateRestartDelayMins * 60;
             
@@ -75,7 +75,7 @@ namespace Torch.Server.Managers
             
             if (latestVersion != null && int.Parse(latestVersion) > currentVersion)
             {
-                _log.Warn($"Space engineers update detectected");
+                _log.Warn($"Game update detectected!");
                 try
                 {
                     Torch.CurrentSession?.Managers.GetManager<ChatManagerServer>()?.SendMessageAsOther("Server",
