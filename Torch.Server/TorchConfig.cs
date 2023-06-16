@@ -25,8 +25,6 @@ namespace Torch.Server
         private string _instanceName = "Instance";
         private bool _autostart;
         private bool _restartOnCrash;
-        private bool _restartOnGameUpdate;
-        private int _gameUpdateRestartDelayMins = 5;
         private bool _noGui;
         private bool _getPluginUpdates = true;
         private bool _getTorchUpdates = true;
@@ -88,21 +86,7 @@ namespace Torch.Server
         [Arg("restartoncrash", "Automatically restart the server if it crashes.")]
         [Display(Name = "Restart On Crash", Description = "Automatically restart the server if it crashes.", GroupName = "Server")]
         public bool RestartOnCrash { get => _restartOnCrash; set => Set(value, ref _restartOnCrash); }
-        
-        /// <summary>
-        /// Enable Game update detection. If enabled, server will restart when game updates are found.
-        /// </summary>
-        [Arg("gameupdatedetection", "Automatically restart the server if the game updates.")]
-        [Display(Name = "Restart On Game Update", Description = "Automatically restart the server if the game updates.", GroupName = "Update Detection")]
-        public bool RestartOnGameUpdate { get => _restartOnGameUpdate; set => Set(value, ref _restartOnGameUpdate); }
-        
-        /// <summary>
-        /// How long (in minutes) to wait before restarting after a game update is detected.
-        /// </summary>
-        [Arg("gameupdaterestartdelay", "How long (in minutes) to wait before restarting after a game update is detected.")]
-        [Display(Name = "Game Update Restart Delay", Description = "How long (in minutes) to wait before restarting after a game update is detected.", GroupName = "Update Detection")]
-        public int GameUpdateRestartDelayMins { get => _gameUpdateRestartDelayMins; set => Set(value, ref _gameUpdateRestartDelayMins); }
-        
+
         /// <inheritdoc />
         [Arg("nogui", "Do not show the Torch UI.")]
         [Display(Name = "No GUI", Description = "Do not show the Torch UI.", GroupName = "Window")]

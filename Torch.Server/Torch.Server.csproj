@@ -245,7 +245,6 @@
     <Compile Include="FlowDocumentTarget.cs" />
     <Compile Include="ListBoxExtensions.cs" />
     <Compile Include="Managers\EntityControlManager.cs" />
-    <Compile Include="Managers\GameUpdateManager.cs" />
     <Compile Include="Managers\MultiplayerManagerDedicated.cs" />
     <Compile Include="Managers\InstanceManager.cs" />
     <Compile Include="Managers\MultiplayerManagerDedicatedEventShim.cs" />
