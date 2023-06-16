@@ -36,6 +36,7 @@ namespace Torch.Server.Managers
         {
             _log.Info("Starting game update manager");
             base.Attach();
+            int updateIntervalSeconds = TorchBase.Instance.Config.GameUpdateRestartDelayMins * 60;
             
             _cancellationTokenSource = new CancellationTokenSource();
 
@@ -45,7 +46,7 @@ namespace Torch.Server.Managers
                 {
                     await CheckForUpdates();
 
-                    await Task.Delay(TimeSpan.FromSeconds(60), _cancellationTokenSource.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(updateIntervalSeconds), _cancellationTokenSource.Token);
                 }
             }, _cancellationTokenSource.Token);
         }
@@ -63,7 +64,7 @@ namespace Torch.Server.Managers
         {
             if(TorchBase.Instance.GameState != TorchGameState.Loaded || !TorchBase.Instance.Config.RestartOnGameUpdate)
                 return;
-
+            
             var response = await _httpClient.GetStringAsync(UpdateCheckUrl);
             var xml = XDocument.Parse(response);
 
@@ -79,8 +80,9 @@ namespace Torch.Server.Managers
                 {
                     Torch.CurrentSession?.Managers.GetManager<ChatManagerServer>()?.SendMessageAsOther("Server",
                         $"A new version of Space Engineers is available! The server will restart in {TorchBase.Instance.Config.GameUpdateRestartDelayMins} minutes to update to version {latestVersion}.");
-                    
-                    await Task.Delay(TimeSpan.FromMinutes(TorchBase.Instance.Config.GameUpdateRestartDelayMins), _cancellationTokenSource.Token);
+
+                    // Wait 2 minutes or until the task is cancelled
+                    await Task.Delay(TimeSpan.FromMinutes(2), _cancellationTokenSource.Token);
 
                     // Restart the server
                     Torch.Restart();
