@@ -33,6 +33,8 @@ namespace Torch
         bool SendLogsToKeen { get; set; }
         bool DeleteMiniDumps { get; set; }
         string LoginToken { get; set; }
+        bool RestartOnGameUpdate { get; set; }
+        int GameUpdateRestartDelayMins { get; set; }
 
         void Save(string path = null);
     }
