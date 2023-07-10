@@ -31,6 +31,11 @@ namespace Torch.Server.ViewModels
                 {
                     Control = p.GetControl();
                 }
+                catch(InvalidOperationException ex)
+                {
+                    //ignore as its likely a hot reload, we can figure out a better solution in the future.
+                    Control = null;
+                }
                 catch (Exception ex)
                 {
                     _log.Error(ex, $"Exception loading interface for plugin {Plugin.Name}! Plugin interface will not be available!");

@@ -209,6 +209,7 @@ namespace Torch.Managers.PatchManager
         {
             lock (_contexts)
             {
+                _log.Info("Removing all patches...");
                 foreach (List<PatchContext> set in _contexts.Values)
                     foreach (PatchContext ctx in set)
                         ctx.RemoveAll();
