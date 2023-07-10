@@ -176,6 +176,39 @@ namespace Torch.Commands
             var ver = Context.Torch.TorchVersion;
             Context.Respond($"Torch version: {ver} SE version: {MyFinalBuildConstants.APP_VERSION}");
         }
+        
+        [Command("reload", "Reloads a specified plugin or all plugins if none specified.")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void Reload(string plugin = null)
+        {
+            var pluginManager = Context.Torch.Managers.GetManager<PluginManager>();
+            if (pluginManager == null)
+            {
+                Context.Respond("Plugin manager not found.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(plugin))
+            {
+                pluginManager.ReloadPlugins();
+                Context.Respond("Reloaded all plugins.");
+            }
+            else
+            {
+                //find plugin by name
+                var pluginToReload = pluginManager.Plugins.Values.FirstOrDefault(p => p.Name.Equals(plugin, StringComparison.InvariantCultureIgnoreCase));
+                if (pluginToReload == null) //not found
+                {
+                    Context.Respond($"Plugin {plugin} not found.");
+                    return;
+                }
+                
+                
+                
+                pluginManager.ReloadPlugin(pluginToReload.Id);
+                Context.Respond($"Reloaded plugin");
+            }
+        }
 
         [Command("plugins", "Lists the currently loaded plugins.")]
         [Permission(MyPromoteLevel.None)]

@@ -54,9 +54,10 @@ namespace Torch.Server.Views
         {
             _server = server;
             _server.Initialized += Server_Initialized;
+            _server.Managers.GetManager<PluginManager>().PluginsReloaded += PluginsReloaded;
         }
 
-        private void Server_Initialized(ITorchServer obj)
+        private void Server_Initialized(ITorchServer obj = null)
         {
             Dispatcher.InvokeAsync(() =>
             {
@@ -65,7 +66,11 @@ namespace Torch.Server.Views
                 DataContext = pluginManager;
                 pluginManager.PropertyChanged += PluginManagerOnPropertyChanged;
             });
+        }
 
+        private void PluginsReloaded()
+        {
+            Server_Initialized();
         }
 
         private void OpenFolder_OnClick(object sender, RoutedEventArgs e)

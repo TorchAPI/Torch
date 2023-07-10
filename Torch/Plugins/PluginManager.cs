@@ -9,7 +9,9 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Xml.Serialization;
+using Havok;
 using NLog;
 using Torch.API;
 using Torch.API.Managers;
@@ -25,6 +27,9 @@ namespace Torch.Managers
     /// <inheritdoc />
     public class PluginManager : Manager, IPluginManager
     {
+        
+        //event for when the plugins are reloaded
+        public event Action PluginsReloaded;
         private class PluginItem
         {
             public string Filename { get; set; }
@@ -40,6 +45,7 @@ namespace Torch.Managers
         
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
         private readonly MtObservableSortedDictionary<Guid, ITorchPlugin> _plugins = new MtObservableSortedDictionary<Guid, ITorchPlugin>();
+        private readonly List<PluginItem> _pluginItems = new List<PluginItem>();
         private CommandManager _mgr;
         
 #pragma warning disable 649
@@ -196,6 +202,7 @@ namespace Torch.Managers
             // Actually load the plugins now.
             foreach (var item in pluginsToLoad)
             {
+                _pluginItems.Add(item);
                 LoadPlugin(item);
             } 
             
@@ -443,6 +450,33 @@ namespace Torch.Managers
         private static bool IsAssemblyCompatible(AssemblyName a, AssemblyName b)
         {
             return a.Name == b.Name && a.Version.Major == b.Version.Major && a.Version.Minor == b.Version.Minor;
+        }
+
+        public void ReloadPlugins()
+        {
+            _log.Info("Reloading plugins.");
+            var plugins = _plugins.ToList();
+            foreach (var plugin in plugins)
+            {
+                plugin.Value?.Dispose();
+                _plugins.Remove(plugin.Key);
+                
+            }
+            
+            LoadPlugins();
+            PluginsReloaded?.Invoke();
+        }
+
+        public void ReloadPlugin(Guid guid)
+        {
+            var plugin = _plugins[guid];
+            
+            plugin.Dispose();
+            _plugins.Remove(guid);
+            _log.Info($"{plugin.Name} {plugin.Version} has been unloaded.");
+
+            LoadPlugin(_pluginItems.First(p => p.Manifest.Guid == guid));
+            _log.Info($"{plugin.Name} {plugin.Version} has been reloaded.");
         }
         
         private void InstantiatePlugin(PluginManifest manifest, IEnumerable<Assembly> assemblies)
