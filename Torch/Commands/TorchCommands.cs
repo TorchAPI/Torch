@@ -203,7 +203,7 @@ namespace Torch.Commands
                     return;
                 }
 
-                if (!pluginToReload.IsReloadable)
+                if (!pluginToReload.IsReloadable && !Context.Torch.Config.BypassIsReloadableFlag)
                 {
                     Context.Respond($"{pluginToReload.Name} does not support reloading.");
                 }

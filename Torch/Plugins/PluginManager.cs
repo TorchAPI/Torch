@@ -474,7 +474,11 @@ namespace Torch.Managers
         public void ReloadPlugins()
         {
             _log.Info("Reloading plugins.");
-            var plugins = _plugins.ToList().Where(p => p.Value.IsReloadable);
+            
+            var plugins = _plugins.ToList();
+
+            if (!Torch.Config.BypassIsReloadableFlag)
+                plugins = plugins.Where(p => p.Value.IsReloadable).ToList();
             
             foreach (var plugin in plugins)
             {
