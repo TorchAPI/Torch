@@ -46,6 +46,7 @@ namespace Torch.Managers
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
         private readonly MtObservableSortedDictionary<Guid, ITorchPlugin> _plugins = new MtObservableSortedDictionary<Guid, ITorchPlugin>();
         private readonly List<PluginItem> _pluginItems = new List<PluginItem>();
+        private readonly List<Guid> _reloadList = new List<Guid>();
         private CommandManager _mgr;
         
 #pragma warning disable 649
@@ -198,18 +199,36 @@ namespace Torch.Managers
                 // This will happen on cylic dependencies.
                 _log.Error(e);
             }
-            
-            // Actually load the plugins now.
-            foreach (var item in pluginsToLoad)
+
+            if (_reloadList.Count > 0)
             {
-                _pluginItems.Add(item);
-                LoadPlugin(item);
-            } 
-            
-            foreach (var plugin in _plugins.Values)
-            {
-                plugin.Init(Torch);
+                foreach (var item in _pluginItems)
+                {
+                    LoadPlugin(item);
+                }
+
+                foreach (var plugin in _plugins.Values)
+                {
+                    plugin.Init(Torch);
+                }
             }
+            else
+            {
+                foreach (var plugin in pluginsToLoad)
+                {
+                    _pluginItems.Add(plugin);
+                    LoadPlugin(plugin);
+                }
+                
+                foreach (var plugin in _plugins.Values)
+                {
+                    plugin.Init(Torch);
+                }
+            }
+            
+            _reloadList.Clear();
+            
+            
             _log.Info($"Loaded {_plugins.Count} plugins.");
             PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
         }
@@ -455,12 +474,13 @@ namespace Torch.Managers
         public void ReloadPlugins()
         {
             _log.Info("Reloading plugins.");
-            var plugins = _plugins.ToList();
+            var plugins = _plugins.ToList().Where(p => p.Value.IsReloadable);
+            
             foreach (var plugin in plugins)
             {
+                _reloadList.Add(plugin.Key);
                 plugin.Value?.Dispose();
                 _plugins.Remove(plugin.Key);
-                
             }
             
             LoadPlugins();
