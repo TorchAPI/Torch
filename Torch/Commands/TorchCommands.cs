@@ -202,7 +202,11 @@ namespace Torch.Commands
                     Context.Respond($"Plugin {plugin} not found.");
                     return;
                 }
-                
+
+                if (!pluginToReload.IsReloadable)
+                {
+                    Context.Respond($"{pluginToReload.Name} does not support reloading.");
+                }
                 
                 
                 pluginManager.ReloadPlugin(pluginToReload.Id);

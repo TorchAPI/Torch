@@ -23,6 +23,11 @@ namespace Torch.API.Plugins
         /// The name of the plugin.
         /// </summary>
         string Name { get; }
+        
+        /// <summary>
+        /// Enable/Disable Plugin reloading
+        /// </summary>
+        bool IsReloadable { get; set; }
 
         /// <summary>
         /// This is called before the game loop is started.

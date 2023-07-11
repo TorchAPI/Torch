@@ -20,6 +20,7 @@ namespace Torch
         public Guid Id => Manifest.Guid;
         public string Version => Manifest.Version;
         public string Name => Manifest.Name;
+        public bool IsReloadable { get; set; }
         public ITorchBase Torch { get; internal set; }
 
         public virtual void Init(ITorchBase torch)
