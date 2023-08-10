@@ -32,5 +32,7 @@ namespace Torch
         public PluginState State { get; } = PluginState.Enabled;
 
         public virtual void Dispose() { }
+        
+        public virtual void Reload() {}
     }
 }

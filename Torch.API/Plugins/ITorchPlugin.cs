@@ -41,6 +41,11 @@ namespace Torch.API.Plugins
         void Update();
 
         /// <summary>
+        /// This is called when the plugin is reloaded.
+        /// </summary>
+        void Reload();
+
+        /// <summary>
         /// Plugin's enabled state. Mainly for UI niceness
         /// </summary>
         PluginState State { get; }

@@ -482,6 +482,9 @@ namespace Torch.Managers
             
             foreach (var plugin in plugins)
             {
+                
+                //if plugin implements ITorchPlugin.Reload() then call it
+                
                 _reloadList.Add(plugin.Key);
                 plugin.Value?.Dispose();
                 _plugins.Remove(plugin.Key);
