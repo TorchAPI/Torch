@@ -20,6 +20,7 @@ using Torch.Commands.Permissions;
 using Torch.Managers;
 using Torch.Mod;
 using Torch.Mod.Messages;
+using Torch.Patches;
 using VRage.Game;
 using VRage.Game.ModAPI;
 
@@ -329,6 +330,7 @@ namespace Torch.Commands
                 }
                 else
                 {
+                    AutoSavePatch.SaveFromCommand = true;
                     if (save)
                     {
                         Log.Info("Saving game before stop.");
@@ -382,9 +384,10 @@ namespace Torch.Commands
                 }
                 else
                 {
+                    AutoSavePatch.SaveFromCommand = true;
                     if (save)
                     {
-                        Log.Info("Savin game before restart.");
+                        Log.Info("Saving game before restart.");
                         Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
                            .SendMessageAsSelf($"Saving game before restart.");
                     }
