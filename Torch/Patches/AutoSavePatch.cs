@@ -16,7 +16,7 @@ namespace Torch.Patches
        Setting MySandboxGame.ConfigDedicated.RestartSave to false can resolve this issue, but this method (patch method) prevents us from changing the config file in order to prevent confusion.
     */
     [PatchShim]
-    public static class AutoSavePatch
+    internal static class AutoSavePatch
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
