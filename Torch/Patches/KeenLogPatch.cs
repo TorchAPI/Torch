@@ -117,7 +117,14 @@ namespace Torch.Patches
         }
         private static bool PrefixWriteLineOptions(MyLog __instance, string message, LoggingOptions option)
         {
-            if (__instance.LogFlag(option))
+            var logFlagMethod = typeof(MyLog).GetMethod("LogFlag", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            if(logFlagMethod == null)
+                throw new Exception("Failed to find LogFlag method");
+            
+            var logFlag = (bool)logFlagMethod.Invoke(__instance, new object[] { option });
+            
+            if (logFlag)
                 _log.Info(PrepareLog(__instance).Append(message));
             return false;
         }
