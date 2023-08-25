@@ -18,6 +18,7 @@ namespace Torch
         bool LocalPlugins { get; set; }
         bool RestartOnCrash { get; set; }
         bool ShouldUpdatePlugins { get; }
+        bool BypassIsReloadableFlag { get; set; }
         bool ShouldUpdateTorch { get; }
         int TickTimeout { get; set; }
         string WaitForPID { get; set; }

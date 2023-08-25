@@ -47,6 +47,7 @@ namespace Torch.Server
         private bool _sendLogsToKeen;
         private bool _deleteMiniDumps = true;
         private string _loginToken;
+        private bool bypassIsReloadableFlag;
 
 
         /// <inheritdoc />
@@ -119,6 +120,10 @@ namespace Torch.Server
         /// <inheritdoc />
         [Display(Name = "Update Plugins", Description = "Check every start for new versions of plugins.", GroupName = "Server")]
         public bool GetPluginUpdates { get => _getPluginUpdates; set => Set(value, ref _getPluginUpdates); }
+        
+        /// <inheritdoc />
+        [Display(Name = "Bypass reloadable flag", Description = "Bypass the reloadable flag on plugins (forces true).", GroupName = "Server")]
+        public bool BypassIsReloadableFlag { get => bypassIsReloadableFlag; set => Set(value, ref bypassIsReloadableFlag); }
 
         /// <inheritdoc />
         [Display(Name = "Watchdog Timeout", Description = "Watchdog timeout (in seconds).", GroupName = "Server")]
