@@ -11,11 +11,12 @@ using Torch.Managers.PatchManager.MSIL;
 namespace Torch.Patches
 {
     /* 
+        (disabled for next update - bish)
        The purpose of this patch is to prevent a autosave from occurring unintentionally during world unload initiated by the !stop or !restart command.
        Due to the user using the command(s) potentally performing a autosave or an opting out of a autosave, Keen's autosave code during unload has to be disabled.
        Setting MySandboxGame.ConfigDedicated.RestartSave to false can resolve this issue, but this method (patch method) prevents us from changing the config file in order to prevent confusion.
     */
-    [PatchShim]
+    //[PatchShim]
     internal static class AutoSavePatch
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
