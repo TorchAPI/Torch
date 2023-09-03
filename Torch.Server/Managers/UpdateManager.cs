@@ -62,6 +62,8 @@ namespace Torch.Managers
                     return;
                 }
                 
+                _log.Info($"Latest version is {job.Version} | Current version is {Torch.TorchVersion}");
+                
                 if (job.Version > Torch.TorchVersion || (Torch.TorchVersion.Branch != Torch.Config.BranchName.ToString()))
                 {
                     _log.Warn($"Updating Torch from version {Torch.TorchVersion} to version {job.Version}");
