@@ -171,7 +171,8 @@ namespace Torch.Session
             {
                 if (_currentSession == null)
                 {
-                    _log.Warn("Session unloading event occurred when we don't have a session.");
+                    _log.Warn("Session unloading event occurred when we don't have a session, restarting.");
+                    Torch.Restart(false);
                     return;
                 }
                 _log.Info($"Unloaded torch session for {_currentSession.KeenSession.Name}");
