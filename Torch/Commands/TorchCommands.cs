@@ -216,7 +216,7 @@ namespace Torch.Commands
         }
 
         [Command("plugins", "Lists the currently loaded plugins.")]
-        [Permission(MyPromoteLevel.None)]
+        [Permission(MyPromoteLevel.Admin)]
         public void Plugins()
         {
             var plugins = Context.Torch.Managers.GetManager<PluginManager>()?.Plugins.Select(p => p.Value.Name) ??
