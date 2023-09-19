@@ -359,8 +359,6 @@ namespace Torch.Commands
         {
             for (var i = countdown; i >= 0; i--)
             {
-                Log.Warn($"Current countdown value: {i} seconds.");
-
                 if (_cancelRestart)
                 {
                     Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
