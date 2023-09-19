@@ -368,21 +368,36 @@ namespace Torch.Commands
                     _cancelRestart = false;
                     yield break;
                 }
-                    
-                if (i >= 60 && i % 60 == 0)
+
+                // Send a message every hour
+                if (i >= 3600 && i % 3600 == 0)
+                {
+                    Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                        .SendMessageAsSelf($"Restarting server in {i / 3600} hour{Pluralize(i / 3600)}.");
+                    yield return null;
+                }
+                // Send a message every 15 minutes for the last hour
+                else if (i < 3600 && i >= 900 && i % 900 == 0)
                 {
                     Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
                         .SendMessageAsSelf($"Restarting server in {i / 60} minute{Pluralize(i / 60)}.");
                     yield return null;
                 }
-                else if (i > 0)
+                // Send a message every minute for the last 10 minutes
+                else if (i < 600 && i % 60 == 0)
                 {
-                    if (i < 11)
-                        Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
-                            .SendMessageAsSelf($"Restarting server in {i} second{Pluralize(i)}.");
+                    Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                        .SendMessageAsSelf($"Restarting server in {i / 60} minute{Pluralize(i / 60)}.");
                     yield return null;
                 }
-                else
+                // Send a message every second for the last 10 seconds
+                else if (i < 11)
+                {
+                    Context.Torch.CurrentSession.Managers.GetManager<IChatManagerClient>()
+                        .SendMessageAsSelf($"Restarting server in {i} second{Pluralize(i)}.");
+                    yield return null;
+                }
+                else if (i == 0)
                 {
                     AutoSavePatch.SaveFromCommand = true;
                     if (save)
@@ -399,6 +414,8 @@ namespace Torch.Commands
                 }
             }
         }
+
+
 
         private string Pluralize(int num)
         {
