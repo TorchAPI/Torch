@@ -91,7 +91,8 @@ namespace Torch.Patches
             }
             catch (Exception e)
             {
-                _log.Debug(e, "Failed to get thread indent");
+                //Commented out as it eventually resolves once fully loaded.
+                //_log.Debug(e, "Failed to get thread indent");
             }
             
             _tmpStringBuilder.Append(' ', t * 3);
