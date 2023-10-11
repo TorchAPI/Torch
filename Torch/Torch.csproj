@@ -241,6 +241,7 @@
     <Compile Include="Managers\PatchManager\Transpile\MethodTranspiler.cs" />
     <Compile Include="MySteamServiceWrapper.cs" />
     <Compile Include="Patches\AutoSavePatch.cs" />
+    <Compile Include="Patches\FactionPatch.cs" />
     <Compile Include="Patches\GameAnalyticsPatch.cs" />
     <Compile Include="Patches\GameStatePatchShim.cs" />
     <Compile Include="Patches\KeenLogPatch.cs" />
