@@ -74,6 +74,7 @@ namespace Torch.Patches
             _log.Info("Faction INIT");
             var m_playerFaction = typeof(MyFactionCollection).GetField("m_playerFaction", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance);
             var m_relationsBetweenFactions = typeof(MyFactionCollection).GetField("m_relationsBetweenFactions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance);
+            var m_relationsBetweenPlayersAndFactions = typeof(MyFactionCollection).GetField("m_relationsBetweenPlayersAndFactions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance);
             var m_factionRequests = typeof(MyFactionCollection).GetField("m_factionRequests", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance);
             var m_playerToFactionsVis = typeof(MyFactionCollection).GetField("m_playerToFactionsVis", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance);
             
@@ -145,7 +146,7 @@ namespace Torch.Patches
 
                 }
 
-                if (m_relationsBetweenFactions.GetType().GetMethod("ContainsKey")?.Invoke(m_relationsBetweenFactions,
+                if (m_relationsBetweenPlayersAndFactions.GetType().GetMethod("ContainsKey")?.Invoke(m_relationsBetweenPlayersAndFactions,
                         new object[]
                                 { new MyFactionCollection.MyRelatablePair(relation.PlayerId, relation.FactionId) }) is
                             bool containsKey && containsKey)
@@ -154,7 +155,7 @@ namespace Torch.Patches
                         continue;
                 }
                 
-                m_relationsBetweenFactions.GetType().GetMethod("Add")?.Invoke(m_relationsBetweenFactions, new object[] { new MyFactionCollection.MyRelatablePair(relation.PlayerId, relation.FactionId), new Tuple<MyRelationsBetweenFactions, int>(rel, rep) });
+                m_relationsBetweenPlayersAndFactions.GetType().GetMethod("Add")?.Invoke(m_relationsBetweenPlayersAndFactions, new object[] { new MyFactionCollection.MyRelatablePair(relation.PlayerId, relation.FactionId), new Tuple<MyRelationsBetweenFactions, int>(rel, rep) });
             }
 
             foreach (var request in builder.Requests)
