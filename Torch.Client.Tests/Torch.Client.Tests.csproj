@@ -71,10 +71,6 @@
       <Project>{fba5d932-6254-4a1e-baf4-e229fa94e3c2}</Project>
       <Name>Torch.API</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Torch.Client\Torch.Client.csproj">
-      <Project>{e36df745-260b-4956-a2e8-09f08b2e7161}</Project>
-      <Name>Torch.Client</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Torch.Tests\Torch.Tests.csproj">
       <Project>{c3c8b671-6ad1-44aa-a8da-e0c0dc0fedf5}</Project>
       <Name>Torch.Tests</Name>
