@@ -207,6 +207,7 @@ namespace Torch.Patches
                         text: MySpaceTexts.Economy_Notification_ReputationDecreased, font: MyFontEnum.Red)));
 
             _compatDefaultFactions.Invoke(__instance, new object[] { null });
+            _log.Info("Factions INIT END");
             return false;
         }
     }
