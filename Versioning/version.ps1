@@ -5,7 +5,12 @@ $branchName = $ENV:BRANCH_NAME
 Write-Host "Build Salt: $buildSalt"
 Write-Host "Branch Name: $branchName"
 
-$gitSimpleVersion = git describe --tags --abbrev=0
+$gitSimpleVersion = git describe --tags --abbrev=0 2>$null
+if (!$gitSimpleVersion) {
+    Write-Host "No tags found in the repository. Using default version."
+    $gitSimpleVersion = "0.0.1" # Default version
+}
+
 $simpleVersionStandard = echo $gitSimpleVersion | Select-String -Pattern "([0-9]+)\.([0-9]+)\.([0-9]+)" | % {$_.Matches} | %{$_.Groups[1].Value+"."+$_.Groups[2].Value+"."+$_.Groups[3].Value}
 $dotNetVersion = "$simpleVersionStandard.$buildSalt"
 $infoVersion = -join(("$gitSimpleVersion" -replace "([0-9]+)\.([0-9]+)\.([0-9]+)","$dotNetVersion"), "-", "$branchName")
