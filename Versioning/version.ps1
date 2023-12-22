@@ -21,4 +21,4 @@ using System.Reflection;
 
 echo $fileContent | Set-Content "$PSScriptRoot/AssemblyVersion.cs"
 
-echo "Information Version: $infoVersion"
+echo "$infoVersion"
