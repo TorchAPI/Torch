@@ -1,13 +1,8 @@
 $buildSalt = $ENV:BUILD_NUMBER
 $branchName = $ENV:BRANCH_NAME
 
-# Writing build salt and branch name
-Write-Host "Build Salt: $buildSalt"
-Write-Host "Branch Name: $branchName"
-
 $gitSimpleVersion = git describe --tags --abbrev=0 2>$null
 if (!$gitSimpleVersion) {
-    Write-Host "No tags found in the repository. Using default version."
     $gitSimpleVersion = "0.0.1" # Default version
 }
 
