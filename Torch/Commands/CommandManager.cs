@@ -61,9 +61,9 @@ namespace Torch.Commands
                 if (commandAttrib == null)
                     continue;
 
-                var command = new Command(plugin, method);
+                var command = new Command(plugin, method, commandAttrib);
                 var cmdPath = string.Join(".", command.Path);
-                _log.Info($"Registering command '{cmdPath}'");
+                _log.Info($"Registering command '{cmdPath}'" + (!string.IsNullOrEmpty(command.Alias) ? $" (alias: {string.Join(", ", command.Alias)})" : ""));
 
                 if (!Commands.AddCommand(command))
                     _log.Error($"Command path {cmdPath} is already registered.");
