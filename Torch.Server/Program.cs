@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Management;
 using System.Net;
 using System.Reflection;
 using System.ServiceProcess;
@@ -62,7 +63,7 @@ namespace Torch.Server
                 }
 
                 // Breaks on Windows Server 2019
-                if ((!new ComputerInfo().OSFullName.Contains("Server 2019") && !new ComputerInfo().OSFullName.Contains("Server 2022")) && !Environment.UserInteractive)
+                if (IsRunningAsService())
                 {
                     using (var service = new TorchService(args))
                         ServiceBase.Run(service);
@@ -80,6 +81,21 @@ namespace Torch.Server
                 log.Fatal(runException.ToString());
                 return;
             }
+        }
+
+        static bool IsRunningAsService()
+        {
+            // Check if the parent process is services.exe
+            using(var currentProcess = Process.GetCurrentProcess())
+            using(var parentProcess = Process.GetProcessById(GetParentProcessId(currentProcess.Id)))
+                return parentProcess != null && parentProcess.ProcessName.StartsWith("services", StringComparison.OrdinalIgnoreCase);
+        }
+
+        static int GetParentProcessId(int processId)
+        {
+            using(var searcher = new ManagementObjectSearcher($"SELECT ParentProcessId FROM Win32_Process WHERE ProcessId={processId}"))
+            using(var results = searcher.Get())
+                return Convert.ToInt32(results.OfType<ManagementObject>().First()["ParentProcessId"]);
         }
     }
 }
