@@ -298,6 +298,7 @@ quit";
                 Thread.Sleep(5000);
                 var exe = typeof(Program).Assembly.Location;
                 Config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
+                Config.TempAutostart = true;
                 Process.Start(exe, Config.ToString());
             }
             else
