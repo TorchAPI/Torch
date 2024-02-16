@@ -341,12 +341,14 @@ namespace Torch.Commands
                             ITorchBase torch = (mod as CommandModule)?.Context?.Torch;
                             Debug.Assert(torch != null);
                             torch.Stop();
+                            torch.Destroy();
                         }, this, TaskContinuationOptions.RunContinuationsAsynchronously);
                     }
                     else
                     {
                         Log.Info("Stopping server.");
-                        Context.Torch.Invoke(() => Context.Torch.Stop());
+                        Context.Torch.Stop();
+                        Context.Torch.Destroy();
                     }
 
                         
@@ -407,7 +409,7 @@ namespace Torch.Commands
                     }
 
                     Log.Warn("Initiating server restart.");
-                    Context.Torch.Invoke(() => Context.Torch.Restart(save));
+                    Context.Torch.Restart(save);
                     yield break;
                 }
 
