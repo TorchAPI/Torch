@@ -106,8 +106,14 @@ namespace Torch.Server.ViewModels
                 //else if (!modInfo.Tags.Contains(""))
                 else
                 {
-                    mod.FriendlyName = modInfos[mod.PublishedFileId].Title;
-                    mod.Description = modInfos[mod.PublishedFileId].Description;
+                    var modInfo = modInfos[mod.PublishedFileId];
+                    
+                    if (!string.IsNullOrEmpty(modInfo.Title))
+                        mod.FriendlyName = modInfo.Title;
+
+                    if (!string.IsNullOrEmpty(modInfo.Description))
+                        mod.Description = modInfo.Description;
+
                     //mod.Name = modInfos[mod.PublishedFileId].FileName;
                 }
             }

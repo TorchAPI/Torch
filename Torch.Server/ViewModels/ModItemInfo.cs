@@ -135,8 +135,13 @@ namespace Torch.Server.ViewModels
             else
             {
                 Log.Info($"Mod Info successfully retrieved!");
-                FriendlyName = modInfo.Title;
-                Description = modInfo.Description;
+
+                if (!string.IsNullOrEmpty(modInfo.Title))
+                    FriendlyName = modInfo.Title;
+
+                if (!string.IsNullOrEmpty(modInfo.Description))
+                    Description = modInfo.Description;
+                
                 //Name = modInfo.FileName;
                 return true;
             }
