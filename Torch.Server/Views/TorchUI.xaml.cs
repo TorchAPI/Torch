@@ -31,6 +31,7 @@ namespace Torch.Server
     {
         private TorchServer _server;
         private TorchConfig _config;
+        public static TorchUI Instance;
 
         private bool _autoscrollLog = true;
         private bool _needScroll;
@@ -61,6 +62,7 @@ namespace Torch.Server
             Themes.uiSource = this;
             Themes.SetConfig(_config);
             Title = $"{_config.InstanceName} - Torch {server.TorchVersion}, SE {server.GameVersion}";
+            Instance = this;
             
             Loaded += TorchUI_Loaded;
         }
