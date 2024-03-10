@@ -63,10 +63,10 @@
         </StackPanel>
         <TabControl Grid.Row="2" Height="Auto" x:Name="TabControl" Margin="5,10,5,5">
             <TabItem Header="Log">
-                <RichTextBox x:Name="ConsoleText" VerticalScrollBarVisibility="Visible" FontFamily="Consolas" IsReadOnly="True" Background="#0c0c0c"/>
+                <RichTextBox x:FieldModifier="public" x:Name="ConsoleText" VerticalScrollBarVisibility="Visible" FontFamily="Consolas" IsReadOnly="True" Background="#0c0c0c"/>
             </TabItem>
             <TabItem Header="Configuration">
-                <Grid IsEnabled="{Binding Path=HasRun, Converter={StaticResource InverseBool}}">
+                <Grid IsEnabled="{Binding Path=CanRun}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition/>
