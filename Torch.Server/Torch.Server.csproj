@@ -290,6 +290,9 @@
       <DependentUpon>CharacterView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Extensions.cs" />
+    <Compile Include="Views\LogEventViewer.xaml.cs">
+      <DependentUpon>LogEventViewer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ModListControl.xaml.cs">
       <DependentUpon>ModListControl.xaml</DependentUpon>
     </Compile>
@@ -463,6 +466,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\LogEventViewer.xaml" />
     <Page Include="Views\ModListControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -65,6 +65,11 @@
             <TabItem Header="Log">
                 <RichTextBox x:FieldModifier="public" x:Name="ConsoleText" VerticalScrollBarVisibility="Visible" FontFamily="Consolas" IsReadOnly="True" Background="#0c0c0c"/>
             </TabItem>
+            
+            <TabItem Header="Log Event viewer">
+                <views:LogEventViewer />
+            </TabItem>
+            
             <TabItem Header="Configuration">
                 <Grid IsEnabled="{Binding Path=CanRun}">
                     <Grid.RowDefinitions>
