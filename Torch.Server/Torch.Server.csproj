@@ -254,6 +254,7 @@
     <Compile Include="Managers\UpdateManager.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Initializer.cs" />
+    <Compile Include="Patches\PortCheckingPatch.cs" />
     <Compile Include="Patches\PromotePatch.cs" />
     <Compile Include="Patches\ServerResponsePatch.cs" />
     <Compile Include="Patches\SteamLoginPatch.cs" />
