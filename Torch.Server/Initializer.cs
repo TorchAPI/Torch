@@ -302,7 +302,7 @@ quit";
             }
             else
             {
-                MessageBox.Show("Torch encountered a fatal error and needs to close. Please check the logs for details.");
+                MessageBox.Show("Torch encountered a fatal error and needs to close. Please check the logs or the log event viewer for details.", "Torch Fatal Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             Process.GetCurrentProcess().Kill();

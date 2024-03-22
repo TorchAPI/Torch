@@ -254,6 +254,7 @@
     <Compile Include="Managers\UpdateManager.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Initializer.cs" />
+    <Compile Include="Patches\NlogCustomTarget.cs" />
     <Compile Include="Patches\PortCheckingPatch.cs" />
     <Compile Include="Patches\PromotePatch.cs" />
     <Compile Include="Patches\ServerResponsePatch.cs" />
@@ -292,6 +293,9 @@
     <Compile Include="Views\Extensions.cs" />
     <Compile Include="Views\LogEventViewer.xaml.cs">
       <DependentUpon>LogEventViewer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\LogMessageWindow.xaml.cs">
+      <DependentUpon>LogMessageWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ModListControl.xaml.cs">
       <DependentUpon>ModListControl.xaml</DependentUpon>
@@ -467,6 +471,7 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\LogEventViewer.xaml" />
+    <Page Include="Views\LogMessageWindow.xaml" />
     <Page Include="Views\ModListControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

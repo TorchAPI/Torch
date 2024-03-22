@@ -16,19 +16,24 @@
         <!-- make a Level and class filter for the log, along with a reset button -->
         <StackPanel Orientation="Horizontal">
             <TextBlock Text="Level:" Margin="0,0,5,0"/>
-            <ComboBox x:Name="LevelFilterComboBox" Width="100" ItemsSource="{Binding LogLevels}" Margin="0,0,5,0" />
+            <ComboBox x:Name="LevelFilterComboBox" Width="100" ItemsSource="{Binding LogLevels}" Margin="0,0,5,0" SelectionChanged="LevelFilterComboBox_SelectionChanged"/>
             <TextBlock Text="Class:" Margin="0,0,5,0"/>
-            <ComboBox x:Name="ClassFilterComboBox" Width="130" ItemsSource="{Binding LogClasses}" Margin="0,0,5,0" />
+            <ComboBox x:Name="ClassFilterComboBox" Width="130" ItemsSource="{Binding LogClasses}" Margin="0,0,5,0" SelectionChanged="ClassFilterComboBox_SelectionChanged"/>
+            
+            <Button x:Name="ResetFiltersButton" Content="Reset filters" Margin="0,0,5,0" Click="ResetFiltersButton_Click" />
+            <!-- test log button -->
+            <Button x:Name="ClearButton" Content="Clear table" Margin="0,0,5,0" Click="ClearButton_Click" />
         </StackPanel>
 
         
-        <DataGrid Grid.Row="1" x:Name="LogEventViewerDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" CanUserResizeColumns="true" CanUserResizeRows="False" CanUserSortColumns="False" IsReadOnly="True" ItemsSource="{Binding LogEvents}">
+        <DataGrid Grid.Row="1" x:Name="LogEventViewerDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" MouseDoubleClick="LogEventViewerDataGrid_MouseDoubleClick" CanUserDeleteRows="False" CanUserReorderColumns="False" CanUserResizeColumns="true" CanUserResizeRows="False" CanUserSortColumns="True" IsReadOnly="True" ItemsSource="{Binding LogEvents}" RowHeight="20">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="50"/>
-                <DataGridTextColumn Header="Level" Binding="{Binding Level}" Width="80" />
-                <DataGridTextColumn Header="Class" Binding="{Binding Class}" Width="120"/>
-                <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*" />
+                <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="60"/>
+                <DataGridTextColumn Header="Level" Binding="{Binding Level}" Width="50" />
+                <DataGridTextColumn Header="Class" Binding="{Binding Class}" Width="200"/>
+                <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
+
     </Grid>
 </UserControl>
