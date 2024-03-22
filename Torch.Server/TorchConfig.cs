@@ -133,8 +133,8 @@ namespace Torch.Server
         [Arg("plugins", "Starts Torch with the given plugin GUIDs (space delimited).")]
         public List<Guid> Plugins { get; set; } = new List<Guid>();
 
-        [Arg("localplugins", "Loads all pluhins from disk, ignores the plugins defined in config.")]
-        [Display(Name = "Local Plugins", Description = "Loads all pluhins from disk, ignores the plugins defined in config.", GroupName = "In-Game")]
+        [Arg("localplugins", "Loads all plugins from disk, ignores the plugins defined in config.")]
+        [Display(Name = "Local Plugins", Description = "Loads all plugins from disk, ignores the plugins defined in config.", GroupName = "In-Game")]
         public bool LocalPlugins { get => _localPlugins; set => Set(value, ref _localPlugins); }
 
         [Arg("disconnect", "When server restarts, all clients are rejected to main menu to prevent auto rejoin.")]
