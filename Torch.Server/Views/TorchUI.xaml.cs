@@ -15,10 +15,12 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using NLog;
+using NLog.Config;
 using NLog.Targets.Wrappers;
 using Sandbox;
 using Torch.API;
 using Torch.API.Managers;
+using Torch.Patches;
 using Torch.Server.Managers;
 using MessageBoxResult = System.Windows.MessageBoxResult;
 
@@ -31,6 +33,7 @@ namespace Torch.Server
     {
         private TorchServer _server;
         private TorchConfig _config;
+        private static Logger _log = LogManager.GetCurrentClassLogger();
         public static TorchUI Instance;
 
         private bool _autoscrollLog = true;
@@ -46,6 +49,18 @@ namespace Torch.Server
             //TODO: data binding for whole server
             DataContext = server;
             InitializeComponent();
+
+            var config = LogManager.Configuration;
+            var customTarget = new NlogCustomTarget()
+            {
+                Name = "NlogCustomTarget"
+            };
+            config.AddTarget(customTarget);
+            var rule = new LoggingRule("*", LogLevel.Warn, customTarget); // Adjust the log level as needed
+            config.LoggingRules.Add(rule);
+
+            // Apply changes
+            LogManager.Configuration = config;
 
             AttachConsole();
 
