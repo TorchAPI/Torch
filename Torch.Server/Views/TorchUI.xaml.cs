@@ -181,8 +181,16 @@ namespace Torch.Server
         {
             var result = MessageBox.Show("Are you sure you want to stop the server?", "Stop Server", MessageBoxButton.YesNo);
 
-            if (result == MessageBoxResult.Yes)
-                _server.Invoke(() => _server.Stop());
+            if (result != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            Task.Run(() =>
+            {
+                _server.Stop();
+                _server.Destroy();
+            });
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -197,7 +205,10 @@ namespace Torch.Server
             //_config.Save(); //you idiot
 
             if (_server?.State == ServerState.Running)
+            {
                 _server.Stop();
+                _server.Destroy();
+            }
 
             _scrollTimer.Stop();
             
