@@ -196,6 +196,7 @@ namespace Torch.Server
 
             //_config.Save(); //you idiot
 
+            _log.Info("Closing Torch...");
             if (_server?.State == ServerState.Running)
                 _server.Stop();
 
