@@ -60,7 +60,8 @@ namespace Torch.Server.Views
             DataContext = new LogViewModel();
 
             NlogCustomTarget.LogEventReceived += LogEvent;
-            
+            TorchServer.Instance.SessionUnloading += Unloading;
+
 
             //on loaded event
             Loaded += (sender, args) =>
@@ -69,6 +70,11 @@ namespace Torch.Server.Views
                 LevelFilterComboBox.SelectedIndex = 0;
                 ClassFilterComboBox.SelectedIndex = 0;
             };
+        }
+
+        private void Unloading()
+        {
+            NlogCustomTarget.LogEventReceived -= LogEvent;
         }
 
         private void LogEvent(LogEventInfo obj)
@@ -95,8 +101,6 @@ namespace Torch.Server.Views
                 }
             });
         }
-
-
         private void LevelFilterComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ApplyFilters();
