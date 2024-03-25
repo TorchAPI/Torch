@@ -125,12 +125,12 @@ namespace Torch.Server.Views
                 string selectedLevel = LevelFilterComboBox.SelectedItem as string;
                 string selectedClass = ClassFilterComboBox.SelectedItem as string;
 
-                // Use LINQ to apply filters more concisely
+                // Use LINQ to filter LogEvents based on the selected criteria
                 var filtered = ((LogViewModel)DataContext).LogEvents.Where(logEvent =>
                 {
-                    bool levelMatch = selectedLevel == "No filter" ||
+                    bool levelMatch = (selectedLevel == "No filter" && logEvent.Level != "Warn") || // Exclude "Warn" unless explicitly selected
                                       logEvent.Level.Equals(selectedLevel, StringComparison.OrdinalIgnoreCase);
-                    bool classMatch = selectedClass == "No filter" ||
+                    bool classMatch = selectedClass == "No filter" || 
                                       logEvent.Class.Equals(selectedClass, StringComparison.OrdinalIgnoreCase);
                     return levelMatch && classMatch;
                 }).ToList();
@@ -142,9 +142,11 @@ namespace Torch.Server.Views
             }
             catch (Exception e)
             {
-                // ignored
+                // Consider logging the exception or handling it as needed
+                MessageBox.Show($"Error applying filters: {e.Message}", "Filter Error");
             }
         }
+
 
         private void LogEventViewerDataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
