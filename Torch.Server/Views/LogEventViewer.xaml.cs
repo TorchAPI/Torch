@@ -5,7 +5,9 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using NLog;
+using Torch.API;
 using Torch.Patches;
 using MessageBox = System.Windows.Forms.MessageBox;
 
@@ -69,6 +71,11 @@ namespace Torch.Server.Views
                 //set the log level filter to the first item in the combo box
                 LevelFilterComboBox.SelectedIndex = 0;
                 ClassFilterComboBox.SelectedIndex = 0;
+                
+                if (TorchServer.Instance.Config.BranchName == TorchBranchType.dev)
+                {
+                    TestButton.Visibility = Visibility.Visible;
+                }
             };
         }
 
@@ -80,7 +87,7 @@ namespace Torch.Server.Views
         private void LogEvent(LogEventInfo obj)
         {
             // Use Dispatcher.Invoke to ensure that the following code block is executed on the UI thread.
-            Dispatcher.Invoke(() =>
+            Dispatcher.BeginInvoke(() =>
             {
                 try
                 {
@@ -92,14 +99,14 @@ namespace Torch.Server.Views
                         ClassFilterComboBox.ItemsSource = updatedClassFilters;
                         classFilters = updatedClassFilters; // Ensure classFilters is updated for future checks.
                     }
-            
+    
                     AddRow(obj.Level.ToString(), obj.LoggerName, (obj.Message == "{0}" ? obj.FormattedMessage : obj.Message));
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message);
                 }
-            });
+            }, DispatcherPriority.Background);
         }
         private void LevelFilterComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -182,6 +189,11 @@ namespace Torch.Server.Views
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
             ((LogViewModel) DataContext).LogEvents.Clear();
+        }
+
+        private void TestButton_OnClickButton_Click(object sender, RoutedEventArgs e)
+        {
+            _log.Error("Test error message");
         }
     }
 }

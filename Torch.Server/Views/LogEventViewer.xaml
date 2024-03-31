@@ -21,8 +21,10 @@
             <ComboBox x:Name="ClassFilterComboBox" Width="130" ItemsSource="{Binding LogClasses}" Margin="0,0,5,0" SelectionChanged="ClassFilterComboBox_SelectionChanged"/>
             
             <Button x:Name="ResetFiltersButton" Content="Reset filters" Margin="0,0,5,0" Click="ResetFiltersButton_Click" />
-            <!-- test log button -->
             <Button x:Name="ClearButton" Content="Clear table" Margin="0,0,5,0" Click="ClearButton_Click" />
+            
+            <Button x:Name="TestButton" Content="Test log" Margin="0,0,5,0" Click="TestButton_OnClickButton_Click" Visibility="Hidden" />
+
         </StackPanel>
 
         
