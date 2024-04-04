@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Sandbox.Game;
+using Color = VRageMath.Color;
 
 namespace Torch.Server.Views.Entities
 {
@@ -32,6 +35,15 @@ namespace Torch.Server.Views.Entities
         {
             this.Resources.MergedDictionaries.Clear();
             this.Resources.MergedDictionaries.Add(dictionary);
+        }
+
+        private void SendDM_ToPlayer(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(PlayerGameID.Text)) return;
+            if (string.IsNullOrWhiteSpace(DM_TextToPlayer.Text)) return;
+            if (!long.TryParse(PlayerGameID.Text, out long Id)) return;
+            
+            MyVisualScriptLogicProvider.SendChatMessageColored(DM_TextToPlayer.Text, Color.Red, "Server", Id);
         }
     }
 }

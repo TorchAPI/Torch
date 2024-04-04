@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Controls;
 using NLog;
+using Sandbox.Game;
 using Sandbox.Game.Entities;
+using Sandbox.Game.Entities.Character;
+using Sandbox.Game.Entities.Cube;
 using Sandbox.Game.World;
 using Torch.API.Managers;
 using Torch.Collections;
@@ -36,7 +40,7 @@ namespace Torch.Server.ViewModels.Entities
             }
         }
 
-        public long Id => Entity.EntityId;
+        public long Id => Entity?.EntityId ?? 0; // Throws null then gives entity id
 
         public MtObservableList<EntityControlViewModel> EntityControls { get; private set; }
 
@@ -50,6 +54,8 @@ namespace Torch.Server.ViewModels.Entities
                 OnPropertyChanged();
             }
         }
+        
+        public virtual string Speed => Entity?.Physics?.Speed.ToString("N") ?? "0";
 
         private string _descriptiveName;
         public string DescriptiveName
