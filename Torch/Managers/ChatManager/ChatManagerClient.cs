@@ -83,7 +83,7 @@ namespace Torch.Managers.ChatManager
             {
                 _chatMessageRecievedReplacer = _chatMessageReceivedFactory.Invoke();
                 _scriptedChatMessageRecievedReplacer = _scriptedChatMessageReceivedFactory.Invoke();
-                _chatMessageRecievedReplacer.Replace(new Action<ulong, string, ChatChannel, long, string>(Multiplayer_ChatMessageReceived),
+                _chatMessageRecievedReplacer.Replace(new Action<ulong, string, ChatChannel, long, string, ulong?>(Multiplayer_ChatMessageReceived),
                     MyMultiplayer.Static);
                 _scriptedChatMessageRecievedReplacer.Replace(
                     new Action<string, string, string, Color>(Multiplayer_ScriptedChatMessageReceived), MyMultiplayer.Static);
@@ -137,12 +137,12 @@ namespace Torch.Managers.ChatManager
         }
 
 
-        private void Multiplayer_ChatMessageReceived(ulong steamUserId, string messageText, ChatChannel channel, long targetId, string customAuthorName)
+        private void Multiplayer_ChatMessageReceived(ulong steamUserId, string messageText, ChatChannel channel, long targetId, string customAuthorName,  ulong? customSenderId )
         {
             var torchMsg = new TorchChatMessage(steamUserId, messageText, channel, targetId,
                 (steamUserId == MyGameService.UserId) ? MyFontEnum.DarkBlue : MyFontEnum.Blue);
             if (!RaiseMessageRecieved(torchMsg) && HasHud)
-                _hudChatMessageReceived.Invoke(MyHud.Chat, steamUserId, messageText, channel, targetId, customAuthorName);
+                _hudChatMessageReceived.Invoke(MyHud.Chat, steamUserId, messageText, channel, targetId, customAuthorName, customSenderId ?? 0);
         }
 
         private void Multiplayer_ScriptedChatMessageReceived(string message, string author, string font, Color color)
@@ -165,7 +165,7 @@ namespace Torch.Managers.ChatManager
         protected static bool HasHud => !Sandbox.Engine.Platform.Game.IsDedicated;
 
         [ReflectedMethod(Name = _hudChatMessageReceivedName)]
-        private static Action<MyHudChat, ulong, string, ChatChannel, long, string> _hudChatMessageReceived;
+        private static Action<MyHudChat, ulong, string, ChatChannel, long, string, ulong?> _hudChatMessageReceived;
         [ReflectedMethod(Name = _hudChatScriptedMessageReceivedName)]
         private static Action<MyHudChat, string, string, string, Color> _hudChatScriptedMessageReceived;
 
