@@ -36,6 +36,8 @@ namespace Torch
         string LoginToken { get; set; }
         bool RestartOnGameUpdate { get; set; }
         int GameUpdateRestartDelayMins { get; set; }
+        bool EnableWhitelist { get; set; }
+        List<ulong> Whitelist { get; set; }
 
         void Save(string path = null);
     }
