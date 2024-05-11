@@ -41,11 +41,11 @@ namespace Torch.Mod
             MyLog.Default.WriteLineAndConsole("TORCH MOD: Mod communication registered successfully.");
         }
 
-        private static void MessageHandler(ushort arg1, byte[] arg2, ulong arg3, bool arg4)
+        private static void MessageHandler(ushort handlerId, byte[] messageSentBytes, ulong senderPlayerId, bool isArrivedFromServer)
         {
             try
             {
-                MessageBase msgBase = MyAPIGateway.Utilities.SerializeFromBinary<MessageBase>(arg2);
+                MessageBase msgBase = MyAPIGateway.Utilities.SerializeFromBinary<MessageBase>(messageSentBytes);
 
 
                 if (false)
@@ -54,7 +54,14 @@ namespace Torch.Mod
                 if (MyAPIGateway.Multiplayer.IsServer)
                     msgBase.ProcessServer();
                 else
+                {
+                    if (!isArrivedFromServer)
+                    {
+                        MyLog.Default.WriteLineAndConsole($"TORCH MOD: {senderPlayerId} sending messages but isn't server");
+                        return;
+                    }
                     msgBase.ProcessClient();
+                }
 
 
             }
