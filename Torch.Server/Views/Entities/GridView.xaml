@@ -15,6 +15,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal">
@@ -27,9 +29,16 @@
         </StackPanel>
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <Label Content="EntityID" Width="100"/>
-            <TextBox Text="{Binding Id, Mode=OneWay}" Margin="3" />
+            <TextBox x:Name="EntityIDText" Text="{Binding Id, Mode=OneWay}" Margin="3" />
         </StackPanel>
-        <ScrollViewer Grid.Row="3" Margin="3" VerticalScrollBarVisibility="Auto">
+        <StackPanel Grid.Row="3" Orientation="Horizontal">
+            <Label Content="Speed" Width="100" />
+            <TextBox Text="{Binding Speed, Mode=OneWay}" Margin="3" />
+        </StackPanel>
+        <StackPanel Grid.Row="4" Orientation="Horizontal">
+            <Button Content="Repair" Margin="3" Width="100" Tag="{Binding ElementName=EntityIDText, Path=Text}" Click="RepairGrid"/>
+        </StackPanel>
+        <ScrollViewer Grid.Row="5" Margin="3" VerticalScrollBarVisibility="Auto">
             <local:EntityControlsView DataContext="{Binding}"/>
         </ScrollViewer>
     </Grid>
