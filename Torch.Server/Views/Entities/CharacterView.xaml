@@ -13,6 +13,11 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal">
@@ -23,7 +28,28 @@
             <Label Content="Position" Width="100"/>
             <TextBox Text="{Binding Position}" Margin="3" />
         </StackPanel>
-        <ScrollViewer Grid.Row="2" Margin="3" VerticalScrollBarVisibility="Auto">
+        <StackPanel Grid.Row="2" Orientation="Horizontal">
+            <Label Content="SteamID" Width="100" />
+            <TextBox Name="SelectedPlayerSteamID" Text="{Binding SteamID, Mode=OneWay}" Margin="3" IsReadOnly="True"/>
+        </StackPanel>
+        <StackPanel Grid.Row="3" Orientation="Horizontal">
+            <Label Content="GameID" Width="100" />
+            <TextBox Name="PlayerGameID" Text="{Binding GameID, Mode=OneWay}" Margin="3" IsReadOnly="True" />
+        </StackPanel>
+        <StackPanel Grid.Row="4" Orientation="Horizontal">
+            <Label Content="Last Login" Width="100" />
+            <TextBox Text="{Binding LoginTime, Mode=OneWay}" Margin="3" IsReadOnly="True" />
+        </StackPanel>
+        <StackPanel Grid.Row="5" Orientation="Horizontal">
+            <Label Content="Speed" Width="100" />
+            <TextBox Text="{Binding Speed, Mode=OneWay}" Margin="3" IsReadOnly="True" />
+        </StackPanel>
+        <StackPanel Grid.Row="6" Orientation="Vertical">
+            <Label Content="Send DM" HorizontalAlignment="Left" />
+            <TextBox x:Name="DM_TextToPlayer" Height="40" Margin="3"/>
+            <Button Content="Send" Margin="3" Click="SendDM_ToPlayer"/>
+        </StackPanel>
+        <ScrollViewer Grid.Row="7" Margin="3" VerticalScrollBarVisibility="Auto">
             <local:EntityControlsView DataContext="{Binding}"/>
         </ScrollViewer>
     </Grid>

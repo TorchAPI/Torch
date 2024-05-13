@@ -6,10 +6,12 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox.Game.Entities.Cube;
+using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces;
 using Torch.Collections;
 using Torch.Server.ViewModels.Entities;
+using VRage.Game.ModAPI;
 
 namespace Torch.Server.ViewModels.Blocks
 {
@@ -46,6 +48,26 @@ namespace Torch.Server.ViewModels.Blocks
                     ((MySlimBlock)Block.SlimBlock).TransferAuthorship(value);
                     OnPropertyChanged();
                 });
+            }
+        }
+
+        public string OwnedBy
+        {
+            get
+            {
+                if (Block != null && Block.OwnerId != 0)
+                {
+                    ulong getSteamId = MySession.Static.Players.TryGetSteamId(Block.OwnerId);
+                    List<IMyIdentity> players = new List<IMyIdentity>();
+                    MyAPIGateway.Players.GetAllIdentites(players);
+                    IMyIdentity player = players.FirstOrDefault(x => x.IdentityId == Block.OwnerId);
+                    if (player != null)
+                    {
+                        return $"{player.DisplayName} [{getSteamId}]";
+                    }
+                }
+                
+                return "Unknown/No Ownership";
             }
         }
 

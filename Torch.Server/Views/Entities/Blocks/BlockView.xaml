@@ -20,8 +20,12 @@
         <StackPanel Grid.Row="0">
             <Label Content="{Binding FullName}" FontSize="16" />
             <StackPanel Orientation="Horizontal">
-                <Label Content="Built By: "/>
+                <Label Content="Built By: " Width="100"/>
                 <TextBox Text="{Binding BuiltBy}" HorizontalAlignment="Stretch" Margin="3"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Owned By: " Width="100"/>
+                <TextBox Text="{Binding OwnedBy, Mode=OneWay}" Margin="3"/>
             </StackPanel>
             <Label Content="Properties"/>
         </StackPanel>

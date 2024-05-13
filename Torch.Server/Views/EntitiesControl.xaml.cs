@@ -40,6 +40,10 @@ namespace Torch.Server.Views
             DataContext = Entities;
             Entities.Init();
             SortCombo.ItemsSource = Enum.GetNames(typeof(EntityTreeViewModel.SortEnum));
+            SortCombo_GridTab.ItemsSource = Enum.GetNames(typeof(EntityTreeViewModel.SortEnum));
+            SortCombo_Characters.ItemsSource = Enum.GetNames(typeof(EntityTreeViewModel.SortEnum));
+            SortCombo_Voxels.ItemsSource = Enum.GetNames(typeof(EntityTreeViewModel.SortEnum));
+            SortCombo_FloatingObjects.ItemsSource = Enum.GetNames(typeof(EntityTreeViewModel.SortEnum));
         }
         
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -47,14 +51,21 @@ namespace Torch.Server.Views
             if (e.NewValue is EntityViewModel vm)
             {
                 Entities.CurrentEntity = vm;
-                if (e.NewValue is GridViewModel gvm)
-                    EditorFrame.Content = new Entities.GridView {DataContext = gvm};
-                if (e.NewValue is BlockViewModel bvm)
-                    EditorFrame.Content = new BlockView {DataContext = bvm};
-                if (e.NewValue is VoxelMapViewModel vvm)
-                    EditorFrame.Content = new VoxelMapView {DataContext = vvm};
-                if (e.NewValue is CharacterViewModel cvm)
-                    EditorFrame.Content = new CharacterView {DataContext = cvm};
+                switch (e.NewValue)
+                {
+                    case GridViewModel gvm:
+                        EditorFrame.Content = new Entities.GridView {DataContext = gvm};
+                        break;
+                    case BlockViewModel bvm:
+                        EditorFrame.Content = new BlockView {DataContext = bvm};
+                        break;
+                    case VoxelMapViewModel vvm:
+                        EditorFrame.Content = new VoxelMapView {DataContext = vvm};
+                        break;
+                    case CharacterViewModel cvm:
+                        EditorFrame.Content = new CharacterView {DataContext = cvm};
+                        break;
+                }
             }
             else
             {
@@ -62,6 +73,84 @@ namespace Torch.Server.Views
                 EditorFrame.Content = null;
             }
         }
+        
+        private void TreeView_Grids_OnSelectionItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (e.NewValue is EntityViewModel vm)
+            {
+                Entities.CurrentEntity = vm;
+                switch (e.NewValue)
+                {
+                    case GridViewModel gvm:
+                        EditorFrame_Grids.Content = new Entities.GridView {DataContext = gvm};
+                        break;
+                    case BlockViewModel bvm:
+                        EditorFrame_Grids.Content = new BlockView {DataContext = bvm};
+                        break;
+                }
+            }
+            else
+            {
+                Entities.CurrentEntity = null;
+                EditorFrame_Grids.Content = null;
+            }
+        }
+
+        private void TreeView_Characters_OnSelectionItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (e.NewValue is EntityViewModel vm)
+            {
+                Entities.CurrentEntity = vm;
+               
+                if (e.NewValue is CharacterViewModel cvm)
+                    EditorFrame_Characters.Content = new CharacterView { DataContext = cvm };
+            }
+            else
+            {
+                Entities.CurrentEntity = null;
+                EditorFrame_Characters.Content = null;
+            }
+        }
+
+        private void TreeView_VoxelMaps_OnSelectionItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (e.NewValue is EntityViewModel vm)
+            {
+                Entities.CurrentEntity = vm;
+                
+                switch (e.NewValue)
+                {
+                    case VoxelMapViewModel vvm:
+                        EditorFrame_VoxelMaps.Content = new VoxelMapView { DataContext = vvm };
+                        break;
+                }
+            }
+            else
+            {
+                Entities.CurrentEntity = null;
+                EditorFrame_VoxelMaps.Content = null;
+            }
+        }
+
+        private void TreeView_FloatingObjects_OnSelectionItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (e.NewValue is EntityViewModel vm)
+            {
+                Entities.CurrentEntity = vm;
+                
+                switch (e.NewValue)
+                {
+                    case FloatingObjectViewModel fvm:
+                        EditorFrame_FloatingObjects.Content = new Entities.GridView { DataContext = fvm };
+                        break;
+                }
+            }
+            else
+            {
+                Entities.CurrentEntity = null;
+                EditorFrame_FloatingObjects.Content = null;
+            }
+        }            
 
         private void Delete_OnClick(object sender, RoutedEventArgs e)
         {
@@ -105,7 +194,6 @@ namespace Torch.Server.Views
                 i.DescriptiveName = i.GetSortedName(sort);
             foreach (var i in Entities.SortedVoxelMaps)
                 i.DescriptiveName = i.GetSortedName(sort);
-            
         }
 
         private void DeleteFloating_OnClick(object sender, RoutedEventArgs e)
