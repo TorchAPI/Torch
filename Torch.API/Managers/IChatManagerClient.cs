@@ -25,16 +25,16 @@ namespace Torch.API.Managers
         #region Backwards compatibility
 
         [Obsolete]
-        public TorchChatMessage(string author, string message, string font = DEFAULT_FONT) 
-            : this(author, message, default, font) { }
+        public TorchChatMessage(string author, string message, ulong customSenderId, string font = DEFAULT_FONT) 
+            : this(author, message, default, customSenderId, font) { }
 
         [Obsolete]
-        public TorchChatMessage(string author, ulong authorSteamId, string message, ChatChannel channel, long target, string font = DEFAULT_FONT)
-            : this(author, authorSteamId, message, channel, target, default, font) { }
+        public TorchChatMessage(string author, ulong authorSteamId, string message, ChatChannel channel, long target,  ulong customSenderId, string font = DEFAULT_FONT)
+            : this(author, authorSteamId, message, channel, target, default, customSenderId, font) { }
 
         [Obsolete]
-        public TorchChatMessage(ulong authorSteamId, string message, ChatChannel channel, long target, string font = DEFAULT_FONT)
-            : this(authorSteamId, message, channel, target, default, font) { }
+        public TorchChatMessage(ulong authorSteamId, string message, ChatChannel channel, long target, ulong customSenderId, string font = DEFAULT_FONT)
+            : this(authorSteamId, message, channel, target, default, customSenderId, font) { }
 
         #endregion
         
@@ -44,7 +44,7 @@ namespace Torch.API.Managers
         /// <param name="author">Author's name</param>
         /// <param name="message">Message</param>
         /// <param name="font">Font</param>
-        public TorchChatMessage(string author, string message, Color color, string font = DEFAULT_FONT)
+        public TorchChatMessage(string author, string message, Color color, ulong customSenderId = 0, string font = DEFAULT_FONT)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = null;
@@ -54,6 +54,7 @@ namespace Torch.API.Managers
             Target = 0;
             Font = font;
             Color = color == default ? ColorUtils.TranslateColor(font) : color;
+            CustomSenderId = customSenderId;
         }
 
         /// <summary>
@@ -63,7 +64,7 @@ namespace Torch.API.Managers
         /// <param name="authorSteamId">Author's steam ID</param>
         /// <param name="message">Message</param>
         /// <param name="font">Font</param>
-        public TorchChatMessage(string author, ulong authorSteamId, string message, ChatChannel channel, long target, Color color, string font = DEFAULT_FONT)
+        public TorchChatMessage(string author, ulong authorSteamId, string message, ChatChannel channel, long target, Color color, ulong customSenderId = 0, string font = DEFAULT_FONT)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = authorSteamId;
@@ -73,6 +74,7 @@ namespace Torch.API.Managers
             Target = target;
             Font = font;
             Color = color == default ? ColorUtils.TranslateColor(font) : color;
+            CustomSenderId = customSenderId;
         }
 
         /// <summary>
@@ -81,7 +83,7 @@ namespace Torch.API.Managers
         /// <param name="authorSteamId">Author's steam ID</param>
         /// <param name="message">Message</param>
         /// <param name="font">Font</param>
-        public TorchChatMessage(ulong authorSteamId, string message, ChatChannel channel, long target, Color color, string font = DEFAULT_FONT)
+        public TorchChatMessage(ulong authorSteamId, string message, ChatChannel channel, long target, Color color, ulong customSenderId = 0, string font = DEFAULT_FONT)
         {
             Timestamp = DateTime.Now;
             AuthorSteamId = authorSteamId;
@@ -91,6 +93,7 @@ namespace Torch.API.Managers
             Target = target;
             Font = font;
             Color = color == default ? ColorUtils.TranslateColor(font) : color;
+            CustomSenderId = customSenderId;
         }
 
         /// <summary>
@@ -125,6 +128,10 @@ namespace Torch.API.Managers
         /// The chat message color.
         /// </summary>
         public readonly Color Color;
+        /// <summary>
+        /// Custom sender id.
+        /// </summary>
+        public readonly ulong CustomSenderId;
     }
 
     /// <summary>

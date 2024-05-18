@@ -83,7 +83,7 @@ namespace Torch.Managers.ChatManager
         {
             if (targetSteamId == Sync.MyId)
             {
-                RaiseMessageRecieved(new TorchChatMessage(authorId, message, ChatChannel.Global, 0));
+                RaiseMessageRecieved(new TorchChatMessage(authorId, message, ChatChannel.Global, 0, 0));
                 return;
             }
             if (MyMultiplayer.Static == null)
@@ -116,7 +116,7 @@ namespace Torch.Managers.ChatManager
         {
             if (targetSteamId == Sync.MyId)
             {
-                RaiseMessageRecieved(new TorchChatMessage(author, message, font));
+                RaiseMessageRecieved(new TorchChatMessage(author, message, 0, font));
                 return;
             }
             if (MyMultiplayer.Static == null)
@@ -158,7 +158,7 @@ namespace Torch.Managers.ChatManager
 
         internal void RaiseMessageRecieved(ChatMsg message, ref bool consumed)
         {
-            var torchMsg = new TorchChatMessage(GetMemberName(message.Author), message.Author, message.Text, (ChatChannel)message.Channel, message.TargetId);
+            var torchMsg = new TorchChatMessage(GetMemberName(message.Author), message.Author, message.Text, (ChatChannel)message.Channel, message.TargetId, 0);
             if (_muted.Contains(message.Author))
             {
                 consumed = true;

@@ -174,12 +174,12 @@ namespace Torch.Server
             var commands = _server.CurrentSession?.Managers.GetManager<Torch.Commands.CommandManager>();
             if (commands != null && commands.IsCommand(text))
             {
-                InsertMessage(new TorchChatMessage(TorchBase.Instance.Config.ChatName, text, TorchBase.Instance.Config.ChatColor));
+                InsertMessage(new TorchChatMessage(TorchBase.Instance.Config.ChatName, text, 0,TorchBase.Instance.Config.ChatColor));
                 _server.Invoke(() =>
                 {
                     if (!commands.HandleCommandFromServer(text, InsertMessage))
                     {
-                        InsertMessage(new TorchChatMessage(TorchBase.Instance.Config.ChatName, "Invalid command.", TorchBase.Instance.Config.ChatColor));
+                        InsertMessage(new TorchChatMessage(TorchBase.Instance.Config.ChatName, "Invalid command.",0, TorchBase.Instance.Config.ChatColor));
                         return;
                     }
                 });
