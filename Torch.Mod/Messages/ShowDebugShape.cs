@@ -3,6 +3,7 @@ using ProtoBuf;
 using Sandbox.Game.Entities;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
+using System;
 using System.Collections.Generic;
 using VRage.Game;
 using VRage.Game.Entity;
@@ -52,20 +53,18 @@ namespace Torch.Mod.Messages
             if (remove)
             {
                 clear(uniqueName);
-                return;
             }
             else if (removeAll)
             {
                 clearAll();
-                return;
             }
 
             //MyAPIGateway.Utilities.ShowMessage("Torch", $"Hit process client on debug draw!");
 
             //If its the same unique name, we can add it
-            if (AllDraws.TryGetValue(uniqueName, out DrawDebug draw))
+            if(AllDraws.ContainsKey(uniqueName))
             {
-                draw.drawObjects.AddList(drawObjects);
+                AllDraws[uniqueName].drawObjects.AddList(drawObjects);
             }
             else
             {
@@ -153,11 +152,17 @@ namespace Torch.Mod.Messages
         //static update to update all draws
         public static void refreshAllDraws()
         {
-            //MyRenderProxy.DebugClearPersistentMessages();
-
-            foreach (var draw in AllDraws)
+            try
             {
-                draw.Value.refreshDraw();
+
+                foreach (var draw in AllDraws)
+                {
+                    draw.Value.refreshDraw();
+                }
+
+            }catch(Exception ex)
+            {
+                //do nothings
             }
         }
 
@@ -198,6 +203,8 @@ namespace Torch.Mod.Messages
         [ProtoMember(106)]
         public Vector3D up;
 
+        [ProtoMember(118)]
+        public int wireDivideRatio = 0;
 
         [ProtoMember(120)]
         public float radius;
@@ -244,27 +251,33 @@ namespace Torch.Mod.Messages
         {
             MatrixD worldMatrix = MatrixD.CreateWorld(position, forward, up);
             var material = TorchModCore.id;
-            MySimpleObjectDraw.DrawTransparentBox(ref worldMatrix, ref box, ref color, raster, 1, linethickness, material, material);
+            MySimpleObjectDraw.DrawTransparentBox(ref worldMatrix, ref box, ref color, raster, wireDivideRatio, linethickness, material, material, intensity: intensity);
         }
 
         public void drawSphere()
         {
             var material = TorchModCore.id;
             var transform = MatrixD.CreateTranslation(position);
-            MySimpleObjectDraw.DrawTransparentSphere(ref transform, 10, ref color, raster, 25, material, material, -1);
+            
+            MySimpleObjectDraw.DrawTransparentSphere(ref transform, radius, ref color, raster, wireDivideRatio, material, material, linethickness, intensity: intensity);
         }
 
         public void drawOBBEntity()
         {
             //This will keep updating the draw for live grid box preview
-            //Do not keep searching for entity on draw
-            if (searchAttempts > 10)
+            //Do not keep searching for entity on draw 
+            if (searchAttempts > 250 || entityID == 0)
                 return;
 
-            if (entRef == null && entityID != 0)
+
+            
+
+
+            entRef = MyEntities.GetEntityById(entityID);
+            if (entRef == null )
             {
-                entRef = MyEntities.GetEntityById(entityID);
                 searchAttempts++;
+                return;
             }
 
 
@@ -272,7 +285,7 @@ namespace Torch.Mod.Messages
             var Matrix = entRef.WorldMatrix;
             BoundingBoxD myAabb = entRef.PositionComp.LocalAABB;
 
-            MySimpleObjectDraw.DrawTransparentBox(ref Matrix, ref myAabb, ref color, raster, 1, linethickness, material, material);
+            MySimpleObjectDraw.DrawTransparentBox(ref Matrix, ref myAabb, ref color, raster, wireDivideRatio, linethickness, material, material);
         }
 
 

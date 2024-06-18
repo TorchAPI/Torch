@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using ProtoBuf;
 using Sandbox.ModAPI;
+using VRage.Utils;
 
 namespace Torch.Mod.Messages
 {
@@ -32,10 +33,8 @@ namespace Torch.Mod.Messages
 
         public override void ProcessClient()
         {
-            if (TorchModCore.Debug)
-            {
-                MyAPIGateway.Utilities.ShowMessage("Torch", $"Joining server {Address} with delay {Delay}");
-            }
+
+            MyLog.Default.WriteLineAndConsole($"Torch: Joining server {Address} with delay {Delay}");
 
             if (Delay <= 0)
             {
@@ -44,10 +43,10 @@ namespace Torch.Mod.Messages
             }
 
             MyAPIGateway.Parallel.StartBackground(() =>
-                                                  {
-                                                      MyAPIGateway.Parallel.Sleep(Delay);
-                                                      MyAPIGateway.Multiplayer.JoinServer(Address);
-                                                  });
+            {
+                MyAPIGateway.Parallel.Sleep(Delay);
+                MyAPIGateway.Multiplayer.JoinServer(Address);
+            });
         }
 
         public override void ProcessServer()
