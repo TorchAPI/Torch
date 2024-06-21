@@ -7,12 +7,17 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Xml;
 using System.Xml.Serialization;
+using EmptyKeys.UserInterface.Generated;
 using Havok;
 using NLog;
+using NLog.Fluent;
+using ProtoBuf;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
@@ -20,6 +25,7 @@ using Torch.API.Session;
 using Torch.API.WebAPI;
 using Torch.Collections;
 using Torch.Commands;
+using Torch.Plugins;
 using Torch.Utils;
 
 namespace Torch.Managers
@@ -27,7 +33,7 @@ namespace Torch.Managers
     /// <inheritdoc />
     public class PluginManager : Manager, IPluginManager
     {
-        
+
         //event for when the plugins are reloaded
         public event Action PluginsReloaded;
         private class PluginItem
@@ -38,33 +44,33 @@ namespace Torch.Managers
             public bool IsZip { get; set; }
             public List<PluginItem> ResolvedDependencies { get; set; }
         }
-        
+
         private static Logger _log = LogManager.GetCurrentClassLogger();
-        
+
         private const string MANIFEST_NAME = "manifest.xml";
-        
+
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
         private readonly MtObservableSortedDictionary<Guid, ITorchPlugin> _plugins = new MtObservableSortedDictionary<Guid, ITorchPlugin>();
         private readonly List<PluginItem> _pluginItems = new List<PluginItem>();
         private readonly List<Guid> _reloadList = new List<Guid>();
         private CommandManager _mgr;
-        
+
 #pragma warning disable 649
         [Dependency]
         private ITorchSessionManager _sessionManager;
 #pragma warning restore 649
-        
+
         /// <inheritdoc />
         public IReadOnlyDictionary<Guid, ITorchPlugin> Plugins => _plugins.AsReadOnlyObservable();
 
         public event Action<IReadOnlyCollection<ITorchPlugin>> PluginsLoaded;
-        
+
         public PluginManager(ITorchBase torchInstance) : base(torchInstance)
         {
             if (!Directory.Exists(PluginDir))
                 Directory.CreateDirectory(PluginDir);
         }
-        
+
         /// <summary>
         /// Updates loaded plugins in parallel.
         /// </summary>
@@ -82,7 +88,7 @@ namespace Torch.Managers
                 }
             }
         }
-        
+
         /// <inheritdoc/>
         public override void Attach()
         {
@@ -111,7 +117,7 @@ namespace Torch.Managers
                     return;
             }
         }
-        
+
         /// <summary>
         /// Unloads all plugins.
         /// </summary>
@@ -157,11 +163,11 @@ namespace Torch.Managers
                     // We have some missing dependencies.
                     // Future fix would be to download them, but instead for now let's
                     // just warn the user it's missing
-                    foreach(var missingPlugin in missingPlugins)
+                    foreach (var missingPlugin in missingPlugins)
                         _log.Warn($"{item.Manifest.Name} is missing dependency {missingPlugin}. Skipping plugin.");
                     continue;
                 }
-                
+
                 pluginsToLoad.Add(pluginItem);
             }
 
@@ -185,7 +191,7 @@ namespace Torch.Managers
 
                         pluginsToLoad.Add(pluginItem);
                     }
-                }   
+                }
             }
 
             // Sort based on dependencies.
@@ -219,16 +225,16 @@ namespace Torch.Managers
                     _pluginItems.Add(plugin);
                     LoadPlugin(plugin);
                 }
-                
+
                 foreach (var plugin in _plugins.Values)
                 {
                     plugin.Init(Torch);
                 }
             }
-            
+
             _reloadList.Clear();
-            
-            
+
+
             _log.Info($"Loaded {_plugins.Count} plugins.");
             PluginsLoaded?.Invoke(_plugins.Values.AsReadOnly());
         }
@@ -238,12 +244,13 @@ namespace Torch.Managers
         private List<PluginItem> GetLocalPlugins(string pluginDir, bool debug = false)
         {
             var firstLoad = Torch.Config.Plugins.Count == 0;
-            
+
             var pluginItems = Directory.EnumerateFiles(pluginDir, "*.zip")
                 .Union(Directory.EnumerateDirectories(pluginDir));
             if (debug)
-                pluginItems = pluginItems.Union(new List<string> {pluginDir});
+                pluginItems = pluginItems.Union(new List<string> { pluginDir });
             var results = new List<PluginItem>();
+
 
             foreach (var item in pluginItems)
             {
@@ -259,11 +266,11 @@ namespace Torch.Managers
                         continue;
                     }
                     manifest = new PluginManifest()
-                               {
-                                   Guid = new Guid(),
-                                   Version = "0",
-                                   Name = "TEST"
-                               };
+                    {
+                        Guid = new Guid(),
+                        Version = "0",
+                        Name = "TEST"
+                    };
                 }
 
                 var duplicatePlugin = results.FirstOrDefault(r => r.Manifest.Guid == manifest.Guid);
@@ -273,7 +280,7 @@ namespace Torch.Managers
                         $"The GUID provided by {manifest.Name} ({item}) is already in use by {duplicatePlugin.Manifest.Name}.");
                     continue;
                 }
-                
+
                 if (!Torch.Config.LocalPlugins && !debug)
                 {
                     if (isZip && !Torch.Config.Plugins.Contains(manifest.Guid))
@@ -287,7 +294,7 @@ namespace Torch.Managers
                         Torch.Config.Plugins.Add(manifest.Guid);
                     }
                 }
-                
+
                 results.Add(new PluginItem
                 {
                     Filename = item,
@@ -299,10 +306,10 @@ namespace Torch.Managers
 
             if (!Torch.Config.LocalPlugins && firstLoad)
                 Torch.Config.Save();
-            
+
             return results;
-        } 
-        
+        }
+
         private bool DownloadPluginUpdates(List<PluginItem> plugins)
         {
             _log.Info("Checking for plugin updates...");
@@ -353,29 +360,45 @@ namespace Torch.Managers
             _log.Info($"Updated {count} plugins.");
             return count > 0;
         }
-        
+
         private void LoadPlugin(PluginItem item)
         {
             var assemblies = new List<Assembly>();
 
             var loaded = AppDomain.CurrentDomain.GetAssemblies();
-            
+            var serializer = new XmlSerializer(typeof(AppConfig));
+            AppConfig pluginAppConfig = null;
+
             if (item.IsZip)
             {
                 using (var zipFile = ZipFile.OpenRead(item.Path))
                 {
                     foreach (var entry in zipFile.Entries)
                     {
+                        if (entry.Name.EndsWith("App.config", StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            using (var stream = entry.Open())
+                            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                            {
+                                string contents = reader.ReadToEnd();
+                                Console.WriteLine(contents);
+
+                                using (StringReader stringReader = new StringReader(contents))
+                                {
+                                    pluginAppConfig = (AppConfig)serializer.Deserialize(stringReader);
+                                }
+                            }
+
+                            continue;
+                        }
+
+
                         if (!entry.Name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
                             continue;
 
-                        //if (loaded.Any(a => entry.Name.Contains(a.GetName().Name)))
-                        //    continue;
-
-
                         using (var stream = entry.Open())
                         {
-                            var data = stream.ReadToEnd((int) entry.Length);
+                            var data = stream.ReadToEnd((int)entry.Length);
                             byte[] symbol = null;
                             var symbolEntryName =
                                 entry.FullName.Substring(0, entry.FullName.Length - "dll".Length) + "pdb";
@@ -384,7 +407,7 @@ namespace Torch.Managers
                                 try
                                 {
                                     using (var symbolStream = symbolEntry.Open())
-                                        symbol = symbolStream.ReadToEnd((int) symbolEntry.Length);
+                                        symbol = symbolStream.ReadToEnd((int)symbolEntry.Length);
                                 }
                                 catch (Exception e)
                                 {
@@ -398,12 +421,29 @@ namespace Torch.Managers
             }
             else
             {
-                var files = Directory
-                    .EnumerateFiles(item.Path, "*.*", SearchOption.AllDirectories)
-                    .ToList();
-                
+
+
+                var files = Directory.EnumerateFiles(item.Path, "*.*", SearchOption.AllDirectories).ToList();
+
+
+
                 foreach (var file in files)
                 {
+
+                    if (file.EndsWith("App.config", StringComparison.CurrentCultureIgnoreCase))
+                    {
+
+                        string contents = File.ReadAllText(file);
+                        using (TextReader reader = new StringReader(contents))
+                        {
+                            pluginAppConfig = (AppConfig)serializer.Deserialize(reader);
+                        }
+
+                        pluginAppConfig = ReadAppConfig(file);
+                        continue;
+                    }
+
+
                     if (!file.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
                         continue;
 
@@ -414,8 +454,7 @@ namespace Torch.Managers
                     {
                         var data = stream.ReadToEnd();
                         byte[] symbol = null;
-                        var symbolPath = Path.Combine(Path.GetDirectoryName(file) ?? ".",
-                            Path.GetFileNameWithoutExtension(file) + ".pdb");
+                        var symbolPath = Path.Combine(Path.GetDirectoryName(file) ?? ".", Path.GetFileNameWithoutExtension(file) + ".pdb");
                         if (File.Exists(symbolPath))
                             try
                             {
@@ -426,36 +465,91 @@ namespace Torch.Managers
                             {
                                 _log.Warn(e, $"Failed to read debugging symbols from {symbolPath}");
                             }
-                        
+
                         assemblies.Add(symbol != null ? Assembly.Load(data, symbol) : Assembly.Load(data));
                     }
                 }
-
-                
             }
-            
-            RegisterAllAssemblies(assemblies);
+
+
+
+
+
+            RegisterAllAssemblies(assemblies, pluginAppConfig);
             InstantiatePlugin(item.Manifest, assemblies);
         }
-        
-        private void RegisterAllAssemblies(IReadOnlyCollection<Assembly> assemblies)
+
+
+        private AppConfig ReadAppConfig(string configFile)
         {
+            try
+            {
+
+                if (File.Exists(configFile))
+                {
+                    // Load and deserialize the XML configuration file
+                    var serializer = new XmlSerializer(typeof(AppConfig));
+                    AppConfig appConfig = null;
+                    using (var stream = new FileStream(configFile, FileMode.Open))
+                    {
+                        appConfig = (AppConfig)serializer.Deserialize(stream);
+
+                        // Now you can access the list of dependent assemblies, their redirects, and versions
+                        foreach (var dependentAssembly in appConfig.Runtime.AssemblyBinding.DependentAssemblies)
+                        {
+                            _log.Warn($"Assembly Name: {dependentAssembly.AssemblyIdentity.Name}");
+                            _log.Warn($"Assembly PublicKeyToken: {dependentAssembly.AssemblyIdentity.PublicKeyToken}");
+                            _log.Warn("Redirects:");
+
+
+                            _log.Warn();
+                        }
+                    }
+
+
+                    return appConfig;
+
+                }
+                else
+                {
+                    _log.Info("app.config file not found in the specified folder.");
+
+                }
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+                _log.Info($"Error: {ex.Message}");
+            }
+
+
+            return null;
+        }
+
+        private void RegisterAllAssemblies(IReadOnlyCollection<Assembly> assemblies, AppConfig pluginAppConfig)
+        {
+
+
             Assembly ResolveDependentAssembly(object sender, ResolveEventArgs args)
             {
                 var requiredAssemblyName = new AssemblyName(args.Name);
-                foreach (Assembly asm in assemblies)
-                {
-                    if (IsAssemblyCompatible(requiredAssemblyName, asm.GetName()))
-                        return asm;
-                }
-                if (requiredAssemblyName.Name.EndsWith(".resources", StringComparison.OrdinalIgnoreCase))
-                    return null;
-                foreach (var asm in assemblies)
+
+                if (TryGetDependentAssembly(requiredAssemblyName, assemblies, pluginAppConfig, out Assembly foundAsm))
+                    return foundAsm;
+
+                _log.Warn($"Couldn't find dependency! {args.RequestingAssembly} depends on {requiredAssemblyName}.");
+                
+                
+                /*foreach (var asm in assemblies)
                     if (asm == args.RequestingAssembly)
                     {
                         _log.Warn($"Couldn't find dependency! {args.RequestingAssembly} depends on {requiredAssemblyName}.");
                         break;
                     }
+                */
                 return null;
             }
 
@@ -464,29 +558,128 @@ namespace Torch.Managers
             {
                 TorchBase.RegisterAuxAssembly(asm);
             }
+
+
+            AppDomain.CurrentDomain.AssemblyResolve -= ResolveDependentAssembly;
         }
-        
-        private static bool IsAssemblyCompatible(AssemblyName a, AssemblyName b)
+
+
+        private static bool TryGetDependentAssembly(AssemblyName requiredAssembly, IReadOnlyCollection<Assembly> allAssemblies, AppConfig pluginAppConfig, out Assembly matched)
         {
+            matched = null;
+
+            if (requiredAssembly.Name.EndsWith(".resources", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            foreach (var assembly in allAssemblies)
+            {
+                AssemblyName ass = assembly.GetName();
+                if (ass.Name != requiredAssembly.Name)
+                    continue;
+
+                int MajorVer = requiredAssembly.Version.Major;
+                int MinorVer = requiredAssembly.Version.Minor;
+
+
+                //Check to see if this is a perfect match
+                if (ass.Version.Major == MajorVer && ass.Version.Minor == MinorVer)
+                {
+                    matched = assembly;
+                    return true;
+                }
+
+
+
+                if (pluginAppConfig != null)
+                {
+                    //Check to see if this is part of the plugin app config
+                    DependentAssemblyElement assemblyConfig = pluginAppConfig.Runtime.AssemblyBinding.DependentAssemblies.FirstOrDefault(x => x.AssemblyIdentity.Name == requiredAssembly.Name);
+                    if (assemblyConfig != null)
+                    {
+                        //Required assembly is in app config get proper version
+
+                        Version requiredVer = requiredAssembly.Version;
+                        string[] versionParts = assemblyConfig.BindingRedirect.OldVersion.Split('-');
+
+                        if (!Version.TryParse(versionParts[0], out Version lowerVersion) || !Version.TryParse(versionParts[1], out Version upperVersion) || !Version.TryParse(assemblyConfig.BindingRedirect.NewVersion, out Version newVersion))
+                        {
+                            _log.Fatal($"Failed to parse versions from App.config on plugin {requiredAssembly.Name}");
+                            continue;
+                        }
+
+                        // Now you have two separate Version objects for the lower and upper versions
+                        Console.WriteLine($"Lower Version: {lowerVersion}");
+                        Console.WriteLine($"Upper Version: {upperVersion}");
+
+                        //Check to see if the required assembly version is within this limit
+
+                        if (lowerVersion <= requiredVer && upperVersion >= requiredVer)
+                        {
+                            //Our required assembly is in the app config with proper version range and has a binding redirect to another version
+
+                            Console.WriteLine($"Assembly {requiredAssembly.Name} - {requiredVer.ToString()} Falls between the redirect versions {lowerVersion}->{upperVersion}. Rebinding to {newVersion}");
+
+                            MajorVer = newVersion.Major;
+                            MinorVer = newVersion.Minor;
+                        }
+                    }
+                }
+
+                if (ass.Version.Major == MajorVer && ass.Version.Minor == MinorVer)
+                {
+                    matched = assembly;
+                    return true;
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            }
+
+
+
+
+
+            return matched != null;
+        }
+
+        private static bool IsAssemblyCompatible(AssemblyName a, AssemblyName b, AppConfig pluginAppConfig)
+        {
+            if (a.Name != b.Name)
+                return false;
+
+
+
             return a.Name == b.Name && a.Version.Major == b.Version.Major && a.Version.Minor == b.Version.Minor;
         }
 
         public void ReloadPlugins()
         {
             _log.Info("Reloading plugins.");
-            
+
             var plugins = _plugins.ToList();
 
             if (!Torch.Config.BypassIsReloadableFlag)
                 plugins = plugins.Where(p => p.Value.IsReloadable).ToList();
-            
+
             foreach (var plugin in plugins)
             {
                 _reloadList.Add(plugin.Key);
                 plugin.Value?.Dispose();
                 _plugins.Remove(plugin.Key);
             }
-            
+
             LoadPlugins();
             PluginsReloaded?.Invoke();
         }
@@ -494,7 +687,7 @@ namespace Torch.Managers
         public void ReloadPlugin(Guid guid)
         {
             var plugin = _plugins[guid];
-            
+
             plugin.Dispose();
             _plugins.Remove(guid);
             _log.Info($"{plugin.Name} {plugin.Version} has been unloaded.");
@@ -502,7 +695,7 @@ namespace Torch.Managers
             LoadPlugin(_pluginItems.First(p => p.Manifest.Guid == guid));
             _log.Info($"{plugin.Name} {plugin.Version} has been reloaded.");
         }
-        
+
         private void InstantiatePlugin(PluginManifest manifest, IEnumerable<Assembly> assemblies)
         {
             Type pluginType = null;
@@ -571,7 +764,7 @@ namespace Torch.Managers
             plugin.Torch = Torch;
             _plugins.Add(manifest.Guid, plugin);
         }
-        
+
         private PluginManifest GetManifestFromZip(string path)
         {
             try
@@ -603,7 +796,7 @@ namespace Torch.Managers
         {
             var dependencies = new List<PluginItem>();
             missingDependencies = new List<Guid>();
-            
+
             foreach (var pluginDependency in item.Manifest.Dependencies)
             {
                 var dependency = items
@@ -623,7 +816,7 @@ namespace Torch.Managers
                     {
                         // If dependency version is too low, we can try to update. Otherwise
                         // it's a missing dependency.
-                        
+
                         // For now let's just warn the user. bitMuse is lazy.
                         _log.Warn($"{dependency.Manifest.Name} is below the requested version for {item.Manifest.Name}."
                         + Environment.NewLine

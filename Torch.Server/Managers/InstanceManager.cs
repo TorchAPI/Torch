@@ -37,6 +37,8 @@ namespace Torch.Server.Managers
 
         public event Action<ConfigDedicatedViewModel> InstanceLoaded;
         public ConfigDedicatedViewModel DedicatedConfig { get; set; }
+
+
         private static readonly Logger Log = LogManager.GetLogger(nameof(InstanceManager));
         
         public InstanceManager(ITorchBase torchInstance) : base(torchInstance)

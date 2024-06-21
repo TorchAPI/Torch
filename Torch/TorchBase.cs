@@ -406,6 +406,8 @@ namespace Torch
         /// <inheritdoc/> 
         public virtual void Start()
         {
+
+
             Game.SignalStart();
             if (!Game.WaitFor(VRageGame.GameState.Running))
                 Log.Warn("Failed to wait for the game to be started");
