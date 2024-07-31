@@ -247,6 +247,7 @@
     <Compile Include="Patches\KeenLogPatch.cs" />
     <Compile Include="Patches\MessageSizeLimitPatch.cs" />
     <Compile Include="Patches\ModsDownloadingPatch.cs" />
+    <Compile Include="Patches\MyReplicationServerPatch.cs" />
     <Compile Include="Patches\PhysicsMemoryPatch.cs" />
     <Compile Include="Patches\SessionDownloadPatch.cs" />
     <Compile Include="Patches\TorchAsyncSaving.cs" />
