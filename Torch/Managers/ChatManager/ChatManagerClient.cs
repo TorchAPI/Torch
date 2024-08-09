@@ -17,6 +17,7 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.Utils;
 using VRage.Game;
+using VRage.GameServices;
 using VRageMath;
 using Color = VRageMath.Color;
 
@@ -83,10 +84,8 @@ namespace Torch.Managers.ChatManager
             {
                 _chatMessageRecievedReplacer = _chatMessageReceivedFactory.Invoke();
                 _scriptedChatMessageRecievedReplacer = _scriptedChatMessageReceivedFactory.Invoke();
-                _chatMessageRecievedReplacer.Replace(new Action<ulong, string, ChatChannel, long, string, ulong?>(Multiplayer_ChatMessageReceived),
-                    MyMultiplayer.Static);
-                _scriptedChatMessageRecievedReplacer.Replace(
-                    new Action<string, string, string, Color>(Multiplayer_ScriptedChatMessageReceived), MyMultiplayer.Static);
+                _chatMessageRecievedReplacer.Replace(new Action<ulong, string, ChatChannel, long, ChatMessageCustomData?>(Multiplayer_ChatMessageReceived), MyMultiplayer.Static);
+                _scriptedChatMessageRecievedReplacer.Replace(new Action<string, string, string, Color>(Multiplayer_ScriptedChatMessageReceived), MyMultiplayer.Static);
             }
             else
             {
@@ -137,12 +136,12 @@ namespace Torch.Managers.ChatManager
         }
 
 
-        private void Multiplayer_ChatMessageReceived(ulong steamUserId, string messageText, ChatChannel channel, long targetId, string customAuthorName,  ulong? customSenderId )
+        private void Multiplayer_ChatMessageReceived(ulong steamUserId, string messageText, ChatChannel channel, long targetId, ChatMessageCustomData? customData )
         {
             var torchMsg = new TorchChatMessage(steamUserId, messageText, channel, targetId,
                 (steamUserId == MyGameService.UserId) ? MyFontEnum.DarkBlue : MyFontEnum.Blue);
             if (!RaiseMessageRecieved(torchMsg) && HasHud)
-                _hudChatMessageReceived.Invoke(MyHud.Chat, steamUserId, messageText, channel, targetId, customAuthorName, customSenderId ?? 0);
+                _hudChatMessageReceived.Invoke(MyHud.Chat, steamUserId, messageText, channel, targetId, customData);
         }
 
         private void Multiplayer_ScriptedChatMessageReceived(string message, string author, string font, Color color)
@@ -165,7 +164,7 @@ namespace Torch.Managers.ChatManager
         protected static bool HasHud => !Sandbox.Engine.Platform.Game.IsDedicated;
 
         [ReflectedMethod(Name = _hudChatMessageReceivedName)]
-        private static Action<MyHudChat, ulong, string, ChatChannel, long, string, ulong?> _hudChatMessageReceived;
+        private static Action<MyHudChat, ulong, string, ChatChannel, long, ChatMessageCustomData?> _hudChatMessageReceived;
         [ReflectedMethod(Name = _hudChatScriptedMessageReceivedName)]
         private static Action<MyHudChat, string, string, string, Color> _hudChatScriptedMessageReceived;
 
