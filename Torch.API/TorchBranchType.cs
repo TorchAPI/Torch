@@ -11,6 +11,7 @@ namespace Torch.API
         publicbeta,
         master,
         staging,
+        ctg,
         dev
     }
 }

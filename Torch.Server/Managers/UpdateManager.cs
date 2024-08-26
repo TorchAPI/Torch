@@ -55,21 +55,53 @@ namespace Torch.Managers
             {
                 _log.Info("Checking for Torch Update...");
                 _isProcessing = true;
-                var job = await JenkinsQuery.Instance.GetLatestVersion(Torch.Config.BranchName.ToString());
-                if (job == null)
+                if (Torch.Config.BranchName == TorchBranchType.master)
                 {
-                    _log.Info("Failed to fetch latest version.");
-                    return;
+                    var job = await JenkinsQuery.Instance.GetLatestVersion(Torch.Config.BranchName.ToString());
+                    if (job == null)
+                    {
+                        _log.Info("Failed to fetch latest version.");
+                        return;
+                    }
+
+                    _log.Info($"Latest version is {job.Version} | Current version is {Torch.TorchVersion}");
+
+                    if (job.Version > Torch.TorchVersion ||
+                        (Torch.TorchVersion.Branch != Torch.Config.BranchName.ToString()))
+                    {
+                        _log.Warn($"Updating Torch from version {Torch.TorchVersion} to version {job.Version}");
+                        var updateName = Path.Combine(_fsManager.TempDirectory, "torchupdate.zip");
+                        //new WebClient().DownloadFile(new Uri(releaseInfo.Item2), updateName);
+                        if (!await JenkinsQuery.Instance.DownloadRelease(job, updateName))
+                        {
+                            _log.Warn("Failed to download new release!");
+                            _isProcessing = false;
+                            return;
+                        }
+
+                        UpdateFromZip(updateName, _torchDir);
+                        File.Delete(updateName);
+                        _log.Warn($"Torch version {job.Version} has been installed.  Restarting...");
+                        Torch.Restart();
+                    }
+                    else
+                    {
+                        _log.Info("Torch is up to date.");
+                    }
                 }
-                
-                _log.Info($"Latest version is {job.Version} | Current version is {Torch.TorchVersion}");
-                
-                if (job.Version > Torch.TorchVersion || (Torch.TorchVersion.Branch != Torch.Config.BranchName.ToString()))
+
+                if (Torch.Config.BranchName == TorchBranchType.ctg)
                 {
-                    _log.Warn($"Updating Torch from version {Torch.TorchVersion} to version {job.Version}");
+                    var latestCTGVersion = await CTGBuildQuery.Instance.GetLatestVersion(Torch.Config.BranchName.ToString());
+                    if (latestCTGVersion == null)
+                    {
+                        _log.Info("Failed to fetch latest version.");
+                        return;
+                    }
+                    
+                    _log.Warn($"Getting latest CTG build");
                     var updateName = Path.Combine(_fsManager.TempDirectory, "torchupdate.zip");
-                    //new WebClient().DownloadFile(new Uri(releaseInfo.Item2), updateName);
-                    if (!await JenkinsQuery.Instance.DownloadRelease(job, updateName))
+                    if (!await CTGBuildQuery.Instance.DownloadRelease(latestCTGVersion, updateName))
                     {
                         _log.Warn("Failed to download new release!");
                         _isProcessing = false;
@@ -77,13 +109,10 @@ namespace Torch.Managers
                     }
                     UpdateFromZip(updateName, _torchDir);
                     File.Delete(updateName);
-                    _log.Warn($"Torch version {job.Version} has been installed.  Restarting...");
+                    _log.Warn($"CTG version {latestCTGVersion.Version} has been installed.  Restarting...");
                     Torch.Restart();
                 }
-                else
-                {
-                    _log.Info("Torch is up to date.");
-                }
+
                 _isProcessing = false;
 
             }

@@ -192,6 +192,7 @@
     <Compile Include="UGCServiceType.cs" />
     <Compile Include="Utils\ColorUtils.cs" />
     <Compile Include="Utils\StringUtils.cs" />
+    <Compile Include="WebAPI\CTGBuildQuery.cs" />
     <Compile Include="WebAPI\JenkinsQuery.cs" />
     <Compile Include="WebAPI\PluginQuery.cs" />
   </ItemGroup>
