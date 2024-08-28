@@ -22,7 +22,7 @@ namespace Torch.Patches
         public const int MAX_FACTION_INFO_LENGTH = 512;
         public const int MAX_FACTION_NAME_LENGTH = 64;
         public const int PLAYER_FACTION_TAG_LENGTH = 3;
-        public const int NPC_FACTION_TAG_LENGTH = 4;
+        public const int NPC_FACTION_TAG_LENGTH = 10;
         
         private static Logger _log = LogManager.GetCurrentClassLogger();
         private static MethodInfo _registerFactionTagMethod = typeof(MyFactionCollection).GetMethod("RegisterFactionTag", BindingFlags.NonPublic | BindingFlags.Instance);
