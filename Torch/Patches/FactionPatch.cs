@@ -102,6 +102,19 @@ namespace Torch.Patches
                 factionBuilder.Name = factionBuilder.Name.Substring(0, Math.Min(factionBuilder.Name.Length, MAX_FACTION_NAME_LENGTH));
                 factionBuilder.Tag = factionBuilder.Tag.Substring(0, Math.Min(factionBuilder.Tag.Length, NPC_FACTION_TAG_LENGTH));
                 
+                //sorry
+                if (factionBuilder.Description.Contains("Potentially Exploited Faction"))
+                    factionBuilder.Description = string.Empty;
+                
+                if (factionBuilder.PrivateInfo.Contains("Potentially Exploited Faction"))
+                    factionBuilder.PrivateInfo = string.Empty;
+                
+                if (string.IsNullOrWhiteSpace(factionBuilder.Name))
+                    factionBuilder.Name = $"Potentially Exploited Faction {_factionCounter}";
+                
+                if (string.IsNullOrWhiteSpace(factionBuilder.Tag))
+                    factionBuilder.Tag = $"PEF{_factionCounter}";
+
                 //do the same substring but with null checks for the description and private info
                 if (factionBuilder.Description != null)
                     factionBuilder.Description = factionBuilder.Description.Substring(0, Math.Min(factionBuilder.Description.Length, MAX_FACTION_INFO_LENGTH));
@@ -243,7 +256,7 @@ namespace Torch.Patches
                 return input;
             }
             
-            input = input.Replace('&', ' ').Replace('#', ' ');
+            return input.Replace('&', ' ').Replace('#', ' ');
             //do the same but after, if the input is an empty string or just whitespace, return "Potentially Exploited Faction (INVESTIGATE)"
             return string.IsNullOrWhiteSpace(input) ? $"Potentially Exploited Faction data (INVESTIGATE)-{factionCountCurrent}" : input;
         }
