@@ -103,12 +103,19 @@ namespace Torch.Patches
                 factionBuilder.Tag = factionBuilder.Tag.Substring(0, Math.Min(factionBuilder.Tag.Length, NPC_FACTION_TAG_LENGTH));
                 
                 //sorry
-                if (factionBuilder.Description.Contains("Potentially Exploited Faction"))
-                    factionBuilder.Description = string.Empty;
-                
-                if (factionBuilder.PrivateInfo.Contains("Potentially Exploited Faction"))
-                    factionBuilder.PrivateInfo = string.Empty;
-                
+
+                if (factionBuilder.Description != null)
+                {
+                    if (factionBuilder.Description.Contains("Potentially Exploited Faction"))
+                        factionBuilder.Description = string.Empty;
+                }
+
+                if(factionBuilder.PrivateInfo != null)
+                {
+                    if (factionBuilder.PrivateInfo.Contains("Potentially Exploited Faction"))
+                        factionBuilder.PrivateInfo = string.Empty;
+                }
+
                 if (string.IsNullOrWhiteSpace(factionBuilder.Name))
                     factionBuilder.Name = $"Potentially Exploited Faction {_factionCounter}";
                 
