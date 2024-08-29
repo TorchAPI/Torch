@@ -265,6 +265,7 @@ namespace Torch.Commands
             }
         
             _restartPending = true;
+            TorchBase.Instance.IsRestartPending = _restartPending;
             
             Task.Run(() =>
             {
@@ -367,6 +368,8 @@ namespace Torch.Commands
                     Log.Warn("Restart cancelled by user.");
 
                     _restartPending = false;
+                    TorchBase.Instance.IsRestartPending = _restartPending;
+                    
                     _cancelRestart = false;
                     yield break;
                 }

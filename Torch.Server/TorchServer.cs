@@ -48,6 +48,7 @@ namespace Torch.Server
         private bool _isRunning;
         private float _simRatio;
         private ServerState _state;
+        private bool _isRestartPending;
         private Stopwatch _uptime;
         private Timer _watchdog;
         private int _players;
@@ -136,6 +137,8 @@ namespace Torch.Server
         public ServerState State { get => _state; private set => SetValue(ref _state, value); }
 
         public event Action<ITorchServer> Initialized;
+
+        public bool IsRestartPending { get => _isRestartPending; set => SetValue(ref _isRestartPending, value); }
 
         /// <inheritdoc />
         public string InstancePath => Config?.InstancePath;

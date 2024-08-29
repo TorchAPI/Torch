@@ -133,6 +133,11 @@ namespace Torch.API
         /// Event raised when <see cref="GameState"/> changes.
         /// </summary>
         event TorchGameStateChangedDel GameStateChanged;
+        
+        /// <summary>
+        /// Has a restart been requested?
+        /// </summary>
+        bool IsRestartPending { get; set; }
     }
 
     /// <summary>
