@@ -109,7 +109,7 @@ namespace Torch.Managers
                     }
                     UpdateFromZip(updateName, _torchDir);
                     File.Delete(updateName);
-                    _log.Warn($"CTG version {latestCTGVersion.Version} has been installed.  Restarting...");
+                    _log.Warn($"CTG version has been installed.  Restarting...");
                     Torch.Restart();
                 }
 

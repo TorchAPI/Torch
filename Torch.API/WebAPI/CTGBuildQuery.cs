@@ -13,9 +13,10 @@ namespace Torch.API.WebAPI
 {
     public class CTGBuildQuery
     {
-        private const string ARTIFACT_PATH = "ctg/build/torch-server.zip";
-        private const string API_PATH = "ctg/json/info.json";
-        private const string BRANCH_QUERY = "https://torchapi.com/" + API_PATH;
+        private const string WEB_URL = "https://torchapi.com/";
+        private const string ARTIFACT_PATH = "ctg/build";
+        private const string API_PATH = "ctg/info";
+        private const string BRANCH_QUERY = WEB_URL + API_PATH;
 
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
@@ -28,23 +29,24 @@ namespace Torch.API.WebAPI
             _client = new HttpClient();
         }
 
-        public async Task<Job> GetLatestVersion(string branch)
+        public async Task<CTGBuild> GetLatestVersion(string branch)
         {
-            var h = await _client.GetAsync(string.Format(BRANCH_QUERY, branch));
-            if (!h.IsSuccessStatusCode)
+            HttpResponseMessage responseMessage = await _client.GetAsync(BRANCH_QUERY);
+            if (!responseMessage.IsSuccessStatusCode)
             {
-                Log.Error($"'{branch}' Branch query failed with code {h.StatusCode}");
-                if(h.StatusCode == HttpStatusCode.NotFound)
-                    Log.Error("This likely means you're trying to update a branch that is not public on Jenkins. Sorry :(");
+                Log.Error($"'{branch}' Branch query failed with code {responseMessage.StatusCode}");
+                if (responseMessage.StatusCode == HttpStatusCode.NotFound)
+                {
+                    Log.Error("This likely means you're trying to update a branch that is not available. Sorry :(");
+                }
                 return null;
             }
 
-            string r = await h.Content.ReadAsStringAsync();
-
-            GameVersionInfo response;
-            try
-            {
-                response = JsonConvert.DeserializeObject<GameVersionInfo>(r);
+            string jsonResponse = await responseMessage.Content.ReadAsStringAsync();
+            GameVersionInfo gameVersionInfo;
+            try 
+            { 
+                gameVersionInfo = JsonConvert.DeserializeObject<GameVersionInfo>(jsonResponse); 
             }
             catch (Exception ex)
             {
@@ -52,32 +54,31 @@ namespace Torch.API.WebAPI
                 return null;
             }
 
-            h = await _client.GetAsync($"{response.LastStableBuild.URL}{API_PATH}");
-            if (!h.IsSuccessStatusCode)
-            {
-                Log.Error($"Job query failed with code {h.StatusCode}");
-                return null;
+            if (!gameVersionInfo.MajorGameVersions.Any()) 
+            { 
+                Log.Error("No major game versions found!"); 
+                return null; 
             }
 
-            r = await h.Content.ReadAsStringAsync();
+            KeyValuePair<string, MajorVersion> latestMajorVersion = gameVersionInfo.MajorGameVersions.Last();
+            if (!latestMajorVersion.Value.Builds.Any()) 
+            { 
+                Log.Error("No builds found in the latest major version!"); 
+                return null; 
+            }
 
-            Job job;
-            try
-            {
-                job = JsonConvert.DeserializeObject<Job>(r);
-                job.BranchName = response.Name;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to deserialize job response!");
-                return null;
-            }
-            return job;
+            KeyValuePair<string, CTGBuild> latestBuildEntry = latestMajorVersion.Value.Builds.Last();
+            CTGBuild latestBuild = latestBuildEntry.Value;
+            latestBuild.Version = $"{latestMajorVersion.Key}-{latestBuildEntry.Key}";
+
+            return latestBuild;
         }
 
-        public async Task<bool> DownloadRelease(Job job, string path)
+        public async Task<bool> DownloadRelease(CTGBuild build, string path)
         {
-            var h = await _client.GetAsync(job.URL + ARTIFACT_PATH);
+            
+            
+            var h = await _client.GetAsync(WEB_URL + ARTIFACT_PATH + $"/{build.Version}");
             if (!h.IsSuccessStatusCode)
             {
                 Log.Error($"Job download failed with code {h.StatusCode}");
@@ -97,54 +98,18 @@ namespace Torch.API.WebAPI
 
     public class GameVersionInfo
     {
-        public Dictionary<int, MajorVersion> MajorGameVersions { get; set; }
+        public Dictionary<string, MajorVersion> MajorGameVersions { get; set; }
     }
 
     public class MajorVersion
     {
-        public Dictionary<int, BuildInfo> Builds { get; set; }
-    }
-
-    public class BuildInfo
-    {
-        public string Description { get; set; }
-        public DateTime Date { get; set; }
-    }
-
-
-    public class CTGBranchResponse
-    {
-        public string Name;
-        public string URL;
-        public CTGBuild LastBuild;
-        public CTGBuild LastStableBuild;
+        public Dictionary<string, CTGBuild> Builds { get; set; }
     }
 
     public class CTGBuild
     {
-        public int Number;
-        public string URL;
-    }
-
-    public class CTGJob
-    {
-        public string BranchName;
-        public int Number;
-        public bool Building;
-        public string Description;
-        public string Result;
-        public string URL;
-        private InformationalVersion _version;
-
-        public InformationalVersion Version
-        {
-            get
-            {
-                if (_version == null)
-                    InformationalVersion.TryParse(Description, out _version);
-
-                return _version;
-            }
-        }
+        public string Version { get; set; }
+        public string Description { get; set; }
+        public string Date { get; set; }
     }
 }
