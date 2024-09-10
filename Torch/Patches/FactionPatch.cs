@@ -19,11 +19,17 @@ namespace Torch.Patches
     [PatchShim]
     public static class FactionPatch
     {
+        public const int MAX_FACTION_INFO_LENGTH = 512;
+        public const int MAX_FACTION_NAME_LENGTH = 64;
+        public const int PLAYER_FACTION_TAG_LENGTH = 3;
+        public const int NPC_FACTION_TAG_LENGTH = 10;
+        
         private static Logger _log = LogManager.GetCurrentClassLogger();
         private static MethodInfo _registerFactionTagMethod = typeof(MyFactionCollection).GetMethod("RegisterFactionTag", BindingFlags.NonPublic | BindingFlags.Instance);
         private static MethodInfo _addMethod = typeof(MyFactionCollection).GetMethod("Add", BindingFlags.NonPublic | BindingFlags.Instance);
         private static MethodInfo _compatDefaultFactions = typeof(MyFactionCollection).GetMethod("CompatDefaultFactions", BindingFlags.Public | BindingFlags.Instance);
-        
+        private static MethodInfo _cleanupFactionMsgMethod = typeof(MyFactionCollection).GetMethod("CleanUpFactionMessage", BindingFlags.NonPublic | BindingFlags.Instance);
+
         public static void Patch(PatchContext ctx)
         {
             ctx.GetPattern(typeof(MyFactionCollection).GetMethod("Add", BindingFlags.NonPublic | BindingFlags.Instance)).Prefixes.Add(typeof(FactionPatch).GetMethod(nameof(AddPrefix)));
@@ -78,12 +84,51 @@ namespace Torch.Patches
             var m_factionRequests = typeof(MyFactionCollection).GetField("m_factionRequests", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance);
             var m_playerToFactionsVis = typeof(MyFactionCollection).GetField("m_playerToFactionsVis", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance);
             
+            int _factionCounter = 0;
             foreach (var factionBuilder in builder.Factions)
             {
+                _factionCounter++;
+                
                 // For compatibility from before there was currency in the game.
                 // If existing faction have account already, do not create another one.
                 if (!MyBankingSystem.Static.TryGetAccountInfo(factionBuilder.FactionId, out var accountInfo))
                     MyBankingSystem.Static.CreateAccount(factionBuilder.FactionId, 0);
+                
+                factionBuilder.Name = CleanUpStringInput(factionBuilder.Name, _factionCounter);
+                factionBuilder.Description = CleanUpStringInput(factionBuilder.Description, _factionCounter);
+                factionBuilder.Tag = CleanUpStringInput(factionBuilder.Tag, _factionCounter);
+                factionBuilder.PrivateInfo = CleanUpStringInput(factionBuilder.PrivateInfo, _factionCounter);
+                
+                factionBuilder.Name = factionBuilder.Name.Substring(0, Math.Min(factionBuilder.Name.Length, MAX_FACTION_NAME_LENGTH));
+                factionBuilder.Tag = factionBuilder.Tag.Substring(0, Math.Min(factionBuilder.Tag.Length, NPC_FACTION_TAG_LENGTH));
+                
+                //sorry
+
+                if (factionBuilder.Description != null)
+                {
+                    if (factionBuilder.Description.Contains("Potentially Exploited Faction"))
+                        factionBuilder.Description = string.Empty;
+                }
+
+                if(factionBuilder.PrivateInfo != null)
+                {
+                    if (factionBuilder.PrivateInfo.Contains("Potentially Exploited Faction"))
+                        factionBuilder.PrivateInfo = string.Empty;
+                }
+
+                if (string.IsNullOrWhiteSpace(factionBuilder.Name))
+                    factionBuilder.Name = $"Potentially Exploited Faction {_factionCounter}";
+                
+                if (string.IsNullOrWhiteSpace(factionBuilder.Tag))
+                    factionBuilder.Tag = $"PEF{_factionCounter}";
+
+                //do the same substring but with null checks for the description and private info
+                if (factionBuilder.Description != null)
+                    factionBuilder.Description = factionBuilder.Description.Substring(0, Math.Min(factionBuilder.Description.Length, MAX_FACTION_INFO_LENGTH));
+                
+                if (factionBuilder.PrivateInfo != null)
+                    factionBuilder.PrivateInfo = factionBuilder.PrivateInfo.Substring(0, Math.Min(factionBuilder.PrivateInfo.Length, MAX_FACTION_INFO_LENGTH));
+
 
                 _addMethod.Invoke(__instance, new object[] { new MyFaction(factionBuilder) });
             }
@@ -209,6 +254,18 @@ namespace Torch.Patches
             _compatDefaultFactions.Invoke(__instance, new object[] { null });
             _log.Info("Factions INIT END");
             return false;
+        }
+        
+        private static string CleanUpStringInput(string input, int factionCountCurrent)
+        {
+            if (input == null)
+            {
+                return input;
+            }
+            
+            return input.Replace('&', ' ').Replace('#', ' ');
+            //do the same but after, if the input is an empty string or just whitespace, return "Potentially Exploited Faction (INVESTIGATE)"
+            return string.IsNullOrWhiteSpace(input) ? $"Potentially Exploited Faction data (INVESTIGATE)-{factionCountCurrent}" : input;
         }
     }
 }
