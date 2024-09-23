@@ -125,6 +125,8 @@ namespace Torch
         /// <inheritdoc/>
         public IDependencyManager Managers { get; }
 
+        public bool IsRestartPending { get; set; }
+
         private bool _init;
 
         /// <summary>
