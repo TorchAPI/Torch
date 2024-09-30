@@ -250,6 +250,7 @@
     <Compile Include="Patches\PhysicsMemoryPatch.cs" />
     <Compile Include="Patches\SessionDownloadPatch.cs" />
     <Compile Include="Patches\TorchAsyncSaving.cs" />
+    <Compile Include="Plugins\PluginConfiguration.cs" />
     <Compile Include="Plugins\PluginDependency.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Collections\KeyTree.cs" />
