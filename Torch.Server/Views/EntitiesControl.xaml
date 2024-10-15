@@ -228,13 +228,16 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TreeView Grid.Row="0" Grid.Column="0" Margin="3" DockPanel.Dock="Top"
-                              SelectedItemChanged="TreeView_FloatingObjects_OnSelectionItemChanged"
-                              TreeViewItem.Expanded="TreeViewItem_OnExpanded" Name="EntityTree_FloatingObjects">
-                        <TreeViewItem ItemsSource="{Binding Path=SortedFloatingObjects}">
+                    <TreeView Grid.Row="0" Grid.Column="0" Margin="3" DockPanel.Dock="Top" TreeViewItem.Expanded="TreeViewItem_OnExpanded" Name="EntityTree_FloatingObjects">
+                        <TreeViewItem ItemsSource="{Binding Path=SortedFloatingObjects, Mode=OneWay}">
                             <TreeViewItem.Header>
-                                <TextBlock Text="{Binding VoxelMaps.Count, StringFormat=Floating Objects ({0})}" />
+                                <TextBlock Text="{Binding FloatingObjects.Count, StringFormat=Floating Objects ({0}), Mode=OneWay}" />
                             </TreeViewItem.Header>
+                            <TreeViewItem.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DescriptiveName, Mode=OneWay}" />
+                                </DataTemplate>
+                            </TreeViewItem.ItemTemplate>
                         </TreeViewItem>
                     </TreeView>
 
@@ -243,7 +246,7 @@
                         <Button Content="Delete Floating objects" Click="DeleteFloating_OnClick" IsEnabled="{Binding CurrentEntity.CanStop}" Margin="3" />
                     </StackPanel>
                 </Grid>
-                <Frame Grid.Column="1" x:Name="EditorFrame_FloatingObjects" Margin="3" NavigationUIVisibility="Hidden" />
+                <Frame Grid.Column="1" x:Name="EditorFrame_FloatingObjects" Margin="3" NavigationUIVisibility="Hidden" /> <!-- Will leave this here for optional future update. -->
                 <GridSplitter Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" ShowsPreview="True" Width="2" />
             </Grid>
         </TabItem>
