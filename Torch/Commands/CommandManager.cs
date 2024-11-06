@@ -94,6 +94,7 @@ namespace Torch.Commands
 
             var splitArgs = Regex.Matches(argText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
             _log.Trace($"Invoking {cmdPath} for server.");
+            _log.Info($"Server is running command '{message}'...");
             var context = new ConsoleCommandContext(Torch, command.Plugin, Sync.MyId, argText, splitArgs);
             if (subscriber != null)
                 context.OnResponse += subscriber;
@@ -166,6 +167,7 @@ namespace Torch.Commands
 
                 var splitArgs = Regex.Matches(argText, "(\"[^\"]+\"|\\S+)").Cast<Match>().Select(x => x.ToString().Replace("\"", "")).ToList();
                 _log.Trace($"Invoking {cmdPath} for player {player.DisplayName}");
+                _log.Info($"Player {player.DisplayName} is running command '{message}'...");
                 var context = new CommandContext(Torch, command.Plugin, steamId, argText, splitArgs);
                 Torch.Invoke(() =>
                 {
