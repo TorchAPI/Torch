@@ -62,7 +62,10 @@ namespace Torch.Server
                 }
 
                 // Breaks on Windows Server 2019
-                if ((!new ComputerInfo().OSFullName.Contains("Server 2019") && !new ComputerInfo().OSFullName.Contains("Server 2022")) && !Environment.UserInteractive)
+                if ((!new ComputerInfo().OSFullName.Contains("Server 2019") &&
+                     !new ComputerInfo().OSFullName.Contains("Server 2022") &&
+                     !new ComputerInfo().OSFullName.Contains("Server 2025")) &&
+                    !Environment.UserInteractive)
                 {
                     using (var service = new TorchService(args))
                         ServiceBase.Run(service);
