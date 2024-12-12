@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
 
 //Needed so Torch can set the instance here without exposing anything bad to mods or creating a circular dependency.
 [assembly: InternalsVisibleTo("Torch")]

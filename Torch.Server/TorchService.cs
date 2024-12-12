@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.ServiceProcess;
 using System.Threading;
 using NLog;
-using Torch.API;
 
 namespace Torch.Server
 {

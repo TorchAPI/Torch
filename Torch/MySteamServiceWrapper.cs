@@ -1,6 +1,5 @@
 using System;
 using System.Reflection;
-using System.Windows.Data;
 using VRage.GameServices;
 
 namespace Torch

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Sandbox.Game.World;
+﻿using Sandbox.Game.World;
 using Torch.API.Managers;
 
 namespace Torch.API.Session

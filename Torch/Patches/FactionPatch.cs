@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Havok;
 using NLog;
 using Sandbox.Definitions;
 using Sandbox.Game.GameSystems.BankingAndCurrency;
