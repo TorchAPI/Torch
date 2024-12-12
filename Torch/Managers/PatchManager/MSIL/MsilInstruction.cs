@@ -6,8 +6,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
-using System.Windows.Documents;
-using Torch.Managers.PatchManager.Transpile;
 using Torch.Utils;
 
 namespace Torch.Managers.PatchManager.MSIL

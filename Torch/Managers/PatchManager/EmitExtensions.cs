@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection.Emit;
 using Torch.Managers.PatchManager.MSIL;
-using Torch.Managers.PatchManager.Transpile;
 
 namespace Torch.Managers.PatchManager
 {

@@ -1,18 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Controls;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
 using Torch.Server.ViewModels.Entities;
-using VRage.Game.ModAPI;
-using VRage.ModAPI;
 using System.Windows.Threading;
 using NLog;
 using Torch.Collections;
-using Torch.Server.Views.Entities;
 
 namespace Torch.Server.ViewModels
 {

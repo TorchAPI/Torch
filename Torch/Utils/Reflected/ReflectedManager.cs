@@ -6,14 +6,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
 using NLog;
-using Sandbox.Engine.Multiplayer;
-using Torch.API;
-using Torch.Managers.PatchManager;
 using Torch.Utils.Reflected;
-using PropertyAttributes = System.Reflection.PropertyAttributes;
 
 namespace Torch.Utils
 {

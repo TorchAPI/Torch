@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VRage.Game.ModAPI;
-
-namespace Torch.API
+﻿namespace Torch.API
 {
     /// <summary>
     /// Represents a player on the server.

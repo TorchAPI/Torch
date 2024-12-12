@@ -2,27 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using NLog;
-using NLog.Fluent;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Engine.Networking;
 using Sandbox.Game.Gui;
 using Sandbox.Game.World;
-using Steamworks;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Managers;
 using Torch.Utils;
-using Torch.ViewModels;
 using VRage.Game;
 using VRage.Game.ModAPI;
 using VRage.GameServices;
 using VRage.Network;
-using VRage.Steam;
 
 namespace Torch.Server.Managers
 {

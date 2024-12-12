@@ -1,6 +1,4 @@
-﻿using Torch.API;
-
-namespace Torch.Commands
+﻿namespace Torch.Commands
 {
     public class CommandModule
     {

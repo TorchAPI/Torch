@@ -8,18 +8,10 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 using NLog;
-using NLog.Targets;
 using Sandbox;
-using Sandbox.Engine.Utils;
-using Torch.Utils;
 using VRage;
-using VRage.FileSystem;
-using VRage.Scripting;
-using VRage.Utils;
 
 namespace Torch.Server
 {

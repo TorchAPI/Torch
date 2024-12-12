@@ -10,10 +10,7 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
 using Torch.Managers;
-using Torch.Utils;
-using VRage.Game;
 using VRage.Game.ModAPI;
-using VRage.Network;
 
 namespace Torch.Commands
 {

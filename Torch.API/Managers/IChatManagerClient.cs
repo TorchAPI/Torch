@@ -1,17 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Gui;
-using Sandbox.Game.Multiplayer;
 using Torch.Utils;
 using VRage.Game;
-using VRage.Network;
-using VRage.Replication;
 using VRageMath;
-using VRageRender;
 
 namespace Torch.API.Managers
 {

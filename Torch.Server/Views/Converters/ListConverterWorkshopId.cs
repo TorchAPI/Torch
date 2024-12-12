@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Data;
-using Sandbox.Engine.Networking;
 using Torch.Server.ViewModels;
 using Torch.Utils;
-using VRage.Game;
 
 namespace Torch.Server.Views.Converters
 {

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;

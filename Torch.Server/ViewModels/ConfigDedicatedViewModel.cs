@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using NLog;
 using Sandbox.Engine.Utils;
 using Torch.Collections;
 using Torch.Server.Managers;
 using VRage.Game;
-using VRage.Game.ModAPI;
 using Torch.Utils.SteamWorkshopTools;
-using Torch.Collections;
 
 namespace Torch.Server.ViewModels
 {

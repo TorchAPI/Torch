@@ -2,19 +2,11 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.Windows.Navigation;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Media;
-using System.Windows.Threading;
-using Torch.API.Managers;
 using Torch.API.Plugins;
-using Torch.Server.Annotations;
-using Torch.Server.Managers;
-using Torch.Server.ViewModels;
 
 namespace Torch.Server.Views
 {
