@@ -12,12 +12,13 @@ namespace Torch.API.WebAPI
 {
     public class PluginQuery
     {
+        public static bool IsApiReachable;
+        
 #if DEBUG
-        private const string ALL_QUERY = "https://torchapi.com/api/plugins?includeArchived=true";
+        private const string ALL_QUERY = "https://torchapi.com/api/plugins?inclcudeArchived=true";
 #else
         private const string ALL_QUERY = "https://torchapi.com/api/plugins";
 #endif
-
 
         private const string PLUGIN_QUERY = "https://torchapi.com/api/plugins/search/{0}";
         private readonly HttpClient _client;
@@ -53,6 +54,46 @@ namespace Torch.API.WebAPI
                 return null;
             }
             return response;
+        }
+
+        public static async Task<bool> TestApiConnection()
+        {
+            Log.Warn("Testing conneciton to torchapi.com");
+            try
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    client.Timeout = TimeSpan.FromSeconds(5);
+                    HttpResponseMessage response = await client.GetAsync(ALL_QUERY);
+                    Log.Info($"API response code: {response.StatusCode}");
+                    
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return false;
+                    }
+
+                    IsApiReachable = true;
+                    
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    
+                    return !string.IsNullOrEmpty(responseContent);
+                }
+            }
+            catch (HttpRequestException e)
+            {
+                Log.Fatal($"Error while testing API connection: {e.Message}");
+                return false;
+            }
+            catch (TaskCanceledException)
+            {
+                Log.Fatal("API request timed out.");
+                return false;
+            }
+            catch (Exception e)
+            {
+                Log.Fatal($"Unexpected error while testing API connection: {e.Message}");
+                return false;
+            }
         }
 
         public async Task<PluginFullItem> QueryOne(Guid guid)

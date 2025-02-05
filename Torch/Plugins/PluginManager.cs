@@ -21,6 +21,7 @@ using Torch.API.WebAPI;
 using Torch.Collections;
 using Torch.Commands;
 using Torch.Utils;
+using static Torch.API.WebAPI.PluginQuery;
 
 namespace Torch.Managers
 {
@@ -61,6 +62,8 @@ namespace Torch.Managers
         
         public PluginManager(ITorchBase torchInstance) : base(torchInstance)
         {
+            Task.Run(async () => await TestApiConnection()).Wait();
+
             if (!Directory.Exists(PluginDir))
                 Directory.CreateDirectory(PluginDir);
         }
@@ -164,28 +167,33 @@ namespace Torch.Managers
                 
                 pluginsToLoad.Add(pluginItem);
             }
-
-
-            if (Torch.Config.ShouldUpdatePlugins)
+            
+            _log.Info($"Is plugin API reachable: {IsApiReachable}");
+            if (IsApiReachable)
             {
-                if (DownloadPluginUpdates(pluginsToLoad))
-                {
-                    // Resort the plugins just in case updates changed load hints.
-                    pluginItems = GetLocalPlugins(PluginDir);
-                    pluginsToLoad.Clear();
-                    foreach (var item in pluginItems)
-                    {
-                        var pluginItem = item;
-                        if (!TryValidatePluginDependencies(pluginItems, ref pluginItem, out var missingPlugins))
-                        {
-                            foreach (var missingPlugin in missingPlugins)
-                                _log.Warn($"{item.Manifest.Name} is missing dependency {missingPlugin}. Skipping plugin.");
-                            continue;
-                        }
 
-                        pluginsToLoad.Add(pluginItem);
+                if (Torch.Config.ShouldUpdatePlugins)
+                {
+                    if (DownloadPluginUpdates(pluginsToLoad))
+                    {
+                        // Resort the plugins just in case updates changed load hints.
+                        pluginItems = GetLocalPlugins(PluginDir);
+                        pluginsToLoad.Clear();
+                        foreach (var item in pluginItems)
+                        {
+                            var pluginItem = item;
+                            if (!TryValidatePluginDependencies(pluginItems, ref pluginItem, out var missingPlugins))
+                            {
+                                foreach (var missingPlugin in missingPlugins)
+                                    _log.Warn(
+                                        $"{item.Manifest.Name} is missing dependency {missingPlugin}. Skipping plugin.");
+                                continue;
+                            }
+
+                            pluginsToLoad.Add(pluginItem);
+                        }
                     }
-                }   
+                }
             }
 
             // Sort based on dependencies.
@@ -317,7 +325,7 @@ namespace Torch.Managers
                         return;
                     }
                     item.Manifest.Version.TryExtractVersion(out Version currentVersion);
-                    var latest = await PluginQuery.Instance.QueryOne(item.Manifest.Guid);
+                    var latest = await Instance.QueryOne(item.Manifest.Guid);
 
                     if (latest?.LatestVersion == null)
                     {
@@ -340,7 +348,7 @@ namespace Torch.Managers
                     }
 
                     _log.Info($"Updating plugin '{item.Manifest.Name}' from {currentVersion} to {newVersion}.");
-                    await PluginQuery.Instance.DownloadPlugin(latest, item.Path);
+                    await Instance.DownloadPlugin(latest, item.Path);
                     Interlocked.Increment(ref count);
                 }
                 catch (Exception e)
