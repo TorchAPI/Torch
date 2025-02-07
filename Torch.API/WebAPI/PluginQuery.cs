@@ -58,43 +58,42 @@ namespace Torch.API.WebAPI
 
         public static async Task<bool> TestApiConnection()
         {
-            Log.Warn("Testing conneciton to torchapi.com");
+            Log.Warn("Testing connection to API");
+
             try
             {
                 using (HttpClient client = new HttpClient())
                 {
                     client.Timeout = TimeSpan.FromSeconds(5);
                     HttpResponseMessage response = await client.GetAsync(ALL_QUERY);
-                    Log.Info($"API response code: {response.StatusCode}");
-                    
+            
                     if (!response.IsSuccessStatusCode)
                     {
+                        Log.Warn($"API responded with status: {response.StatusCode}");
                         return false;
                     }
 
                     IsApiReachable = true;
-                    
-                    string responseContent = await response.Content.ReadAsStringAsync();
-                    
-                    return !string.IsNullOrEmpty(responseContent);
+                    return true;
                 }
             }
             catch (HttpRequestException e)
             {
-                Log.Fatal($"Error while testing API connection: {e.Message}");
+                Log.Error("Error testing API connection.");
                 return false;
             }
             catch (TaskCanceledException)
             {
-                Log.Fatal("API request timed out.");
+                Log.Error("API request timed out.");
                 return false;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Log.Fatal($"Unexpected error while testing API connection: {e.Message}");
+                Log.Error("Unexpected error testing API connection.");
                 return false;
             }
         }
+
 
         public async Task<PluginFullItem> QueryOne(Guid guid)
         {
