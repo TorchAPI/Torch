@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Sandbox;
 using Sandbox.Engine.Platform;
@@ -14,8 +11,6 @@ using Sandbox.Graphics.GUI;
 using Torch.API;
 using Torch.API.Session;
 using VRage;
-using VRage.Audio;
-using VRage.Utils;
 
 namespace Torch.Patches
 {

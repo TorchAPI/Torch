@@ -8,7 +8,6 @@ using System.Reflection.Emit;
 using NLog;
 using Torch.Managers.PatchManager.MSIL;
 using Torch.Utils;
-using VRage.Game.VisualScripting.Utils;
 
 namespace Torch.Managers.PatchManager.Transpile
 {

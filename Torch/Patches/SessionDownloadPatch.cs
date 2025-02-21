@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using NLog;
 using Sandbox.Game.World;
 using Torch.API.Session;
 using Torch.API.Managers;
 using Torch.Managers.PatchManager;
-using Torch.Mod;
 using VRage.Game;
 
 namespace Torch.Patches

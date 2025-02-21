@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using NLog;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Engine.Networking;
@@ -15,10 +11,8 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.Managers.PatchManager;
 using Torch.Utils;
-using VRage;
 using VRage.Collections;
 using VRage.Game;
-using VRage.Library.Collections;
 using VRage.Network;
 using VRageMath;
 

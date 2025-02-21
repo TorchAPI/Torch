@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using NLog;
 using Torch.API;
-using Torch.Managers.PatchManager.Transpile;
 
 namespace Torch.Managers.PatchManager
 {

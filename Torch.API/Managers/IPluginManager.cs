@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Torch.API.Plugins;
-using VRage.Collections;
-using VRage.Plugins;
 
 namespace Torch.API.Managers
 {

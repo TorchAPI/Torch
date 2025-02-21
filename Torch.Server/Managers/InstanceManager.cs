@@ -1,33 +1,20 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
-using Havok;
 using NLog;
 using Sandbox;
-using Sandbox.Engine.Networking;
 using Sandbox.Engine.Utils;
-using Sandbox.Game;
-using Sandbox.Game.Gui;
 using Torch.API;
-using Torch.API.Managers;
 using Torch.Collections;
 using Torch.Managers;
 using Torch.Mod;
 using Torch.Server.ViewModels;
 using Torch.Utils;
-using VRage;
 using VRage.FileSystem;
 using VRage.Game;
-using VRage.Game.ObjectBuilder;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Private;
-using VRage.Plugins;
 
 namespace Torch.Server.Managers
 {
