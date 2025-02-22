@@ -63,6 +63,7 @@ namespace Torch.Server
         /// <inheritdoc />
         public TorchServer(TorchConfig config) : base(config)
         {
+            
             DedicatedInstance = new InstanceManager(this);
             AddManager(DedicatedInstance);
             AddManager(new EntityControlManager(this));
