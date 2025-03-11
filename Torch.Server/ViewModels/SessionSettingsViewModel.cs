@@ -314,6 +314,9 @@ namespace Torch.Server.ViewModels
 
         [Torch.Views.Display(Description = "Enables system for weather", Name = "Enable Weather System", GroupName = "Others")]
         public bool EnableWeatherSystem { get => _settings.WeatherSystem; set => SetValue(ref _settings.WeatherSystem, value); }
+        
+        [Torch.Views.Display(Description = "Enable temporary containers to spawn after destroying a block with inventory.", Name = "Temporary Containers", GroupName = "Others")]
+        public bool EnableTemporaryContainers { get => _settings.TemporaryContainers; set => SetValue(ref _settings.TemporaryContainers, value); }
 
         public SessionSettingsViewModel(MyObjectBuilder_SessionSettings settings)
         {
