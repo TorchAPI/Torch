@@ -12,12 +12,13 @@ namespace Torch.API.WebAPI
 {
     public class PluginQuery
     {
+        public static bool IsApiReachable;
+        
 #if DEBUG
-        private const string ALL_QUERY = "https://torchapi.com/api/plugins?includeArchived=true";
+        private const string ALL_QUERY = "https://torchapi.com/api/plugins?inclcudeArchived=true";
 #else
         private const string ALL_QUERY = "https://torchapi.com/api/plugins";
 #endif
-
 
         private const string PLUGIN_QUERY = "https://torchapi.com/api/plugins/search/{0}";
         private readonly HttpClient _client;
@@ -54,6 +55,45 @@ namespace Torch.API.WebAPI
             }
             return response;
         }
+
+        public static async Task<bool> TestApiConnection()
+        {
+            Log.Warn("Testing connection to API");
+
+            try
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    client.Timeout = TimeSpan.FromSeconds(5);
+                    HttpResponseMessage response = await client.GetAsync(ALL_QUERY);
+            
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Log.Warn($"API responded with status: {response.StatusCode}");
+                        return false;
+                    }
+
+                    IsApiReachable = true;
+                    return true;
+                }
+            }
+            catch (HttpRequestException e)
+            {
+                Log.Error("Error testing API connection.");
+                return false;
+            }
+            catch (TaskCanceledException)
+            {
+                Log.Error("API request timed out.");
+                return false;
+            }
+            catch (Exception)
+            {
+                Log.Error("Unexpected error testing API connection.");
+                return false;
+            }
+        }
+
 
         public async Task<PluginFullItem> QueryOne(Guid guid)
         {
