@@ -314,6 +314,54 @@ namespace Torch.Server.ViewModels
 
         [Torch.Views.Display(Description = "Enables system for weather", Name = "Enable Weather System", GroupName = "Others")]
         public bool EnableWeatherSystem { get => _settings.WeatherSystem; set => SetValue(ref _settings.WeatherSystem, value); }
+        
+        [Torch.Views.Display(Description = "Global encounter spawn timer in minutes.", Name = "Global Encounter Timer", GroupName = "NPCs")]
+        public int GlobalEncounterTimer { get => _settings.GlobalEncounterTimer; set => SetValue(ref _settings.GlobalEncounterTimer, value); }
+        
+        [Torch.Views.Display(Description = "Maximum number of encounters that can exist at once. 0 means unlimited.", Name = "Global Encounter Cap", GroupName = "NPCs")]
+        public int GlobalEncounterCap { get => _settings.GlobalEncounterCap; set => SetValue(ref _settings.GlobalEncounterCap, value); }
+        
+        [Torch.Views.Display(Description = "Enables automatic removal of encounters after a time period.", Name = "Enable Encounter Removal Timer", GroupName = "NPCs")]
+        public bool GlobalEncounterEnableRemovalTimer { get => _settings.GlobalEncounterEnableRemovalTimer; set => SetValue(ref _settings.GlobalEncounterEnableRemovalTimer, value); }
+        
+        [Torch.Views.Display(Description = "Minimum time in minutes before an encounter can be removed.", Name = "Min Encounter Removal Timer", GroupName = "NPCs")]
+        public int GlobalEncounterMinRemovalTimer { get => _settings.GlobalEncounterMinRemovalTimer; set => SetValue(ref _settings.GlobalEncounterMinRemovalTimer, value); }
+        
+        [Torch.Views.Display(Description = "Maximum time in minutes before an encounter is removed.", Name = "Max Encounter Removal Timer", GroupName = "NPCs")]
+        public int GlobalEncounterMaxRemovalTimer { get => _settings.GlobalEncounterMaxRemovalTimer; set => SetValue(ref _settings.GlobalEncounterMaxRemovalTimer, value); }
+        
+        [Torch.Views.Display(Description = "Time in minutes between encounter removal checks.", Name = "Encounter Removal Check Interval", GroupName = "NPCs")]
+        public int GlobalEncounterRemovalTimeClock { get => _settings.GlobalEncounterRemovalTimeClock; set => SetValue(ref _settings.GlobalEncounterRemovalTimeClock, value); }
+        
+        [Torch.Views.Display(Description = "Density of encounters in the world (0.0 to 1.0).", Name = "Encounter Density", GroupName = "NPCs")]
+        public float EncounterDensity { get => _settings.EncounterDensity; set => SetValue(ref _settings.EncounterDensity, value); }
+        
+        [Torch.Views.Display(Description = "Version of the encounter generator system.", Name = "Encounter Generator Version", GroupName = "NPCs")]
+        public int EncounterGeneratorVersion { get => _settings.EncounterGeneratorVersion; set => SetValue(ref _settings.EncounterGeneratorVersion, value); }
+        
+        [Torch.Views.Display(Description = "Enables encounters on planets.", Name = "Enable Planetary Encounters", GroupName = "NPCs")]
+        public bool EnablePlanetaryEncounters { get => _settings.EnablePlanetaryEncounters; set => SetValue(ref _settings.EnablePlanetaryEncounters, value); }
+        
+        [Torch.Views.Display(Description = "Minimum time in minutes between planetary encounter spawns.", Name = "Min Planetary Encounter Timer", GroupName = "NPCs")]
+        public float PlanetaryEncounterTimerMin { get => _settings.PlanetaryEncounterTimerMin; set => SetValue(ref _settings.PlanetaryEncounterTimerMin, value); }
+        
+        [Torch.Views.Display(Description = "Maximum time in minutes between planetary encounter spawns.", Name = "Max Planetary Encounter Timer", GroupName = "NPCs")]
+        public float PlanetaryEncounterTimerMax { get => _settings.PlanetaryEncounterTimerMax; set => SetValue(ref _settings.PlanetaryEncounterTimerMax, value); }
+        
+        [Torch.Views.Display(Description = "Range in meters to check for existing structures when spawning planetary encounters.", Name = "Planetary Encounter Structure Range", GroupName = "NPCs")]
+        public int PlanetaryEncounterExistingStructuresRange { get => _settings.PlanetaryEncounterExistingStructuresRange; set => SetValue(ref _settings.PlanetaryEncounterExistingStructuresRange, value); }
+        
+        [Torch.Views.Display(Description = "Range in meters for area lockdown when spawning planetary encounters.", Name = "Planetary Encounter Lockdown Range", GroupName = "NPCs")]
+        public int PlanetaryEncounterAreaLockdownRange { get => _settings.PlanetaryEncounterAreaLockdownRange; set => SetValue(ref _settings.PlanetaryEncounterAreaLockdownRange, value); }
+        
+        [Torch.Views.Display(Description = "Desired spawn range in meters for planetary encounters.", Name = "Planetary Encounter Spawn Range", GroupName = "NPCs")]
+        public int PlanetaryEncounterDesiredSpawnRange { get => _settings.PlanetaryEncounterDesiredSpawnRange; set => SetValue(ref _settings.PlanetaryEncounterDesiredSpawnRange, value); }
+        
+        [Torch.Views.Display(Description = "Range in meters to check for player presence near planetary encounters.", Name = "Planetary Encounter Presence Range", GroupName = "NPCs")]
+        public int PlanetaryEncounterPresenceRange { get => _settings.PlanetaryEncounterPresenceRange; set => SetValue(ref _settings.PlanetaryEncounterPresenceRange, value); }
+        
+        [Torch.Views.Display(Description = "Time in minutes before despawning planetary encounters with no player presence.", Name = "Planetary Encounter Despawn Timeout", GroupName = "NPCs")]
+        public float PlanetaryEncounterDespawnTimeout { get => _settings.PlanetaryEncounterDespawnTimeout; set => SetValue(ref _settings.PlanetaryEncounterDespawnTimeout, value); }
 
         public SessionSettingsViewModel(MyObjectBuilder_SessionSettings settings)
         {

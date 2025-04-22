@@ -184,5 +184,63 @@
                 </StackPanel>
             </StackPanel>
         </Expander>
+        <Expander Header="Encounters">
+            <StackPanel Margin="10,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding GlobalEncounterTimer}" Margin="3" Width="70" />
+                    <Label Content="Global Encounter Timer (mins)" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding GlobalEncounterCap}" Margin="3" Width="70" />
+                    <Label Content="Global Encounter Cap" />
+                </StackPanel>
+                <CheckBox IsChecked="{Binding GlobalEncounterEnableRemovalTimer}" Content="Enable Encounter Removal" Margin="3" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding GlobalEncounterMinRemovalTimer}" Margin="3" Width="70" />
+                    <Label Content="Min Removal Timer (mins)" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding GlobalEncounterMaxRemovalTimer}" Margin="3" Width="70" />
+                    <Label Content="Max Removal Timer (mins)" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding GlobalEncounterRemovalTimeClock}" Margin="3" Width="70" />
+                    <Label Content="Removal Check Interval (mins)" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding EncounterDensity}" Margin="3" Width="70" />
+                    <Label Content="Encounter Density" />
+                </StackPanel>
+                <CheckBox IsChecked="{Binding EnablePlanetaryEncounters}" Content="Enable Planetary Encounters" Margin="3" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding PlanetaryEncounterTimerMin}" Margin="3" Width="70" />
+                    <Label Content="Min Planetary Timer (mins)" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding PlanetaryEncounterTimerMax}" Margin="3" Width="70" />
+                    <Label Content="Max Planetary Timer (mins)" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding PlanetaryEncounterExistingStructuresRange}" Margin="3" Width="70" />
+                    <Label Content="Structure Check Range (m)" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding PlanetaryEncounterAreaLockdownRange}" Margin="3" Width="70" />
+                    <Label Content="Area Lockdown Range (m)" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding PlanetaryEncounterDesiredSpawnRange}" Margin="3" Width="70" />
+                    <Label Content="Desired Spawn Range (m)" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding PlanetaryEncounterPresenceRange}" Margin="3" Width="70" />
+                    <Label Content="Presence Check Range (m)" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding PlanetaryEncounterDespawnTimeout}" Margin="3" Width="70" />
+                    <Label Content="Despawn Timeout (mins)" />
+                </StackPanel>
+            </StackPanel>
+        </Expander>
     </StackPanel>
 </UserControl>
