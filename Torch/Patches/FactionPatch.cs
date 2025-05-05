@@ -26,6 +26,7 @@ namespace Torch.Patches
         
         private static Logger _log = LogManager.GetCurrentClassLogger();
         private static MethodInfo _registerFactionTagMethod = typeof(MyFactionCollection).GetMethod("RegisterFactionTag", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static MethodInfo _registerFactionTypeMethod = typeof(MyFactionCollection).GetMethod("RegisterFactionType", BindingFlags.NonPublic | BindingFlags.Instance);
         private static MethodInfo _addMethod = typeof(MyFactionCollection).GetMethod("Add", BindingFlags.NonPublic | BindingFlags.Instance);
         private static MethodInfo _compatDefaultFactions = typeof(MyFactionCollection).GetMethod("CompatDefaultFactions", BindingFlags.Public | BindingFlags.Instance);
         private static MethodInfo _cleanupFactionMsgMethod = typeof(MyFactionCollection).GetMethod("CleanUpFactionMessage", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -53,7 +54,8 @@ namespace Torch.Patches
             //add faction to dictionary
             m_factions.GetType().GetMethod("Add")?.Invoke(m_factions, new object[] { faction.FactionId, faction });
             _registerFactionTagMethod.Invoke(__instance, new object[] { faction });
-
+            _registerFactionTypeMethod.Invoke(__instance, new object[] { faction });
+            
             return false;
         }
         
