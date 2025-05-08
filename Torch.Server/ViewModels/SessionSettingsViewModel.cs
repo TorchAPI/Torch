@@ -236,6 +236,15 @@ namespace Torch.Server.ViewModels
 
         [Torch.Views.Display(Description = "Enables experimental mode.", Name = "Experimental Mode", GroupName = "Others")]
         public bool ExperimentalMode { get => _settings.ExperimentalMode; set => SetValue(ref _settings.ExperimentalMode, value); }
+        
+        [Torch.Views.Display(Description = "Enables experimental feature to share inertia tensor.", Name = "Enable Share Inertia Tensor", GroupName = "Others")]
+        public bool EnableShareInertiaTensor {get => _settings.EnableShareInertiaTensor; set => SetValue(ref _settings.EnableShareInertiaTensor, value);}
+        
+        [Torch.Views.Display(Description = "Enables unsafe impulses (experimental feature) for Piston block.", Name = "Enable Unsafe Piston Impulses", GroupName = "Others")]
+        public bool EnableUnsafePistonImpulses {get => _settings.EnableUnsafePistonImpulses; set => SetValue(ref _settings.EnableUnsafePistonImpulses, value);}
+        
+        [Torch.Views.Display(Description = "Enables unsafe torques (experimental feature) for Rotor blocks.", Name = "Enable Unsafe Rotor Impulses", GroupName = "Others")]
+        public bool EnableUnsafeRotorTorques {get => _settings.EnableUnsafeRotorTorques; set => SetValue(ref _settings.EnableUnsafeRotorTorques, value);}
 
         [Torch.Views.Display(Description = "Enables adaptive simulation quality system. This system is useful if you have a lot of voxel deformations in the world and low simulation speed.", Name = "Adaptive Simulation Quality", GroupName = "Others")]
         public bool AdaptiveSimulationQuality { get => _settings.AdaptiveSimulationQuality; set => SetValue(ref _settings.AdaptiveSimulationQuality, value); }
