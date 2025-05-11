@@ -311,10 +311,11 @@ namespace Torch
 
             Debug.Assert(MyPerGameSettings.BasicGameInfo.GameVersion != null, "MyPerGameSettings.BasicGameInfo.GameVersion != null");
             GameVersion = new MyVersion(MyPerGameSettings.BasicGameInfo.GameVersion.Value);
+            var buildNumber = MyPerGameSettings.BasicGameInfo.ServerBuildNumber;
 
             try
             {
-                Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}";
+                Console.Title = $"{Config.InstanceName} - Torch {TorchVersion}, SE {GameVersion}.{buildNumber}";
             }
             catch
             {
@@ -327,7 +328,7 @@ namespace Torch
             Log.Info("RELEASE");
 #endif
             Log.Info($"Torch Version: {TorchVersion}");
-            Log.Info($"Game Version: {GameVersion}");
+            Log.Info($"Game Version: {GameVersion}.{buildNumber}");
             Log.Info($"Executing assembly: {Assembly.GetEntryAssembly().FullName}");
             Log.Info($"Executing directory: {AppDomain.CurrentDomain.BaseDirectory}");
 
