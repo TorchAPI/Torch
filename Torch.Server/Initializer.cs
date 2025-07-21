@@ -91,6 +91,17 @@ quit";
                 File.Copy(apiSource, apiTarget);
             }
             
+                   
+            // Steam Client 64-bit DLL
+            var clientSource64 = Path.Combine(basePath, "DedicatedServer64", "steamclient64.dll");
+            var clientTarget64 = Path.Combine(basePath, "steamclient64.dll");
+            CopyAndVerifyDll(clientSource64, clientTarget64, new Version("9.86.62.31"));
+            
+            // Steam Client 32-bit DLL
+            var clientSource = Path.Combine(basePath, "DedicatedServer64", "steamclient.dll");
+            var clientTarget = Path.Combine(basePath, "steamclient.dll");
+            CopyAndVerifyDll(clientSource, clientTarget, new Version("9.86.62.31"));
+            
             var havokSource = Path.Combine(basePath, "DedicatedServer64", "Havok.dll");
             var havokTarget = Path.Combine(basePath, "Havok.dll");
 
@@ -231,6 +242,32 @@ quit";
             {
                 log.Info(cmd.StandardOutput.ReadLine());
                 Thread.Sleep(100);
+            }
+        }
+        
+        private void CopyAndVerifyDll(string sourcePath, string targetPath, Version requiredVersion = null)
+        {
+            if (!File.Exists(targetPath))
+            {
+                File.Copy(sourcePath, targetPath);
+                return;
+            }
+        
+            if (requiredVersion != null)
+            {
+                var targetVersion = FileVersionInfo.GetVersionInfo(targetPath);
+                var currentVersion = new Version(targetVersion.FileVersion);
+        
+                if (currentVersion != requiredVersion)
+                {
+                    File.Delete(targetPath);
+                    File.Copy(sourcePath, targetPath);
+                }
+            }
+            else if (File.GetLastWriteTime(targetPath) < File.GetLastWriteTime(sourcePath))
+            {
+                File.Delete(targetPath);
+                File.Copy(sourcePath, targetPath);
             }
         }
 
