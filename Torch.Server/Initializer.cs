@@ -102,6 +102,27 @@ quit";
             var clientTarget = Path.Combine(basePath, "steamclient.dll");
             CopyAndVerifyDll(clientSource, clientTarget, new Version("9.86.62.31"));
             
+            // tier0 64-bit DLL
+            var tier0Source64 = Path.Combine(basePath, "DedicatedServer64", "tier0_s64.dll");
+            var tier0Target64 = Path.Combine(basePath, "tier0_s64.dll");
+            CopyAndVerifyDll(tier0Source64, tier0Target64, new Version("9.86.62.31"));
+            
+            // tier0 32-bit DLL
+            var tier0Source = Path.Combine(basePath, "DedicatedServer64", "tier0_s.dll");
+            var tier0Target = Path.Combine(basePath, "tier0_s.dll");
+            CopyAndVerifyDll(tier0Source, tier0Target, new Version("9.86.62.31"));
+            
+            // vstdlib 64-bit DLL
+            var vstdlibSource64 = Path.Combine(basePath, "DedicatedServer64", "vstdlib_s64.dll");
+            var vstdlibTarget64 = Path.Combine(basePath, "vstdlib_s64.dll");
+            CopyAndVerifyDll(vstdlibSource64, vstdlibTarget64, new Version("9.86.62.31"));
+            
+            // vstdlib 32-bit DLL
+            var vstdlibSource = Path.Combine(basePath, "DedicatedServer64", "vstdlib_s.dll");
+            var vstdlibTarget = Path.Combine(basePath, "vstdlib_s.dll");
+            CopyAndVerifyDll(vstdlibSource, vstdlibTarget, new Version("9.86.62.31"));
+
+            
             var havokSource = Path.Combine(basePath, "DedicatedServer64", "Havok.dll");
             var havokTarget = Path.Combine(basePath, "Havok.dll");
 
