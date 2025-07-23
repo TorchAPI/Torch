@@ -92,35 +92,38 @@ quit";
             }
             
                    
+            // Define the required version once
+            var requiredVersion = new Version(9, 86, 62, 31);
+
             // Steam Client 64-bit DLL
             var clientSource64 = Path.Combine(basePath, "DedicatedServer64", "steamclient64.dll");
             var clientTarget64 = Path.Combine(basePath, "steamclient64.dll");
-            CopyAndVerifyDll(clientSource64, clientTarget64, new Version("9.86.62.31"));
-            
+            CopyAndVerifyDll(clientSource64, clientTarget64, requiredVersion);
+
             // Steam Client 32-bit DLL
             var clientSource = Path.Combine(basePath, "DedicatedServer64", "steamclient.dll");
             var clientTarget = Path.Combine(basePath, "steamclient.dll");
-            CopyAndVerifyDll(clientSource, clientTarget, new Version("9.86.62.31"));
-            
+            CopyAndVerifyDll(clientSource, clientTarget, requiredVersion);
+
             // tier0 64-bit DLL
             var tier0Source64 = Path.Combine(basePath, "DedicatedServer64", "tier0_s64.dll");
             var tier0Target64 = Path.Combine(basePath, "tier0_s64.dll");
-            CopyAndVerifyDll(tier0Source64, tier0Target64, new Version("9.86.62.31"));
-            
+            CopyAndVerifyDll(tier0Source64, tier0Target64, requiredVersion);
+
             // tier0 32-bit DLL
             var tier0Source = Path.Combine(basePath, "DedicatedServer64", "tier0_s.dll");
             var tier0Target = Path.Combine(basePath, "tier0_s.dll");
-            CopyAndVerifyDll(tier0Source, tier0Target, new Version("9.86.62.31"));
-            
+            CopyAndVerifyDll(tier0Source, tier0Target, requiredVersion);
+
             // vstdlib 64-bit DLL
             var vstdlibSource64 = Path.Combine(basePath, "DedicatedServer64", "vstdlib_s64.dll");
             var vstdlibTarget64 = Path.Combine(basePath, "vstdlib_s64.dll");
-            CopyAndVerifyDll(vstdlibSource64, vstdlibTarget64, new Version("9.86.62.31"));
-            
+            CopyAndVerifyDll(vstdlibSource64, vstdlibTarget64, requiredVersion);
+
             // vstdlib 32-bit DLL
             var vstdlibSource = Path.Combine(basePath, "DedicatedServer64", "vstdlib_s.dll");
             var vstdlibTarget = Path.Combine(basePath, "vstdlib_s.dll");
-            CopyAndVerifyDll(vstdlibSource, vstdlibTarget, new Version("9.86.62.31"));
+            CopyAndVerifyDll(vstdlibSource, vstdlibTarget, requiredVersion);
 
             
             var havokSource = Path.Combine(basePath, "DedicatedServer64", "Havok.dll");
@@ -277,9 +280,9 @@ quit";
             if (requiredVersion != null)
             {
                 var targetVersion = FileVersionInfo.GetVersionInfo(targetPath);
-                var currentVersion = new Version(targetVersion.FileVersion);
+                var currentVersion = targetVersion.FileVersion;
         
-                if (currentVersion != requiredVersion)
+                if (currentVersion != requiredVersion.ToString())
                 {
                     File.Delete(targetPath);
                     File.Copy(sourcePath, targetPath);
