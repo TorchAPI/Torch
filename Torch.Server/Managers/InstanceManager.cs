@@ -55,19 +55,7 @@ namespace Torch.Server.Managers
             MyFileSystem.Init("Content", path);
             //Initializes saves path. Why this isn't in Init() we may never know.
             MyFileSystem.InitUserSpecific(null);
-
-            // why?....
-            // var configPath = Path.Combine(path, CONFIG_NAME);
-            // if (!File.Exists(configPath))
-            // {
-            //     Log.Error($"Failed to load dedicated config at {path}");
-            //     return;
-            // }
-
             
-            // var config = new MyConfigDedicated<MyObjectBuilder_SessionSettings>(configPath);
-            // config.Load(configPath);
-
             DedicatedConfig = new ConfigDedicatedViewModel((MyConfigDedicated<MyObjectBuilder_SessionSettings>) MySandboxGame.ConfigDedicated);
 
             var worldFolders = Directory.EnumerateDirectories(Path.Combine(Torch.Config.InstancePath, "Saves"));

@@ -35,19 +35,6 @@ namespace Torch.Utils
 #pragma warning restore 618
             AppDomain.CurrentDomain.SetData(TorchKey, true);
             AppDomain.CurrentDomain.ExecuteAssemblyByName(entryPoint, args);
-            return;
-            // this would be way better but HAVOK IS UNMANAGED :clang:
-            // exclude application base from probing
-//            var setup = new AppDomainSetup
-//            {
-//                ApplicationBase = pathPrefix.ToString(),
-//                PrivateBinPathProbe = "",
-//                PrivateBinPath = string.Join(";", allPaths)
-//            };
-//            AppDomain domain = AppDomain.CreateDomain($"TorchDomain-{Assembly.GetEntryAssembly().GetName().Name}-{new Random().Next():X}", null, setup);
-//            domain.SetData(TorchKey, true);
-//            domain.ExecuteAssemblyByName(entryPoint, args);
-//            AppDomain.Unload(domain);
         }
     }
 }

@@ -46,11 +46,7 @@ namespace Torch.Managers
         {
             if (Torch.Config.NoUpdate || !Torch.Config.GetTorchUpdates || (Torch.Config.BranchName == TorchBranchType.dev))
                 return;
-
-#if  DEBUG
-            return;  
-#endif
-
+            
             try
             {
                 _log.Info("Checking for Torch Update...");

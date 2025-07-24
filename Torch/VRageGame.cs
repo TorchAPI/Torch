@@ -258,30 +258,7 @@ namespace Torch
                 {
                     renderer = new MyNullRender();
                 }
-                else
-                {
-                    MyPerformanceSettings preset = MyGuiScreenOptionsGraphics.GetPreset(MyRenderPresetEnum.NORMAL);
-                    MyRenderProxy.Settings.User = MyVideoSettingsManager.GetGraphicsSettingsFromConfig(ref preset, false)
-                        .PerformanceSettings.RenderSettings;
-                    MyStringId graphicsRenderer = MySandboxGame.Config.GraphicsRenderer;
-                    if (graphicsRenderer == MySandboxGame.DirectX11RendererKey)
-                    {
-                        renderer = new MyDX11Render(new MyRenderSettings?(MyRenderProxy.Settings));
-                        if (!renderer.IsSupported)
-                        {
-                            MySandboxGame.Log.WriteLine(
-                                "DirectX 11 renderer not supported. No renderer to revert back to.");
-                            renderer = null;
-                        }
-                    }
-                    if (renderer == null)
-                    {
-                        throw new MyRenderException(
-                            "The current version of the game requires a Dx11 card. \\n For more information please see : http://blog.marekrosa.org/2016/02/space-engineers-news-full-source-code_26.html",
-                            MyRenderExceptionEnum.GpuNotSupported);
-                    }
-                    MySandboxGame.Config.GraphicsRenderer = graphicsRenderer;
-                }
+                
                 MyRenderProxy.Initialize(renderer);
                 MyRenderProfiler.SetAutocommit(false);
                 //This broke services?

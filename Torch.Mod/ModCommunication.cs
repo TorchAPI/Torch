@@ -76,16 +76,11 @@ namespace Torch.Mod
         {
             MyLog.Default.WriteLineAndConsole("TORCH MOD: Unregistering mod communication.");
             MyAPIGateway.Multiplayer?.UnregisterSecureMessageHandler(NET_ID, MessageHandler);
-            //_processing?.CompleteAdding();
             _closing = true;
-            //_task.Wait();
         }
 
         public static void DoProcessing(MessageBase m)
         {
-            if (false)
-                MyAPIGateway.Utilities.ShowMessage("Torch", $"Sending message of type {m.GetType().Name}");
-
             var b = MyAPIGateway.Utilities.SerializeToBinary(m);
 
 
