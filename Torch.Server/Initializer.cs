@@ -57,6 +57,11 @@ quit";
             if (_init)
                 return false;
 
+            // Adding .net 10 preview stuff might have made optimizations/inlining too fast??
+            // the !Debug is called before nlog has loaded so we force it.
+            var config = new NLog.Config.XmlLoggingConfiguration("NLog.config", true);
+            LogManager.Configuration = config;
+            
 #if !DEBUG
             AppDomain.CurrentDomain.UnhandledException += HandleException;
             LogManager.Configuration.AddRule(LogLevel.Info, LogLevel.Fatal, "console");

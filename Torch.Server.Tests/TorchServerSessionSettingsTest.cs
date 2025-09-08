@@ -20,10 +20,6 @@ namespace Torch.Server.Tests
         [MemberData(nameof(ModelFields))]
         public void MissingPropertyTest(FieldInfo modelField)
         {
-            // Ignore fields that aren't applicable to SE
-            if (modelField.GetCustomAttribute<GameRelationAttribute>()?.RelatedTo == Game.MedievalEngineers)
-                return;
-
             if (string.IsNullOrEmpty(modelField.GetCustomAttribute<DisplayAttribute>()?.Name))
                 return;
 
