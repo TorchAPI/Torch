@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using MahApps.Metro.Controls;
+using System.Collections.Generic;
 using System.ComponentModel;
 using VRage.Game;
 using VRage.Library.Utils;
+using VRageRender.Utils;
+using static Sandbox.Game.Multiplayer.MyPlayerCollection;
+using static VRage.Dedicated.RemoteAPI.MyDedicatedController;
 
 namespace Torch.Server.ViewModels
 {
@@ -538,7 +542,41 @@ namespace Torch.Server.ViewModels
         // This setting is not found in vanilla dedicated server GUI
         [Torch.Views.Display(Description = "Enables experimental mode.", Name = "Experimental Mode", GroupName = "Experimental")]
         public bool ExperimentalMode { get => _settings.ExperimentalMode; set => SetValue(ref _settings.ExperimentalMode, value); }
-        
+
+
+        [Torch.Views.Display(Description = "Enable radiation hazards. Requires Airtightness.", Name = "Enable Radiation", GroupName = "Environment")]
+        public bool EnableRadiation { get => _settings.EnableRadiation; set => SetValue(ref _settings.EnableRadiation, value); }
+
+        [Torch.Views.Display(Description = "A multiplier for the amount of radiation gained in space from sun exposure. Requires Airtightness and Radiation.", Name = "Solar Radiation Intensity", GroupName = "Environment")]
+        public float SolarRadioationIntensity { get => _settings.SolarRadiationIntensity; set => SetValue(ref _settings.SolarRadiationIntensity, value); }
+
+
+        [Torch.Views.Display(Description = "Enables reseting forageable items.", Name = "Reset forageable items", GroupName = "Trash Removal")]
+        public bool ResetForageableItems { get => _settings.ResetForageableItems; set => SetValue(ref _settings.ResetForageableItems, value); }
+
+
+        [Torch.Views.Display(Description = "Defines time in minutes after which forageable items are reset.", Name = "Reset forageable items time (min)", GroupName = "Trash Removal")]
+        public int ResetForageableItemsTimeM { get => _settings.ResetForageableItemsTimeM; set => SetValue(ref _settings.ResetForageableItemsTimeM, value); }
+
+
+        [Torch.Views.Display(Description = "Defines minimum distance from player for forageable items to reset.", Name = "Reset forageable items distance (m)", GroupName = "Trash Removal")]
+        public int ResetForageableItemsDistance { get => _settings.ResetForageableItemsDistance; set => SetValue(ref _settings.ResetForageableItemsDistance, value); }
+
+
+        [Torch.Views.Display(Description = "This value impacts how quickly the player becomes hungry, as well as how quickly food production occurs.", Name = "Food Consumption Rate", GroupName = "Environment")]
+        public float FoodCunsumptionRate { get => _settings.FoodConsumptionRate; set => SetValue(ref _settings.FoodConsumptionRate, value); }
+
+
+        [Torch.Views.Display(Description = "Enable buffs and enhancements which player characters earn over time. These benefits are lost if the player respawns.", Name = "Enable Survival Buffs", GroupName = "Environment")]
+        public bool EnableSurvivalBuffs { get => _settings.EnableSurvivalBuffs; set => SetValue(ref _settings.EnableSurvivalBuffs, value); }
+
+
+        [Torch.Views.Display(Description = "Upon respawning, all players will have their health, oxygen, gas tank levels, and other stats set to critically low levels.", Name = "Enable Reduced Stats", GroupName = "Environment")]
+        public bool EnableReducedStatsOnRespawn { get => _settings.EnableReducedStatsOnRespawn; set => SetValue(ref _settings.EnableReducedStatsOnRespawn, value); }
+
+
+
+
 
 
         public SessionSettingsViewModel(MyObjectBuilder_SessionSettings settings)
