@@ -63,8 +63,8 @@ namespace Torch
         [ReflectedMethod(Name = "Unload", TypeName = "Sandbox.Game.Audio.MyMusicController, Sandbox.Game")]
         private static readonly Action<object> _musicControllerUnload;
 
-//        [ReflectedGetter(Name = "UpdateLayerDescriptors", Type = typeof(MyReplicationServer))]
-//        private static readonly Func<MyReplicationServer.UpdateLayerDesc[]> _layerSettings;
+        //[ReflectedGetter(Name = "UpdateLayerDescriptors", Type = typeof(MyReplicationServer))]
+        //private static readonly Func<MyReplicationServer.UpdateLayerDesc[]> _layerSettings;
 
 #pragma warning restore 649
 
@@ -78,7 +78,7 @@ namespace Torch
         private readonly Thread _updateThread;
         private readonly string _rootPath;
         private readonly string _modCachePath = null;
-        
+
         private bool _startGame = false;
         private readonly AutoResetEvent _commandChanged = new AutoResetEvent(false);
         private bool _destroyGame = false;
@@ -155,19 +155,19 @@ namespace Torch
             //not implemented by keen.. removed in cross-play update
             //MyVRage.Platform.InitScripting(MyVRageScripting.Create());
             _ = MyVRage.Platform.Scripting;
-            
+
             MyFileSystem.ExePath = Path.GetDirectoryName(typeof(SpaceEngineersGame).Assembly.Location);
 
             _tweakGameSettings();
 
             MyFileSystem.Reset();
-            MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _rootPath, _userDataPath,false, -1, null, _modCachePath);
+            MyInitializer.InvokeBeforeRun(_appSteamId, _appName, _rootPath, _userDataPath, false, -1, null, _modCachePath);
 
             _log.Info("Loading Dedicated Config");
             // object created in SpaceEngineersGame.SetupPerGameSettings()
             MySandboxGame.ConfigDedicated.Load();
             MyPlatformGameSettings.CONSOLE_COMPATIBLE = MySandboxGame.ConfigDedicated.ConsoleCompatibility;
-            
+
             //Type.GetType("VRage.Steam.MySteamService, VRage.Steam").GetProperty("IsActive").GetSetMethod(true).Invoke(service, new object[] {SteamAPI.Init()});
             _log.Info("Initializing network services");
 
@@ -181,12 +181,12 @@ namespace Torch
 
             var aggregator = new MyServerDiscoveryAggregator();
             MyServiceManager.Instance.AddService<IMyServerDiscovery>(aggregator);
-            
+
             IMyGameService service;
             if (isEos)
             {
                 service = MyEOSService.Create();
-                MyEOSService.InitNetworking(dedicated,false,
+                MyEOSService.InitNetworking(dedicated, false,
                     "Space Engineers",
                     service,
                     "xyza7891A4WeGrpP85BTlBa3BSfUEABN",
@@ -215,7 +215,7 @@ namespace Torch
             }
 
             MyServiceManager.Instance.AddService(service);
-            
+
             MyGameService.WorkshopService.AddAggregate(MyModIoService.Create(
                 service,
                 "spaceengineers",
@@ -227,18 +227,18 @@ namespace Torch
                 true,
                 "XboxLive",
                 "XboxOne"));
-            
+
             if (!isEos && !MyGameService.HasGameServer)
             {
                 _log.Warn("Network service is not running! Please reinstall dedicated server.");
                 return;
             }
-            
+
             _log.Info("Initializing services");
             MyServiceManager.Instance.AddService<IMyMicrophoneService>(new MyNullMicrophone());
 
             MyNetworkMonitor.Init();
-            
+
             _log.Info("Services initialized");
             MySandboxGame.InitMultithreading();
             // MyInitializer.InitCheckSum();
@@ -250,7 +250,7 @@ namespace Torch
             if (!MySandboxGame.IsReloading)
                 MyFileSystem.InitUserSpecific(dedicated ? null : MyGameService.UserId.ToString());
             MySandboxGame.IsReloading = dedicated;
-            
+
             // render init
             {
                 IMyRender renderer = null;
@@ -258,7 +258,7 @@ namespace Torch
                 {
                     renderer = new MyNullRender();
                 }
-                
+
                 MyRenderProxy.Initialize(renderer);
                 MyRenderProfiler.SetAutocommit(false);
                 //This broke services?
@@ -273,8 +273,24 @@ namespace Torch
             MyPlugins.RegisterGameObjectBuildersAssemblyFile(MyPerGameSettings.GameModObjBuildersAssembly);
             MyPlugins.RegisterSandboxAssemblyFile(MyPerGameSettings.SandboxAssembly);
             MyPlugins.RegisterSandboxGameAssemblyFile(MyPerGameSettings.SandboxGameAssembly);
-            //typeof(MySandboxGame).GetMethod("Preallocate", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
             MyGlobalTypeMetadata.Static.Init(false);
+            typeof(MySandboxGame).GetMethod("Preallocate", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
+
+            // MyEntities static constructor gets invoked too early by EntityTreeViewModel.Init and so
+            // some object builder types do not get registered with the entity object factory.
+            var entityFactory = Type.GetType("Sandbox.Game.Entities.MyEntityFactory, Sandbox.Game");
+
+            var objFactory = (VRage.ObjectBuilders.MyObjectFactory<VRage.Game.Entity.MyEntityTypeAttribute, VRage.Game.Entity.MyEntity>)entityFactory
+                .GetField("m_objectFactory", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+
+            // Make sure the types weren't already registered correctly in MySandboxGame.Preload
+            if (objFactory.TryGetProducedType(typeof(MyObjectBuilder_CubePlacer)) == null)
+            {
+                var registerDescriptorsFromAssembly = entityFactory.GetMethod("RegisterDescriptorsFromAssembly", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Assembly[]) }, null);
+
+                registerDescriptorsFromAssembly.Invoke(null, new object[] { new[] { MyPlugins.GameAssembly, MyPlugins.SandboxAssembly } });
+                registerDescriptorsFromAssembly.Invoke(null, new object[] { MyPlugins.UserAssemblies });
+            }
         }
 
         private void Destroy()
@@ -434,12 +450,12 @@ namespace Torch
 
         public Task LoadSession(string path)
         {
-            return _torch.InvokeAsync(()=>DoLoadSession(path));
+            return _torch.InvokeAsync(() => DoLoadSession(path));
         }
 
         public Task JoinSession(ulong lobbyId)
         {
-            return _torch.InvokeAsync(()=>DoJoinSession(lobbyId));
+            return _torch.InvokeAsync(() => DoJoinSession(lobbyId));
         }
 
         public Task UnloadSession()
@@ -459,7 +475,7 @@ namespace Torch
             if (Thread.CurrentThread == _updateThread)
                 return _state == state;
 
-            DateTime? end = timeout.HasValue ? (DateTime?) (DateTime.Now + timeout.Value) : null;
+            DateTime? end = timeout.HasValue ? (DateTime?)(DateTime.Now + timeout.Value) : null;
             while (_state != state && (!end.HasValue || end > DateTime.Now + TimeSpan.FromSeconds(1)))
                 if (end.HasValue)
                     _stateChangedEvent.WaitOne(end.Value - DateTime.Now);
