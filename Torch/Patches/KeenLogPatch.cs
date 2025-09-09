@@ -1,17 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using NLog;
-using Torch.API;
+using Sandbox.Engine.Multiplayer;
 using Torch.Managers.PatchManager;
 using Torch.Utils;
 using VRage.Utils;
-using Sandbox.Engine.Multiplayer;
-using Sandbox.Game.World;
 
 namespace Torch.Patches
 {
@@ -48,7 +43,6 @@ namespace Torch.Patches
         [ReflectedMethodInfo(typeof(MyMultiplayerServerBase), nameof(MyMultiplayerServerBase.ValidationFailed), Parameters = new[] { typeof(ulong), typeof(bool), typeof(string), typeof(bool) })]
         private static MethodInfo _logSuppressValidationFailed;
 #pragma warning restore 649
-        
 
         public static void Patch(PatchContext context)
         {
@@ -62,7 +56,7 @@ namespace Torch.Patches
             context.GetPattern(_logWriteLineException).Prefixes.Add(Method(nameof(PrefixWriteLineException)));
             context.GetPattern(_logAppendToClosedLogException).Prefixes.Add(Method(nameof(PrefixAppendToClosedLogException)));
 
-            context.GetPattern(_logWriteLineOptions).Prefixes.Add(Method(nameof(PrefixWriteLineOptions)));  
+            context.GetPattern(_logWriteLineOptions).Prefixes.Add(Method(nameof(PrefixWriteLineOptions)));
         }
 
         private static MethodInfo Method(string name)
@@ -75,26 +69,19 @@ namespace Torch.Patches
 
         [ThreadStatic]
         private static StringBuilder _tmpStringBuilder;
-        
+
         private static StringBuilder PrepareLog(MyLog log)
         {
             if (_tmpStringBuilder == null)
                 _tmpStringBuilder = new StringBuilder();
-            
+
             _tmpStringBuilder.Clear();
             var i = Thread.CurrentThread.ManagedThreadId;
             int t = 0;
-            
-            try
-            {
+
+            if (log.LogEnabled)
                 t = _getIndentByThread(log, i);
-            }
-            catch (Exception e)
-            {
-                //Commented out as it eventually resolves once fully loaded.
-                //_log.Debug(e, "Failed to get thread indent");
-            }
-            
+
             _tmpStringBuilder.Append(' ', t * 3);
             return _tmpStringBuilder;
         }
@@ -120,11 +107,11 @@ namespace Torch.Patches
         {
             var logFlagMethod = typeof(MyLog).GetMethod("LogFlag", BindingFlags.Instance | BindingFlags.NonPublic);
 
-            if(logFlagMethod == null)
+            if (logFlagMethod == null)
                 throw new Exception("Failed to find LogFlag method");
-            
+
             var logFlag = (bool)logFlagMethod.Invoke(__instance, new object[] { option });
-            
+
             if (logFlag)
                 _log.Info(PrepareLog(__instance).Append(message));
             return false;
