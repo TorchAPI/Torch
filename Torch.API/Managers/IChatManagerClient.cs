@@ -1,13 +1,14 @@
-﻿using System;
+﻿using Sandbox.Engine.Multiplayer;
+using Sandbox.Game.Gui;
+using Sandbox.Game.Multiplayer;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Sandbox.Engine.Multiplayer;
-using Sandbox.Game.Gui;
-using Sandbox.Game.Multiplayer;
 using Torch.Utils;
 using VRage.Game;
+using VRage.GameServices;
 using VRage.Network;
 using VRage.Replication;
 using VRageMath;
@@ -54,6 +55,7 @@ namespace Torch.API.Managers
             Target = 0;
             Font = font;
             Color = color == default ? ColorUtils.TranslateColor(font) : color;
+            CustomData = null;
         }
 
         /// <summary>
@@ -73,6 +75,7 @@ namespace Torch.API.Managers
             Target = target;
             Font = font;
             Color = color == default ? ColorUtils.TranslateColor(font) : color;
+            CustomData = null;
         }
 
         /// <summary>
@@ -91,6 +94,20 @@ namespace Torch.API.Managers
             Target = target;
             Font = font;
             Color = color == default ? ColorUtils.TranslateColor(font) : color;
+            CustomData = null;
+        }
+
+        public TorchChatMessage(ChatMsg msg)
+        {
+            Timestamp = DateTime.Now;
+            AuthorSteamId = msg.Author;
+            Author = MyMultiplayer.Static?.GetMemberName(msg.Author) ?? "Player";
+            Message = msg.Text;
+            Channel = (ChatChannel)msg.Channel;
+            Target = msg.TargetId;
+            Font = DEFAULT_FONT;
+            Color = default;
+            CustomData = msg.CustomData;
         }
 
         /// <summary>
@@ -125,6 +142,11 @@ namespace Torch.API.Managers
         /// The chat message color.
         /// </summary>
         public readonly Color Color;
+
+        /// <summary>
+        /// Chat message custom data, if any.
+        /// </summary>
+        public readonly ChatMessageCustomData? CustomData;
     }
 
     /// <summary>
