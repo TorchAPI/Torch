@@ -41,6 +41,8 @@ namespace Torch.Managers.ChatManager
 
         private static bool PrefixMessageProcessing(ref ChatMsg msg)
         {
+          
+
             var consumed = false;
             OnChatRecvAccess?.Invoke(ref msg);
             ChatManager.RaiseMessageRecieved(msg, ref consumed);
@@ -158,7 +160,7 @@ namespace Torch.Managers.ChatManager
 
         internal void RaiseMessageRecieved(ChatMsg message, ref bool consumed)
         {
-            var torchMsg = new TorchChatMessage(GetMemberName(message.Author), message.Author, message.Text, (ChatChannel)message.Channel, message.TargetId);
+            var torchMsg = new TorchChatMessage(message);
             if (_muted.Contains(message.Author))
             {
                 consumed = true;
