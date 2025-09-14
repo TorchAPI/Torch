@@ -75,7 +75,7 @@ namespace Torch.Server
         {
             Dispatcher.InvokeAsync(() =>
             {
-                ChatItems.Inlines.Clear();
+                ChatItems.Document.Blocks.Clear();
             });
 
             var sessionManager = _server.Managers.GetManager<ITorchSessionManager>();
@@ -88,7 +88,7 @@ namespace Torch.Server
             switch (state)
             {
                 case TorchSessionState.Loading:
-                    Dispatcher.InvokeAsync(() => ChatItems.Inlines.Clear());
+                    Dispatcher.InvokeAsync(() => ChatItems.Document.Blocks.Clear());
                     break;
                 case TorchSessionState.Loaded:
                     {
@@ -131,6 +131,14 @@ namespace Torch.Server
             if (Dispatcher.CheckAccess())
             {
                 bool atBottom = ChatScroller.VerticalOffset + 8 > ChatScroller.ScrollableHeight;
+
+                // We'll maintain a single paragraph for all messages:
+                if (!(ChatItems.Document.Blocks.FirstBlock is Paragraph firstBlock))
+                {
+                    firstBlock = new Paragraph();
+                    ChatItems.Document.Blocks.Add(firstBlock);
+                }
+
                 var span = new Span();
                 span.Inlines.Add($"{msg.Timestamp} ");
                 switch (msg.Channel)
@@ -145,7 +153,8 @@ namespace Torch.Server
                 span.Inlines.Add(new Run(msg.Author) { Foreground = LookupBrush(msg.Font) });
                 span.Inlines.Add($": {msg.Message}");
                 span.Inlines.Add(new LineBreak());
-                ChatItems.Inlines.Add(span);
+                firstBlock.Inlines.Add(span);
+
                 if (atBottom)
                     ChatScroller.ScrollToBottom();
             }
