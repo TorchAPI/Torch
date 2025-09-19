@@ -45,7 +45,11 @@ namespace Torch.Server
         protected override void OnStop()
         {
             var mre = new ManualResetEvent(false);
-            Task.Run(() => _initializer.Server.Stop());
+            Task.Run(() =>
+            {
+                _initializer.Server.Stop();
+                _initializer.Server.Destroy();
+            });
             if (!mre.WaitOne(TimeSpan.FromMinutes(1)))
                 Process.GetCurrentProcess().Kill();
         }

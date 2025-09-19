@@ -223,6 +223,7 @@ namespace Torch.Server
                 {
                     config.TempAutostart = true;
                     torch.Stop();
+                    torch.Destroy();
                 }
                 
                 LogManager.Flush();
