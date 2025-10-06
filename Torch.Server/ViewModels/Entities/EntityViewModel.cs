@@ -20,7 +20,7 @@ using VRageMath;
 
 namespace Torch.Server.ViewModels.Entities
 {
-    public class EntityViewModel : ViewModel
+    public class EntityViewModel : ViewModel, IEntityModel
     {
         protected EntityTreeViewModel Tree { get; }
 
@@ -30,7 +30,7 @@ namespace Torch.Server.ViewModels.Entities
         public IMyEntity Entity
         {
             get => _backing;
-            protected set
+            private set
             {
                 _backing = value;
                 OnPropertyChanged();
@@ -139,7 +139,7 @@ namespace Torch.Server.ViewModels.Entities
 
         public virtual string Position
         {
-            get => Entity?.GetPosition().ToString();
+            get => Entity?.GetPosition().ToString() ?? "nil";
             set
             {
                 if (!Vector3D.TryParse(value, out Vector3D v))
@@ -155,6 +155,13 @@ namespace Torch.Server.ViewModels.Entities
 
         public virtual bool CanDelete => true;
 
+        private bool _isMarkedForDelete;
+        public bool IsMarkedForDelete
+        {
+            get => _isMarkedForDelete;
+            set => SetValue(ref _isMarkedForDelete, value);
+        }
+        
         public virtual void Delete()
         {
             Entity.Close();
@@ -183,6 +190,22 @@ namespace Torch.Server.ViewModels.Entities
             public int Compare(EntityViewModel x, EntityViewModel y)
             {
                 return x.CompareToSort(y, _sort);
+            }
+        }
+        
+        // Converts meters to a human-readable KM.
+        public virtual string PrettyDistance
+        {
+            get
+            {
+                Vector3D? position = Entity?.GetPosition();
+                if (position is null) return "nil";
+            
+                var distance = Vector3D.Distance((Vector3D)position, Vector3D.Zero);
+                if (distance < 1000)
+                    return $"{distance:N0} m";
+    
+                return $"{distance / 1000:N2} km";
             }
         }
     }

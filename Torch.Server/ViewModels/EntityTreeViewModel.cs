@@ -32,13 +32,13 @@ namespace Torch.Server.ViewModels
         //TODO: these should be sorted sets for speed
         public MtObservableSortedDictionary<long, GridViewModel> Grids { get; set; } = new MtObservableSortedDictionary<long, GridViewModel>();
         public MtObservableSortedDictionary<long, CharacterViewModel> Characters { get; set; } = new MtObservableSortedDictionary<long, CharacterViewModel>();
-        public MtObservableSortedDictionary<long, EntityViewModel> FloatingObjects { get; set; } = new MtObservableSortedDictionary<long, EntityViewModel>();
+        public MtObservableSortedDictionary<long, FloatingObjectViewModel> FloatingObjects { get; set; } = new MtObservableSortedDictionary<long, FloatingObjectViewModel>();
         public MtObservableSortedDictionary<long, VoxelMapViewModel> VoxelMaps { get; set; } = new MtObservableSortedDictionary<long, VoxelMapViewModel>();
         public Dispatcher ControlDispatcher => _control.Dispatcher;
 
         public SortedView<GridViewModel> SortedGrids { get; }
         public SortedView<CharacterViewModel> SortedCharacters { get; }
-        public SortedView<EntityViewModel> SortedFloatingObjects { get; }
+        public SortedView<FloatingObjectViewModel> SortedFloatingObjects { get; }
         public SortedView<VoxelMapViewModel> SortedVoxelMaps { get; }
 
         private EntityViewModel _currentEntity;
@@ -68,7 +68,7 @@ namespace Torch.Server.ViewModels
             var comparer = new EntityViewModel.Comparer(_currentSort);
             SortedGrids = new SortedView<GridViewModel>(Grids.Values, comparer);
             SortedCharacters = new SortedView<CharacterViewModel>(Characters.Values, comparer);
-            SortedFloatingObjects = new SortedView<EntityViewModel>(FloatingObjects.Values, comparer);
+            SortedFloatingObjects = new SortedView<FloatingObjectViewModel>(FloatingObjects.Values, comparer);
             SortedVoxelMaps = new SortedView<VoxelMapViewModel>(VoxelMaps.Values, comparer);
         }
 

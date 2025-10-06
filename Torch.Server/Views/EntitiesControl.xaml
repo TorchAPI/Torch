@@ -27,7 +27,9 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TreeView Grid.Row="0" Margin="3" DockPanel.Dock="Top" SelectedItemChanged="TreeView_OnSelectedItemChanged" TreeViewItem.Expanded="TreeViewItem_OnExpanded" Name="EntityTree">
+                    <TreeView Grid.Row="0" Margin="3" DockPanel.Dock="Top" 
+                              SelectedItemChanged="TreeView_OnSelectedItemChanged" 
+                              TreeViewItem.Expanded="TreeViewItem_OnExpanded" Name="EntityTree">
                         <TreeView.Resources>
                             <HierarchicalDataTemplate DataType="{x:Type entities:GridViewModel}" ItemsSource="{Binding Path=Blocks}">
                                 <TextBlock Text="{Binding DescriptiveName}" />
@@ -109,16 +111,23 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TreeView Grid.Row="0" Grid.Column="0" Margin="3" DockPanel.Dock="Top" SelectedItemChanged="TreeView_Grids_OnSelectionItemChanged" TreeViewItem.Expanded="TreeViewItem_OnExpanded" Name="EntityTree_Grids">
+                    <TreeView Grid.Row="0" Grid.Column="0" Margin="3" DockPanel.Dock="Top" 
+                              SelectedItemChanged="TreeView_Grids_OnSelectionItemChanged" 
+                              TreeViewItem.Expanded="TreeViewItem_OnExpanded" Name="EntityTree_Grids">
                         <TreeView.Resources>
+                            <!-- Grids -->
                             <HierarchicalDataTemplate DataType="{x:Type entities:GridViewModel}" ItemsSource="{Binding Path=Blocks}">
-                                <TextBlock Text="{Binding DescriptiveName}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox IsChecked="{Binding IsMarkedForDelete, Mode=TwoWay}" Margin="2,0,4,0"/>
+                                    <TextBlock Text="{Binding DescriptiveName}" />
+                                </StackPanel>
                                 <HierarchicalDataTemplate.ItemTemplate>
                                     <HierarchicalDataTemplate ItemsSource="{Binding Value.Values}">
                                         <TextBlock>
                                             <Run Text="{Binding Path=Key, Converter={StaticResource DefinitionConverter}, Mode=OneWay}" />
                                             <Run Text="{Binding Path=Value.Count, StringFormat=' ({0} blocks)', Mode=OneWay}" />
                                         </TextBlock>
+                                        <!-- Blocks -->
                                         <HierarchicalDataTemplate.ItemTemplate>
                                             <DataTemplate DataType="{x:Type blocks:BlockViewModel}">
                                                 <TextBlock Text="{Binding Path=Name}" />
@@ -128,6 +137,7 @@
                                 </HierarchicalDataTemplate.ItemTemplate>
                             </HierarchicalDataTemplate>
                         </TreeView.Resources>
+                        
                         <TreeViewItem ItemsSource="{Binding Path=SortedGrids}">
                             <TreeViewItem.Header>
                                 <TextBlock Text="{Binding Grids.Count, StringFormat=Grids ({0})}" />
@@ -137,7 +147,7 @@
 
                     <ComboBox Grid.Row="1" Margin="3" Name="SortCombo_GridTab" SelectionChanged="SortCombo_SelectionChanged" />
                     <StackPanel Grid.Column="0" Grid.Row="2" DockPanel.Dock="Bottom">
-                        <Button Content="Delete" Click="Delete_OnClick" IsEnabled="{Binding CurrentEntity.CanDelete}" Margin="3" />
+                        <Button Tag="Grids" Content="Delete Selected" Click="MultiDelete_OnClick" IsEnabled="{Binding CurrentEntity.CanDelete}" Margin="3" />
                         <Button Content="Stop" Click="Stop_OnClick" IsEnabled="{Binding CurrentEntity.CanStop}" Margin="3" />
                     </StackPanel>
                 </Grid>
@@ -158,7 +168,9 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TreeView Grid.Row="0" Grid.Column="0" Margin="3" DockPanel.Dock="Top" SelectedItemChanged="TreeView_Characters_OnSelectionItemChanged" TreeViewItem.Expanded="TreeViewItem_OnExpanded" Name="EntityTree_Characters">
+                    <TreeView Grid.Row="0" Grid.Column="0" Margin="3" DockPanel.Dock="Top" 
+                              SelectedItemChanged="TreeView_Characters_OnSelectionItemChanged" 
+                              TreeViewItem.Expanded="TreeViewItem_OnExpanded" Name="EntityTree_Characters">
                         <TreeViewItem ItemsSource="{Binding Path=SortedCharacters}">
                             <TreeViewItem.Header>
                                 <TextBlock Text="{Binding Characters.Count, StringFormat=Characters ({0})}" />
@@ -193,10 +205,15 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TreeView Grid.Row="0" Grid.Column="0" Margin="3" DockPanel.Dock="Top" SelectedItemChanged="TreeView_VoxelMaps_OnSelectionItemChanged" TreeViewItem.Expanded="TreeViewItem_OnExpanded" Name="EntityTree_Voxels">
+                    <TreeView Grid.Row="0" Grid.Column="0" Margin="3" DockPanel.Dock="Top" 
+                              SelectedItemChanged="TreeView_VoxelMaps_OnSelectionItemChanged" 
+                              TreeViewItem.Expanded="TreeViewItem_OnExpanded" Name="EntityTree_Voxels">
                         <TreeView.Resources>
                             <HierarchicalDataTemplate DataType="{x:Type entities:VoxelMapViewModel}" ItemsSource="{Binding AttachedGrids}">
-                                <TextBlock Text="{Binding DescriptiveName}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox IsChecked="{Binding IsMarkedForDelete, Mode=TwoWay}" Margin="2,0,4,0"/>
+                                    <TextBlock Text="{Binding DescriptiveName}" />
+                                </StackPanel>
                             </HierarchicalDataTemplate>
                         </TreeView.Resources>
                         <TreeViewItem ItemsSource="{Binding Path=SortedVoxelMaps}">
@@ -208,7 +225,7 @@
 
                     <ComboBox Grid.Row="1" Margin="3" Name="SortCombo_Voxels" SelectionChanged="SortCombo_SelectionChanged" />
                     <StackPanel Grid.Column="0" Grid.Row="2" DockPanel.Dock="Bottom">
-                        <Button Content="Delete" Click="Delete_OnClick" IsEnabled="{Binding CurrentEntity.CanDelete}" Margin="3" />
+                        <Button Tag="VoxelMaps" Content="Delete" Click="MultiDelete_OnClick" IsEnabled="{Binding CurrentEntity.CanDelete}" Margin="3" />
                     </StackPanel>
                 </Grid> 
                 <Frame Grid.Column="1" x:Name="EditorFrame_VoxelMaps" Margin="3" NavigationUIVisibility="Hidden" />
@@ -233,14 +250,23 @@
                               TreeViewItem.Expanded="TreeViewItem_OnExpanded" Name="EntityTree_FloatingObjects">
                         <TreeViewItem ItemsSource="{Binding Path=SortedFloatingObjects}">
                             <TreeViewItem.Header>
-                                <TextBlock Text="{Binding VoxelMaps.Count, StringFormat=Floating Objects ({0})}" />
+                                <TextBlock Text="{Binding FloatingObjects.Count, StringFormat=Floating Objects ({0}), Mode=OneWay}" />
                             </TreeViewItem.Header>
+                            <TreeViewItem.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <CheckBox IsChecked="{Binding IsMarkedForDelete, Mode=TwoWay}" Margin="2,0,4,0"/>
+                                        <TextBlock Text="{Binding DescriptiveName}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </TreeViewItem.ItemTemplate>
                         </TreeViewItem>
                     </TreeView>
 
                     <ComboBox Grid.Row="1" Margin="3" Name="SortCombo_FloatingObjects" SelectionChanged="SortCombo_SelectionChanged" />
                     <StackPanel Grid.Column="0" Grid.Row="2" DockPanel.Dock="Bottom">
-                        <Button Content="Delete Floating objects" Click="DeleteFloating_OnClick" IsEnabled="{Binding CurrentEntity.CanStop}" Margin="3" />
+                        <Button Content="Delete All Floating objects" Click="DeleteFloating_OnClick" IsEnabled="{Binding CurrentEntity.CanStop}" Margin="3" />
+                        <Button Tag="FloatingObjects" Content="Delete Selected Floating objects" Click="MultiDelete_OnClick" IsEnabled="{Binding CurrentEntity.CanStop}" Margin="3" />
                     </StackPanel>
                 </Grid>
                 <Frame Grid.Column="1" x:Name="EditorFrame_FloatingObjects" Margin="3" NavigationUIVisibility="Hidden" />

@@ -54,7 +54,7 @@ namespace Torch.Server.ViewModels.Entities
         public GridViewModel()
         {
         }
-
+        
         public GridViewModel(MyCubeGrid grid, EntityTreeViewModel tree) : base(grid, tree)
         {
             //DescriptiveName = $"{grid.DisplayName} ({grid.BlocksCount} blocks)";

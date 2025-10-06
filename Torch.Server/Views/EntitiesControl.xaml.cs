@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using NLog;
+using Sandbox.Game.Entities;
 using Torch.Collections;
 using Torch.Server.ViewModels;
 using Torch.Server.ViewModels.Blocks;
@@ -64,6 +65,9 @@ namespace Torch.Server.Views
                         break;
                     case CharacterViewModel cvm:
                         EditorFrame.Content = new CharacterView {DataContext = cvm};
+                        break;
+                    case FloatingObjectViewModel fvm:
+                        EditorFrame.Content = new FloatingObjectsView {DataContext = fvm};
                         break;
                 }
             }
@@ -141,7 +145,7 @@ namespace Torch.Server.Views
                 switch (e.NewValue)
                 {
                     case FloatingObjectViewModel fvm:
-                        EditorFrame_FloatingObjects.Content = new Entities.GridView { DataContext = fvm };
+                        EditorFrame_FloatingObjects.Content = new FloatingObjectsView { DataContext = fvm };
                         break;
                 }
             }
@@ -156,7 +160,36 @@ namespace Torch.Server.Views
         {
             if (Entities.CurrentEntity?.Entity is IMyCharacter)
                 return;
+            
             TorchBase.Instance.Invoke(() => Entities.CurrentEntity?.Delete());
+        }
+        
+        private void MultiDelete_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is Button button)) return;
+            if (button.Tag == null) return;
+
+            var listToDelete = new List<IEntityModel>();
+            switch (button.Tag)
+            {
+                case "Grids":
+                    listToDelete = new List<IEntityModel>(Entities.SortedGrids.Where(g => g.IsMarkedForDelete).ToList());
+                    break;
+                case "VoxelMaps":
+                    listToDelete = new List<IEntityModel>(Entities.SortedVoxelMaps.Where(g => g.IsMarkedForDelete).ToList());
+                    break;
+                case "FloatingObjects":
+                    listToDelete = new List<IEntityModel>(Entities.SortedFloatingObjects.Where(g => g.IsMarkedForDelete).ToList());
+                    break;
+            }
+            
+            if (listToDelete.Count == 0) return;
+            
+            if (MessageBox.Show($"Are you sure you want to delete the following [{listToDelete.Count}] items?", "Delete Entities", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                return;
+            
+            foreach (var g in listToDelete)
+                TorchBase.Instance.Invoke(() => g.Delete());
         }
 
         private void Stop_OnClick(object sender, RoutedEventArgs e)
