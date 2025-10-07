@@ -65,6 +65,8 @@ namespace Torch
     {
         static TorchBase()
         {
+            DotEnv.Load();
+
             MyVRageWindows.Init("SpaceEngineersDedicated", MySandboxGame.Log, null, false);
             ReflectedManager.Process(typeof(TorchBase).Assembly);
             ReflectedManager.Process(typeof(ITorchBase).Assembly);
