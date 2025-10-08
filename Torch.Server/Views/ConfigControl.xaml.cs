@@ -5,14 +5,13 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
-using System.Windows.Media;
 using System.Windows.Threading;
 using Torch.API.Managers;
 using Torch.Server.Annotations;
 using Torch.Server.Managers;
 using Torch.Server.ViewModels;
-using Torch.Views;
 using VRage.Game.ModAPI;
 using VRage.Serialization;
 
@@ -24,23 +23,31 @@ namespace Torch.Server.Views
     public partial class ConfigControl : UserControl, INotifyPropertyChanged
     {
         private InstanceManager _instanceManager;
-
         private bool _configValid;
         public bool ConfigValid { get => _configValid; private set { _configValid = value; OnPropertyChanged(); } }
-
         private List<BindingExpression> _bindingExpressions = new List<BindingExpression>();
+        private TorchServer _server;
 
-        public ConfigControl()
+        public ConfigControl(TorchServer server)
         {
             InitializeComponent();
+            _server = server;
             _instanceManager = TorchBase.Instance.Managers.GetManager<InstanceManager>();
             _instanceManager.InstanceLoaded += _instanceManager_InstanceLoaded;
             DataContext = _instanceManager.DedicatedConfig;
             TorchSettings.DataContext = (TorchConfig)TorchBase.Instance.Config;
             // Gets called once all children are loaded
             Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(ApplyStyles));
+            
+            _server.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName == nameof(TorchServer.CanRun))
+                {
+                    Dispatcher.Invoke(SetReadOnly);
+                }
+            };
         }
-
+        
         private void CheckValid()
         {
             ConfigValid = !_bindingExpressions.Any(x => x.HasError);
@@ -148,6 +155,49 @@ namespace Torch.Server.Views
                 w.Checkpoint.PromotedUsers = new SerializableDictionary<ulong, MyPromoteLevel>();
             d.Edit(w.Checkpoint.PromotedUsers.Dictionary);
             _instanceManager.DedicatedConfig.Administrators = w.Checkpoint.PromotedUsers.Dictionary.Where(k => k.Value >= MyPromoteLevel.Admin).Select(k => k.Key.ToString()).ToList();
+        }
+        
+        private void SetReadOnly()
+        {
+            foreach (var textbox in GetAllChildren<TextBox>(this))
+            {
+                textbox.IsReadOnly = !_server.CanRun;
+            }
+
+            foreach (var button in GetAllChildren<Button>(this))
+            {
+                button.IsEnabled = _server.CanRun;
+            }
+
+            foreach (var comboBox in GetAllChildren<ComboBox>(this))
+            {
+                comboBox.IsEnabled = _server.CanRun;
+            }
+            
+            foreach (var slider in GetAllChildren<Slider>(this))
+            {
+                slider.IsEnabled = _server.CanRun;
+            }
+            
+            foreach (var checkbox in GetAllChildren<CheckBox>(this))
+            {
+                checkbox.IsEnabled = _server.CanRun;
+            }
+            
+            foreach (var toggleButton in GetAllChildren<ToggleButton>(this))
+            {
+                toggleButton.IsEnabled = _server.CanRun;
+            }
+            
+            foreach (var radioButton in GetAllChildren<RadioButton>(this))
+            {
+                radioButton.IsEnabled = _server.CanRun;
+            }
+            
+            foreach (var listBox in GetAllChildren<ListBox>(this))
+            {
+                listBox.IsEnabled = _server.CanRun;
+            }
         }
     }
 }

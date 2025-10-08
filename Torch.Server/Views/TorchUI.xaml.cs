@@ -3,27 +3,21 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using NLog;
 using NLog.Config;
 using NLog.Targets.Wrappers;
-using Sandbox;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Patches;
 using Torch.Server.Managers;
+using Torch.Server.Views;
 using MessageBox = System.Windows.MessageBox;
 using MessageBoxResult = System.Windows.MessageBoxResult;
 using Rectangle = System.Drawing.Rectangle;
@@ -48,11 +42,13 @@ namespace Torch.Server
         {
             _config = (TorchConfig)server.Config;
             WindowStartupLocation = WindowStartupLocation.Manual;
-
+            SetWindow();
+            
             _server = server;
             // TODO: data binding for whole server
             DataContext = server;
             InitializeComponent();
+            ConfigTab.Content = new ConfigControl(_server);
 
             var config = LogManager.Configuration;
             var customTarget = new NlogCustomTarget()
@@ -95,9 +91,21 @@ namespace Torch.Server
             _scrollTimer.Tick += ScrollIfNeed;
             _scrollTimer.Interval = 120;
             _scrollTimer.Start();
-            
+
+            _server.GameStateChanged += (game, state) =>
+            {
+                if (state == TorchGameState.Loaded && _config.MinimizeOnServerStart)
+                    BtnStart.Dispatcher.Invoke(() =>  // Cheap way to get to UI thread
+                    {
+                        WindowState = WindowState.Minimized;
+                    });
+            };
+        }
+
+        private void SetWindow()
+        {
             // Set the default window size if no position is saved
-            if ( _config.WindowWidth == 0 || _config.WindowHeight == 0)
+            if ( _config.WindowWidth == 0 && _config.WindowHeight == 0)
             {
                 Width = 980;
                 Height = 588;
@@ -125,8 +133,8 @@ namespace Torch.Server
             LocationChanged += (_, args) =>
             {
                 if (!_config.SaveWindowChanges) return;
-                _config.WindowX = (int)Top;
-                _config.WindowY = (int)Left;
+                _config.WindowX = (int)Left;
+                _config.WindowY = (int)Top;
                 _config.Save();
             };
             SizeChanged += (_, args) =>
@@ -138,15 +146,6 @@ namespace Torch.Server
             
             if (_config.StartMinimized)
                 WindowState = WindowState.Minimized;
-
-            _server.GameStateChanged += (game, state) =>
-            {
-                if (state == TorchGameState.Loaded && _config.MinimizeOnServerStart)
-                    BtnStart.Dispatcher.Invoke(() =>  // Cheap way to get to UI thread
-                    {
-                        WindowState = WindowState.Minimized;
-                    });
-            };
         }
 
         private void ScrollIfNeed(object sender, EventArgs e)
