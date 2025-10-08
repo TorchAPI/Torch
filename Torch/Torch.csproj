@@ -272,6 +272,7 @@
     <Compile Include="Managers\MultiplayerManagerBase.cs" />
     <Compile Include="Persistent.cs" />
     <Compile Include="Plugins\PluginManifest.cs" />
+    <Compile Include="Utils\DotEnv.cs" />
     <Compile Include="Utils\ModItemUtils.cs" />
     <Compile Include="Utils\SteamWorkshopTools\KeyValueExtensions.cs" />
     <Compile Include="Utils\MiscExtensions.cs" />
