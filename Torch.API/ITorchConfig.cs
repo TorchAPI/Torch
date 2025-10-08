@@ -26,9 +26,14 @@ namespace Torch
         string ChatColor { get; set; }
         string TestPlugin { get; set; }
         bool DisconnectOnRestart { get; set; }
+        bool SaveWindowChanges { get; set; }
         int WindowWidth { get; set; }
         int WindowHeight { get; set; }
+        int WindowX { get; set; }
+        int WindowY { get; set; }
         int FontSize { get; set; }
+        bool StartMinimized { get; set; }
+        bool MinimizeOnServerStart { get; set; }
         UGCServiceType UgcServiceType { get; set; }
         TorchBranchType BranchName { get; set; }
         bool SendLogsToKeen { get; set; }
