@@ -369,10 +369,13 @@ namespace Torch.Commands
 
                     _restartPending = false;
                     TorchBase.Instance.IsRestartPending = _restartPending;
+                    TorchBase.Instance.SecondsUntilRestart = -1;
                     
                     _cancelRestart = false;
                     yield break;
                 }
+                
+                TorchBase.Instance.SecondsUntilRestart = i;
 
                 // Send a message every hour
                 if (i >= 3600 && i % 3600 == 0)
@@ -410,6 +413,7 @@ namespace Torch.Commands
                     }
 
                     Log.Warn("Initiating server restart.");
+                    TorchBase.Instance.SecondsUntilRestart = -1;
                     Context.Torch.Invoke(() => Context.Torch.Restart(save));
                     yield break;
                 }

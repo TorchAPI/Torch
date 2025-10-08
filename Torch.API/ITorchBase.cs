@@ -138,6 +138,11 @@ namespace Torch.API
         /// Has a restart been requested?
         /// </summary>
         bool IsRestartPending { get; set; }
+        
+        /// <summary>
+        /// How many seconds until the next restart?
+        /// </summary>
+        int SecondsUntilRestart { get; set; }
     }
 
     /// <summary>

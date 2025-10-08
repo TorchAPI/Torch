@@ -277,6 +277,7 @@
     <Compile Include="ViewModels\Entities\CharacterViewModel.cs" />
     <Compile Include="ViewModels\ConfigDedicatedViewModel.cs" />
     <Compile Include="ViewModels\Entities\EntityControlViewModel.cs" />
+    <Compile Include="ViewModels\Entities\IEntityModel.cs" />
     <Compile Include="ViewModels\ModItemInfo.cs" />
     <Compile Include="ViewModels\SessionSettingsViewModel.cs" />
     <Compile Include="ViewModels\WorldConfigurationViewModel.cs" />
@@ -289,6 +290,9 @@
     <Compile Include="Views\Converters\ModToIdConverter.cs" />
     <Compile Include="Views\Entities\CharacterView.xaml.cs">
       <DependentUpon>CharacterView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Entities\FloatingObjectsView.xaml.cs">
+      <DependentUpon>FloatingObjectsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Extensions.cs" />
     <Compile Include="Views\LogEventViewer.xaml.cs">
@@ -466,6 +470,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\Entities\FloatingObjectsView.xaml" />
     <Page Include="Views\Entities\GridView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

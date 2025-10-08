@@ -12,9 +12,23 @@
     <Grid>
         <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Expander Grid.Row="0" Header="Attached Grids">
+        
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Label Content="Distance From Center" Width="125" />
+            <TextBox Text="{Binding PrettyDistance, Mode=OneWay}" Margin="3" />
+        </StackPanel>
+        
+        <StackPanel Grid.Row="1" Orientation="Horizontal">
+            <Label Content="Position" Width="125"/>
+            <TextBox Text="{Binding Position}" Margin="3" IsReadOnly="True"/>
+        </StackPanel>
+        
+        <Expander Grid.Row="2" Header="Attached Grids">
             <ListView ItemsSource="{Binding AttachedGrids}" Margin="3">
                 <ListView.ItemTemplate>
                     <DataTemplate>
@@ -24,7 +38,7 @@
             </ListView>
         </Expander>
         
-        <ScrollViewer Grid.Row="1" Margin="3" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="3" Margin="3" VerticalScrollBarVisibility="Auto">
             <local:EntityControlsView DataContext="{Binding}"/>
         </ScrollViewer>
     </Grid>
