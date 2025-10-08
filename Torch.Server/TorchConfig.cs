@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Windows;
 using System.Xml.Serialization;
-using Newtonsoft.Json;
 using NLog;
 using Torch.API;
 using Torch.Views;
-using VRage.Game;
 
 namespace Torch.Server
 {
@@ -37,8 +34,13 @@ namespace Torch.Server
         private string _chatColor = "Red";
         private bool _enableWhitelist = false;
         private List<ulong> _whitelist = new List<ulong>();
-        private int _windowWidth = 980;
-        private int _windowHeight = 588;
+        private bool _saveWindowChanges = true;
+        private bool _startMinimized = false;
+        private bool _minimizeOnServerStart = false;
+        private int _windowWidth;
+        private int _windowHeight;
+        private int _windowX;
+        private int _windowY;
         private bool _independentConsole = false;
         private bool _enableAsserts = false;
         private int _fontSize = 16;
@@ -153,11 +155,26 @@ namespace Torch.Server
         [Display(Name = "Whitelist", Description = "Collection of whitelisted steam ids.", GroupName = "In-Game")]
         public List<ulong> Whitelist { get => _whitelist; set => Set(value, ref _whitelist); }
 
+        [Display(Name = "Save Window Changes", Description = "Save window size and location.", GroupName = "Window")]
+        public bool SaveWindowChanges { get => _saveWindowChanges; set => Set(value, ref _saveWindowChanges); }
+        
+        [Display(Name = "Start Minimized", Description = "Start Torch minimized.", GroupName = "Window")]
+        public bool StartMinimized { get => _startMinimized; set => Set(value, ref _startMinimized); }
+        
+        [Display(Name = "Minimize On Server Start", Description = "Minimize Torch window on server start.", GroupName = "Window")]
+        public bool MinimizeOnServerStart { get => _minimizeOnServerStart; set => Set(value, ref _minimizeOnServerStart); }
+        
         [Display(Name = "Width", Description = "Default window width.", GroupName = "Window")]
         public int WindowWidth { get => _windowWidth; set => Set(value, ref _windowWidth); }
 
         [Display(Name = "Height", Description = "Default window height", GroupName = "Window")]
         public int WindowHeight { get => _windowHeight; set => Set(value, ref _windowHeight); }
+        
+        [Display(Name = "WindowX", Description = "Default window X position", GroupName = "Window")]
+        public int WindowX { get => _windowX; set => Set(value, ref _windowX); }
+        
+        [Display(Name = "WindowY", Description = "Default window Y position", GroupName = "Window")]
+        public int WindowY { get => _windowY; set => Set(value, ref _windowY); }
 
         [Display(Name = "Font Size", Description = "Font size for logging text box. (default is 16)", GroupName = "Window")]
         public int FontSize { get => _fontSize; set => Set(value, ref _fontSize); }
@@ -176,7 +193,7 @@ namespace Torch.Server
             set => Set(value, ref _torchBranch);
         }
 
-public string LastUsedTheme { get; set; } = "Torch Theme";
+        public string LastUsedTheme { get; set; } = "Torch Theme";
 
         //Prevent reserved players being written to disk, but allow it to be read
         //remove this when ReservedPlayers is removed

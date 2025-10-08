@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -9,6 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -22,7 +24,10 @@ using Torch.API;
 using Torch.API.Managers;
 using Torch.Patches;
 using Torch.Server.Managers;
+using MessageBox = System.Windows.MessageBox;
 using MessageBoxResult = System.Windows.MessageBoxResult;
+using Rectangle = System.Drawing.Rectangle;
+using TextBox = System.Windows.Controls.TextBox;
 
 namespace Torch.Server
 {
@@ -41,12 +46,11 @@ namespace Torch.Server
         private System.Windows.Forms.Timer _scrollTimer;
         public TorchUI(TorchServer server)
         {
-            WindowStartupLocation = WindowStartupLocation.Manual;
             _config = (TorchConfig)server.Config;
-            Width = _config.WindowWidth;
-            Height = _config.WindowHeight;
+            WindowStartupLocation = WindowStartupLocation.Manual;
+
             _server = server;
-            //TODO: data binding for whole server
+            // TODO: data binding for whole server
             DataContext = server;
             InitializeComponent();
 
@@ -91,6 +95,58 @@ namespace Torch.Server
             _scrollTimer.Tick += ScrollIfNeed;
             _scrollTimer.Interval = 120;
             _scrollTimer.Start();
+            
+            // Set the default window size if no position is saved
+            if ( _config.WindowWidth == 0 || _config.WindowHeight == 0)
+            {
+                Width = 980;
+                Height = 588;
+            }
+            else
+            {
+                Width = _config.WindowWidth;
+                Height = _config.WindowHeight;
+            }
+            
+            // Only restore if visible on a screen, otherwise let windows position it.
+            const int tolerance = 10;
+            var rect = new Rectangle(_config.WindowX, _config.WindowY, _config.WindowWidth, _config.WindowHeight);
+            if (Screen.AllScreens.Any(s =>
+                {
+                    Rectangle area = s.WorkingArea;
+                    area.Inflate(tolerance, tolerance);
+                    return area.Contains(rect);
+                }))
+            {
+                Left = _config.WindowX;
+                Top = _config.WindowY;
+            }
+
+            LocationChanged += (_, args) =>
+            {
+                if (!_config.SaveWindowChanges) return;
+                _config.WindowX = (int)Top;
+                _config.WindowY = (int)Left;
+                _config.Save();
+            };
+            SizeChanged += (_, args) =>
+            {
+                if (!_config.SaveWindowChanges) return;
+                _config.WindowHeight = (int)args.NewSize.Height;
+                _config.WindowWidth = (int)args.NewSize.Width;
+            };
+            
+            if (_config.StartMinimized)
+                WindowState = WindowState.Minimized;
+
+            _server.GameStateChanged += (game, state) =>
+            {
+                if (state == TorchGameState.Loaded && _config.MinimizeOnServerStart)
+                    BtnStart.Dispatcher.Invoke(() =>  // Cheap way to get to UI thread
+                    {
+                        WindowState = WindowState.Minimized;
+                    });
+            };
         }
 
         private void ScrollIfNeed(object sender, EventArgs e)
