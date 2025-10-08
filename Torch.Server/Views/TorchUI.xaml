@@ -70,21 +70,7 @@
                 <views:LogEventViewer />
             </TabItem>
             
-            <TabItem Header="Configuration">
-                <Grid IsEnabled="{Binding Path=CanRun}">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition/>
-                    </Grid.RowDefinitions>
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition/>
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                    <views:ConfigControl Grid.Row="1" x:Name="ConfigControl" Margin="3" DockPanel.Dock="Bottom" IsEnabled="{Binding CanRun}"/>
-                </Grid>
-            </TabItem>
+            <TabItem Header="Configuration" Name="ConfigTab" />
             <TabItem Header="Mods">
                 <views:ModListControl/>
             </TabItem>
