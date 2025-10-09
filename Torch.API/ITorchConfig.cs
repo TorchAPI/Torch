@@ -43,6 +43,7 @@ namespace Torch
         int GameUpdateRestartDelayMins { get; set; }
         bool EnableWhitelist { get; set; }
         List<ulong> Whitelist { get; set; }
+        bool OverwriteGlobalNLogConfigOnUpdate { get; set; }
 
         void Save(string path = null);
     }

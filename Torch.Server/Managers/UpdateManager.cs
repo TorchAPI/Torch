@@ -1,15 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.IO.Packaging;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using NLog;
 using Torch.API;
 using Torch.API.WebAPI;
@@ -99,6 +91,11 @@ namespace Torch.Managers
                 {
                     if(file.Name == "NLog-user.config" && File.Exists(Path.Combine(extractPath, file.FullName)))
                         continue;
+                    
+                    // Torch will overwrite any user nlog settings and some want a different set of options.  This allows them to keep theirs.
+                    if(file.Name == "NLog.config" && File.Exists(Path.Combine(extractPath, file.FullName)))
+                        if (!Torch.Config.OverwriteGlobalNLogConfigOnUpdate)
+                            continue;
 
                     var targetFile = Path.Combine(extractPath, file.FullName);
                     Directory.CreateDirectory(Path.GetDirectoryName(targetFile));
