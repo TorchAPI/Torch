@@ -223,6 +223,8 @@ namespace Torch.Server
         [Display(Name = "Login Token", Description = "Steam GSLT (can be used if you have dynamic ip)", GroupName = "Server")]
         public string LoginToken { get => _loginToken; set => Set(value, ref _loginToken); }
 
+        [Display(Name = "Overwrite global NLog config on update.", Description = "This should ALWAYS be true UNLESS you know what you are doing.  Breaking the default config may cause issues with logging.  Just, no.  Leave this alone.", GroupName = "Logging" )]
+        public bool OverwriteGlobalNLogConfigOnUpdate { get; set; } = true;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
