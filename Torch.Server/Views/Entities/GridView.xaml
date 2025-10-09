@@ -22,29 +22,44 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Button Content="Repair" Margin="3" Width="125" Tag="{Binding ElementName=EntityIDText, Path=Text}" Click="RepairGrid"/>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Orientation="Horizontal">
             <Label Content="Name" Width="125"/>
             <TextBox Text="{Binding Name}" Margin="3"/>
         </StackPanel>
-        <StackPanel Grid.Row="1" Orientation="Horizontal">
+        <StackPanel Grid.Row="2" Orientation="Horizontal">
             <Label Content="Position" Width="125"/>
             <TextBox Text="{Binding Position}" Margin="3" />
         </StackPanel>
-        <StackPanel Grid.Row="2" Orientation="Horizontal">
+        <StackPanel Grid.Row="3" Orientation="Horizontal">
             <Label Content="EntityID" Width="125"/>
             <TextBox x:Name="EntityIDText" Text="{Binding Id, Mode=OneWay}" Margin="3" />
         </StackPanel>
-        <StackPanel Grid.Row="3" Orientation="Horizontal">
+        <StackPanel Grid.Row="4" Orientation="Horizontal">
             <Label Content="Speed" Width="125" />
             <TextBox Text="{Binding Speed, Mode=OneWay}" Margin="3" />
         </StackPanel>
-        <StackPanel Grid.Row="4" Orientation="Horizontal">
+        <StackPanel Grid.Row="5" Orientation="Horizontal">
             <Label Content="Distance From Center" Width="125" />
             <TextBox Text="{Binding PrettyDistance, Mode=OneWay}" Margin="3" />
         </StackPanel>
-        <StackPanel Grid.Row="5" Orientation="Horizontal">
-            <Button Content="Repair" Margin="3" Width="125" Tag="{Binding ElementName=EntityIDText, Path=Text}" Click="RepairGrid"/>
+        <StackPanel Grid.Row="6" Orientation="Horizontal">
+            <Label Content="Blocks" Width="125" />
+            <TextBox Text="{Binding BlockCount, Mode=OneWay}" Margin="3" />
         </StackPanel>
-        
+        <StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal">
+            <TextBlock Text="Owners and Blocks" Width="125" ToolTip="Expand the blocklist on the grid entry to populate."/>
+            
+            <DataGrid x:Name="DictGrid" AutoGenerateColumns="False" CanUserAddRows="False" 
+                      IsReadOnly="True" ItemsSource="{Binding Owners}" 
+                      Margin="3" ToolTip="Expand the blocklist on the grid entry to populate.">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Name" Binding="{Binding Key, Mode=OneWay}"/>
+                    <DataGridTextColumn Header="Count" Binding="{Binding Value, Mode=OneWay}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </StackPanel>
         
         <ScrollViewer Grid.Row="6" Margin="3" VerticalScrollBarVisibility="Auto">
             <local:EntityControlsView DataContext="{Binding}"/>

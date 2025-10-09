@@ -99,7 +99,7 @@
             </Grid>
         </TabItem>
         
-        <TabItem Header="Grids">
+        <TabItem Header="Grids" IsSelected="True">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="5*"/>
@@ -107,11 +107,18 @@
                 </Grid.ColumnDefinitions>
                 <Grid Grid.Column="0">
                     <Grid.RowDefinitions>
-                        <RowDefinition />
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TreeView Grid.Row="0" Grid.Column="0" Margin="3" DockPanel.Dock="Top" 
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="Filter" Margin="3"/>
+                        <TextBox Name="FilterBox" ToolTip="Filter" MinWidth="150"/>
+                    </StackPanel>
+                    
+                    <TreeView Grid.Row="1" Grid.Column="0" Margin="3" DockPanel.Dock="Top" 
                               SelectedItemChanged="TreeView_Grids_OnSelectionItemChanged" 
                               TreeViewItem.Expanded="TreeViewItem_OnExpanded" Name="EntityTree_Grids">
                         <TreeView.Resources>
@@ -138,15 +145,15 @@
                             </HierarchicalDataTemplate>
                         </TreeView.Resources>
                         
-                        <TreeViewItem ItemsSource="{Binding Path=SortedGrids}">
+                        <TreeViewItem ItemsSource="{Binding Path=FilteredSortedGrids}">
                             <TreeViewItem.Header>
-                                <TextBlock Text="{Binding Grids.Count, StringFormat=Grids ({0})}" />
+                                <TextBlock Text="{Binding FilteredSortedGrids.FilteredCount, StringFormat=Grids ({0})}" />
                             </TreeViewItem.Header>
                         </TreeViewItem>
                     </TreeView>
 
-                    <ComboBox Grid.Row="1" Margin="3" Name="SortCombo_GridTab" SelectionChanged="SortCombo_SelectionChanged" />
-                    <StackPanel Grid.Column="0" Grid.Row="2" DockPanel.Dock="Bottom">
+                    <ComboBox Grid.Row="2" Margin="3" Name="SortCombo_GridTab" SelectionChanged="SortCombo_SelectionChanged" />
+                    <StackPanel Grid.Column="0" Grid.Row="3" DockPanel.Dock="Bottom">
                         <Button Tag="Grids" Content="Delete Selected" Click="MultiDelete_OnClick" IsEnabled="{Binding CurrentEntity.CanDelete}" Margin="3" />
                         <Button Content="Stop" Click="Stop_OnClick" IsEnabled="{Binding CurrentEntity.CanStop}" Margin="3" />
                     </StackPanel>

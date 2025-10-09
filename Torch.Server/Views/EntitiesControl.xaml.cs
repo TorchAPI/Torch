@@ -45,6 +45,12 @@ namespace Torch.Server.Views
             SortCombo_Characters.ItemsSource = Enum.GetNames(typeof(EntityTreeViewModel.SortEnum));
             SortCombo_Voxels.ItemsSource = Enum.GetNames(typeof(EntityTreeViewModel.SortEnum));
             SortCombo_FloatingObjects.ItemsSource = Enum.GetNames(typeof(EntityTreeViewModel.SortEnum));
+
+            FilterBox.TextChanged += (sender, args) =>
+            {
+                string filter = FilterBox.Text;
+                Entities.FilteredSortedGrids.Filter = grid => grid.Name.Contains(filter, StringComparison.OrdinalIgnoreCase);
+            };
         }
         
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)

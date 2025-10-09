@@ -3,12 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Havok;
 using NLog;
 
 namespace Torch.Collections
@@ -19,6 +14,7 @@ namespace Torch.Collections
         private readonly MtObservableCollectionBase<T> _backing;
         private IComparer<T> _comparer;
         private readonly List<T> _store;
+        private Predicate<T> _filter;
 
         public SortedView(MtObservableCollectionBase<T> backing, IComparer<T> comparer)
         {
@@ -55,7 +51,6 @@ namespace Torch.Collections
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
         }
 
         public IEnumerator<T> GetEnumerator()
@@ -69,6 +64,16 @@ namespace Torch.Collections
         }
 
         public int Count => _backing.Count;
+
+        public int FilteredCount
+        {
+            get
+            {
+                if (_filter == null)
+                    return Count;
+                return _store.Count;
+            }
+        }
 
         private void InsertSorted(IEnumerable items)
         {
@@ -100,6 +105,8 @@ namespace Torch.Collections
             if (index < 0)
                 index = ~index;
             _store.Insert(index, item);
+            OnPropertyChanged(nameof(Count));
+            OnPropertyChanged(nameof(FilteredCount));
             return index;
         }
 
@@ -115,15 +122,31 @@ namespace Torch.Collections
             
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
+        
+        public Predicate<T> Filter
+        {
+            get => _filter;
+            set
+            {
+                _filter = value;
+                Refresh();
+            }
+        }
 
         public void Refresh()
         {
             _store.Clear();
             //_store.AddRange(_backing);
             _store.EnsureCapacity(_backing.Count);
-            foreach (var e in _backing)
-                _store.Add(e);
-            Sort();
+            foreach (var item in _backing)
+            {
+                if (_filter == null || _filter(item))
+                    _store.Add(item);
+            }
+            Sort(); // maintain sort
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            OnPropertyChanged(nameof(Count));
+            OnPropertyChanged(nameof(FilteredCount));
         }
 
         public void SetComparer(IComparer<T> comparer, bool resort = true)
