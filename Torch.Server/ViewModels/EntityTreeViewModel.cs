@@ -37,6 +37,7 @@ namespace Torch.Server.ViewModels
         public Dispatcher ControlDispatcher => _control.Dispatcher;
 
         public SortedView<GridViewModel> SortedGrids { get; }
+        public SortedView<GridViewModel> FilteredSortedGrids { get; }
         public SortedView<CharacterViewModel> SortedCharacters { get; }
         public SortedView<FloatingObjectViewModel> SortedFloatingObjects { get; }
         public SortedView<VoxelMapViewModel> SortedVoxelMaps { get; }
@@ -67,6 +68,7 @@ namespace Torch.Server.ViewModels
             _control = control;
             var comparer = new EntityViewModel.Comparer(_currentSort);
             SortedGrids = new SortedView<GridViewModel>(Grids.Values, comparer);
+            FilteredSortedGrids = new SortedView<GridViewModel>(Grids.Values, comparer);
             SortedCharacters = new SortedView<CharacterViewModel>(Characters.Values, comparer);
             SortedFloatingObjects = new SortedView<FloatingObjectViewModel>(FloatingObjects.Values, comparer);
             SortedVoxelMaps = new SortedView<VoxelMapViewModel>(VoxelMaps.Values, comparer);
