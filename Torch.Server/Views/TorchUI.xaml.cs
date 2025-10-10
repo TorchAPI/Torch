@@ -64,11 +64,6 @@ namespace Torch.Server
 
             AttachConsole();
 
-            //Left = _config.WindowPosition.X;
-            //Top = _config.WindowPosition.Y;
-            //Width = _config.WindowSize.X;
-            //Height = _config.WindowSize.Y;
-
             Chat.BindServer(server);
             PlayerList.BindServer(server);
             Plugins.BindServer(server);
@@ -78,6 +73,8 @@ namespace Torch.Server
             Themes.SetConfig(_config);
             Title = $"{_config.InstanceName} - Torch {server.TorchVersion}, SE {server.GameVersion}";
             Instance = this;
+
+            EntityManagerTab.Content = new EntitiesControl(_server);
             
             Loaded += TorchUI_Loaded;
         }

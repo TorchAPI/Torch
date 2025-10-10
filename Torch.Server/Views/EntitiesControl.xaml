@@ -15,7 +15,7 @@
         <converters:DefinitionToIdConverter x:Key="DefinitionConverter" />
     </UserControl.Resources>
     <TabControl>
-        <TabItem Header="Everything">
+        <TabItem Header="Peek">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="5*"/>
@@ -99,7 +99,7 @@
             </Grid>
         </TabItem>
         
-        <TabItem Header="Grids" IsSelected="True">
+        <TabItem Header="Grids">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="5*"/>
@@ -115,7 +115,7 @@
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
                         <TextBlock Text="Filter" Margin="3"/>
-                        <TextBox Name="FilterBox" ToolTip="Filter" MinWidth="150"/>
+                        <TextBox Name="GridsFilterBox" ToolTip="Filter" MinWidth="150"/>
                     </StackPanel>
                     
                     <TreeView Grid.Row="1" Grid.Column="0" Margin="3" DockPanel.Dock="Top" 
@@ -196,6 +196,98 @@
                     </StackPanel>
                 </Grid>
                 <Frame Grid.Column="1" x:Name="EditorFrame_Characters" Margin="3" NavigationUIVisibility="Hidden" />
+                <GridSplitter Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" ShowsPreview="True" Width="2" />
+            </Grid>
+        </TabItem>
+        
+        <TabItem Header="Players">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5*"/>
+                    <ColumnDefinition Width="5*"/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <DockPanel Grid.Row="0">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+                            <TextBlock Text="Filter:" Margin="3"/>
+                            <TextBox Name="PlayersFilterBox" MinWidth="150" Margin="3"/>
+                        </StackPanel>
+                        
+                        <ListView x:Name="PlayerList" ItemsSource="{Binding SortedPlayers}"  
+                                  Margin="5" SelectionChanged="ShowSelectedPlayerView"
+                                  VirtualizingStackPanel.IsVirtualizing="True"
+                                  VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                  ScrollViewer.CanContentScroll="True">
+                            
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel />
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                            
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="4">
+                                        <TextBlock Text="{Binding Name}" Tag="{Binding}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                            
+                        </ListView>
+                    </DockPanel>
+                </Grid>
+                <Frame Grid.Column="1" x:Name="EditorFrame_Players" Margin="3" NavigationUIVisibility="Hidden" />
+                <GridSplitter Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" ShowsPreview="True" Width="2" />
+            </Grid>
+        </TabItem>
+        
+        <TabItem Header="Factions">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5*"/>
+                    <ColumnDefinition Width="5*"/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <DockPanel Grid.Row="0">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+                            <TextBlock Text="Filter:" Margin="3"/>
+                            <TextBox Name="FactionsFilterBox" MinWidth="150" Margin="3"/>
+                        </StackPanel>
+                        
+                        <ListView x:Name="FactionList" ItemsSource="{Binding SortedFactions}"  
+                                  Margin="5" SelectionChanged="ShowSelectedFactionView"
+                                  VirtualizingStackPanel.IsVirtualizing="True"
+                                  VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                  ScrollViewer.CanContentScroll="True">
+                            
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel />
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                            
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="4">
+                                        <TextBlock Text="{Binding Name}" Tag="{Binding}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                            
+                        </ListView>
+                    </DockPanel>
+                </Grid>
+                <Frame Grid.Column="1" x:Name="EditorFrame_Factions" Margin="3" NavigationUIVisibility="Hidden" />
                 <GridSplitter Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" ShowsPreview="True" Width="2" />
             </Grid>
         </TabItem>

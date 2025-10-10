@@ -1,0 +1,92 @@
+﻿<UserControl x:Class="Torch.Server.Views.Entities.FactionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Torch.Server.Views.Entities"
+             xmlns:entities="clr-namespace:Torch.Server.ViewModels.Entities"
+             d:DataContext="{d:DesignInstance Type=entities:FactionViewModel, IsDesignTimeCreatable=True}"
+             mc:Ignorable="d">
+    <UserControl.DataContext>
+        <entities:FactionViewModel />
+    </UserControl.DataContext>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Name" Margin="3"/>
+        <TextBox Grid.Row="0" Grid.Column="1" IsReadOnly="True" Text="{Binding Name, Mode=OneWay}"/>
+        
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="ID" Margin="3"/>
+        <TextBox Grid.Row="1" Grid.Column="1" IsReadOnly="True" Text="{Binding ID, Mode=OneWay}"/>
+        
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Description" Margin="3"/>
+        <TextBox Grid.Row="2" Grid.Column="1" IsReadOnly="True" Text="{Binding Description, Mode=OneWay}"/>
+        
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Tag" Margin="3"/>
+        <TextBox Grid.Row="3" Grid.Column="1" IsReadOnly="True" Text="{Binding Tag, Mode=OneWay}"/>
+        
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Founder" Margin="3"/>
+        <TextBox Name="FounderBox" Grid.Row="4" Grid.Column="1" IsReadOnly="True" Text="{Binding Founder.PlayerIdent.DisplayName, Mode=OneWay}"/>
+        
+        <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+            <GroupBox Header="Leaders">
+                <ListBox Name="LeadersList" ItemsSource="{Binding Leaders}" MinHeight="50"
+                         d:DataContext="{d:DesignInstance Type=entities:FactionViewModel, IsDesignTimeCreatable=True}"
+                         SelectionChanged="NewSelectedLeader">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding PlayerIdent.DisplayName}" 
+                                       Tag="{Binding}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </GroupBox>
+            <GroupBox Header="Members">
+                <ListBox Name="MembersList" ItemsSource="{Binding Members}" MinHeight="50"
+                         d:DataContext="{d:DesignInstance Type=entities:FactionViewModel, IsDesignTimeCreatable=True}"
+                         SelectionChanged="NewSelectedMember">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding PlayerIdent.DisplayName}" 
+                                       Tag="{Binding}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </GroupBox>
+            <GroupBox Name="FactionOptions" Header="Options">
+                <StackPanel>
+                    <Button Content="Promote Selected Leader" Margin="3" Click="PromoteLeader" />
+                    <Button Content="Promote Selected Member" Margin="3" Click="PromoteMember"/>
+                    <Button Content="Demote Selected Leader" Margin="3" Click="DemoteLeader"/>
+                    <Button Content="Kick Selected Leader" Margin="3" Click="KickLeader"/>
+                    <Button Content="Kick Selected Member" Margin="3" Click="KickMember"/>
+                    <Button Content="Remove Faction" Margin="3" Click="RemoveFaction"/>
+                    <TextBlock Background="Gray" Text="Options do not work on NPC."/>
+                </StackPanel>
+            </GroupBox>
+            
+        </StackPanel>
+        
+        <ScrollViewer Grid.Row="7" Grid.Column="0" Margin="3" VerticalScrollBarVisibility="Auto">
+            <local:EntityControlsView DataContext="{Binding}"/>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
