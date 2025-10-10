@@ -49,10 +49,10 @@
             <TextBox Text="{Binding BlockCount, Mode=OneWay}" Margin="3" />
         </StackPanel>
         <StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal">
-            <TextBlock Text="Owners and Blocks" Width="125" ToolTip="Expand the blocklist on the grid entry to populate."/>
+            <TextBlock Text="Owners and Blocks" Width="125" ToolTip="Expand the blocklist on the grid entry to populate." Margin="3"/>
             
             <DataGrid x:Name="DictGrid" AutoGenerateColumns="False" CanUserAddRows="False" 
-                      IsReadOnly="True" ItemsSource="{Binding Owners}" 
+                      IsReadOnly="True" ItemsSource="{Binding Owners, Mode=OneWay}" 
                       Margin="3" ToolTip="Expand the blocklist on the grid entry to populate.">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Name" Binding="{Binding Key, Mode=OneWay}"/>
