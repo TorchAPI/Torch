@@ -5,6 +5,7 @@ using Sandbox.Definitions;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Cube;
 using Sandbox.Game.World;
+using SharpDX.Toolkit.Collections;
 using Torch.Collections;
 using Torch.Server.ViewModels.Blocks;
 using VRage.Game;
@@ -76,7 +77,7 @@ namespace Torch.Server.ViewModels.Entities
                 Blocks.Remove(block.BlockDefinition);
             
             long ownerId = block.OwnerId;
-            if (block.OwnerId == 0)
+            if (block.OwnerId == 0 && block.IDModule != null) // IDModule shouldn't be null on a terminal block but it has happened.
                 ownerId = block.IDModule.Owner;
 
             if (ownerId != 0)
@@ -95,26 +96,35 @@ namespace Torch.Server.ViewModels.Entities
 
         private void AddBlock(MyTerminalBlock block)
         {
-            if (!Blocks.TryGetValue(block.BlockDefinition, out var group))
-                group = Blocks[block.BlockDefinition] = new MtObservableSortedDictionary<long, BlockViewModel>();
-            group.Add(block.EntityId, new BlockViewModel(block, Tree));
-
-            long ownerId = block.OwnerId;
-            if (block.OwnerId == 0)
-                ownerId = block.IDModule.Owner;
-
-            if (ownerId != 0)
+            try
             {
-                var playerIdent = MySession.Static.Players.TryGetIdentity(ownerId);
-                if (playerIdent != null)
+                if (!Blocks.TryGetValue(block.BlockDefinition, out var group))
+                    group = Blocks[block.BlockDefinition] = new MtObservableSortedDictionary<long, BlockViewModel>();
+                group.Add(block.EntityId, new BlockViewModel(block, Tree));
+
+                long ownerId = block.OwnerId;
+                if (block.OwnerId == 0 && block.IDModule != null)
+                    ownerId = block.IDModule.Owner;
+
+                if (ownerId != 0)
                 {
-                    var name = playerIdent.DisplayName;
-                    if (!Owners.TryGetValue(name, out int count))
-                        Owners[name] = 1;
-                    else
-                        Owners[name] = count + 1; 
+                    var playerIdent = MySession.Static.Players.TryGetIdentity(ownerId);
+                    if (playerIdent != null)
+                    {
+                        var name = playerIdent.DisplayName;
+                        if (!Owners.TryGetValue(name, out int count))
+                            Owners[name] = 1;
+                        else
+                            Owners[name] = count + 1; 
+                    }
                 }
             }
+            catch (Exception)
+            {
+                // Used MtObservableSortedDictionary for Owners collection, which threw errors on some blocks.
+                // Switched to ObservableDictionary and left the try/catch just in case...
+            }
+            
         }
         
         public int BlockCount
@@ -127,7 +137,7 @@ namespace Torch.Server.ViewModels.Entities
             }
         }
 
-        public MtObservableSortedDictionary<string,int> Owners { get; } = new MtObservableSortedDictionary<string, int>();
+        public ObservableDictionary<string,int> Owners { get; } = new ObservableDictionary<string, int>();
 
         private void Grid_OnBlockAdded(MySlimBlock obj)
         {
