@@ -1,21 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using NLog;
-using Sandbox.Game.Entities;
-using Torch.Collections;
 using Torch.Server.ViewModels;
 using Torch.Server.ViewModels.Blocks;
 using Torch.Server.ViewModels.Entities;
@@ -31,13 +20,15 @@ namespace Torch.Server.Views
     public partial class EntitiesControl : UserControl
     {
         public EntityTreeViewModel Entities { get; set; }
+        private TorchServer _server;
 
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        public EntitiesControl()
+        public EntitiesControl(TorchServer server)
         {
             InitializeComponent();
-            Entities = new EntityTreeViewModel(this);
+            _server = server;
+            Entities = new EntityTreeViewModel(this, _server);
             DataContext = Entities;
             Entities.Init();
             SortCombo.ItemsSource = Enum.GetNames(typeof(EntityTreeViewModel.SortEnum));
@@ -46,10 +37,16 @@ namespace Torch.Server.Views
             SortCombo_Voxels.ItemsSource = Enum.GetNames(typeof(EntityTreeViewModel.SortEnum));
             SortCombo_FloatingObjects.ItemsSource = Enum.GetNames(typeof(EntityTreeViewModel.SortEnum));
 
-            FilterBox.TextChanged += (sender, args) =>
+            GridsFilterBox.TextChanged += (sender, args) =>
             {
-                string filter = FilterBox.Text;
+                string filter = GridsFilterBox.Text;
                 Entities.FilteredSortedGrids.Filter = grid => grid.Name.Contains(filter, StringComparison.OrdinalIgnoreCase);
+            };
+
+            PlayersFilterBox.TextChanged += (sender, args) =>
+            {
+                string filter = PlayersFilterBox.Text;
+                Entities.SortedPlayers.Filter = player => player.Name.Contains(filter, StringComparison.OrdinalIgnoreCase);
             };
         }
         
@@ -239,6 +236,21 @@ namespace Torch.Server.Views
         {
             foreach (var i in Entities.SortedFloatingObjects)
                 TorchBase.Instance.Invoke(() => i?.Delete());
+        }
+
+        private void ShowSelectedPlayerView(object sender, SelectionChangedEventArgs selectionChangedEventArgs)
+        {
+            if (PlayerList.SelectedItem is PlayerViewModel player)
+                EditorFrame_Players.Content = new PlayerView { DataContext = player };
+        }
+
+        private void ShowSelectedFactionView(object sender, SelectionChangedEventArgs e)
+        {
+            if (FactionList.SelectedItem is FactionViewModel faction)
+            {
+                FactionView facView = new FactionView(faction);
+                EditorFrame_Factions.Content = facView;
+            }
         }
     }
 }

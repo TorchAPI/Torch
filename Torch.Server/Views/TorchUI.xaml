@@ -84,9 +84,7 @@
                     <local:PlayerListControl Grid.Column="1" x:Name="PlayerList" DockPanel.Dock="Right"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Entity Manager">
-                <views:EntitiesControl />
-            </TabItem>
+            <TabItem Header="Entity Manager" Name="EntityManagerTab"/>
             <TabItem Header="Plugins">
                 <views:PluginsControl x:Name="Plugins" />
             </TabItem>
