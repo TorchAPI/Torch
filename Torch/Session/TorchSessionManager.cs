@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NLog;
-using Sandbox.Engine.Networking;
 using Sandbox.Game.World;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Session;
 using Torch.Managers;
 using Torch.Mod;
-using Torch.Session;
 using Torch.Utils;
 using VRage.Game;
 
@@ -46,8 +41,9 @@ namespace Torch.Session
         public TorchSessionManager(ITorchBase torchInstance) : base(torchInstance)
         {
             _overrideMods = new Dictionary<ulong, MyObjectBuilder_Checkpoint.ModItem>();
+
             if (Torch.Config.UgcServiceType == UGCServiceType.Steam)
-                _overrideMods.Add(TorchModCore.MOD_ID, ModItemUtils.Create(TorchModCore.MOD_ID));
+                _overrideMods.Add(TorchModCore.MOD_ID, ModItemUtils.Create(TorchModCore.MOD_ID, "Steam"));
         }
 
         /// <inheritdoc/>
@@ -81,7 +77,7 @@ namespace Torch.Session
         /// <inheritdoc/>
         public bool RemoveOverrideMod(ulong modId)
         {
-            if(_overrideMods.TryGetValue(modId, out var item))
+            if (_overrideMods.TryGetValue(modId, out var item))
                 OverrideModsChanged?.Invoke(new CollectionChangeEventArgs(CollectionChangeAction.Remove, item));
 
             return _overrideMods.Remove(modId);
