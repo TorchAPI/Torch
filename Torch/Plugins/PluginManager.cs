@@ -326,7 +326,7 @@ namespace Torch.Managers
                 {
                     if (!item.IsZip)
                     {
-                        _log.Warn($"Unzipped plugins cannot be auto-updated. Skipping plugin {item}");
+                        _log.Warn($"Unzipped plugins cannot be auto-updated. Skipping plugin '{item.Manifest.Name}'");
                         return;
                     }
 
@@ -336,7 +336,7 @@ namespace Torch.Managers
 
                     if (latest?.LatestVersion == null)
                     {
-                        _log.Warn($"Plugin {item.Manifest.Name} does not have any releases on torchapi.com. Cannot update.");
+                        _log.Warn($"Plugin '{item.Manifest.Name}' does not have any releases on torchapi.com. Cannot update.");
                         return;
                     }
 
@@ -361,7 +361,7 @@ namespace Torch.Managers
                 }
                 catch (Exception e)
                 {
-                    _log.Warn($"An error occurred updating the plugin {item.Manifest.Name}.");
+                    _log.Warn($"An error occurred updating the plugin '{item.Manifest.Name}'.");
                     _log.Warn(e);
                 }
             }).ToArray());
