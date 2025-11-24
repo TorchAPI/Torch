@@ -197,7 +197,7 @@ namespace Torch.Server.Managers
         private static Func<MyDedicatedServerBase, ulong, bool> _Profiling;
 
         [ReflectedMethod(Name = "UserAccepted")]
-        private static Action<MyDedicatedServerBase, ulong> _userAcceptedImpl;
+        private static Action<MyDedicatedServerBase, ulong, bool> _userAcceptedImpl;
 
         [ReflectedMethod(Name = "UserRejected")]
         private static Action<MyDedicatedServerBase, ulong, JoinResult> _userRejected;
@@ -329,14 +329,14 @@ namespace Torch.Server.Managers
                 else
                     verdict = task.Result;
 
-                Torch.Invoke(() => { CommitVerdict(info.SteamID, verdict); });
+                Torch.Invoke(() => { CommitVerdict(info.SteamID, verdict, false); });
             });
         }
 
-        private void CommitVerdict(ulong steamId, JoinResult verdict)
+        private void CommitVerdict(ulong steamId, JoinResult verdict, bool isPasswordValidated)
         {
             if (verdict == JoinResult.OK)
-                UserAccepted(steamId);
+                UserAccepted(steamId, isPasswordValidated);
             else
                 UserRejected(steamId, verdict);
         }
@@ -362,9 +362,9 @@ namespace Torch.Server.Managers
             _userRejected.Invoke((MyDedicatedServerBase) MyMultiplayer.Static, steamId, reason);
         }
 
-        private void UserAccepted(ulong steamId)
+        private void UserAccepted(ulong steamId, bool isPasswordValidated)
         {
-            _userAcceptedImpl.Invoke((MyDedicatedServerBase) MyMultiplayer.Static, steamId);
+            _userAcceptedImpl.Invoke((MyDedicatedServerBase) MyMultiplayer.Static, steamId, isPasswordValidated);
             base.RaiseClientJoined(steamId);
         }
 
