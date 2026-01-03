@@ -103,6 +103,8 @@ namespace Torch.Server.ViewModels
                         if (identity.SteamId == 0) continue;
                         var player = MySession.Static.Players.TryGetPlayerIdentity(identity.SteamId);
                         if (player is null) continue;
+                        if (Players.ContainsKey(player.IdentityId)) continue;
+                        
                         Players.Add(new KeyValuePair<long, PlayerViewModel>(player.IdentityId, new PlayerViewModel(player, identity)));
                     }
 
