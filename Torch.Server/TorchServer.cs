@@ -249,6 +249,7 @@ namespace Torch.Server
             {
                 _multiplayerManagerDedicated = CurrentSession.Managers.GetManager<MultiplayerManagerDedicated>();
                 CurrentSession.Managers.GetManager<CommandManager>().RegisterCommandModule(typeof(WhitelistCommands));
+                CurrentSession.Managers.GetManager<CommandManager>().RegisterCommandModule(typeof(TestCommands));
                 ModCommunication.Register();
             }
         }
