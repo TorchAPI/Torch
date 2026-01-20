@@ -74,6 +74,7 @@ namespace Torch.Server
             
             var sessionManager = Managers.GetManager<ITorchSessionManager>();
             sessionManager.AddFactory(x => new MultiplayerManagerDedicated(this));
+            sessionManager.AddFactory(x => new ConsoleCommandManager(this));
             
             // Needs to be done at some point after MyVRageWindows.Init
             // where the debug listeners are registered
