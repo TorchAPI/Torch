@@ -64,7 +64,7 @@ quit";
             
 #if !DEBUG
             AppDomain.CurrentDomain.UnhandledException += HandleException;
-            LogManager.Configuration.AddRule(LogLevel.Info, LogLevel.Fatal, "console");
+            // LogManager.Configuration.AddRule(LogLevel.Info, LogLevel.Fatal, "console");  This is a duplicate rule which already exists in Nlog.conf
             LogManager.ReconfigExistingLoggers();
 #endif
 
