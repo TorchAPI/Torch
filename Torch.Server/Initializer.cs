@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows;
+using Microsoft.Win32;
 using NLog;
 using Sandbox;
 using VRage;
@@ -35,7 +36,213 @@ quit";
         private string _basePath;
 
         private static string GetDedicatedServer64Path(string basePath) => Path.Combine(basePath, "game", "DedicatedServer64");
-            
+
+        private void EnsureDedicatedServer64Symlink()
+        {
+            var targetPath = GetDedicatedServer64Path(_basePath);
+            var linkPath = Path.Combine(_basePath, "DedicatedServer64");
+
+            if (!Directory.Exists(targetPath))
+            {
+                Log.Warn($"Target DedicatedServer64 folder does not exist at {targetPath}, skipping symlink creation.");
+                return;
+            }
+
+            if (Directory.Exists(linkPath))
+            {
+                // Check if it's already a junction pointing to the correct target
+                var attr = File.GetAttributes(linkPath);
+                if ((attr & FileAttributes.ReparsePoint) != 0)
+                {
+                    // It's a junction/symlink, we assume it's correct (could verify target but skip for simplicity)
+                    Log.Info($"DedicatedServer64 junction already exists at {linkPath}");
+                    return;
+                }
+                else
+                {
+                    // It's a regular directory - we shouldn't replace it
+                    Log.Warn($"DedicatedServer64 already exists as a regular directory at {linkPath}, not creating junction.");
+                    return;
+                }
+            }
+
+            // Create junction using mklink
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = $"/c mklink /J \"{linkPath}\" \"{targetPath}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+            try
+            {
+                using (var process = Process.Start(startInfo))
+                {
+                    process.WaitForExit();
+                    if (process.ExitCode == 0)
+                    {
+                        Log.Info($"Created DedicatedServer64 junction at {linkPath} pointing to {targetPath}");
+                    }
+                    else
+                    {
+                        var output = process.StandardOutput.ReadToEnd();
+                        var error = process.StandardError.ReadToEnd();
+                        Log.Warn($"Failed to create junction: {output} {error}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"Failed to create DedicatedServer64 junction: {ex.Message}");
+            }
+        }
+
+        private void CheckPrerequisites()
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                Log.Info("Skipping prerequisite checks on non-Windows platform.");
+                return;
+            }
+
+            bool allOk = true;
+
+            // .NET Framework 4.8
+            if (!IsNetFramework48Installed())
+            {
+                Log.Error(".NET Framework 4.8 is not installed. Please install it from https://go.microsoft.com/fwlink/?LinkId=2085155");
+                Log.Error(
+                    "Please visit Torch's Wiki - Installation page for more information at https://wiki.torchapi.com/en/installing-torch");
+                allOk = false;
+            }
+
+            // VC++ 2013 Redistributable (x64)
+            if (!IsVcRedist2013Installed())
+            {
+                Log.Error("Visual C++ 2013 Redistributable (x64) is not installed. Please install it from https://aka.ms/highdpimfc2013x64enu");
+                Log.Error("Please visit Torch's Wiki - Installation page for more information at https://wiki.torchapi.com/en/installing-torch");
+                allOk = false;
+            }
+
+            // VC++ 2019 Redistributable (x64)
+            if (!IsVcRedist2019Installed())
+            {
+                Log.Error("Visual C++ 2019 Redistributable (x64) is not installed. Please install it from https://aka.ms/vc14/vc_redist.x64.exe");
+                Log.Error("Please visit Torch's Wiki - Installation page for more information at https://wiki.torchapi.com/en/installing-torch");
+                allOk = false;
+            }
+
+            if (allOk)
+                Log.Info("All prerequisites satisfied.");
+            else
+            {
+                Log.Error("Prerequisites not satisfied. Please install the missing components and try again.");
+                Log.Error("Press any key to exit...");
+                Console.ReadKey();
+                Environment.Exit(1);
+            }
+        }
+
+        private static bool IsNetFramework48Installed()
+        {
+            try
+            {
+                using (var ndpKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"))
+                {
+                    if (ndpKey?.GetValue("Release") is int release)
+                        return release >= 528040; // .NET 4.8
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+            return false;
+        }
+
+        private static bool IsVcRedist2013Installed()
+        {
+            // Check registry keys for x64 and x86
+            string[] registryPaths = new[]
+            {
+                @"SOFTWARE\Microsoft\VisualStudio\12.0\VC\Runtimes\x64",
+                @"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\12.0\VC\Runtimes\x64",
+                @"SOFTWARE\Microsoft\VisualStudio\12.0\VC\Runtimes\x86",
+                @"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\12.0\VC\Runtimes\x86"
+            };
+            foreach (var path in registryPaths)
+            {
+                try
+                {
+                    using (var vcKey = Registry.LocalMachine.OpenSubKey(path))
+                    {
+                        if (vcKey?.GetValue("Installed") is int installed && installed == 1)
+                            return true;
+                    }
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
+
+            // Fallback: check for presence of msvcp120.dll in system directory
+            string systemDir = Environment.GetFolderPath(Environment.SpecialFolder.System);
+            string dllPath = Path.Combine(systemDir, "msvcp120.dll");
+            if (File.Exists(dllPath))
+                return true;
+
+            // Also check vcruntime120.dll
+            dllPath = Path.Combine(systemDir, "vcruntime120.dll");
+            if (File.Exists(dllPath))
+                return true;
+
+            return false;
+        }
+
+        private static bool IsVcRedist2019Installed()
+        {
+            // Check registry keys for x64 and x86
+            string[] registryPaths = new[]
+            {
+                @"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64",
+                @"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x64",
+                @"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x86",
+                @"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x86",
+                @"SOFTWARE\Microsoft\VisualStudio\14.2\VC\Runtimes\x64",
+                @"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.2\VC\Runtimes\x64"
+            };
+            foreach (var path in registryPaths)
+            {
+                try
+                {
+                    using (var vcKey = Registry.LocalMachine.OpenSubKey(path))
+                    {
+                        if (vcKey?.GetValue("Installed") is int installed && installed == 1)
+                            return true;
+                    }
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
+
+            // Fallback: check for presence of vcruntime140.dll in system directory
+            string systemDir = Environment.GetFolderPath(Environment.SpecialFolder.System);
+            string dllPath = Path.Combine(systemDir, "vcruntime140.dll");
+            if (File.Exists(dllPath))
+                return true;
+
+            // Also check msvcp140.dll
+            dllPath = Path.Combine(systemDir, "msvcp140.dll");
+            if (File.Exists(dllPath))
+                return true;
+
+            return false;
+        }
 
         internal Persistent<TorchConfig> ConfigPersistent { get; private set; }
         public TorchConfig Config => ConfigPersistent?.Data;
@@ -74,8 +281,13 @@ quit";
 #endif
 
             // This is what happens when Keen is bad and puts extensions into the System namespace.
+            CheckPrerequisites();
+
             if (!Enumerable.Contains(args, "-noupdate"))
                 RunSteamCmd();
+
+            // Legacy/Plugin Dev Support
+            EnsureDedicatedServer64Symlink();
 
             var basePath = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
             var dedicatedServerPath = GetDedicatedServer64Path(basePath);
@@ -254,12 +466,13 @@ quit";
 
             log.Info("Checking for DS updates.");
             
-            const int maxAttempts = 2;
+            const int maxAttempts = 3;
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
                 if (attempt > 1)
                 {
                     log.Info($"Retrying SteamCMD update (attempt {attempt})...");
+                    log.Info("This may take awhile depending on your internet connection, please be patient.");
                     Thread.Sleep(3000); // brief delay before retry
                 }
                 
