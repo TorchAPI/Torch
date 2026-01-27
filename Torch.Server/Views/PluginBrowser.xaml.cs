@@ -1,27 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using Newtonsoft.Json;
 using NLog;
 using Torch.API.WebAPI;
-using Torch.Collections;
+using Torch.Collections.Concurrent;
 using Torch.Server.Annotations;
-using Torch.Managers;
 using Torch.API.Managers;
 
 namespace Torch.Server.Views
@@ -33,8 +24,8 @@ namespace Torch.Server.Views
     {
         private static Logger Log = LogManager.GetCurrentClassLogger();
 
-        public MtObservableList<PluginItem> PluginsSource { get; set; } = new MtObservableList<PluginItem>();
-        public MtObservableList<PluginItem> Plugins { get; set; } = new MtObservableList<PluginItem>();
+        public ObservableConcurrentList<PluginItem> PluginsSource { get; set; } = new ObservableConcurrentList<PluginItem>();
+        public ObservableConcurrentList<PluginItem> Plugins { get; set; } = new ObservableConcurrentList<PluginItem>();
         public PluginItem CurrentItem { get; set; }
         public const string PLUGINS_SEARCH_TEXT = "Plugins search...";
         private string PreviousSearchQuery = "";

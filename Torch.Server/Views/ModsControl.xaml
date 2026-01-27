@@ -6,7 +6,15 @@
              mc:Ignorable="d">
     <StackPanel Margin="0,0,0,0" Orientation="Vertical">
         <Label Content="Mods" Margin="5,5,5,5"/>
-        <ListView x:Name="ModList" HorizontalAlignment="Left" Height="265" VerticalAlignment="Top" Width="300" Margin="5,5,5,5" MouseDoubleClick="modList_OnMouseDoubleClick">
+        <ListView x:Name="ModList" 
+                  HorizontalAlignment="Left" 
+                  Height="265" 
+                  VerticalAlignment="Top" 
+                  Width="300" 
+                  Margin="5,5,5,5" 
+                  MouseDoubleClick="modList_OnMouseDoubleClick" 
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding FriendlyName}" ToolTip="{Binding Description}"/>
@@ -14,8 +22,8 @@
             </ListView.ItemTemplate>
         </ListView>
         <DockPanel>
-            <Button x:Name="RemBtn" Width="70" Content="Remove" Margin="3" Click="remBtn_Click" DockPanel.Dock="Right"/>
-            <Button x:Name="AddBtn" Width="70" Content="Add" Click="addBtn_Click" Margin="3" DockPanel.Dock="Right"/>
+            <Button Width="70" Content="Remove" Margin="3" Click="remBtn_Click" DockPanel.Dock="Right"/>
+            <Button Width="70" Content="Add" Click="addBtn_Click" Margin="3" DockPanel.Dock="Right"/>
             <Label Content="Mod ID:"/>
             <TextBox x:Name="ModIdBox" Margin="3" DockPanel.Dock="Left"/>
         </DockPanel>

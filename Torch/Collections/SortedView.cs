@@ -5,18 +5,19 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using NLog;
+using Torch.Collections.Concurrent;
 
 namespace Torch.Collections
 {
     public class SortedView<T>: IReadOnlyCollection<T>, INotifyCollectionChanged, INotifyPropertyChanged
     {
         private readonly Logger _log = LogManager.GetCurrentClassLogger();
-        private readonly MtObservableCollectionBase<T> _backing;
+        private readonly ObservableConcurrentSortedList<T> _backing;
         private IComparer<T> _comparer;
         private readonly List<T> _store;
         private Predicate<T> _filter;
 
-        public SortedView(MtObservableCollectionBase<T> backing, IComparer<T> comparer)
+        public SortedView(ObservableConcurrentSortedList<T> backing, IComparer<T> comparer)
         {
             _comparer = comparer;
             _backing = backing;

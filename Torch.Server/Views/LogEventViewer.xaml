@@ -28,7 +28,18 @@
         </StackPanel>
 
         
-        <DataGrid Grid.Row="1" x:Name="LogEventViewerDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" MouseDoubleClick="LogEventViewerDataGrid_MouseDoubleClick" CanUserDeleteRows="False" CanUserReorderColumns="False" CanUserResizeColumns="true" CanUserResizeRows="False" CanUserSortColumns="True" IsReadOnly="True" ItemsSource="{Binding LogEvents}" RowHeight="20">
+        <DataGrid Grid.Row="1" 
+                  x:Name="LogEventViewerDataGrid" 
+                  AutoGenerateColumns="False" 
+                  CanUserAddRows="False" 
+                  MouseDoubleClick="LogEventViewerDataGrid_MouseDoubleClick" 
+                  CanUserDeleteRows="False" 
+                  CanUserReorderColumns="False" 
+                  CanUserResizeColumns="true" CanUserResizeRows="False" 
+                  CanUserSortColumns="True" 
+                  IsReadOnly="True" 
+                  ItemsSource="{Binding LogEvents}" RowHeight="20"
+                  EnableRowVirtualization="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="60"/>
                 <DataGridTextColumn Header="Level" Binding="{Binding Level}" Width="50" />

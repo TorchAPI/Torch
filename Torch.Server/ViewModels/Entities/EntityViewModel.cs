@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using NLog;
 using Sandbox.Game.Entities;
 using Torch.API.Managers;
-using Torch.Collections;
+using Torch.Collections.Concurrent;
 using Torch.Server.Managers;
 using Torch.Utils;
 using VRage.ModAPI;
@@ -33,7 +33,7 @@ namespace Torch.Server.ViewModels.Entities
 
         public long Id => Entity?.EntityId ?? 0; // Throws null then gives entity id
 
-        public MtObservableList<EntityControlViewModel> EntityControls { get; private set; }
+        public ObservableConcurrentList<EntityControlViewModel> EntityControls { get; private set; }
 
         public virtual string Name
         {

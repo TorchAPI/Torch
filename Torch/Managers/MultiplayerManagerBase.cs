@@ -25,6 +25,7 @@ using Sandbox.ModAPI;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.Collections;
+using Torch.Collections.Concurrent;
 using Torch.Commands;
 using Torch.Utils;
 using Torch.ViewModels;
@@ -48,7 +49,7 @@ namespace Torch.Managers
         /// <inheritdoc />
         public event Action<IPlayer> PlayerLeft;
 
-        public MtObservableSortedDictionary<ulong, PlayerViewModel> Players { get; } = new MtObservableSortedDictionary<ulong, PlayerViewModel>();
+        public ObservableConcurrentDictionary<ulong, PlayerViewModel> Players { get; } = new ObservableConcurrentDictionary<ulong, PlayerViewModel>();
 
 #pragma warning disable 649
         [ReflectedGetter(Name = "m_players")]

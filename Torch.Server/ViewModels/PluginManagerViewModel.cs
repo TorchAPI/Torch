@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Plugins;
-using Torch.Collections;
+using Torch.Collections.Concurrent;
 
 namespace Torch.Server.ViewModels
 {
     public class PluginManagerViewModel : ViewModel
     {
-        public MtObservableList<PluginViewModel> Plugins { get; } = new MtObservableList<PluginViewModel>();
+        public ObservableConcurrentList<PluginViewModel> Plugins { get; } = new ObservableConcurrentList<PluginViewModel>();
 
         private PluginViewModel _selectedPlugin;
         public PluginViewModel SelectedPlugin

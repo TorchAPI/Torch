@@ -5,6 +5,7 @@ using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using System.Threading.Tasks;
 using Torch.Collections;
+using Torch.Collections.Concurrent;
 
 namespace Torch.Server.ViewModels.Entities
 {
@@ -16,7 +17,7 @@ namespace Torch.Server.ViewModels.Entities
 
         public override bool CanStop => false;
 
-        public MtObservableList<GridViewModel> AttachedGrids { get; } = new MtObservableList<GridViewModel>();
+        public ObservableConcurrentList<GridViewModel> AttachedGrids { get; } = new ObservableConcurrentList<GridViewModel>();
 
         public async Task UpdateAttachedGrids()
         {

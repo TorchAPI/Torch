@@ -12,7 +12,7 @@
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -200,6 +200,13 @@
     <Compile Include="Collections\MtObservableSortedDictionary.cs" />
     <Compile Include="Collections\MtObservableEvent.cs" />
     <Compile Include="Collections\MtObservableList.cs" />
+    <Compile Include="Collections\Concurrent\ObservableConcurrentDictionary.cs" />
+    <Compile Include="Collections\Concurrent\ObservableConcurrentDictionaryValues.cs" />
+    <Compile Include="Collections\Concurrent\ObservableConcurrentList.cs" />
+    <Compile Include="Collections\Concurrent\ObservableConcurrentHashSet.cs" />
+    <Compile Include="Collections\Concurrent\ObservableConcurrentSortedList.cs" />
+    <Compile Include="Collections\Concurrent\DispatcherObservableEvent.cs" />
+    <Compile Include="Collections\Concurrent\ReadOnlyObservableConcurrentDictionary.cs" />
     <Compile Include="Collections\SortedView.cs" />
     <Compile Include="Collections\SystemSortedView.cs" />
     <Compile Include="Collections\TransformComparer.cs" />
