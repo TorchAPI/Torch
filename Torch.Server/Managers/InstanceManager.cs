@@ -52,7 +52,7 @@ namespace Torch.Server.Managers
                 ValidateInstance(path);
 
             MyFileSystem.Reset();
-            MyFileSystem.Init("Content", path);
+            MyFileSystem.Init("game/Content", path);
             //Initializes saves path. Why this isn't in Init() we may never know.
             MyFileSystem.InitUserSpecific(null);
             
@@ -106,6 +106,7 @@ namespace Torch.Server.Managers
             }
 
             DedicatedConfig.SelectedWorld = worldInfo;
+            DedicatedConfig.RefreshModel();
             if (DedicatedConfig.SelectedWorld?.Checkpoint != null)
             {
                 DedicatedConfig.Mods.Clear();
@@ -121,6 +122,7 @@ namespace Torch.Server.Managers
         {
             DedicatedConfig.LoadWorld = world.WorldPath;
             DedicatedConfig.SelectedWorld = world;
+            DedicatedConfig.RefreshModel();
             if (DedicatedConfig.SelectedWorld?.Checkpoint != null)
             {
                 DedicatedConfig.Mods.Clear();

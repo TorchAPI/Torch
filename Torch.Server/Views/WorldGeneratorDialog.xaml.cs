@@ -46,7 +46,7 @@ namespace Torch.Server
             InitializeComponent();
             _loadLocalization();
 
-            string worldsDir = Path.Combine(MyFileSystem.ContentPath, "CustomWorlds");
+            string worldsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "game", "Content", "CustomWorlds");
             var result = new List<Tuple<string,MyWorldInfo>>();
             
             GetWorldInfo(worldsDir, result);
@@ -93,6 +93,9 @@ namespace Torch.Server
                 // Trash code to work around inconsistent path formats.
                 var fileRelPath = file.Replace($"{_currentItem.Path.TrimEnd('\\')}\\", "");
                 var destPath = Path.Combine(worldPath, fileRelPath);
+                var destDir = Path.GetDirectoryName(destPath);
+                if (destDir != null && !Directory.Exists(destDir))
+                    Directory.CreateDirectory(destDir);
                 File.Copy(file, destPath);
             }
 
@@ -103,6 +106,7 @@ namespace Torch.Server
 
             _instanceManager.SelectWorld(worldPath, false);
             _instanceManager.ImportSelectedWorldConfig();
+            _instanceManager.DedicatedConfig.SelectedWorld?.SaveSandbox();
             Close();
         }
 
