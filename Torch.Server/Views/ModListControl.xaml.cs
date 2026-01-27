@@ -1,32 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Runtime.CompilerServices;
-using System.Windows.Threading;
-using VRage.Game;
 using NLog;
-using Sandbox.Engine.Networking;
 using Torch.API;
 using Torch.Server.Managers;
 using Torch.API.Managers;
 using Torch.Server.ViewModels;
 using Torch.Server.Annotations;
-using Torch.Collections;
+using Torch.Collections.Concurrent;
 using Torch.Utils;
 using Torch.Views;
 
@@ -82,9 +73,9 @@ namespace Torch.Server.Views
         {
             Log.Info("Instance loaded.");
             Dispatcher.Invoke(() => {
-                DataContext = obj?.Mods ?? new MtObservableList<ModItemInfo>();
+                DataContext = obj?.Mods ?? new ObservableConcurrentList<ModItemInfo>();
                 UpdateLayout();
-                ((MtObservableList<ModItemInfo>)DataContext).CollectionChanged += OnModlistUpdate;
+                ((ObservableConcurrentList<ModItemInfo>)DataContext).CollectionChanged += OnModlistUpdate;
             });
         }
 
@@ -127,7 +118,7 @@ namespace Torch.Server.Views
         }
         private void RemoveBtn_OnClick(object sender, RoutedEventArgs e)
         {
-            var modList = ((MtObservableList<ModItemInfo>)DataContext);
+            var modList = ((ObservableConcurrentList<ModItemInfo>)DataContext);
             if (ModList.SelectedItem is ModItemInfo mod && modList.Contains(mod))
                 modList.Remove(mod);
         }
@@ -213,7 +204,7 @@ namespace Torch.Server.Views
             if( targetMod != null && !ReferenceEquals(_draggedMod, targetMod))
             {
                 _hasOrderChanged = true;
-                var modList = (MtObservableList<ModItemInfo>)DataContext;
+                var modList = (ObservableConcurrentList<ModItemInfo>)DataContext;
                 modList.Move(modList.IndexOf(targetMod), _draggedMod);
                 //modList.RemoveAt(modList.IndexOf(_draggedMod));
                 //modList.Insert(modList.IndexOf(targetMod), _draggedMod);
@@ -260,7 +251,7 @@ namespace Torch.Server.Views
             var editor = new CollectionEditor();
 
             //let's see just how poorly we can do this
-            var modList = ((MtObservableList<ModItemInfo>)DataContext).ToList();
+            var modList = ((ObservableConcurrentList<ModItemInfo>)DataContext).ToList();
             var idList = modList.Select(m => m.ToString()).ToList();
             var tasks = new List<Task>();
             //blocking

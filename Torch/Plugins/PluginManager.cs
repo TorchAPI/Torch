@@ -13,6 +13,7 @@ using Torch.API.Managers;
 using Torch.API.Plugins;
 using Torch.API.Session;
 using Torch.Collections;
+using Torch.Collections.Concurrent;
 using Torch.Commands;
 using Torch.Utils;
 using static Torch.API.WebAPI.PluginQuery;
@@ -39,7 +40,7 @@ namespace Torch.Managers
         private const string MANIFEST_NAME = "manifest.xml";
 
         public readonly string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
-        private readonly MtObservableSortedDictionary<Guid, ITorchPlugin> _plugins = new MtObservableSortedDictionary<Guid, ITorchPlugin>();
+        private readonly ObservableConcurrentDictionary<Guid, ITorchPlugin> _plugins = new ObservableConcurrentDictionary<Guid, ITorchPlugin>();
         private readonly List<PluginItem> _pluginItems = new List<PluginItem>();
         private readonly List<Guid> _reloadList = new List<Guid>();
         private CommandManager _mgr;

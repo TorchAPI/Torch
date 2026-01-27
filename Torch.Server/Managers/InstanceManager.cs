@@ -6,7 +6,7 @@ using NLog;
 using Sandbox;
 using Sandbox.Engine.Utils;
 using Torch.API;
-using Torch.Collections;
+using Torch.Collections.Concurrent;
 using Torch.Managers;
 using Torch.Mod;
 using Torch.Server.ViewModels;
@@ -131,7 +131,8 @@ namespace Torch.Server.Managers
 
         private void ImportWorldConfig(WorldViewModel world, bool modsOnly = true)
         {
-            var mods = new MtObservableList<ModItemInfo>();
+            
+            var mods = new ObservableConcurrentList<ModItemInfo>();
             foreach (var mod in world.WorldConfiguration.Mods)
                 mods.Add(new ModItemInfo(mod));
             DedicatedConfig.Mods = mods;
@@ -189,7 +190,7 @@ namespace Torch.Server.Managers
                     return;
                 }
 
-                var mods = new MtObservableList<ModItemInfo>();
+                var mods = new ObservableConcurrentList<ModItemInfo>();
                 foreach (var mod in checkpoint.Mods)
                     mods.Add(new ModItemInfo(mod));
                 DedicatedConfig.Mods = mods;

@@ -10,6 +10,7 @@ using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces;
 using Torch.Collections;
+using Torch.Collections.Concurrent;
 using Torch.Server.ViewModels.Entities;
 using VRage.Game.ModAPI;
 
@@ -18,7 +19,7 @@ namespace Torch.Server.ViewModels.Blocks
     public class BlockViewModel : EntityViewModel
     {
         public IMyTerminalBlock Block => (IMyTerminalBlock) Entity;
-        public MtObservableList<PropertyViewModel> Properties { get; } = new MtObservableList<PropertyViewModel>();
+        public ObservableConcurrentList<PropertyViewModel> Properties { get; } = new ObservableConcurrentList<PropertyViewModel>();
 
         public string FullName => $"{Block?.CubeGrid.CustomName} - {Block?.CustomName}";
 

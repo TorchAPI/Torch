@@ -10,10 +10,15 @@ using Torch.Utils;
 namespace Torch.Collections
 {
     /// <summary>
-    /// Multithread safe observable dictionary
+    /// Multithread safe observable dictionary (deprecated).
     /// </summary>
     /// <typeparam name="TK">Key type</typeparam>
     /// <typeparam name="TV">Value type</typeparam>
+    /// <remarks>
+    /// <para>This class is obsolete. Use <see cref="Concurrent.ObservableConcurrentDictionary{TKey, TValue}"/> instead.</para>
+    /// <para>For sorted dictionary needs, combine ObservableConcurrentDictionary with SortedView.</para>
+    /// </remarks>
+    [Obsolete("MtObservableSortedDictionary is deprecated. Use Torch.Collections.Concurrent.ObservableConcurrentDictionary with SortedView for sorted requirements.")]
     public class MtObservableSortedDictionary<TK, TV> :
         MtObservableCollectionBase<KeyValuePair<TK, TV>>, IDictionary<TK, TV>
     {

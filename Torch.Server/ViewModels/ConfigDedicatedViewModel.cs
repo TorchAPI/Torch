@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using NLog;
 using Sandbox.Engine.Utils;
-using Torch.Collections;
 using Torch.Server.Managers;
 using VRage.Game;
-using VRage.Game.ModAPI;
 using Torch.Utils.SteamWorkshopTools;
-using Torch.Collections;
+using Torch.Collections.Concurrent;
 
 namespace Torch.Server.ViewModels
 {
@@ -64,7 +60,7 @@ namespace Torch.Server.ViewModels
         private SessionSettingsViewModel _sessionSettings;
         public SessionSettingsViewModel SessionSettings { get => _sessionSettings; set { _sessionSettings = value; OnPropertyChanged(); } }
 
-        public MtObservableList<WorldViewModel> Worlds { get; } = new MtObservableList<WorldViewModel>();
+        public ObservableConcurrentList<WorldViewModel> Worlds { get; } = new ObservableConcurrentList<WorldViewModel>();
         private WorldViewModel _selectedWorld;
         public WorldViewModel SelectedWorld
         {
@@ -118,8 +114,8 @@ namespace Torch.Server.ViewModels
 
         public List<ulong> Banned { get => _config.Banned; set => SetValue(x => _config.Banned = x, value); }
 
-        private MtObservableList<ModItemInfo> _mods = new MtObservableList<ModItemInfo>();
-        public MtObservableList<ModItemInfo> Mods
+        private ObservableConcurrentList<ModItemInfo> _mods = new ObservableConcurrentList<ModItemInfo>();
+        public ObservableConcurrentList<ModItemInfo> Mods
         {
             get => _mods;
             set
