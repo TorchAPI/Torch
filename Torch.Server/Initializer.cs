@@ -8,18 +8,10 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 using NLog;
-using NLog.Targets;
 using Sandbox;
-using Sandbox.Engine.Utils;
-using Torch.Utils;
 using VRage;
-using VRage.FileSystem;
-using VRage.Scripting;
-using VRage.Utils;
 
 namespace Torch.Server
 {
@@ -35,12 +27,15 @@ namespace Torch.Server
         private static readonly string STEAMCMD_PATH = $"{STEAMCMD_DIR}\\steamcmd.exe";
         private static readonly string RUNSCRIPT_PATH = $"{STEAMCMD_DIR}\\runscript.txt";
 
-        private const string RUNSCRIPT = @"force_install_dir ../
+        private const string RUNSCRIPT = @"force_install_dir ../game
 login anonymous
-app_update 298740
+app_update 298740 
 quit";
         private TorchServer _server;
         private string _basePath;
+
+        private static string GetDedicatedServer64Path(string basePath) => Path.Combine(basePath, "game", "DedicatedServer64");
+            
 
         internal Persistent<TorchConfig> ConfigPersistent { get; private set; }
         public TorchConfig Config => ConfigPersistent?.Data;
@@ -83,7 +78,8 @@ quit";
                 RunSteamCmd();
 
             var basePath = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
-            var apiSource = Path.Combine(basePath, "DedicatedServer64", "steam_api64.dll");
+            var dedicatedServerPath = GetDedicatedServer64Path(basePath);
+            var apiSource = Path.Combine(dedicatedServerPath, "steam_api64.dll");
             var apiTarget = Path.Combine(basePath, "steam_api64.dll");
 
             if (!File.Exists(apiTarget))
@@ -101,37 +97,37 @@ quit";
             var requiredVersion = new Version(9, 86, 62, 31);
 
             // Steam Client 64-bit DLL
-            var clientSource64 = Path.Combine(basePath, "DedicatedServer64", "steamclient64.dll");
+            var clientSource64 = Path.Combine(dedicatedServerPath, "steamclient64.dll");
             var clientTarget64 = Path.Combine(basePath, "steamclient64.dll");
             CopyAndVerifyDll(clientSource64, clientTarget64, requiredVersion);
 
             // Steam Client 32-bit DLL
-            var clientSource = Path.Combine(basePath, "DedicatedServer64", "steamclient.dll");
+            var clientSource = Path.Combine(dedicatedServerPath, "steamclient.dll");
             var clientTarget = Path.Combine(basePath, "steamclient.dll");
             CopyAndVerifyDll(clientSource, clientTarget, requiredVersion);
 
             // tier0 64-bit DLL
-            var tier0Source64 = Path.Combine(basePath, "DedicatedServer64", "tier0_s64.dll");
+            var tier0Source64 = Path.Combine(dedicatedServerPath, "tier0_s64.dll");
             var tier0Target64 = Path.Combine(basePath, "tier0_s64.dll");
             CopyAndVerifyDll(tier0Source64, tier0Target64, requiredVersion);
 
             // tier0 32-bit DLL
-            var tier0Source = Path.Combine(basePath, "DedicatedServer64", "tier0_s.dll");
+            var tier0Source = Path.Combine(dedicatedServerPath, "tier0_s.dll");
             var tier0Target = Path.Combine(basePath, "tier0_s.dll");
             CopyAndVerifyDll(tier0Source, tier0Target, requiredVersion);
 
             // vstdlib 64-bit DLL
-            var vstdlibSource64 = Path.Combine(basePath, "DedicatedServer64", "vstdlib_s64.dll");
+            var vstdlibSource64 = Path.Combine(dedicatedServerPath, "vstdlib_s64.dll");
             var vstdlibTarget64 = Path.Combine(basePath, "vstdlib_s64.dll");
             CopyAndVerifyDll(vstdlibSource64, vstdlibTarget64, requiredVersion);
 
             // vstdlib 32-bit DLL
-            var vstdlibSource = Path.Combine(basePath, "DedicatedServer64", "vstdlib_s.dll");
+            var vstdlibSource = Path.Combine(dedicatedServerPath, "vstdlib_s.dll");
             var vstdlibTarget = Path.Combine(basePath, "vstdlib_s.dll");
             CopyAndVerifyDll(vstdlibSource, vstdlibTarget, requiredVersion);
 
             
-            var havokSource = Path.Combine(basePath, "DedicatedServer64", "Havok.dll");
+            var havokSource = Path.Combine(dedicatedServerPath, "Havok.dll");
             var havokTarget = Path.Combine(basePath, "Havok.dll");
 
             if (!File.Exists(havokTarget))
@@ -257,20 +253,73 @@ quit";
             }
 
             log.Info("Checking for DS updates.");
-            var steamCmdProc = new ProcessStartInfo(STEAMCMD_PATH, "+runscript runscript.txt")
-            {
-                WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), STEAMCMD_DIR),
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                StandardOutputEncoding = Encoding.ASCII
-            };
-            var cmd = Process.Start(steamCmdProc);
             
-            // ReSharper disable once PossibleNullReferenceException
-            while (!cmd.HasExited)
+            const int maxAttempts = 2;
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                log.Info(cmd.StandardOutput.ReadLine());
-                Thread.Sleep(100);
+                if (attempt > 1)
+                {
+                    log.Info($"Retrying SteamCMD update (attempt {attempt})...");
+                    Thread.Sleep(3000); // brief delay before retry
+                }
+                
+                var steamCmdProc = new ProcessStartInfo(STEAMCMD_PATH, "+runscript runscript.txt")
+                {
+                    WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), STEAMCMD_DIR),
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    StandardOutputEncoding = Encoding.ASCII,
+                    StandardErrorEncoding = Encoding.ASCII
+                };
+                var cmd = Process.Start(steamCmdProc);
+                if (cmd == null)
+                {
+                    log.Error("Failed to start SteamCMD process.");
+                    continue;
+                }
+
+                // Read output and error asynchronously to avoid deadlocks
+                var output = new StringBuilder();
+                var error = new StringBuilder();
+                cmd.OutputDataReceived += (_, args) =>
+                {
+                    if (args.Data != null)
+                    {
+                        log.Info(args.Data);
+                        output.AppendLine(args.Data);
+                    }
+                };
+                cmd.ErrorDataReceived += (_, args) =>
+                {
+                    if (args.Data != null)
+                    {
+                        log.Error($"SteamCMD stderr: {args.Data}");
+                        error.AppendLine(args.Data);
+                    }
+                };
+                cmd.BeginOutputReadLine();
+                cmd.BeginErrorReadLine();
+                
+                cmd.WaitForExit();
+                int exitCode = cmd.ExitCode;
+                
+                // Ensure all events are processed
+                Thread.Sleep(500);
+                
+                if (exitCode == 0)
+                {
+                    log.Info("SteamCMD update completed successfully.");
+                    return;
+                }
+                
+                log.Warn($"SteamCMD exited with code {exitCode}. Output: {output}");
+                if (error.Length > 0)
+                    log.Error($"SteamCMD errors: {error}");
+                
+                // If this was the last attempt, break and let the caller continue (copy will fail later)
+                if (attempt == maxAttempts)
+                    log.Error("SteamCMD update failed after all attempts. The DS files may be missing.");
             }
         }
         

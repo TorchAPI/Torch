@@ -27,7 +27,7 @@ namespace Torch.Server
             Target.Register<FlowDocumentTarget>("FlowDocument");
             //Ensures that all the files are downloaded in the Torch directory.
             var workingDir = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
-            var binDir = Path.Combine(workingDir, "DedicatedServer64");
+            var binDir = Path.Combine(workingDir, "game", "DedicatedServer64");
             Directory.SetCurrentDirectory(workingDir);
 
             //HACK for block skins update
