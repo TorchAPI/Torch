@@ -1,33 +1,21 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
-using Havok;
 using NLog;
 using Sandbox;
-using Sandbox.Engine.Networking;
 using Sandbox.Engine.Utils;
-using Sandbox.Game;
-using Sandbox.Game.Gui;
 using Torch.API;
-using Torch.API.Managers;
 using Torch.Collections;
 using Torch.Managers;
 using Torch.Mod;
 using Torch.Server.ViewModels;
 using Torch.Utils;
-using VRage;
 using VRage.FileSystem;
 using VRage.Game;
-using VRage.Game.ObjectBuilder;
+using VRage.Game.ModAPI;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Private;
-using VRage.Plugins;
 
 namespace Torch.Server.Managers
 {
@@ -52,7 +40,7 @@ namespace Torch.Server.Managers
                 ValidateInstance(path);
 
             MyFileSystem.Reset();
-            MyFileSystem.Init("Content", path);
+            MyFileSystem.Init("game/Content", path);
             //Initializes saves path. Why this isn't in Init() we may never know.
             MyFileSystem.InitUserSpecific(null);
             
@@ -106,6 +94,7 @@ namespace Torch.Server.Managers
             }
 
             DedicatedConfig.SelectedWorld = worldInfo;
+            DedicatedConfig.RefreshModel();
             if (DedicatedConfig.SelectedWorld?.Checkpoint != null)
             {
                 DedicatedConfig.Mods.Clear();
@@ -114,6 +103,7 @@ namespace Torch.Server.Managers
                 foreach (var m in DedicatedConfig.SelectedWorld.WorldConfiguration.Mods)
                     DedicatedConfig.Mods.Add(new ModItemInfo(m));
                 Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
+                DedicatedConfig.RefreshModel();
             }
         }
 
@@ -121,6 +111,7 @@ namespace Torch.Server.Managers
         {
             DedicatedConfig.LoadWorld = world.WorldPath;
             DedicatedConfig.SelectedWorld = world;
+            DedicatedConfig.RefreshModel();
             if (DedicatedConfig.SelectedWorld?.Checkpoint != null)
             {
                 DedicatedConfig.Mods.Clear();
@@ -129,6 +120,7 @@ namespace Torch.Server.Managers
                 foreach (var m in DedicatedConfig.SelectedWorld.WorldConfiguration.Mods)
                     DedicatedConfig.Mods.Add(new ModItemInfo(m));
                 Task.Run(() => DedicatedConfig.UpdateAllModInfosAsync());
+                DedicatedConfig.RefreshModel();
             }
         }
 
@@ -144,11 +136,38 @@ namespace Torch.Server.Managers
                 mods.Add(new ModItemInfo(mod));
             DedicatedConfig.Mods = mods;
 
-
             Log.Debug("Loaded mod list from world");
 
             if (!modsOnly)
                 DedicatedConfig.SessionSettings = world.WorldConfiguration.Settings;
+
+            // Update left pane fields from world checkpoint
+            if (world.Checkpoint != null)
+            {
+                DedicatedConfig.WorldName = world.Checkpoint.SessionName;
+                DedicatedConfig.ServerDescription = world.Checkpoint.Description;
+                DedicatedConfig.ServerName = world.Checkpoint.SessionName;
+                if (!string.IsNullOrEmpty(world.Checkpoint.Password))
+                    DedicatedConfig.Password = world.Checkpoint.Password;
+                // Update administrators from promoted users
+                if (world.Checkpoint.PromotedUsers != null)
+                {
+                    var adminIds = world.Checkpoint.PromotedUsers.Dictionary
+                        .Where(kvp => kvp.Value >= MyPromoteLevel.Admin)
+                        .Select(kvp => kvp.Key.ToString())
+                        .ToList();
+                    DedicatedConfig.Administrators = adminIds;
+                }
+            }
+
+            // Ensure LoadWorld is set to this world's path
+            DedicatedConfig.LoadWorld = world.WorldPath;
+
+            // Make sure the config uses LoadWorld instead of last session
+            if (DedicatedConfig.Model is MyConfigDedicated<MyObjectBuilder_SessionSettings> config)
+                config.IgnoreLastSession = true;
+
+            DedicatedConfig.RefreshModel();
         }
 
         private void ImportWorldConfig(bool modsOnly = true)
@@ -179,6 +198,28 @@ namespace Torch.Server.Managers
 
                 if (!modsOnly)
                     DedicatedConfig.SessionSettings = new SessionSettingsViewModel(checkpoint.Settings);
+
+                // Update left pane fields from world checkpoint
+                DedicatedConfig.WorldName = checkpoint.SessionName;
+                DedicatedConfig.ServerDescription = checkpoint.Description;
+                DedicatedConfig.ServerName = checkpoint.SessionName;
+                if (!string.IsNullOrEmpty(checkpoint.Password))
+                    DedicatedConfig.Password = checkpoint.Password;
+                // Update administrators from promoted users
+                if (checkpoint.PromotedUsers != null)
+                {
+                    var adminIds = checkpoint.PromotedUsers.Dictionary
+                        .Where(kvp => kvp.Value >= MyPromoteLevel.Admin)
+                        .Select(kvp => kvp.Key.ToString())
+                        .ToList();
+                    DedicatedConfig.Administrators = adminIds;
+                }
+
+                // Make sure the config uses LoadWorld instead of last session
+                if (DedicatedConfig.Model is MyConfigDedicated<MyObjectBuilder_SessionSettings> config)
+                    config.IgnoreLastSession = true;
+
+                DedicatedConfig.RefreshModel();
             }
             catch (Exception e)
             {

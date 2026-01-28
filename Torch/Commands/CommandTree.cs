@@ -96,7 +96,7 @@ namespace Torch.Commands
 
         public Command GetCommand(string commandText, out string argText)
         {
-            var split = commandText.Split(new []{' '}, StringSplitOptions.RemoveEmptyEntries).ToList();
+            var split = commandText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
             var skip = GetNode(split, out CommandNode node);
             if (skip == -1)
             {
@@ -106,17 +106,44 @@ namespace Torch.Commands
 
             if (split.Count > skip)
             {
-                var substringIndex = commandText.IndexOf(split[skip]);
-                if (substringIndex <= commandText.Length)
+                // ===================================================================
+                // BUG (original approach):
+                //   var substringIndex = commandText.IndexOf(split[skip]);
+                //   if (substringIndex <= commandText.Length)
+                //   {
+                //       argText = commandText.Substring(substringIndex);
+                //       return node.Command;
+                //   }
+                //
+                // Why it fails:
+                //   IndexOf finds the first occurrence of the token, which may be inside a previous token.
+                //   Example: commandText = "qs storegrid ore 10000", split[skip] = "ore".
+                //   "storegrid" contains "ore", so IndexOf returns the position inside "storegrid".
+                //   This causes argText to start in the middle of the command name, e.g. "oregrid ore 10000".
+                // ===================================================================
+                
+                // FIX: Track the position of each preceding token so we start after the command name.
+                int startIndex = 0;
+                for (int i = 0; i < skip; i++)
                 {
-                    argText = commandText.Substring(substringIndex);
-                    return node.Command;
+                    // Match the token at its expected position (case‑sensitive, ordinal search).
+                    int idx = commandText.IndexOf(split[i], startIndex, StringComparison.Ordinal);
+                    if (idx < 0)
+                        break; // Should never happen because we just split the same string.
+                    startIndex = idx + split[i].Length;
+                    // Skip any spaces that follow the token.
+                    while (startIndex < commandText.Length && commandText[startIndex] == ' ')
+                        startIndex++;
                 }
+                // startIndex now points to the beginning of the first argument token.
+                argText = commandText.Substring(startIndex).TrimStart();
+                return node.Command;
             }
 
             argText = "";
             return node.Command;
         }
+
 
         public string GetTreeString()
         {
