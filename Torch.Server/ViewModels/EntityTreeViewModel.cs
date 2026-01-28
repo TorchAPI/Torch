@@ -11,7 +11,7 @@ using Sandbox.Game.World;
 using Torch.API;
 using Torch.API.Managers;
 using Torch.API.Session;
-using Torch.Collections;
+using Torch.Collections.Concurrent;
 using VRage.Game.ModAPI;
 using PlayerViewModel = Torch.Server.ViewModels.Entities.PlayerViewModel;
 
@@ -31,21 +31,21 @@ namespace Torch.Server.ViewModels
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         //TODO: these should be sorted sets for speed
-        public MtObservableSortedDictionary<long, GridViewModel> Grids { get; set; } = new MtObservableSortedDictionary<long, GridViewModel>();
-        public MtObservableSortedDictionary<long, CharacterViewModel> Characters { get; set; } = new MtObservableSortedDictionary<long, CharacterViewModel>();
-        public MtObservableSortedDictionary<long, FloatingObjectViewModel> FloatingObjects { get; set; } = new MtObservableSortedDictionary<long, FloatingObjectViewModel>();
-        public MtObservableSortedDictionary<long, VoxelMapViewModel> VoxelMaps { get; set; } = new MtObservableSortedDictionary<long, VoxelMapViewModel>();
-        public MtObservableSortedDictionary<long, PlayerViewModel> Players { get; set; } = new MtObservableSortedDictionary<long, PlayerViewModel>();
-        public MtObservableSortedDictionary<long, FactionViewModel> Factions { get; set; } = new MtObservableSortedDictionary<long, FactionViewModel>();
+        public ObservableConcurrentDictionary<long, GridViewModel> Grids { get; set; } = new ObservableConcurrentDictionary<long, GridViewModel>();
+        public ObservableConcurrentDictionary<long, CharacterViewModel> Characters { get; set; } = new ObservableConcurrentDictionary<long, CharacterViewModel>();
+        public ObservableConcurrentDictionary<long, FloatingObjectViewModel> FloatingObjects { get; set; } = new ObservableConcurrentDictionary<long, FloatingObjectViewModel>();
+        public ObservableConcurrentDictionary<long, VoxelMapViewModel> VoxelMaps { get; set; } = new ObservableConcurrentDictionary<long, VoxelMapViewModel>();
+        public ObservableConcurrentDictionary<long, PlayerViewModel> Players { get; set; } = new ObservableConcurrentDictionary<long, PlayerViewModel>();
+        public ObservableConcurrentDictionary<long, FactionViewModel> Factions { get; set; } = new ObservableConcurrentDictionary<long, FactionViewModel>();
         public Dispatcher ControlDispatcher => _control.Dispatcher;
 
-        public SortedView<GridViewModel> SortedGrids { get; }
-        public SortedView<GridViewModel> FilteredSortedGrids { get; }
-        public SortedView<CharacterViewModel> SortedCharacters { get; }
-        public SortedView<FloatingObjectViewModel> SortedFloatingObjects { get; }
-        public SortedView<VoxelMapViewModel> SortedVoxelMaps { get; }
-        public SortedView<PlayerViewModel> SortedPlayers { get; }
-        public SortedView<FactionViewModel> SortedFactions { get; }
+        public ObservableConcurrentSortedList<GridViewModel> SortedGrids { get; }
+        public ObservableConcurrentSortedList<GridViewModel> FilteredSortedGrids { get; }
+        public ObservableConcurrentSortedList<CharacterViewModel> SortedCharacters { get; }
+        public ObservableConcurrentSortedList<FloatingObjectViewModel> SortedFloatingObjects { get; }
+        public ObservableConcurrentSortedList<VoxelMapViewModel> SortedVoxelMaps { get; }
+        public ObservableConcurrentSortedList<PlayerViewModel> SortedPlayers { get; }
+        public ObservableConcurrentSortedList<FactionViewModel> SortedFactions { get; }
 
         private EntityViewModel _currentEntity;
         private SortEnum _currentSort;
@@ -60,7 +60,11 @@ namespace Torch.Server.ViewModels
         public SortEnum CurrentSort
         {
             get => _currentSort;
-            set => SetValue(ref _currentSort, value);
+            set
+            {
+                SetValue(ref _currentSort, value);
+                UpdateSortComparer();
+            }
         }
 
         // Westin miller still hates you today WPF
@@ -72,16 +76,16 @@ namespace Torch.Server.ViewModels
         {
             _control = control;
             var entityComparer = new EntityViewModel.Comparer(_currentSort);
-            SortedGrids = new SortedView<GridViewModel>(Grids.Values, entityComparer);
-            FilteredSortedGrids = new SortedView<GridViewModel>(Grids.Values, entityComparer);
-            SortedCharacters = new SortedView<CharacterViewModel>(Characters.Values, entityComparer);
-            SortedFloatingObjects = new SortedView<FloatingObjectViewModel>(FloatingObjects.Values, entityComparer);
-            SortedVoxelMaps = new SortedView<VoxelMapViewModel>(VoxelMaps.Values, entityComparer);
-            SortedPlayers = new SortedView<PlayerViewModel>(Players.Values, Comparer<PlayerViewModel>
+            SortedGrids = new ObservableConcurrentSortedList<GridViewModel>(Grids.Values, entityComparer);
+            FilteredSortedGrids = new ObservableConcurrentSortedList<GridViewModel>(Grids.Values, entityComparer);
+            SortedCharacters = new ObservableConcurrentSortedList<CharacterViewModel>(Characters.Values, entityComparer);
+            SortedFloatingObjects = new ObservableConcurrentSortedList<FloatingObjectViewModel>(FloatingObjects.Values, entityComparer);
+            SortedVoxelMaps = new ObservableConcurrentSortedList<VoxelMapViewModel>(VoxelMaps.Values, entityComparer);
+            SortedPlayers = new ObservableConcurrentSortedList<PlayerViewModel>(Players.Values, Comparer<PlayerViewModel>
                 .Create((x, y) => 
                     string.Compare(x?.Name, y?.Name, StringComparison.InvariantCultureIgnoreCase))
             );
-            SortedFactions = new SortedView<FactionViewModel>(Factions.Values, Comparer<FactionViewModel>
+            SortedFactions = new ObservableConcurrentSortedList<FactionViewModel>(Factions.Values, Comparer<FactionViewModel>
                 .Create((x, y) =>
                     string.Compare(x?.Name, y?.Name, StringComparison.InvariantCultureIgnoreCase))
             );
@@ -91,6 +95,16 @@ namespace Torch.Server.ViewModels
                 var sessionManager = server.Managers.GetManager<ITorchSessionManager>();
                 sessionManager.SessionStateChanged += RegisterLiveNonEntities;
             }
+        }
+
+        private void UpdateSortComparer()
+        {
+            var comparer = new EntityViewModel.Comparer(_currentSort);
+            SortedGrids.SetComparer(comparer);
+            FilteredSortedGrids.SetComparer(comparer);
+            SortedCharacters.SetComparer(comparer);
+            SortedFloatingObjects.SetComparer(comparer);
+            SortedVoxelMaps.SetComparer(comparer);
         }
 
         private void RegisterLiveNonEntities(ITorchSession session, TorchSessionState newState)
@@ -105,12 +119,12 @@ namespace Torch.Server.ViewModels
                         if (player is null) continue;
                         if (Players.ContainsKey(player.IdentityId)) continue;
                         
-                        Players.Add(new KeyValuePair<long, PlayerViewModel>(player.IdentityId, new PlayerViewModel(player, identity)));
+                        Players.Add(player.IdentityId, new PlayerViewModel(player, identity));
                     }
 
                     foreach (MyFaction faction in MySession.Static.Factions.GetAllFactions())
                     {
-                        Factions.Add(new KeyValuePair<long, FactionViewModel>(faction.FactionId, new FactionViewModel(faction)));
+                        Factions.Add(faction.FactionId, new FactionViewModel(faction));
                     }
 
                     Sync.Players.RealPlayerIdentityCreated += NewPlayerCreated;
@@ -121,7 +135,9 @@ namespace Torch.Server.ViewModels
                 case TorchSessionState.Unloading:
                     Sync.Players.RealPlayerIdentityCreated -= NewPlayerCreated;
                     MySession.Static.Factions.FactionCreated -= NewFactionCreated;
+                    MySession.Static.Factions.FactionStateChanged -= FactionChanged;
                     Players.Clear();
+                    Factions.Clear();
                     break;
             }
         }
@@ -155,7 +171,7 @@ namespace Torch.Server.ViewModels
             {
                 var faction = MySession.Static.Factions.GetPlayerFaction(id);
                 if (faction is null) return;
-                Factions.Add(new KeyValuePair<long, FactionViewModel>(faction.FactionId, new FactionViewModel(faction)));
+                Factions.Add(faction.FactionId, new FactionViewModel(faction));
             });
         }
 
@@ -163,7 +179,7 @@ namespace Torch.Server.ViewModels
         {
             var player = MySession.Static.Players.TryGetPlayer(identityId);
             if (player is null) return;
-            Players.Add(new KeyValuePair<long, PlayerViewModel>(player.Identity.IdentityId, new PlayerViewModel(player.Identity, new MyPlayer.PlayerId())));
+            Players.Add(player.Identity.IdentityId, new PlayerViewModel(player.Identity, player.Id));
         }
 
         public void Init()

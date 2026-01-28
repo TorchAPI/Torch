@@ -6,7 +6,7 @@ using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Cube;
 using Sandbox.Game.World;
 using SharpDX.Toolkit.Collections;
-using Torch.Collections;
+using Torch.Collections.Concurrent;
 using Torch.Server.ViewModels.Blocks;
 using VRage.Game;
 
@@ -45,10 +45,9 @@ namespace Torch.Server.ViewModels.Entities
 
         private MyCubeGrid Grid => (MyCubeGrid) Entity;
 
-        public MtObservableSortedDictionary<MyCubeBlockDefinition, MtObservableSortedDictionary<long, BlockViewModel>>
+        public ObservableConcurrentDictionary<MyCubeBlockDefinition, ObservableConcurrentDictionary<long, BlockViewModel>>
             Blocks { get; } =
-            new MtObservableSortedDictionary<MyCubeBlockDefinition, MtObservableSortedDictionary<long, BlockViewModel>>(
-                CubeBlockDefinitionComparer.Default);
+            new ObservableConcurrentDictionary<MyCubeBlockDefinition, ObservableConcurrentDictionary<long, BlockViewModel>>();
 
         public GridViewModel()
         {
@@ -58,7 +57,7 @@ namespace Torch.Server.ViewModels.Entities
         public GridViewModel(MyCubeGrid grid, EntityTreeViewModel tree) : base(grid, tree)
         {
             //DescriptiveName = $"{grid.DisplayName} ({grid.BlocksCount} blocks)";
-            Blocks.Add(_fillerDefinition, new MtObservableSortedDictionary<long, BlockViewModel>());
+            Blocks.Add(_fillerDefinition, new ObservableConcurrentDictionary<long, BlockViewModel>());
         }
 
         private void Grid_OnBlockRemoved(MySlimBlock obj)
@@ -99,7 +98,7 @@ namespace Torch.Server.ViewModels.Entities
             try
             {
                 if (!Blocks.TryGetValue(block.BlockDefinition, out var group))
-                    group = Blocks[block.BlockDefinition] = new MtObservableSortedDictionary<long, BlockViewModel>();
+                    group = Blocks[block.BlockDefinition] = new ObservableConcurrentDictionary<long, BlockViewModel>();
                 group.Add(block.EntityId, new BlockViewModel(block, Tree));
 
                 long ownerId = block.OwnerId;

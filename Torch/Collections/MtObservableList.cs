@@ -10,9 +10,13 @@ using Torch.Utils;
 namespace Torch.Collections
 {
     /// <summary>
-    /// Multithread safe, observable list
+    /// Multithread safe, observable list (deprecated).
     /// </summary>
     /// <typeparam name="T">Value type</typeparam>
+    /// <remarks>
+    /// <para>This class is obsolete. Use <see cref="Concurrent.ObservableConcurrentList{T}"/> instead.</para>
+    /// </remarks>
+    [Obsolete("MtObservableList is deprecated. Use Torch.Collections.Concurrent.ObservableConcurrentList instead.")]
     public class MtObservableList<T> : MtObservableCollection<List<T>, T>, IList<T>, IList
     {
         /// <summary>

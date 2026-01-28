@@ -1,16 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Controls;
 using NLog;
-using NLog.Fluent;
 using Torch.API;
 using Torch.Collections;
+using Torch.Collections.Concurrent;
 using Torch.Managers;
 using Torch.Server.ViewModels.Entities;
 using Torch.Utils;
@@ -87,8 +82,8 @@ namespace Torch.Server.Managers
         private readonly List<ModelFactory> _modelFactories = new List<ModelFactory>();
         private readonly List<Delegate> _controlFactories = new List<Delegate>();
 
-        private readonly List<WeakReference<EntityViewModel>> _boundEntityViewModels = new List<WeakReference<EntityViewModel>>();
-        private readonly ConditionalWeakTable<EntityViewModel, MtObservableList<EntityControlViewModel>> _boundViewModels = new ConditionalWeakTable<EntityViewModel, MtObservableList<EntityControlViewModel>>();
+        private readonly ObservableConcurrentList<WeakReference<EntityViewModel>> _boundEntityViewModels = new ObservableConcurrentList<WeakReference<EntityViewModel>>();
+        private readonly ConditionalWeakTable<EntityViewModel, ObservableConcurrentList<EntityControlViewModel>> _boundViewModels = new ConditionalWeakTable<EntityViewModel, ObservableConcurrentList<EntityControlViewModel>>();
 
         /// <summary>
         /// This factory will be used to create component models for matching entity models.
@@ -109,14 +104,14 @@ namespace Torch.Server.Managers
                 while (i < _boundEntityViewModels.Count)
                 {
                     if (_boundEntityViewModels[i].TryGetTarget(out EntityViewModel target) &&
-                        _boundViewModels.TryGetValue(target, out MtObservableList<EntityControlViewModel> components))
+                        _boundViewModels.TryGetValue(target, out ObservableConcurrentList<EntityControlViewModel> components))
                     {
                         if (target is TEntityBaseModel tent)
                             UpdateBinding(target, components);
                         i++;
                     }
                     else
-                        _boundEntityViewModels.RemoveAtFast(i);
+                        _boundEntityViewModels.RemoveAt(i);
                 }
             }
         }
@@ -190,7 +185,7 @@ namespace Torch.Server.Managers
             while (i < _boundEntityViewModels.Count)
             {
                 if (_boundEntityViewModels[i].TryGetTarget(out EntityViewModel target) &&
-                    _boundViewModels.TryGetValue(target, out MtObservableList<EntityControlViewModel> components))
+                    _boundViewModels.TryGetValue(target, out ObservableConcurrentList<EntityControlViewModel> components))
                 {
                     foreach (EntityControlViewModel component in components)
                         if (component is TEntityComponentModel)
@@ -198,7 +193,7 @@ namespace Torch.Server.Managers
                     i++;
                 }
                 else
-                    _boundEntityViewModels.RemoveAtFast(i);
+                    _boundEntityViewModels.RemoveAt(i);
             }
         }
 
@@ -207,7 +202,7 @@ namespace Torch.Server.Managers
         /// </summary>
         /// <param name="entity">view model to query</param>
         /// <returns></returns>
-        public MtObservableList<EntityControlViewModel> BoundModels(EntityViewModel entity)
+        public ObservableConcurrentList<EntityControlViewModel> BoundModels(EntityViewModel entity)
         {
             return _boundViewModels.GetValue(entity, CreateFreshBinding);
         }
@@ -231,9 +226,9 @@ namespace Torch.Server.Managers
             return null;
         }
 
-        private MtObservableList<EntityControlViewModel> CreateFreshBinding(EntityViewModel key)
+        private ObservableConcurrentList<EntityControlViewModel> CreateFreshBinding(EntityViewModel key)
         {
-            var binding = new MtObservableList<EntityControlViewModel>();
+            var binding = new ObservableConcurrentList<EntityControlViewModel>();
             lock (this)
             {
                 _boundEntityViewModels.Add(new WeakReference<EntityViewModel>(key));
@@ -246,7 +241,7 @@ namespace Torch.Server.Managers
             return binding;
         }
 
-        private void UpdateBinding(EntityViewModel key, MtObservableList<EntityControlViewModel> binding)
+        private void UpdateBinding(EntityViewModel key, ObservableConcurrentList<EntityControlViewModel> binding)
         {
             if (!binding.IsObserved)
                 return;
