@@ -30,12 +30,12 @@ namespace Torch.Server
 
         private static readonly Logger Log = LogManager.GetLogger(nameof(Initializer));
         private bool _init;
-        private const string STEAMCMD_DIR = "steamcmd";
+        private const string STEAMCMD_DIR = "steam/steamcmd";
         private const string STEAMCMD_ZIP = "temp.zip";
         private static readonly string STEAMCMD_PATH = $"{STEAMCMD_DIR}\\steamcmd.exe";
         private static readonly string RUNSCRIPT_PATH = $"{STEAMCMD_DIR}\\runscript.txt";
 
-        private const string RUNSCRIPT = @"force_install_dir ../
+        private const string RUNSCRIPT = @"force_install_dir ../../
 login anonymous
 app_update 298740
 quit";
@@ -83,66 +83,7 @@ quit";
                 RunSteamCmd();
 
             var basePath = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
-            var apiSource = Path.Combine(basePath, "DedicatedServer64", "steam_api64.dll");
-            var apiTarget = Path.Combine(basePath, "steam_api64.dll");
-
-            if (!File.Exists(apiTarget))
-            {
-                File.Copy(apiSource, apiTarget);
-            }
-            else if (File.GetLastWriteTime(apiTarget) < File.GetLastWriteTime(apiSource))
-            {
-                File.Delete(apiTarget);
-                File.Copy(apiSource, apiTarget);
-            }
             
-                   
-            // Define the required version once
-            var requiredVersion = new Version(9, 86, 62, 31);
-
-            // Steam Client 64-bit DLL
-            var clientSource64 = Path.Combine(basePath, "DedicatedServer64", "steamclient64.dll");
-            var clientTarget64 = Path.Combine(basePath, "steamclient64.dll");
-            CopyAndVerifyDll(clientSource64, clientTarget64, requiredVersion);
-
-            // Steam Client 32-bit DLL
-            var clientSource = Path.Combine(basePath, "DedicatedServer64", "steamclient.dll");
-            var clientTarget = Path.Combine(basePath, "steamclient.dll");
-            CopyAndVerifyDll(clientSource, clientTarget, requiredVersion);
-
-            // tier0 64-bit DLL
-            var tier0Source64 = Path.Combine(basePath, "DedicatedServer64", "tier0_s64.dll");
-            var tier0Target64 = Path.Combine(basePath, "tier0_s64.dll");
-            CopyAndVerifyDll(tier0Source64, tier0Target64, requiredVersion);
-
-            // tier0 32-bit DLL
-            var tier0Source = Path.Combine(basePath, "DedicatedServer64", "tier0_s.dll");
-            var tier0Target = Path.Combine(basePath, "tier0_s.dll");
-            CopyAndVerifyDll(tier0Source, tier0Target, requiredVersion);
-
-            // vstdlib 64-bit DLL
-            var vstdlibSource64 = Path.Combine(basePath, "DedicatedServer64", "vstdlib_s64.dll");
-            var vstdlibTarget64 = Path.Combine(basePath, "vstdlib_s64.dll");
-            CopyAndVerifyDll(vstdlibSource64, vstdlibTarget64, requiredVersion);
-
-            // vstdlib 32-bit DLL
-            var vstdlibSource = Path.Combine(basePath, "DedicatedServer64", "vstdlib_s.dll");
-            var vstdlibTarget = Path.Combine(basePath, "vstdlib_s.dll");
-            CopyAndVerifyDll(vstdlibSource, vstdlibTarget, requiredVersion);
-
-            
-            var havokSource = Path.Combine(basePath, "DedicatedServer64", "Havok.dll");
-            var havokTarget = Path.Combine(basePath, "Havok.dll");
-
-            if (!File.Exists(havokTarget))
-            {
-                File.Copy(havokSource, havokTarget);   
-            }
-            else if (File.GetLastWriteTime(havokTarget) < File.GetLastWriteTime(havokSource))
-            {   
-                File.Delete(havokTarget);
-                File.Copy(havokSource, havokTarget);
-            }
 
             InitConfig();
             if (!Config.Parse(args))
@@ -170,6 +111,26 @@ quit";
 
             _init = true;
             return true;
+        }
+
+        private void CopyDirectory(string sourceDir, string targetDir)
+        {
+            Directory.CreateDirectory(targetDir);
+
+            foreach (var file in Directory.GetFiles(sourceDir))
+            {
+                var targetFile = Path.Combine(targetDir, Path.GetFileName(file));
+                if (!File.Exists(targetFile) || File.GetLastWriteTime(targetFile) < File.GetLastWriteTime(file))
+                {
+                    File.Copy(file, targetFile, true);
+                }
+            }
+
+            foreach (var directory in Directory.GetDirectories(sourceDir))
+            {
+                var targetSubDir = Path.Combine(targetDir, Path.GetFileName(directory));
+                CopyDirectory(directory, targetSubDir);
+            }
         }
 
         public void Run()
@@ -247,6 +208,24 @@ quit";
                     ZipFile.ExtractToDirectory(STEAMCMD_ZIP, STEAMCMD_DIR);
                     File.Delete(STEAMCMD_ZIP);
                     log.Info("SteamCMD downloaded successfully!");
+
+                    // First-run: SteamCMD needs to self-update, initialize its config store,
+                    // and cache app depot info before it can process app_update commands.
+                    log.Info("Initializing SteamCMD (first run)...");
+                    var initProc = new ProcessStartInfo(STEAMCMD_PATH, "+login anonymous +quit")
+                    {
+                        WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), STEAMCMD_DIR),
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        StandardOutputEncoding = Encoding.ASCII
+                    };
+                    var initCmd = Process.Start(initProc);
+                    while (!initCmd.HasExited)
+                    {
+                        log.Info(initCmd.StandardOutput.ReadLine());
+                        Thread.Sleep(100);
+                    }
+                    log.Info("SteamCMD initialization complete.");
                 }
                 catch (Exception e)
                 {
@@ -272,33 +251,9 @@ quit";
                 log.Info(cmd.StandardOutput.ReadLine());
                 Thread.Sleep(100);
             }
+            log.Info("SteamCMD update check complete.");
         }
         
-        private void CopyAndVerifyDll(string sourcePath, string targetPath, Version requiredVersion = null)
-        {
-            if (!File.Exists(targetPath))
-            {
-                File.Copy(sourcePath, targetPath);
-                return;
-            }
-        
-            if (requiredVersion != null)
-            {
-                var targetVersion = FileVersionInfo.GetVersionInfo(targetPath);
-                var currentVersion = targetVersion.FileVersion;
-        
-                if (currentVersion != requiredVersion.ToString())
-                {
-                    File.Delete(targetPath);
-                    File.Copy(sourcePath, targetPath);
-                }
-            }
-            else if (File.GetLastWriteTime(targetPath) < File.GetLastWriteTime(sourcePath))
-            {
-                File.Delete(targetPath);
-                File.Copy(sourcePath, targetPath);
-            }
-        }
 
         private void LogException(Exception ex)
         {
