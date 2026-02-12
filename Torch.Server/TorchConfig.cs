@@ -226,6 +226,9 @@ namespace Torch.Server
         [Display(Name = "Overwrite global NLog config on update.", Description = "This should ALWAYS be true UNLESS you know what you are doing.  Breaking the default config may cause issues with logging.  Just, no.  Leave this alone.", GroupName = "Logging" )]
         public bool OverwriteGlobalNLogConfigOnUpdate { get; set; } = true;
 
+        [Display(Name = "Force Overwrite Runscript", Description = "Always overwrite the SteamCMD runscript on startup. Disable only if you have a custom runscript.", GroupName = "Server")]
+        public bool ForceOverwriteRunscript { get; set; } = true;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public TorchConfig() { }

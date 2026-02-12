@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using System.Xml.Linq;
 using NLog;
 using NLog.Targets;
 using Sandbox;
@@ -31,6 +32,7 @@ namespace Torch.Server
         private static readonly Logger Log = LogManager.GetLogger(nameof(Initializer));
         private bool _init;
         private const string STEAMCMD_DIR = "steam/steamcmd";
+        private const string STEAMCMD_LEGACY_DIR = "steamcmd";
         private const string STEAMCMD_ZIP = "temp.zip";
         private static readonly string STEAMCMD_PATH = $"{STEAMCMD_DIR}\\steamcmd.exe";
         private static readonly string RUNSCRIPT_PATH = $"{STEAMCMD_DIR}\\runscript.txt";
@@ -80,10 +82,10 @@ quit";
 
             // This is what happens when Keen is bad and puts extensions into the System namespace.
             if (!Enumerable.Contains(args, "-noupdate"))
-                RunSteamCmd();
+                RunSteamCmd(PeekForceOverwriteRunscript());
 
             var basePath = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
-            
+
 
             InitConfig();
             if (!Config.Parse(args))
@@ -185,16 +187,25 @@ quit";
             ConfigPersistent = Persistent<TorchConfig>.Load(configPath);
         }
 
-        public static void RunSteamCmd()
+        public static void RunSteamCmd(bool forceOverwriteRunscript = true)
         {
             var log = LogManager.GetLogger("SteamCMD");
+
+            // Migrate from old layout (steamcmd/) to new layout (steam/steamcmd/)
+            if (Directory.Exists(STEAMCMD_LEGACY_DIR) && !Directory.Exists(STEAMCMD_DIR))
+            {
+                log.Info("Migrating SteamCMD from legacy directory...");
+                Directory.CreateDirectory("steam");
+                Directory.Move(STEAMCMD_LEGACY_DIR, STEAMCMD_DIR);
+                log.Info("SteamCMD migrated to steam/steamcmd.");
+            }
 
             if (!Directory.Exists(STEAMCMD_DIR))
             {
                 Directory.CreateDirectory(STEAMCMD_DIR);
             }
 
-            if (!File.Exists(RUNSCRIPT_PATH))
+            if (forceOverwriteRunscript || !File.Exists(RUNSCRIPT_PATH))
                 File.WriteAllText(RUNSCRIPT_PATH, RUNSCRIPT);
 
             if (!File.Exists(STEAMCMD_PATH))
@@ -253,7 +264,31 @@ quit";
             }
             log.Info("SteamCMD update check complete.");
         }
-        
+
+        /// <summary>
+        /// Peek at Torch.cfg XML to read ForceOverwriteRunscript before TorchConfig can be loaded.
+        /// Returns true (default) if the config doesn't exist or the element is missing.
+        /// </summary>
+        private static bool PeekForceOverwriteRunscript()
+        {
+            var configPath = Path.Combine(Directory.GetCurrentDirectory(), "Torch.cfg");
+            if (!File.Exists(configPath))
+                return true;
+
+            try
+            {
+                var doc = System.Xml.Linq.XDocument.Load(configPath);
+                var element = doc.Root?.Element("ForceOverwriteRunscript");
+                if (element == null)
+                    return true;
+
+                return bool.TryParse(element.Value, out var value) ? value : true;
+            }
+            catch
+            {
+                return true;
+            }
+        }
 
         private void LogException(Exception ex)
         {
