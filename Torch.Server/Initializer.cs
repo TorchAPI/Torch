@@ -85,6 +85,18 @@ quit";
                 RunSteamCmd(PeekForceOverwriteRunscript());
 
             var basePath = new FileInfo(typeof(Program).Assembly.Location).Directory.ToString();
+            var apiSource = Path.Combine(basePath, "DedicatedServer64", "steam_api64.dll");
+            var apiTarget = Path.Combine(basePath, "steam_api64.dll");
+
+            if (!File.Exists(apiTarget))
+            {
+                File.Copy(apiSource, apiTarget);
+            }
+            else if (File.GetLastWriteTime(apiTarget) < File.GetLastWriteTime(apiSource))
+            {
+                File.Delete(apiTarget);
+                File.Copy(apiSource, apiTarget);
+            }
 
 
             InitConfig();
