@@ -50,7 +50,7 @@ namespace Torch.Server
         private bool _deleteMiniDumps = true;
         private string _loginToken;
         private bool bypassIsReloadableFlag;
-        private bool _enableAnalytics = false;
+        private bool _enableAnalytics = true;
         private string _analyticsToken = "";
 
 
