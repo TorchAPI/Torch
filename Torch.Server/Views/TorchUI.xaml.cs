@@ -10,6 +10,7 @@ using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Navigation;
 using NLog;
 using NLog.Config;
 using NLog.Targets.Wrappers;
@@ -83,11 +84,25 @@ namespace Torch.Server
         {
             var scrollViewer = FindDescendant<ScrollViewer>(ConsoleText);
             scrollViewer.ScrollChanged += ConsoleText_OnScrollChanged;
-            
+
             _scrollTimer = new System.Windows.Forms.Timer();
             _scrollTimer.Tick += ScrollIfNeed;
             _scrollTimer.Interval = 120;
             _scrollTimer.Start();
+
+            // Show analytics banner if enabled
+            if (_config.EnableAnalytics)
+                AnalyticsBanner.Visibility = Visibility.Visible;
+
+            // Keep banner in sync if the config value changes at runtime
+            _config.PropertyChanged += (s, args) =>
+            {
+                if (args.PropertyName == nameof(TorchConfig.EnableAnalytics))
+                    Dispatcher.Invoke(() =>
+                        AnalyticsBanner.Visibility = _config.EnableAnalytics
+                            ? Visibility.Visible
+                            : Visibility.Collapsed);
+            };
 
             _server.GameStateChanged += (game, state) =>
             {
@@ -235,6 +250,19 @@ namespace Torch.Server
 
             if (result == MessageBoxResult.Yes)
                 _server.Invoke(() => _server.Stop());
+        }
+
+        private void AnalyticsPrivacyLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+            e.Handled = true;
+        }
+
+        private void AnalyticsDisableLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            _config.EnableAnalytics = false;
+            _log.Info("Analytics disabled from UI banner. Set EnableAnalytics=true in Torch.cfg to re-enable.");
+            e.Handled = true;
         }
 
         protected override void OnClosing(CancelEventArgs e)

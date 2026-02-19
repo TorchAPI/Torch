@@ -45,6 +45,10 @@ namespace Torch
         List<ulong> Whitelist { get; set; }
         bool OverwriteGlobalNLogConfigOnUpdate { get; set; }
 
+        // Analytics — no PII
+        bool EnableAnalytics { get; set; }
+        string AnalyticsToken { get; set; }
+
         void Save(string path = null);
     }
 }

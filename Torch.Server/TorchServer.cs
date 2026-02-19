@@ -69,6 +69,7 @@ namespace Torch.Server
             AddManager(new RemoteAPIManager(this));
             AddManager(new UpdateManager(this));
             AddManager(new GameUpdateManager(this));
+            AddManager(new AnalyticsManager(this));
 
             Managers.GetManager<UpdateManager>().CheckAndUpdateTorch();
             

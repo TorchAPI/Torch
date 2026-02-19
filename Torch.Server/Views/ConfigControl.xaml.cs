@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -161,7 +161,21 @@ namespace Torch.Server.Views
         {
             foreach (var textbox in GetAllChildren<TextBox>(this))
             {
-                textbox.IsReadOnly = !_server.CanRun;
+                // Don't make inherently read-only textboxes editable
+                // (e.g., AnalyticsToken with ReadOnly=true in DisplayAttribute)
+                if (!_server.CanRun)
+                    textbox.IsReadOnly = true;
+                // Only make editable if it wasn't marked as inherently read-only
+                // We use Tag to track this - PropertyGrid doesn't set Tag on TextBoxes
+                else if (textbox.Tag as string != "InherentlyReadOnly")
+                {
+                    // Check if this is the first time and textbox is already read-only
+                    // If so, mark it as inherently read-only
+                    if (textbox.IsReadOnly && textbox.Tag == null)
+                        textbox.Tag = "InherentlyReadOnly";
+                    else
+                        textbox.IsReadOnly = false;
+                }
             }
 
             foreach (var button in GetAllChildren<Button>(this))

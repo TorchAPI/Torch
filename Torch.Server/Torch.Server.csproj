@@ -244,6 +244,7 @@
     <Compile Include="Commands\WhitelistCommands.cs" />
     <Compile Include="FlowDocumentTarget.cs" />
     <Compile Include="ListBoxExtensions.cs" />
+    <Compile Include="Managers\AnalyticsManager.cs" />
     <Compile Include="Managers\EntityControlManager.cs" />
     <Compile Include="Managers\GameUpdateManager.cs" />
     <Compile Include="Managers\MultiplayerManagerDedicated.cs" />

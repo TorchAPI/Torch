@@ -26,9 +26,32 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="1" Margin="5,5,5,5" Orientation="Horizontal">
+        <!-- Analytics notice banner — only visible when EnableAnalytics=true -->
+        <Border x:Name="AnalyticsBanner" Grid.Row="0"
+                Background="#1a3a1a" BorderBrush="#2e6b2e" BorderThickness="0,0,0,1"
+                Padding="8,5,8,5" Visibility="Collapsed">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <Hyperlink x:Name="AnalyticsPrivacyLink" NavigateUri="https://torchapi.com/privacy"
+                               RequestNavigate="AnalyticsPrivacyLink_RequestNavigate">
+                        <Run Text="Privacy Policy" Foreground="#88cc88"/>
+                    </Hyperlink>
+                    <Run Text=" · " Foreground="#557755"/>
+                    <Hyperlink x:Name="AnalyticsDisableLink" RequestNavigate="AnalyticsDisableLink_RequestNavigate"
+                               NavigateUri="disable">
+                        <Run Text="Disable" Foreground="#88cc88"/>
+                    </Hyperlink>
+                </TextBlock>
+                <TextBlock VerticalAlignment="Center" Foreground="#aaddaa" FontSize="11">
+                    <Run Text="📊 Anonymous usage analytics are enabled." FontWeight="SemiBold"/>
+                    <Run Text=" Torch reports player count, uptime, sim speed, version numbers and active plugin GUIDs to torchapi.com every 5 min." Foreground="#88aa88"/>
+                </TextBlock>
+            </DockPanel>
+        </Border>
+        <StackPanel Grid.Row="2" Margin="5,5,5,5" Orientation="Horizontal">
             <Button x:Name="BtnStart" Content="Start" Height="24" Width="75" Margin="5,0,5,0"
                     HorizontalAlignment="Left" Click="BtnStart_Click">
                 <Button.IsEnabled>
@@ -61,15 +84,22 @@
                 </Label.Content>
             </Label>
         </StackPanel>
-        <TabControl Grid.Row="2" Height="Auto" x:Name="TabControl" Margin="5,10,5,5">
+        <TabControl Grid.Row="3" Height="Auto" x:Name="TabControl" Margin="5,10,5,5">
+            <!-- Override the tab strip panel so the Privacy tab can be pinned to the right -->
+            <TabControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <DockPanel LastChildFill="False"/>
+                </ItemsPanelTemplate>
+            </TabControl.ItemsPanel>
+
             <TabItem Header="Log">
                 <RichTextBox x:FieldModifier="public" x:Name="ConsoleText" VerticalScrollBarVisibility="Visible" FontFamily="Consolas" IsReadOnly="True" Background="#0c0c0c"/>
             </TabItem>
-            
+
             <TabItem Header="Log Event viewer">
                 <views:LogEventViewer />
             </TabItem>
-            
+
             <TabItem Header="Configuration" Name="ConfigTab" />
             <TabItem Header="Mods">
                 <views:ModListControl/>
@@ -90,6 +120,109 @@
             </TabItem>
             <TabItem Header="Themes">
                 <views:ThemeControl x:Name="Themes" />
+            </TabItem>
+
+            <!-- Privacy Policy tab — pinned to the far right of the tab strip -->
+            <TabItem DockPanel.Dock="Right" x:Name="PrivacyTab">
+                <TabItem.Header>
+                    <TextBlock Text="Privacy Policy" Foreground="#888888" FontStyle="Italic"/>
+                </TabItem.Header>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                              Background="#0f0f0f" Padding="20">
+                    <StackPanel MaxWidth="760">
+                        <TextBlock Text="Torch Analytics — Privacy Policy" FontSize="18" FontWeight="Bold"
+                                   Foreground="#ffffff" Margin="0,0,0,12"/>
+                        <TextBlock Text="Last updated: February 2026" Foreground="#666666"
+                                   FontSize="11" Margin="0,0,0,20"/>
+
+                        <TextBlock Text="What we collect" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#cccccc" Margin="0,0,0,6"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#aaaaaa" Margin="0,0,0,16" FontSize="12">
+When <Run FontFamily="Consolas" Foreground="#88cc88">EnableAnalytics=true</Run> is set in your <Run FontFamily="Consolas" Foreground="#88cc88">Torch.cfg</Run>,
+Torch sends the following data to torchapi.com every 5 minutes:
+                        </TextBlock>
+                        <StackPanel Margin="16,0,0,16">
+                            <TextBlock Foreground="#aaaaaa" FontSize="12" Margin="0,2,0,2">• Player count (number of players currently online)</TextBlock>
+                            <TextBlock Foreground="#aaaaaa" FontSize="12" Margin="0,2,0,2">• Server uptime (seconds since process start)</TextBlock>
+                            <TextBlock Foreground="#aaaaaa" FontSize="12" Margin="0,2,0,2">• Simulation speed ratio</TextBlock>
+                            <TextBlock Foreground="#aaaaaa" FontSize="12" Margin="0,2,0,2">• Torch version number</TextBlock>
+                            <TextBlock Foreground="#aaaaaa" FontSize="12" Margin="0,2,0,2">• Space Engineers version number</TextBlock>
+                            <TextBlock Foreground="#aaaaaa" FontSize="12" Margin="0,2,0,2">• Active plugin GUIDs (public marketplace identifiers only)</TextBlock>
+                        </StackPanel>
+
+                        <TextBlock Text="What we do NOT collect" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#cccccc" Margin="0,0,0,6"/>
+                        <StackPanel Margin="16,0,0,16">
+                            <TextBlock Foreground="#aaaaaa" FontSize="12" Margin="0,2,0,2">• No player names, Steam IDs, or any player-identifiable information</TextBlock>
+                            <TextBlock Foreground="#aaaaaa" FontSize="12" Margin="0,2,0,2">• No IP addresses or network identifiers</TextBlock>
+                            <TextBlock Foreground="#aaaaaa" FontSize="12" Margin="0,2,0,2">• No server passwords, world saves, or configuration details</TextBlock>
+                            <TextBlock Foreground="#aaaaaa" FontSize="12" Margin="0,2,0,2">• No chat messages or in-game actions</TextBlock>
+                        </StackPanel>
+
+                        <TextBlock Text="Why we collect it" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#cccccc" Margin="0,0,0,6"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#aaaaaa" Margin="0,0,0,16" FontSize="12">
+Usage data helps us understand which Torch versions and plugins are in active use,
+identify compatibility issues, and prioritise development effort. Plugin GUID data
+is used to surface trending plugins on the Torch marketplace.
+                        </TextBlock>
+
+                        <TextBlock Text="Your server token" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#cccccc" Margin="0,0,0,6"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#aaaaaa" Margin="0,0,0,16" FontSize="12">
+On first registration a random 64-character token is generated and stored in your
+<Run FontFamily="Consolas" Foreground="#88cc88">Torch.cfg</Run>. This token identifies your server record in our database.
+It is not linked to any account, Steam identity, or IP address. You can view and copy
+your token from the Configuration tab under Torch settings.
+                        </TextBlock>
+                        
+
+                        <TextBlock Text="Right to erasure" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#cccccc" Margin="0,0,0,6"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#aaaaaa" Margin="0,0,0,16" FontSize="12">
+To permanently delete all data associated with your server, send an HTTP DELETE request to:
+                        </TextBlock>
+                        <Border Background="#1a1a1a" BorderBrush="#333333" BorderThickness="1"
+                                Padding="10,6" Margin="0,0,0,16" CornerRadius="3">
+                            <TextBlock FontFamily="Consolas" FontSize="11" Foreground="#88cc88"
+                                       Text="DELETE https://torchapi.com/analytics/server/{your-token}"
+                                       TextWrapping="Wrap"/>
+                        </Border>
+                        <TextBlock TextWrapping="Wrap" Foreground="#aaaaaa" Margin="0,0,0,16" FontSize="12">
+Your token can be found in <Run FontFamily="Consolas" Foreground="#88cc88">Torch.cfg</Run> under the
+<Run FontFamily="Consolas" Foreground="#88cc88">AnalyticsToken</Run> key. All snapshots and the server
+record are deleted immediately and cannot be recovered.
+                        </TextBlock>
+
+                        <TextBlock Text="Data retention" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#cccccc" Margin="0,0,0,6"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#aaaaaa" Margin="0,0,0,16" FontSize="12">
+Individual snapshots are automatically purged after 30 days. Server records
+are retained while analytics remain enabled.
+                        </TextBlock>
+
+                        <TextBlock Text="Disabling analytics" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#cccccc" Margin="0,0,0,6"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#aaaaaa" Margin="0,0,0,16" FontSize="12">
+Set <Run FontFamily="Consolas" Foreground="#88cc88">EnableAnalytics=false</Run> in <Run FontFamily="Consolas" Foreground="#88cc88">Torch.cfg</Run>,
+or click "Disable" in the banner at the top of this window. No further data will be sent.
+Existing data on the server is not automatically deleted when you disable — use the
+erasure endpoint above if you wish to remove it.
+                        </TextBlock>
+
+                        <TextBlock Text="Contact" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#cccccc" Margin="0,0,0,6"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#aaaaaa" Margin="0,0,0,4" FontSize="12">
+For privacy questions or data requests, visit:
+                        </TextBlock>
+                        <TextBlock FontSize="12" Margin="0,0,0,20">
+                            <Hyperlink NavigateUri="https://torchapi.com/privacy"
+                                       RequestNavigate="AnalyticsPrivacyLink_RequestNavigate">
+                                <Run Text="https://torchapi.com/privacy" Foreground="#5599ff"/>
+                            </Hyperlink>
+                        </TextBlock>
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
     </Grid>

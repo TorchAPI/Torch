@@ -50,6 +50,8 @@ namespace Torch.Server
         private bool _deleteMiniDumps = true;
         private string _loginToken;
         private bool bypassIsReloadableFlag;
+        private bool _enableAnalytics = false;
+        private string _analyticsToken = "";
 
 
         /// <inheritdoc />
@@ -126,6 +128,19 @@ namespace Torch.Server
         /// <inheritdoc />
         [Display(Name = "Bypass reloadable flag", Description = "Bypass the reloadable flag on plugins (forces true).", GroupName = "Server")]
         public bool BypassIsReloadableFlag { get => bypassIsReloadableFlag; set => Set(value, ref bypassIsReloadableFlag); }
+
+        /// <inheritdoc />
+        [Display(Name = "Enable Analytics",
+                 Description = "Send anonymous usage telemetry to torchapi.com every 5 min. No PII collected. Default: false (opt-in).",
+                 GroupName = "Analytics")]
+        public bool EnableAnalytics { get => _enableAnalytics; set => Set(value, ref _enableAnalytics); }
+
+        /// <inheritdoc />
+        [Display(Name = "Analytics Token",
+                 Description = "Auto-generated UUID assigned on first registration. Stored in Torch.cfg. Do not share publicly.",
+                 GroupName = "Analytics",
+                 ReadOnly = true)]
+        public string AnalyticsToken { get => _analyticsToken; set => Set(value, ref _analyticsToken); }
 
         /// <inheritdoc />
         [Display(Name = "Watchdog Timeout", Description = "Watchdog timeout (in seconds).", GroupName = "Server")]
