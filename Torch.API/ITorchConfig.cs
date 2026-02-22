@@ -48,6 +48,7 @@ namespace Torch
         // Analytics — no PII
         bool EnableAnalytics { get; set; }
         string AnalyticsToken { get; set; }
+        bool AnalyticsBannerHidden { get; set; }
 
         void Save(string path = null);
     }

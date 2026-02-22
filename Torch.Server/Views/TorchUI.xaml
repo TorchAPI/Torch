@@ -29,7 +29,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <!-- Analytics notice banner — only visible when EnableAnalytics=true -->
+        <!-- Analytics notice banner — only visible when EnableAnalytics=true and banner not hidden -->
         <Border x:Name="AnalyticsBanner" Grid.Row="0"
                 Background="#1a3a1a" BorderBrush="#2e6b2e" BorderThickness="0,0,0,1"
                 Padding="8,5,8,5" Visibility="Collapsed">
@@ -40,15 +40,18 @@
                         <Run Text="Privacy Policy" Foreground="#88cc88"/>
                     </Hyperlink>
                     <Run Text=" · " Foreground="#557755"/>
+                    <Hyperlink x:Name="AnalyticsHideLink" RequestNavigate="AnalyticsHideLink_RequestNavigate"
+                               NavigateUri="hide">
+                        <Run Text="Hide" Foreground="#88cc88"/>
+                    </Hyperlink>
+                    <Run Text=" · " Foreground="#557755"/>
                     <Hyperlink x:Name="AnalyticsDisableLink" RequestNavigate="AnalyticsDisableLink_RequestNavigate"
                                NavigateUri="disable">
                         <Run Text="Disable" Foreground="#88cc88"/>
                     </Hyperlink>
                 </TextBlock>
-                <TextBlock VerticalAlignment="Center" Foreground="#aaddaa" FontSize="11">
-                    <Run Text="📊 Anonymous usage analytics are enabled." FontWeight="SemiBold"/>
-                    <Run Text=" Torch reports player count, uptime, sim speed, version numbers and active plugin GUIDs to torchapi.com every 5 min." Foreground="#88aa88"/>
-                </TextBlock>
+                <TextBlock VerticalAlignment="Center" Foreground="#aaddaa" FontSize="11"
+                           Text="📊 Anonymous usage analytics are enabled." FontWeight="SemiBold"/>
             </DockPanel>
         </Border>
         <StackPanel Grid.Row="2" Margin="5,5,5,5" Orientation="Horizontal">

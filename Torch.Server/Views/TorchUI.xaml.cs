@@ -90,16 +90,17 @@ namespace Torch.Server
             _scrollTimer.Interval = 120;
             _scrollTimer.Start();
 
-            // Show analytics banner if enabled
-            if (_config.EnableAnalytics)
+            // Show analytics banner if enabled and not hidden
+            if (_config.EnableAnalytics && !_config.AnalyticsBannerHidden)
                 AnalyticsBanner.Visibility = Visibility.Visible;
 
-            // Keep banner in sync if the config value changes at runtime
+            // Keep banner in sync if config values change at runtime
             _config.PropertyChanged += (s, args) =>
             {
-                if (args.PropertyName == nameof(TorchConfig.EnableAnalytics))
+                if (args.PropertyName == nameof(TorchConfig.EnableAnalytics) ||
+                    args.PropertyName == nameof(TorchConfig.AnalyticsBannerHidden))
                     Dispatcher.Invoke(() =>
-                        AnalyticsBanner.Visibility = _config.EnableAnalytics
+                        AnalyticsBanner.Visibility = _config.EnableAnalytics && !_config.AnalyticsBannerHidden
                             ? Visibility.Visible
                             : Visibility.Collapsed);
             };
@@ -255,6 +256,13 @@ namespace Torch.Server
         private void AnalyticsPrivacyLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
             Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+            e.Handled = true;
+        }
+
+        private void AnalyticsHideLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            _config.AnalyticsBannerHidden = true;
+            _config.Save();
             e.Handled = true;
         }
 

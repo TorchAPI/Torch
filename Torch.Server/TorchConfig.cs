@@ -52,6 +52,7 @@ namespace Torch.Server
         private bool bypassIsReloadableFlag;
         private bool _enableAnalytics = true;
         private string _analyticsToken = "";
+        private bool _analyticsBannerHidden = false;
 
 
         /// <inheritdoc />
@@ -141,6 +142,12 @@ namespace Torch.Server
                  GroupName = "Analytics",
                  ReadOnly = true)]
         public string AnalyticsToken { get => _analyticsToken; set => Set(value, ref _analyticsToken); }
+
+        /// <inheritdoc />
+        [Display(Name = "Hide Analytics Banner",
+                 Description = "Hides the analytics notice banner at the top of the Torch window.",
+                 GroupName = "Analytics")]
+        public bool AnalyticsBannerHidden { get => _analyticsBannerHidden; set => Set(value, ref _analyticsBannerHidden); }
 
         /// <inheritdoc />
         [Display(Name = "Watchdog Timeout", Description = "Watchdog timeout (in seconds).", GroupName = "Server")]
