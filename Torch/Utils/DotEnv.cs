@@ -17,21 +17,20 @@ namespace Torch.Utils
 
             var txt = File.ReadAllText(filePath, Encoding.Default);
             var newline = new[] { "\r\n", Environment.NewLine };
-            var equal = new[] { "=" };
             foreach (var line in txt.Split(newline, StringSplitOptions.RemoveEmptyEntries))
             {
-                var pair = line.Split(equal, StringSplitOptions.None);
-                if (pair.Length == 0) continue;
+                var splitterIndex = line.IndexOf('=');
+                if (splitterIndex < 0) continue;
 
-                var key = pair[0].Trim();
-                if (pair.Length == 1)
+                var key = line.Substring(0, splitterIndex).Trim();
+                if (splitterIndex == line.Length - 1)
                 {
                     Environment.SetEnvironmentVariable(key, null);
                     Log.Info($"{key} (no value)");
                     continue;
                 }
 
-                var value = pair[1].Trim();
+                var value = line.Substring(splitterIndex + 1).Trim();
                 Log.Info($"{key} = {Mask(value)} (masked)");
                 Environment.SetEnvironmentVariable(key, value);
             }
