@@ -41,8 +41,11 @@ namespace Torch.Managers.ChatManager
 
         private static bool PrefixMessageProcessing(ref ChatMsg msg)
         {
-          
-
+            //anti spam crash fix 
+            long identityId1 = MySession.Static.Players.TryGetIdentityId(MyEventContext.Current.Sender.Value, 0);
+            if (identityId1 == 0)
+                return false;
+            
             var consumed = false;
             OnChatRecvAccess?.Invoke(ref msg);
             ChatManager.RaiseMessageRecieved(msg, ref consumed);
