@@ -87,9 +87,11 @@ namespace Torch.Server.ViewModels.Entities
                 {
                     var name = playerIdent.DisplayName;
                     if (Owners.ContainsKey(name))
+                    {   
                         Owners[name]--;
-                    if (Owners[name] == 0)
-                        Owners.Remove(name);
+                        if (Owners[name] == 0)
+                            Owners.Remove(name);
+                    }
                 }
             }
         }
