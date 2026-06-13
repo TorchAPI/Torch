@@ -11,12 +11,10 @@ using Torch.Managers.PatchManager.MSIL;
 namespace Torch.Patches
 {
     /* 
-        (disabled for next update - bish)
-       The purpose of this patch is to prevent a autosave from occurring unintentionally during world unload initiated by the !stop or !restart command.
-       Due to the user using the command(s) potentally performing a autosave or an opting out of a autosave, Keen's autosave code during unload has to be disabled.
-       Setting MySandboxGame.ConfigDedicated.RestartSave to false can resolve this issue, but this method (patch method) prevents us from changing the config file in order to prevent confusion.
+       The purpose of this patch is to prevent an autosave from occurring unintentionally during world unload initiated by the !stop false or !restart false commands.
+       Keen's autosave code during unload has to be disabled or it bypasses the command.
     */
-    //[PatchShim]
+    [PatchShim]
     internal static class AutoSavePatch
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
@@ -38,25 +36,75 @@ namespace Torch.Patches
         {
             var msil = instructions.ToList();
 
-            for (var i = 0; i < msil.Count; i++)
+            int anchorIdx = -1;
+            for (int i = 0; i < msil.Count; i++)
             {
-                var instruction = msil[i];
-                if (instruction.OpCode == OpCodes.Ldsfld && instruction.Operand is MsilOperandInline.MsilOperandReflected<FieldInfo> operandReflected 
-                    && operandReflected.Value.FieldType == typeof(bool) && operandReflected.Value.Name == "IsDedicated")
+                var inst = msil[i];
+                if (inst.OpCode == OpCodes.Ldstr
+                    && inst.Operand is MsilOperandInline.MsilOperandString strOp
+                    && strOp.Value == "Autosave in unload")
                 {
-                    for (int c = 0; c < 13; c++)
-                    {
-                        msil.RemoveAt(i);
-                    }
-
-                    var call = new MsilInstruction(OpCodes.Call);
-                    (call.Operand as MsilOperandInline.MsilOperandReflected<MethodBase>).Value = typeof(AutoSavePatch).GetMethod(nameof(SaveIfNeeded), BindingFlags.NonPublic | BindingFlags.Static);
-                    msil.Insert(i, call);
-
+                    anchorIdx = i;
                     break;
                 }
             }
 
+            if (anchorIdx < 0)
+            {
+                _log.Error("AutoSavePatch: 'Autosave in unload' string not found in MySession.Unload. " +
+                           "Keen may have changed the log message. Patch skipped.");
+                return msil;
+            }
+			
+            int startIdx = -1;
+            for (int i = anchorIdx - 1; i >= 0; i--)
+            {
+                var inst = msil[i];
+                if ((inst.OpCode == OpCodes.Call || inst.OpCode == OpCodes.Callvirt)
+                    && inst.Operand is MsilOperandInline.MsilOperandReflected<MethodBase> getStaticOp
+                    && getStaticOp.Value.Name == "get_Static"
+                    && getStaticOp.Value.DeclaringType == typeof(MySession))
+                {
+                    startIdx = i;
+                    break;
+                }
+            }
+
+            int endIdx = -1;
+            for (int i = anchorIdx + 1; i < msil.Count; i++)
+            {
+                var inst = msil[i];
+                if ((inst.OpCode == OpCodes.Call || inst.OpCode == OpCodes.Callvirt)
+                    && inst.Operand is MsilOperandInline.MsilOperandReflected<MethodBase> methOp
+                    && methOp.Value.Name == "Save"
+                    && methOp.Value.DeclaringType == typeof(MySession))
+                {
+                    endIdx = i;
+                    break;
+                }
+            }
+
+            if (endIdx >= 0 && endIdx + 1 < msil.Count && msil[endIdx + 1].OpCode == OpCodes.Pop)
+            {
+                endIdx++;
+            }
+
+            if (startIdx < 0 || endIdx < 0 || endIdx <= startIdx)
+            {
+                _log.Error("AutoSavePatch: could not locate the autosave block boundaries " +
+                           $"(startIdx={startIdx}, anchorIdx={anchorIdx}, endIdx={endIdx}). Patch skipped.");
+                return msil;
+            }
+
+            int count = endIdx - startIdx + 1;
+            msil.RemoveRange(startIdx, count);
+
+            var call = new MsilInstruction(OpCodes.Call);
+            (call.Operand as MsilOperandInline.MsilOperandReflected<MethodBase>).Value =
+                typeof(AutoSavePatch).GetMethod(nameof(SaveIfNeeded), BindingFlags.NonPublic | BindingFlags.Static);
+            msil.Insert(startIdx, call);
+
+            _log.Info($"AutoSavePatch: patched MySession.Unload (replaced {count} instructions).");
             return msil;
         }
 
