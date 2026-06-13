@@ -30,8 +30,8 @@ namespace Torch.Commands
     {
         private static bool _restartPending = false;
         private static bool _cancelRestart = false;
-        private bool _stopPending = false;
-        private bool _cancelStop = false;
+		private static bool _stopPending = false;
+		private static bool _cancelStop = false;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         
         [Command("whatsmyip")]
