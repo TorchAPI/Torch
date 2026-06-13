@@ -116,6 +116,34 @@ namespace Torch.Server.ViewModels
         [Torch.Views.Display(Description = "The type of the game online mode.", Name = "Online Mode", GroupName = "Others")]
         public MyOnlineModeEnum OnlineMode { get => _settings.OnlineMode; set => SetValue(ref _settings.OnlineMode, value); }
 
+        [Torch.Views.Display(Description = "The maximum number of grids a player can send to storage using a Services Terminal. Set to 0 to disable grid storage in the world.", Name = "Max Stored Grids", GroupName = "Others")]
+        public int GridStorageMaxPerPlayer { get => _settings.GridStorageMaxPerPlayer; set => SetValue(ref _settings.GridStorageMaxPerPlayer, value); }
+
+        [Torch.Views.Display(Description = "", Name = "Grid Storage Queue Limit", GroupName = "Others")]
+        public int GridStorageQueueLimit { get => _settings.GridStorageQueueLimit; set => SetValue(ref _settings.GridStorageQueueLimit, value); }
+
+        [Torch.Views.Display(Description = "Time to retrieve (minutes) would be limited by this value.", Name = "Max Retrieval Time", GroupName = "Others")]
+        public float GridStorageRetrievalTimeMaxMinutes { get => _settings.GridStorageRetrievalTimeMaxMinutes; set => SetValue(ref _settings.GridStorageRetrievalTimeMaxMinutes, value); }
+
+        [Torch.Views.Display(Description = "Time to retrieve a grid (minutes) is (MinimumTime + MinutesPerPCU * PCU) * WorldSettingValue", Name = "Min Retrieval Time", GroupName = "Others")]
+        public float GridStorageRetrievalTimeMinMinutes { get => _settings.GridStorageRetrievalTimeMinMinutes; set => SetValue(ref _settings.GridStorageRetrievalTimeMinMinutes, value); }
+
+        [Torch.Views.Display(Description = "Adjusts how quickly grids can be retrieved from storage when using a Services Terminal.", Name = "Grid Storage Retrieval Time", GroupName = "Others")]
+        public float GridStorageRetrievalTimeMultiplier { get => _settings.GridStorageRetrievalTimeMultiplier; set => SetValue(ref _settings.GridStorageRetrievalTimeMultiplier, value); }
+
+        [Torch.Views.Display(Description = "Time to retrieve a grid (minutes) is (MinimumTime + MinutesPerPCU * PCU) * WorldSettingValue", Name = "Minutes Per PCU", GroupName = "Others")]
+        public float GridStorageMinutesPerPCU { get => _settings.GridStorageMinutesPerPCU; set => SetValue(ref _settings.GridStorageMinutesPerPCU, value); }
+
+        [Torch.Views.Display(Description = "Remaining time to retrieve a grid is multiplied by this value when a player uses 'expedite' feature", Name = "Expedite Factor", GroupName = "Others")]
+        public float GridStorageExpediteFactor { get => _settings.GridStorageExpediteFactor; set => SetValue(ref _settings.GridStorageExpediteFactor, value); }
+
+        [Torch.Views.Display(Description = "Credits cost per remaining second for the 'expedite' feature", Name = "Expedite Cost", GroupName = "Others")]
+        public float GridStorageExpediteCostPerSecond { get => _settings.GridStorageExpediteCostPerSecond; set => SetValue(ref _settings.GridStorageExpediteCostPerSecond, value); }
+
+        [Torch.Views.Display(Description = "When enabled, grids sent to storage are allowed to have items in their inventory.", Name = "Allow Items in Stored Grids", GroupName = "Others")]
+        public bool GridStorageAllowsInventory { get => _settings.GridStorageAllowsInventory; set => SetValue(ref _settings.GridStorageAllowsInventory, value); }
+
+
 
 
         // TRASH REMOVAL
@@ -488,6 +516,8 @@ namespace Torch.Server.ViewModels
         [Torch.Views.Display(Description = "Version of the encounter generator system.", Name = "Encounter Generator Version", GroupName = "NPCs")]
         public int EncounterGeneratorVersion { get => _settings.EncounterGeneratorVersion; set => SetValue(ref _settings.EncounterGeneratorVersion, value); }
 
+        [Torch.Views.Display(Description = "Reputation will decay back to default values over time.", Name = "Reputation Decay", GroupName = "NPCs")]
+        public float ReputationDecayRate { get => _settings.ReputationDecayRate; set => SetValue(ref _settings.ReputationDecayRate, value); }
 
 
         // PVP
