@@ -159,6 +159,28 @@ namespace Torch.Server
             CanRun = true;
             Initialized?.Invoke(this);
             Log.Info($"Initialized server '{Config.InstanceName}' at '{Config.InstancePath}'");
+            CleanupEmptySEDedicatedLogs(Config.InstancePath);
+        }
+
+        private static void CleanupEmptySEDedicatedLogs(string directory)
+        {
+            if (string.IsNullOrEmpty(directory) || !System.IO.Directory.Exists(directory))
+                return;
+
+            var cutoff = Process.GetCurrentProcess().StartTime;
+            foreach (var path in System.IO.Directory.EnumerateFiles(directory, "SpaceEngineersDedicated_*.log"))
+            {
+                try
+                {
+                    var info = new System.IO.FileInfo(path);
+                    if (info.Length == 0 && info.LastWriteTime < cutoff)
+                        System.IO.File.Delete(path);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn(ex, $"Failed to clean up SpaceEngineersDedicated log file: {path}");
+                }
+            }
         }
 
         /// <inheritdoc />
