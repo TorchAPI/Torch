@@ -41,8 +41,7 @@ namespace Torch.Server.Views
             
             _server.PropertyChanged += (sender, args) =>
             {
-                if (args.PropertyName == nameof(TorchServer.CanRun) ||
-                    args.PropertyName == nameof(TorchServer.HasRun))
+                if (args.PropertyName == nameof(TorchServer.CanRun))
                 {
                     Dispatcher.Invoke(SetReadOnly);
                 }
@@ -167,59 +166,58 @@ namespace Torch.Server.Views
         
         private void SetReadOnly()
         {
-            // Config is only editable before the first start of the session. After the server
-            // has run the checkpoint is stale and saving is blocked, so the
-            // entire panel is locked even after a stop.
-            bool editable = _server.CanRun && !_server.HasRun;
-
             foreach (var textbox in GetAllChildren<TextBox>(this))
             {
-                // Track fields that are inherently read-only (Such as AnalyticsToken)
-                // so they stay read-only even when the panel is editable.
-                if (textbox.IsReadOnly && textbox.Tag == null)
-                    textbox.Tag = "InherentlyReadOnly";
-
-                bool inherentlyReadOnly = textbox.Tag as string == "InherentlyReadOnly";
-
-                // Gray out when the panel is locked, otherwise enable- but keep
-                // inherently-read-only fields non-editable.
-                textbox.IsEnabled = editable;
-                textbox.IsReadOnly = !editable || inherentlyReadOnly;
+                // Don't make inherently read-only textboxes editable
+                // (e.g., AnalyticsToken with ReadOnly=true in DisplayAttribute)
+                if (!_server.CanRun)
+                    textbox.IsReadOnly = true;
+                // Only make editable if it wasn't marked as inherently read-only
+                // We use Tag to track this - PropertyGrid doesn't set Tag on TextBoxes
+                else if (textbox.Tag as string != "InherentlyReadOnly")
+                {
+                    // Check if this is the first time and textbox is already read-only
+                    // If so, mark it as inherently read-only
+                    if (textbox.IsReadOnly && textbox.Tag == null)
+                        textbox.Tag = "InherentlyReadOnly";
+                    else
+                        textbox.IsReadOnly = false;
+                }
             }
 
             foreach (var button in GetAllChildren<Button>(this))
             {
-                button.IsEnabled = editable;
+                button.IsEnabled = _server.CanRun;
             }
 
             foreach (var comboBox in GetAllChildren<ComboBox>(this))
             {
-                comboBox.IsEnabled = editable;
+                comboBox.IsEnabled = _server.CanRun;
             }
             
             foreach (var slider in GetAllChildren<Slider>(this))
             {
-                slider.IsEnabled = editable;
+                slider.IsEnabled = _server.CanRun;
             }
             
             foreach (var checkbox in GetAllChildren<CheckBox>(this))
             {
-                checkbox.IsEnabled = editable;
+                checkbox.IsEnabled = _server.CanRun;
             }
             
             foreach (var toggleButton in GetAllChildren<ToggleButton>(this))
             {
-                toggleButton.IsEnabled = editable;
+                toggleButton.IsEnabled = _server.CanRun;
             }
             
             foreach (var radioButton in GetAllChildren<RadioButton>(this))
             {
-                radioButton.IsEnabled = editable;
+                radioButton.IsEnabled = _server.CanRun;
             }
             
             foreach (var listBox in GetAllChildren<ListBox>(this))
             {
-                listBox.IsEnabled = editable;
+                listBox.IsEnabled = _server.CanRun;
             }
         }
     }
