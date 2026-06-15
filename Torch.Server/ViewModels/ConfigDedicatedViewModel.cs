@@ -29,7 +29,6 @@ namespace Torch.Server.ViewModels
         public ConfigDedicatedViewModel(MyConfigDedicated<MyObjectBuilder_SessionSettings> configDedicated)
         {
             _config = configDedicated;
-            //_config.IgnoreLastSession = true;
             SessionSettings = new SessionSettingsViewModel(_config.SessionSettings);
             Task.Run(() => UpdateAllModInfosAsync());
         }
@@ -39,8 +38,9 @@ namespace Torch.Server.ViewModels
             Validate();
 
             _config.SessionSettings = _sessionSettings;
-            // Never ever
-            //_config.IgnoreLastSession = true;
+            // LastSession.sbl auto-resume has no purpose on a Torch server (the world to load
+            // is always set explicitly via LoadWorld) and overrides the selected world, so disable it.
+            _config.IgnoreLastSession = true;
             _config.Save(path);
         }
 
