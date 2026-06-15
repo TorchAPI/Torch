@@ -97,7 +97,12 @@ namespace Torch.Server.Views
 
         private void SaveBtn_OnClick(object sender, RoutedEventArgs e)
         {
-            _instanceManager.SaveConfig();
+            if (!_instanceManager.SaveConfig())
+            {
+                MessageBox.Show(
+                    "Configurations are only editable before the first start. If you have autostart enabled, you must disable it before making changes.",
+                    "Configuration Not Saved!", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
 
