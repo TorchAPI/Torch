@@ -226,7 +226,7 @@ namespace Torch.Server
         /// </summary>
         public override void Restart(bool save = true)
         {
-            if (Config.DisconnectOnRestart)
+            if (IsRunning && Config.DisconnectOnRestart)
             {
                 ModCommunication.SendMessageToClients(new JoinServerMessage("0.0.0.0:25555"));
                 Log.Info("Ejected all players from server for restart.");
