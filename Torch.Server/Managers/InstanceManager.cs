@@ -199,12 +199,12 @@ namespace Torch.Server.Managers
             }
         }
 
-        public void SaveConfig()
+        public bool SaveConfig()
         {
             if (((TorchServer)Torch).HasRun)
             {
                 Log.Warn("Checkpoint cache is stale, not saving dedicated config.");
-                return;
+                return false;
             }
             
             DedicatedConfig.Save(Path.Combine(Torch.Config.InstancePath, CONFIG_NAME));
@@ -238,6 +238,8 @@ namespace Torch.Server.Managers
                 Log.Error("Failed to write sandbox config, changes will not appear on server");
                 Log.Error(e);
             }
+
+            return true;
         }
 
         /// <summary>
