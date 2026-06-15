@@ -134,11 +134,23 @@ namespace Torch.Server.Managers
 
         public void ImportSelectedWorldConfig()
         {
+            if (DedicatedConfig.SelectedWorld == null)
+            {
+                Log.Warn("No world selected; cannot import world config.");
+                return;
+            }
+
             ImportWorldConfig(DedicatedConfig.SelectedWorld, false);
         }
 
         private void ImportWorldConfig(WorldViewModel world, bool modsOnly = true)
         {
+            if (world?.WorldConfiguration == null)
+            {
+                Log.Warn("Cannot import world config: no world or world configuration available.");
+                return;
+            }
+
             var mods = new MtObservableList<ModItemInfo>();
             foreach (var mod in world.WorldConfiguration.Mods)
                 mods.Add(new ModItemInfo(mod));

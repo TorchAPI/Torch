@@ -106,6 +106,13 @@ namespace Torch.Server.Views
 
         private void ImportConfig_OnClick(object sender, RoutedEventArgs e)
         {
+            if (_instanceManager.DedicatedConfig?.SelectedWorld == null)
+            {
+                MessageBox.Show("Please select a world before attempting to import its configs.",
+                    "No World Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             _instanceManager.ImportSelectedWorldConfig();
         }
 
