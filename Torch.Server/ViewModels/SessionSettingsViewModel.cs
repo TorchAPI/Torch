@@ -143,6 +143,14 @@ namespace Torch.Server.ViewModels
         [Torch.Views.Display(Description = "When enabled, grids sent to storage are allowed to have items in their inventory.", Name = "Allow Items in Stored Grids", GroupName = "Others")]
         public bool GridStorageAllowsInventory { get => _settings.GridStorageAllowsInventory; set => SetValue(ref _settings.GridStorageAllowsInventory, value); }
 
+        [Torch.Views.Display(Description = "Time (minutes) added to retrieval per kilometer from original storage location (MinimumTime + ((MinutesPerPCU * PCU) + (MinutesPerKm * Distance)) * WorldSettingValue", Name = "Minutes Per Km", GroupName = "Others")]
+        public float GridStorageMinutesPerKm { get => _settings.GridStorageMinutesPerKm; set => SetValue(ref _settings.GridStorageMinutesPerKm, value); }
+
+        [Torch.Views.Display(Description = "Duration in seconds a grid must be free from combat before it can be stored. Set to 0 to disable.", Name = "Combat Cooldown", GroupName = "Others")]
+        public int GridStorageCombatCooldown { get => _settings.GridStorageCombatCooldown; set => SetValue(ref _settings.GridStorageCombatCooldown, value); }
+
+        [Torch.Views.Display(Description = "Maximum distance in meters a Services Terminal can be from the original storage location to retrieve a grid. Set to 0 to disable.", Name = "Max Retrieve Distance", GroupName = "Others")]
+        public double GridStorageMaxDistance { get => _settings.GridStorageMaxDistance; set => SetValue(ref _settings.GridStorageMaxDistance, value); }
 
 
 
