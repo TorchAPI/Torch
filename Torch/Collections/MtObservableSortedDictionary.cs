@@ -200,11 +200,11 @@ namespace Torch.Collections
                     var item = new KeyValuePair<TK, TV>(key, value);
                     if (TryGetBucket(key, out var firstGtBucket))
                     {
-                        TV old = _backing[firstGtBucket].Value;
+                        KeyValuePair<TK, TV> old = _backing[firstGtBucket];
                         _backing[firstGtBucket] = item;
-                        _valueCollection.ParentChanged(
-                            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, old,
-                                value, firstGtBucket));
+                        RaiseAllChanged(
+                            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, item,
+                                old, firstGtBucket));
                     }
                     else
                     {
