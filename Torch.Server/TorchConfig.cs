@@ -22,6 +22,7 @@ namespace Torch.Server
         private string _instanceName = "Instance";
         private bool _autostart;
         private bool _restartOnCrash;
+        private int _fatalCloseDelaySeconds = 300;
         private bool _restartOnGameUpdate;
         private int _gameUpdateRestartDelayMins = 5;
         private bool _noGui;
@@ -94,7 +95,14 @@ namespace Torch.Server
         [Arg("restartoncrash", "Automatically restart the server if it crashes.")]
         [Display(Name = "Restart On Crash", Description = "Automatically restart the server if it crashes.", GroupName = "Server")]
         public bool RestartOnCrash { get => _restartOnCrash; set => Set(value, ref _restartOnCrash); }
-        
+
+        /// <summary>
+        /// How long (in seconds) the fatal error dialog or console message stays up before Torch closes by itself.
+        /// 0 closes at once, and a negative value waits until the admin closes it.
+        /// </summary>
+        [Display(Name = "Fatal Error Close Delay", Description = "How long (in seconds) a fatal error stays on screen before Torch closes by itself. 0 closes at once. -1 waits until you close it. With no console and no UI, Torch always closes at once.", GroupName = "Server")]
+        public int FatalCloseDelaySeconds { get => _fatalCloseDelaySeconds; set => Set(value, ref _fatalCloseDelaySeconds); }
+
         /// <summary>
         /// Enable Game update detection. If enabled, server will restart when game updates are found.
         /// </summary>
