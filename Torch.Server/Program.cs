@@ -51,6 +51,7 @@ namespace Torch.Server
                 var log = LogManager.GetCurrentClassLogger();
                 log.Error($"Error updating. Please delete the following files from the Torch root folder manually:\r\n{string.Join("\r\n", badDlls)}");
                 log.Error(e);
+                Environment.ExitCode = 1;
                 return;
             }
 
