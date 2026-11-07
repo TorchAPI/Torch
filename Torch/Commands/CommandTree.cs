@@ -96,7 +96,8 @@ namespace Torch.Commands
 
         public Command GetCommand(string commandText, out string argText)
         {
-            var split = commandText.Split(new []{' '}, StringSplitOptions.RemoveEmptyEntries).ToList();
+            var separator = new[] {' '};
+            var split = commandText.Split(separator, StringSplitOptions.RemoveEmptyEntries).ToList();
             var skip = GetNode(split, out CommandNode node);
             if (skip == -1)
             {
@@ -104,17 +105,10 @@ namespace Torch.Commands
                 return null;
             }
 
-            if (split.Count > skip)
-            {
-                var substringIndex = commandText.IndexOf(split[skip]);
-                if (substringIndex <= commandText.Length)
-                {
-                    argText = commandText.Substring(substringIndex);
-                    return node.Command;
-                }
-            }
-
-            argText = "";
+            // With a count, the last element is the remaining text, with its spacing and quotes kept.
+            argText = split.Count > skip
+                ? commandText.Split(separator, skip + 1, StringSplitOptions.RemoveEmptyEntries)[skip]
+                : "";
             return node.Command;
         }
 
