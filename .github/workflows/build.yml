@@ -1,0 +1,115 @@
+name: Build
+
+on:
+  push:
+    branches: [master, staging, publicbeta]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  SE_APP_ID: "298740"
+  SE_DIR: ${{ github.workspace }}\..\se-ds
+  # Jenkins reached master #351; builds must keep counting up or the updater ignores them.
+  BUILD_NUMBER_OFFSET: "400"
+
+jobs:
+  build:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Restore SE dedicated server
+        id: se-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.SE_DIR }}
+          key: se-ds-never-matches
+          restore-keys: se-ds-
+
+      - name: Acquire SE
+        id: se
+        shell: pwsh
+        run: |
+          $steamcmd = "$env:RUNNER_TEMP\steamcmd"
+          New-Item -ItemType Directory -Force $steamcmd, $env:SE_DIR | Out-Null
+          Invoke-WebRequest https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip -OutFile "$steamcmd.zip"
+          Expand-Archive "$steamcmd.zip" $steamcmd -Force
+          & "$steamcmd\steamcmd.exe" +force_install_dir $env:SE_DIR +login anonymous +app_update $env:SE_APP_ID +quit
+          if (!(Test-Path "$env:SE_DIR\DedicatedServer64\VRage.dll")) {
+            & "$steamcmd\steamcmd.exe" +force_install_dir $env:SE_DIR +login anonymous +app_update $env:SE_APP_ID validate +quit
+          }
+          if (!(Test-Path "$env:SE_DIR\DedicatedServer64\VRage.dll")) { throw "SteamCMD did not install the dedicated server" }
+          $manifest = Get-Content "$env:SE_DIR\steamapps\appmanifest_$env:SE_APP_ID.acf" -Raw
+          $buildId = [regex]::Match($manifest, '"buildid"\s+"(\d+)"').Groups[1].Value
+          "key=se-ds-$buildId" >> $env:GITHUB_OUTPUT
+          if (Test-Path GameBinaries) { cmd /c rmdir GameBinaries }
+          cmd /c mklink /J GameBinaries "$env:SE_DIR\DedicatedServer64"
+          $global:LASTEXITCODE = 0
+
+      - name: Save SE dedicated server
+        if: steps.se-cache.outputs.cache-matched-key != steps.se.outputs.key
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.SE_DIR }}
+          key: ${{ steps.se.outputs.key }}
+
+      - uses: microsoft/setup-msbuild@v2
+      - uses: NuGet/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore Torch.sln
+
+      - name: Version
+        id: version
+        shell: pwsh
+        env:
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+        run: |
+          $env:BUILD_NUMBER = [int]$env:GITHUB_RUN_NUMBER + [int]$env:BUILD_NUMBER_OFFSET
+          $version = (& ./Versioning/version.ps1 | Select-Object -Last 1).Trim()
+          "number=$env:BUILD_NUMBER" >> $env:GITHUB_OUTPUT
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "Torch $version" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Build
+        run: msbuild Torch.sln /p:Configuration=Release /p:Platform=x64
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $package = "bin\torch-server"
+          New-Item -ItemType Directory -Force $package | Out-Null
+          Get-ChildItem bin\x64\Release -File | Copy-Item -Destination $package
+          Remove-Item "$package\VRage.*", "$package\Sandbox.*", "$package\SpaceEngineers.*"
+          Add-Type -Assembly System.IO.Compression.FileSystem
+          [System.IO.Compression.ZipFile]::CreateFromDirectory("$PWD\$package", "$PWD\bin\torch-server.zip")
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: torch-server
+          path: bin/torch-server.zip
+
+      - name: Publish to build.torchapi.com
+        if: github.event_name != 'pull_request' && contains(fromJSON('["master","staging","publicbeta"]'), github.ref_name)
+        shell: bash
+        env:
+          BRANCH: ${{ github.ref_name }}
+          NUMBER: ${{ steps.version.outputs.number }}
+          VERSION: ${{ steps.version.outputs.version }}
+          KEY: ${{ secrets.TORCH_PUBLISH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.TORCH_PUBLISH_KNOWN_HOSTS }}
+          HOST: ${{ secrets.TORCH_PUBLISH_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/publish && chmod 600 ~/.ssh/publish
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/publish -o BatchMode=yes "torchbuild@$HOST" \
+            publish "$BRANCH" "$NUMBER" "$VERSION" \
+            < bin/torch-server.zip

@@ -1,0 +1,47 @@
+#!/bin/sh
+# Forced command for the torchbuild SSH key: publish <branch> <number> <version> < torch-server.zip
+# Writes the subset of the Jenkins JSON API that Torch.API/WebAPI/JenkinsQuery.cs reads.
+set -eu
+umask 022
+
+base_url=https://build.torchapi.com
+web_root=/var/www/docker/torchbuild
+keep=10
+
+set -f
+set -- ${SSH_ORIGINAL_COMMAND:-}
+set +f
+[ "$#" -eq 4 ] && [ "$1" = publish ] || { echo "usage: publish <branch> <number> <version>" >&2; exit 2; }
+branch=$2 number=$3 version=$4
+
+case "$branch" in master|staging|publicbeta) ;; *) echo "branch not published: $branch" >&2; exit 2 ;; esac
+case "$number" in ''|*[!0-9]*) echo "bad build number: $number" >&2; exit 2 ;; esac
+printf '%s' "$version" | grep -Eq '^v?[0-9]+(\.[0-9]+){3}-[A-Za-z0-9._-]+$' || { echo "bad version: $version" >&2; exit 2; }
+
+job_dir=$web_root/job/Torch/job/$branch
+job_url=$base_url/job/Torch/job/$branch/
+build_url=$job_url$number/
+mkdir -p "$job_dir/api"
+
+tmp=$(mktemp -d "$job_dir/.incoming.XXXXXX")
+trap 'rm -rf "$tmp"' EXIT
+chmod 755 "$tmp"
+mkdir -p "$tmp/artifact/bin" "$tmp/api"
+cat > "$tmp/artifact/bin/torch-server.zip"
+unzip -tq "$tmp/artifact/bin/torch-server.zip" >/dev/null || { echo "upload is not a valid zip" >&2; exit 1; }
+
+printf '{"number":%s,"building":false,"result":"SUCCESS","description":"%s","url":"%s"}\n' \
+  "$number" "$version" "$build_url" > "$tmp/api/json"
+printf '{"name":"%s","url":"%s","lastBuild":{"number":%s,"url":"%s"},"lastStableBuild":{"number":%s,"url":"%s"}}\n' \
+  "$branch" "$job_url" "$number" "$build_url" "$number" "$build_url" > "$job_dir/api/.json.new"
+
+rm -rf "${job_dir:?}/$number"
+mv "$tmp" "$job_dir/$number"
+trap - EXIT
+mv "$job_dir/api/.json.new" "$job_dir/api/json"
+
+ls -1 "$job_dir" | grep -E '^[0-9]+$' | sort -n | head -n "-$keep" | while read -r old; do
+  rm -rf "${job_dir:?}/$old"
+done
+
+echo "published $branch #$number ($version) at $build_url"
