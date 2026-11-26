@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -86,9 +86,19 @@ namespace Torch.Server
         static bool IsRunningAsService()
         {
             // Check if the parent process is services.exe
-            using(var currentProcess = Process.GetCurrentProcess())
-            using(var parentProcess = Process.GetProcessById(GetParentProcessId(currentProcess.Id)))
-                return parentProcess != null && parentProcess.ProcessName.StartsWith("services", StringComparison.OrdinalIgnoreCase);
+            // The launcher may already have exited (e.g. the old Torch process during !restart,
+            // or a script that starts Torch and exits). Process.GetProcessById then throws,
+            // which used to kill Torch silently at startup. A missing parent is not services.exe.
+            try
+            {
+                using(var currentProcess = Process.GetCurrentProcess())
+                using(var parentProcess = Process.GetProcessById(GetParentProcessId(currentProcess.Id)))
+                    return parentProcess.ProcessName.StartsWith("services", StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         static int GetParentProcessId(int processId)
