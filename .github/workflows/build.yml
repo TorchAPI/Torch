@@ -105,8 +105,13 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
           KEY: ${{ secrets.TORCH_PUBLISH_KEY }}
           KNOWN_HOSTS: ${{ secrets.TORCH_PUBLISH_KNOWN_HOSTS }}
-          HOST: ${{ secrets.TORCH_PUBLISH_HOST }}
+          HOST: ${{ secrets.TORCH_PUBLISH_HOST || vars.TORCH_PUBLISH_HOST }}
         run: |
+          missing=
+          [ -n "$KEY" ] || missing="$missing TORCH_PUBLISH_KEY"
+          [ -n "$KNOWN_HOSTS" ] || missing="$missing TORCH_PUBLISH_KNOWN_HOSTS"
+          [ -n "$HOST" ] || missing="$missing TORCH_PUBLISH_HOST"
+          [ -z "$missing" ] || { echo "::error::Empty repository secrets:$missing"; exit 1; }
           dir="$RUNNER_TEMP/publish-ssh"
           mkdir -p "$dir"
           trap 'rm -rf "$dir"' EXIT
