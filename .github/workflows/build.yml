@@ -107,9 +107,12 @@ jobs:
           KNOWN_HOSTS: ${{ secrets.TORCH_PUBLISH_KNOWN_HOSTS }}
           HOST: ${{ secrets.TORCH_PUBLISH_HOST }}
         run: |
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$KEY" > ~/.ssh/publish && chmod 600 ~/.ssh/publish
-          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          ssh -i ~/.ssh/publish -o BatchMode=yes "torchbuild@$HOST" \
-            publish "$BRANCH" "$NUMBER" "$VERSION" \
+          dir="$RUNNER_TEMP/publish-ssh"
+          mkdir -p "$dir"
+          trap 'rm -rf "$dir"' EXIT
+          printf '%s\n' "$KEY" > "$dir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$dir/known_hosts"
+          ssh -i "$dir/key" -o IdentitiesOnly=yes -o BatchMode=yes \
+            -o UserKnownHostsFile="$dir/known_hosts" -o StrictHostKeyChecking=yes \
+            "torchbuild@$HOST" publish "$BRANCH" "$NUMBER" "$VERSION" \
             < bin/torch-server.zip
