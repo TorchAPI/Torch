@@ -39,6 +39,10 @@ rm -rf "${job_dir:?}/$number"
 mv "$tmp" "$job_dir/$number"
 trap - EXIT
 mv "$job_dir/api/.json.new" "$job_dir/api/json"
+for link in lastBuild lastStableBuild lastSuccessfulBuild; do
+  ln -sfn "$number" "$job_dir/.$link.new"
+  mv -T "$job_dir/.$link.new" "$job_dir/$link"
+done
 
 ls -1 "$job_dir" | grep -E '^[0-9]+$' | sort -n | head -n "-$keep" | while read -r old; do
   rm -rf "${job_dir:?}/$old"
