@@ -351,6 +351,40 @@ quit";
                 File.Delete(dumpPath);
         }
 
+        private static bool HasInteractiveConsole => Environment.UserInteractive && !Console.IsInputRedirected;
+
+        /// <summary>
+        /// Shows the fatal error dialog. It has a limit unless the admin turned that off, because the UI can be running
+        /// with nobody at it. MessageBox has no timeout, so it runs on its own thread and closes with the process.
+        /// </summary>
+        private static void ShowFatalDialog(TimeSpan time)
+        {
+            var message = "Torch encountered a fatal error and needs to close. Please check the logs or the Log event viewer for details.";
+            if (time != Timeout.InfiniteTimeSpan)
+                message += $"{Environment.NewLine}{Environment.NewLine}Torch closes by itself in {time.TotalSeconds} seconds.";
+            var dialog = new Thread(() => MessageBox.Show(message, "Torch Fatal Error", MessageBoxButton.OK, MessageBoxImage.Error)) { IsBackground = true };
+            dialog.Start();
+            dialog.Join(time);
+        }
+
+        /// <summary>
+        /// Keeps a console open so the error above can be read. It has a limit unless the admin turned that off, because
+        /// a console can exist with nobody at it, such as a hosting panel, a scheduled task or a container.
+        /// </summary>
+        private static void HoldConsole(TimeSpan time)
+        {
+            var limited = time != Timeout.InfiniteTimeSpan;
+            Console.WriteLine("Torch has stopped because of the error above. Press any key to close"
+                              + (limited ? $", or it closes by itself in {time.TotalSeconds} seconds." : "."));
+            var timer = Stopwatch.StartNew();
+            while (!limited || timer.Elapsed < time)
+            {
+                if (Console.KeyAvailable)
+                    return;
+                Thread.Sleep(100);
+            }
+        }
+
         private void HandleException(object sender, UnhandledExceptionEventArgs e)
         {
             _server.FatalException = true;
@@ -366,9 +400,13 @@ quit";
                 Config.WaitForPID = Process.GetCurrentProcess().Id.ToString();
                 Process.Start(exe, Config.ToString());
             }
-            else
+            else if (Config.FatalCloseDelaySeconds != 0)
             {
-                MessageBox.Show("Torch encountered a fatal error and needs to close. Please check the logs or the Log event viewer for details.", "Torch Fatal Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                var delay = Config.FatalCloseDelaySeconds < 0 ? Timeout.InfiniteTimeSpan : TimeSpan.FromSeconds(Config.FatalCloseDelaySeconds);
+                if (!Config.NoGui)
+                    ShowFatalDialog(delay);
+                else if (HasInteractiveConsole)
+                    HoldConsole(delay);
             }
 
             Process.GetCurrentProcess().Kill();
