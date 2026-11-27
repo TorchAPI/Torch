@@ -77,6 +77,7 @@ namespace Torch.Server
                 initializer.Run();
             } catch (Exception runException)
             {
+                Environment.ExitCode = 1;
                 var log = LogManager.GetCurrentClassLogger();
                 log.Fatal(runException.ToString());
                 return;
