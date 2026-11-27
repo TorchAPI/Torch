@@ -544,6 +544,17 @@ namespace Torch.Server.ViewModels
         [Torch.Views.Display(Description = "Server will restart after specified time [minutes], when it's empty after match started. Works only in PvP scenarios. When 0 feature is disabled.", Name = "Match Restart When Empty", GroupName = "PvP")]
         public int MatchRestartWhenEmptyTime { get => _settings.MatchRestartWhenEmptyTime; set => SetValue(ref _settings.MatchRestartWhenEmptyTime, value); }
 
+        [Torch.Views.Display(Description = "When enabled players will be allowed to use relative dampening on hostile grids.", Name = "Allow Dampening to Hostile Grids", GroupName = "PvP")]
+        public bool AllowDampeningToHostileGrids { get => _settings.AllowDampeningToHostileGrids; set => SetValue(ref _settings.AllowDampeningToHostileGrids, value); }
+
+        [Torch.Views.Display(Description = "When enabled, very large or heavy grids that use a Jump Drive may create temporary signatures at their exit location. The larger the grid, the farther away it can be detected.", Name = "Enable Jump Detection", GroupName = "PvP")]
+        public bool EnableJumpSignatures { get => _settings.EnableJumpSignatures; set => SetValue(ref _settings.EnableJumpSignatures, value); }
+
+
+        // MISC
+        [Torch.Views.Display(Description = "When enabled, Artificial Mass blocks and Space Balls can be influenced by artificial gravity.", Name = "Allow Gravity Drives", GroupName = "Misc")]
+        public bool AllowGravityDrives { get => _settings.AllowGravityDrives; set => SetValue(ref _settings.AllowGravityDrives, value); }
+
 
 
         // EXPERIMENTAL
